@@ -660,4 +660,89 @@ describe('playStore addToPlan captures the per-row toggle state', () => {
     // seed either carries no state or no seed at all.
     expect(seed?.state?.['frightened.sourceHidden'] ?? 0).toBe(0);
   });
+
+  it('a row planned BEFORE the recorder freezes its sight value when the toggle appears', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    // The check row FIRST — no condition exists yet, so its add-time capture
+    // records nothing. Then the recorder, with no timer advance between.
+    playStore.addToPlan(catalogRule(playStore, 'record-check'));
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+
+    // The first evaluation on which the toggle reaches the pre-existing row
+    // freezes its selection: no live-seed fallback forever.
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 0
+    });
+
+    // ...and the frozen value never moves: a later tap changes the seed, not
+    // the earlier row.
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    expect(playStore.state.facts['frightened.sourceHidden']).toBe(1);
+    expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+      'frightened.sourceHidden': 0
+    });
+  });
+
+  it('a queued save reaches its OWN character even if the character switches mid-drain', async () => {
+    vi.mocked(apiGet)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ruleGroups: ['condition-frightened', 'core-events'] })
+      } as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ effects: null })
+      } as Response);
+    vi.mocked(apiPost).mockResolvedValue({
+      ok: true,
+      json: async () => ({ ruleGroups: [] })
+    } as Response);
+    const { playStore } = await import('$lib/play/playStore.svelte');
+    playStore.reset();
+    await playStore.loadRuleGroups('char-1');
+
+    playStore.addToPlan(catalogRule(playStore, 'record-frightened'));
+    vi.runAllTimers();
+    const los = (playStore.state.engineOutput?.annotations ?? []).find(
+      (a) => a.key === 'rule.dnd-5e-2024.condition-frightened.los'
+    );
+    // Tap, then leave the character BEFORE the save's microtask settles. The
+    // queued snapshot is scoped to char-1 at call time, so it must still land.
+    playStore.addFollowupEffect(los!.toggle!.offEffect);
+    playStore.reset();
+    await vi.advanceTimersByTimeAsync(0);
+
+    const charOnePosts = vi
+      .mocked(apiPost)
+      .mock.calls.filter(([url]) => String(url).includes('/characters/char-1/effects'));
+    expect(charOnePosts.length).toBeGreaterThan(0);
+    const last = charOnePosts[charOnePosts.length - 1];
+    const body = last![1] as { effects: string };
+    const persisted = JSON.parse(body.effects) as {
+      key?: string;
+      state?: Record<string, number>;
+    }[];
+    const seed = persisted.find((e) => e.key === 'frightened-source');
+    expect(seed?.state?.['frightened.sourceHidden']).toBe(1);
+  });
 });

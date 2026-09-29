@@ -243,6 +243,42 @@ function performEvaluation(): void {
     topBarEntries: result.topBarEntries,
     resourceEntries: result.resourceEntries
   };
+
+  ensurePlannedToggleSelections();
+}
+
+/**
+ * Freeze the per-row sight value of planned rows that PREDATE the toggle's
+ * existence: a row added before record-frightened captured nothing (the
+ * annotation did not exist), and without this pass its chip would fall back
+ * to the live seed FOREVER — a later row's tap would move the earlier row,
+ * breaking the per-row guarantee. The first evaluation on which a toggle
+ * reaches a row initializes its selection from the current seed; later
+ * evaluations no-op (the value is set). The seed fallback then only serves
+ * the picker, which is its intended audience.
+ */
+function ensurePlannedToggleSelections(): void {
+  const annotations = state.engineOutput?.annotations ?? [];
+  const toggles = annotations.filter((a) => a.toggle !== undefined);
+  if (toggles.length === 0) return;
+
+  let changed = false;
+  const items = state.plannedItems.map((item) => {
+    const labels = getAnnotationLabels(item.rule.ui);
+    if (labels.length === 0) return item;
+    const captures = captureToggleSelections(labels, state.facts, toggles);
+    if (Object.keys(captures).length === 0) return item;
+    const selections = { ...(item.rule.selections ?? {}) };
+    for (const [fact, value] of Object.entries(captures)) {
+      if (selections[fact] !== undefined) continue; // already frozen
+      selections[fact] = value;
+      changed = true;
+    }
+    return changed ? { ...item, rule: { ...item.rule, selections } } : item;
+  });
+  if (changed) {
+    state = { ...state, plannedItems: items };
+  }
 }
 
 /**
@@ -1046,41 +1082,45 @@ function getDependents(ruleGroupId: string): string[] {
   return dependents;
 }
 
-// Serialized + coalesced effect saves. Rapid commits (LoS chip taps) must
-// never interleave: the API's DynamoDB SET is unconditional, so an earlier
-// unawaited request landing LAST would persist a stale list and a reload
-// would restore the opposite state. One save in flight at a time; further
-// persistCommitted calls coalesce into a single queued save that always
-// snapshots the LATEST committed state when it starts.
-let effectSaveInFlight = false;
-let effectSaveQueued = false;
+// Serialized + coalesced effect saves, scoped per character. Rapid commits
+// (LoS chip taps) must never interleave: the API's DynamoDB SET is
+// unconditional, so an earlier unawaited request landing LAST would persist
+// a stale list and a reload would restore the opposite state. Each call
+// records the LATEST snapshot under its OWN character id at call time — a
+// switch to another character mid-drain cannot misroute the pending save or
+// drop it (the outgoing character's final state still lands). One save in
+// flight; later calls for the same character overwrite their slot (coalesce
+// to the latest).
+const pendingEffectSaves: Record<string, string> = {};
+let effectSaveDraining = false;
 
 function persistCommitted(): void {
   if (!state.currentCharacterId) return;
-  effectSaveQueued = true;
-  if (effectSaveInFlight) return;
+  pendingEffectSaves[state.currentCharacterId] = JSON.stringify(state.committed);
+  if (effectSaveDraining) return;
+  effectSaveDraining = true;
   void drainEffectSaves();
 }
 
 async function drainEffectSaves(): Promise<void> {
-  while (effectSaveQueued) {
-    effectSaveQueued = false;
-    if (!state.currentCharacterId) return;
-    effectSaveInFlight = true;
-    const characterId = state.currentCharacterId;
-    const snapshot = JSON.stringify(state.committed);
-    try {
-      const response = await apiPost(`/api/characters/${characterId}/effects`, {
-        effects: snapshot
-      });
-      if (!response.ok) {
+  try {
+    while (Object.keys(pendingEffectSaves).length > 0) {
+      const characterId = Object.keys(pendingEffectSaves)[0];
+      const snapshot = pendingEffectSaves[characterId];
+      delete pendingEffectSaves[characterId];
+      try {
+        const response = await apiPost(`/api/characters/${characterId}/effects`, {
+          effects: snapshot
+        });
+        if (!response.ok) {
+          toast.error(get(t)('play.error.saveEffects'));
+        }
+      } catch {
         toast.error(get(t)('play.error.saveEffects'));
       }
-    } catch {
-      toast.error(get(t)('play.error.saveEffects'));
-    } finally {
-      effectSaveInFlight = false;
     }
+  } finally {
+    effectSaveDraining = false;
   }
 }
 
