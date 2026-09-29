@@ -615,6 +615,7 @@ function removeFromPlan(instanceId: string): void {
   // earned. The eviction mirrors chip dismissal (removeEffect's dependents
   // pass), on the plan side — which is what lets the chip render for a merely
   // PLANNED condition instead of gating on commitment.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity -- function-local scratch, read once below
   const dependentKeys = new Set<string>();
   for (const effect of getPlannedEntry(instanceId)?.advertisedEffects ?? []) {
     for (const key of effect.dependents ?? []) dependentKeys.add(key);
