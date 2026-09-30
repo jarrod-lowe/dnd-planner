@@ -7,7 +7,10 @@ description: >-
   effects while it is live. The recorder models BEING KNOCKED prone, so it is
   free and ungated (the voluntary choice is the separate drop-prone offer; see
   condition-prone-drop), and any rest clears it (untilShortRest covers both
-  rest kinds; see condition-prone-rest-clears).
+  rest kinds; see condition-prone-rest-clears). An attribution chip (a
+  valueless rider, the GWF idiom) names WHY the attack dice-lines default to
+  2d20-take-low: it targets attack.any so every weapon and unarmed panel
+  carries the explanation, and its label rides the roll toast.
 ruleGroups:
   - dnd-5e-2024/condition-prone
 steps:
@@ -21,6 +24,7 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-prone.notice
+            - rule.dnd-5e-2024.condition-prone.disadvantage
   - addOffer:
       id: record-prone
       assert:
@@ -31,6 +35,15 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-prone.notice
+            - rule.dnd-5e-2024.condition-prone.disadvantage
           targets:
             - key: rule.dnd-5e-2024.condition-prone.notice
               targets: [notice]
+            - key: rule.dnd-5e-2024.condition-prone.disadvantage
+              targets: [attack.any]
+          riders:
+            - key: rule.dnd-5e-2024.condition-prone.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.condition-prone.rider
+                type: modifier
+                appliesTo: to-hit

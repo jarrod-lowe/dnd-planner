@@ -15,7 +15,10 @@ description: >-
   unscoped); Movable/drag stays notice text. The recorder models BEING
   GRAPPLED (imposed by an enemy effect), so it is free and ungated (the prone
   "Knocked Prone" precedent), and any rest clears it (untilShortRest; see
-  condition-grappled-rest-clears).
+  condition-grappled-rest-clears). An attribution chip (a valueless rider,
+  the GWF idiom) names WHY the attack dice-lines default to 2d20-take-low: it
+  targets attack.any so every weapon and unarmed panel carries the
+  explanation, and its label rides the roll toast.
 ruleGroups:
   - species-human/species-human
   - dnd-5e-2024/movement
@@ -34,6 +37,7 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-grappled.notice
+            - rule.dnd-5e-2024.condition-grappled.disadvantage
   - addOffer:
       id: record-grappled
       assert:
@@ -55,6 +59,15 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-grappled.notice
+            - rule.dnd-5e-2024.condition-grappled.disadvantage
           targets:
             - key: rule.dnd-5e-2024.condition-grappled.notice
               targets: [notice]
+            - key: rule.dnd-5e-2024.condition-grappled.disadvantage
+              targets: [attack.any]
+          riders:
+            - key: rule.dnd-5e-2024.condition-grappled.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.condition-grappled.rider
+                type: modifier
+                appliesTo: to-hit

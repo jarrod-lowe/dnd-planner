@@ -138,6 +138,31 @@ const conditionFrightened: RuleModule = {
               labelOff: `${CF}.los.out-of-sight`,
               appliesTo: ['to-hit', 'check']
             }
+          },
+          {
+            // Attribution chips (the GWF valueless-rider idiom): explains what
+            // the LoS chip FORCES — no flags exist to explain it. ONE
+            // standing-QUALIFIED sentence per D20 Test kind (the Exhaustion
+            // one-per-kind precedent), never a seed-flipped variant: rows
+            // capture their own sight value while the seed feeds forward, and
+            // annotation text sees only global facts, so a flipped key would
+            // contradict a row whose capture differs from the seed. The
+            // per-row truth stays the toggle's job (its pressed state reads
+            // the row's capture); the notice body DOES flip because the strip
+            // speaks about the condition going forward, not about any row.
+            // check.any scopes the ability checks (never dice.any — saves are
+            // not disadvantaged); dice.initiative joins it because the
+            // initiative panel carries no check label, yet the LoS TOGGLE
+            // reaches it through dice.any (its die is purpose 'check'), so
+            // Frightened disadvantages Initiative like any other Dex check.
+            key: `${CF}.disadvantage`,
+            targets: ['attack.any'],
+            rider: { label: `${CF}.rider`, type: 'modifier', appliesTo: 'to-hit' }
+          },
+          {
+            key: `${CF}.disadvantage-checks`,
+            targets: ['check.any', 'dice.initiative'],
+            rider: { label: `${CF}.rider`, type: 'modifier', appliesTo: 'check' }
           }
         ]
       : []

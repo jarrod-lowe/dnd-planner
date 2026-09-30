@@ -13,7 +13,7 @@ steps:
         offerUi:
           - id: record-check
             ui:
-              annotationLabels: [dice.any]
+              annotationLabels: [check.any, dice.any]
               primaryControl:
                 type: dice-line
                 dice:

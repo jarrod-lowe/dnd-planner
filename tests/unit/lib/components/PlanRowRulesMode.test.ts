@@ -40,7 +40,10 @@ vi.mock('$lib/details/index', () => ({
 }));
 
 // Mock annotations
-vi.mock('$lib/play/annotations', () => ({
+vi.mock('$lib/play/annotations', async (importOriginal) => ({
+  // Only the matcher is stubbed; the pure helpers (riderToastLabels, …) stay
+  // real so handleDiceRoll's toast path keeps working under this mock.
+  ...(await importOriginal<typeof import('$lib/play/annotations')>()),
   getMatchingAnnotations: vi.fn(() => [])
 }));
 

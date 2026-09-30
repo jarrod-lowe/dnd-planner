@@ -124,6 +124,25 @@ const conditionPoisoned: RuleModule = {
             targets: ['notice'],
             source: `${CP}.effect-poisoned.name`,
             body: `${CP}.notice.body`
+          },
+          {
+            // Attribution chips (the GWF valueless-rider idiom): names WHY the
+            // affected dice-lines default to 2d20-take-low — one per D20 Test
+            // kind (the Exhaustion precedent), because appliesTo is
+            // single-purpose. No `value` → text chips on the matched panels
+            // plus the toast labels; the flags themselves are unchanged.
+            // check.any scopes the ability checks WITHOUT dice.any — the save
+            // recorders carry dice.any too, and saves are the one D20 Test
+            // Poisoned does not touch. Initiative is a Dexterity check, hence
+            // dice.initiative (its die is purpose 'check').
+            key: `${CP}.disadvantage`,
+            targets: ['attack.any'],
+            rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'to-hit' }
+          },
+          {
+            key: `${CP}.disadvantage-checks`,
+            targets: ['check.any', 'dice.initiative'],
+            rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'check' }
           }
         ]
       : []

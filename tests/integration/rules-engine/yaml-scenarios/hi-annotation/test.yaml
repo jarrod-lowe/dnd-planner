@@ -48,7 +48,7 @@ steps:
         offerUi:
           - id: record-check
             ui:
-              annotationLabels: [dice.any]
+              annotationLabels: [check.any, dice.any]
           - id: record-save-wis
             ui:
               annotationLabels: [save.any, save.wis, dice.any]

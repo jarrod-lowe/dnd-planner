@@ -93,6 +93,29 @@ const conditionInvisible: RuleModule = {
             targets: ['notice'],
             source: `${CI}.effect-invisible.name`,
             body: `${CI}.notice.body`
+          },
+          {
+            // Attribution chips, the ADVANTAGE polarity (the GWF
+            // valueless-rider idiom): names WHY the dice-lines default to
+            // 2d20-take-high via their advantageUp leg — one per D20 Test kind
+            // (the Exhaustion one-per-kind precedent), because appliesTo is
+            // single-purpose. No `value` → text chips on the matched panels
+            // plus the toast labels; the flags themselves are unchanged.
+            // attack.any (weapons + unarmed) and dice.initiative — exactly the
+            // two tests the effect raises (the initiative die is purpose
+            // 'check'). The attack chip's TEXT carries the sight exception
+            // (SRD "if a creature can somehow see you, you don't gain this
+            // benefit against that creature" — sight is unmodelled, so the
+            // player overrides the mode by hand); Initiative's Surprise has
+            // no exception.
+            key: `${CI}.advantage`,
+            targets: ['attack.any'],
+            rider: { label: `${CI}.rider`, type: 'modifier', appliesTo: 'to-hit' }
+          },
+          {
+            key: `${CI}.advantage-initiative`,
+            targets: ['dice.initiative'],
+            rider: { label: `${CI}.rider`, type: 'modifier', appliesTo: 'check' }
           }
         ]
       : []

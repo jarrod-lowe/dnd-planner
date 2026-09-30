@@ -8,7 +8,11 @@ description: >-
   condition's standing effect while it is live. The recorder models BEING
   POISONED (imposed by an enemy effect), so it is free and ungated (the prone
   "Knocked Prone" precedent), and any rest clears it (untilShortRest covers
-  both rest kinds; see condition-poisoned-rest-clears).
+  both rest kinds; see condition-poisoned-rest-clears). An attribution chip
+  (a valueless rider, the GWF idiom) names WHY the affected dice-lines default
+  to 2d20-take-low: attack.any (weapons + unarmed), check.any (the 18 skill
+  rollers + record-check — never dice.any, which would leak onto saves), and
+  dice.initiative.
 ruleGroups:
   - dnd-5e-2024/condition-poisoned
 steps:
@@ -22,6 +26,7 @@ steps:
         annotations:
           notExists:
             - rule.dnd-5e-2024.condition-poisoned.notice
+            - rule.dnd-5e-2024.condition-poisoned.disadvantage
   - addOffer:
       id: record-poisoned
       assert:
@@ -34,6 +39,23 @@ steps:
         annotations:
           exists:
             - rule.dnd-5e-2024.condition-poisoned.notice
+            - rule.dnd-5e-2024.condition-poisoned.disadvantage
+            - rule.dnd-5e-2024.condition-poisoned.disadvantage-checks
           targets:
             - key: rule.dnd-5e-2024.condition-poisoned.notice
               targets: [notice]
+            - key: rule.dnd-5e-2024.condition-poisoned.disadvantage
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.condition-poisoned.disadvantage-checks
+              targets: [check.any, dice.initiative]
+          riders:
+            - key: rule.dnd-5e-2024.condition-poisoned.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.condition-poisoned.rider
+                type: modifier
+                appliesTo: to-hit
+            - key: rule.dnd-5e-2024.condition-poisoned.disadvantage-checks
+              rider:
+                label: rule.dnd-5e-2024.condition-poisoned.rider
+                type: modifier
+                appliesTo: check

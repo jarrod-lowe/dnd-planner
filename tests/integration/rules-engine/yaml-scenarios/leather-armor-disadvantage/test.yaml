@@ -1,5 +1,10 @@
 name: 'Leather Armor Disadvantage'
-description: 'Disadvantage applies and spellcasting blocked when not proficient with light armor'
+description: >-
+  Disadvantage applies and spellcasting blocked when not proficient with light
+  armor. An attribution chip (a valueless rider, the GWF idiom) names WHY the
+  affected dice-lines default to 2d20-take-low — targets exactly the panels
+  the penalty facts govern; the generic record-check reads no armor fact, so
+  it neither rolls low nor carries the chip.
 ruleGroups:
   - dnd-5e-2024/ac
   - dnd-5e-2024/ability-scores
@@ -17,6 +22,9 @@ steps:
         offers:
           exists:
             - don-leather-armor
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.armor-training.disadvantage
   # Don leather armor — disadvantage on STR/DEX checks and spellcasting block apply
   - addOffer:
       id: don-leather-armor
@@ -31,3 +39,30 @@ steps:
           skill.sleight-of-hand.disadvantage: 1
           skill.stealth.disadvantage: 1
           spellcasting.remaining: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.armor-training.disadvantage
+            - rule.dnd-5e-2024.armor-training.disadvantage-checks
+          targets:
+            - key: rule.dnd-5e-2024.armor-training.disadvantage
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.armor-training.disadvantage-checks
+              targets:
+                [
+                  dice.initiative,
+                  check.acrobatics,
+                  check.athletics,
+                  check.sleight-of-hand,
+                  check.stealth
+                ]
+          riders:
+            - key: rule.dnd-5e-2024.armor-training.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.armor-training.rider
+                type: modifier
+                appliesTo: to-hit
+            - key: rule.dnd-5e-2024.armor-training.disadvantage-checks
+              rider:
+                label: rule.dnd-5e-2024.armor-training.rider
+                type: modifier
+                appliesTo: check

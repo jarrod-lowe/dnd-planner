@@ -187,6 +187,19 @@ const conditionProne: RuleModule = {
             source: `${CP}.effect-prone.name`,
             body: `${CP}.notice.body`,
             values: { cost: f.num('character.movement.half_speed') }
+          },
+          {
+            // Attribution chip (the GWF valueless-rider idiom): names WHY the
+            // attack dice-lines default to 2d20-take-low. No `value` → a text
+            // chip on the matched panels plus the toast label; the flags
+            // themselves are unchanged. attack.any reaches every weapon and
+            // unarmed panel; Unconscious (which writes condition.prone)
+            // inherits the chip — accurate, it IS prone. appliesTo scopes the
+            // toast label to the to-hit die (attack.any is a PANEL label, so
+            // without it the label would ride the damage toast too).
+            key: `${CP}.disadvantage`,
+            targets: ['attack.any'],
+            rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'to-hit' }
           }
         ]
       : []

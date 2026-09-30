@@ -246,6 +246,53 @@ Note it pairs with a plain reminder, not with a **valued** rider: an annotation
 carrying `rider.value` is rendered as a dice-line toggle chip instead of a text
 chip, and a toggle has nowhere to put the add affordance.
 
+### `annotate` — attribution chips (the valueless rider)
+
+A rider with NO `value` is purely informational (`AnnotationRider.value`'s
+documented contract): it renders as a text chip on every matched panel AND its
+`label` rides the roll toast/roll-log modifier list — scoped to the rolled
+die's purpose by `appliesTo` (a weapon panel matches `attack.any` as a PANEL
+label, so without it an attack attribution would ride the damage toast too).
+That is the attribution idiom — naming WHY a roll mode changed (the
+conditions' "imposes disadvantage" chips are the reference implementations;
+GWF was first). `appliesTo` is single-purpose, so a multi-surface source emits
+ONE CHIP PER D20 TEST KIND (the Exhaustion precedent):
+
+```ts
+annotate: (f) =>
+  f.num('condition.poisoned') > 0
+    ? [
+        // … the notice …
+        {
+          key: `${CP}.disadvantage`, // the chip sentence, i18n
+          targets: ['attack.any'],
+          // No `value` — never a modifier chip.
+          rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'to-hit' }
+        },
+        {
+          key: `${CP}.disadvantage-checks`,
+          targets: ['check.any', 'dice.initiative'], // Initiative is a Dex check
+          rider: { label: `${CP}.rider`, type: 'modifier', appliesTo: 'check' }
+        }
+      ]
+    : [];
+```
+
+The PANEL scope is the `targets` list (a valueless rider has no purpose filter
+there) — scope with the specific roller labels and never `dice.any` (it
+reaches every dice panel, including saves the source does not touch):
+
+| Roll surface                   | Labels                             |
+| ------------------------------ | ---------------------------------- |
+| Weapons + unarmed              | `attack.any` (+ per-weapon labels) |
+| Save recorders / concentration | `save.any`, `save.<ability>`       |
+| Skill rollers + record-check   | `check.any`, `check.<skill>`       |
+| Roll Initiative                | `dice.initiative`                  |
+| Any roller (reroll riders)     | `dice.any`                         |
+
+Chips state what the source imposes, not the final roll mode — when advantage
+and disadvantage cancel, both chips stay, each independently true.
+
 ### Effects
 
 - Per-turn spends: keyless, `expiry: { kind: 'endOfTurn' }`.

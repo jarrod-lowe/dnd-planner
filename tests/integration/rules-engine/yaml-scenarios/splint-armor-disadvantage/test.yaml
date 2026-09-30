@@ -1,5 +1,10 @@
 name: 'Splint Armor Disadvantage'
-description: 'Disadvantage applies, Stealth always disadvantaged, spellcasting blocked when not proficient with heavy armor'
+description: >-
+  Disadvantage applies, Stealth always disadvantaged, spellcasting blocked when
+  not proficient with heavy armor. The untrained attribution chip (a valueless
+  rider, the GWF idiom) names WHY the affected dice-lines default to
+  2d20-take-low; the unconditional proficient-worn Stealth disadvantage is a
+  separate source and stays un-chipped.
 ruleGroups:
   - dnd-5e-2024/ac
   - dnd-5e-2024/ability-scores
@@ -17,6 +22,9 @@ steps:
         offers:
           exists:
             - don-splint-armor
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.armor-training.disadvantage
   # Don splint armor -- disadvantage on STR/DEX checks, always Stealth disadvantage, spellcasting block
   - addOffer:
       id: don-splint-armor
@@ -32,3 +40,30 @@ steps:
           skill.sleight-of-hand.disadvantage: 1
           skill.stealth.disadvantage: 1
           spellcasting.remaining: 0
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.armor-training.disadvantage
+            - rule.dnd-5e-2024.armor-training.disadvantage-checks
+          targets:
+            - key: rule.dnd-5e-2024.armor-training.disadvantage
+              targets: [attack.any]
+            - key: rule.dnd-5e-2024.armor-training.disadvantage-checks
+              targets:
+                [
+                  dice.initiative,
+                  check.acrobatics,
+                  check.athletics,
+                  check.sleight-of-hand,
+                  check.stealth
+                ]
+          riders:
+            - key: rule.dnd-5e-2024.armor-training.disadvantage
+              rider:
+                label: rule.dnd-5e-2024.armor-training.rider
+                type: modifier
+                appliesTo: to-hit
+            - key: rule.dnd-5e-2024.armor-training.disadvantage-checks
+              rider:
+                label: rule.dnd-5e-2024.armor-training.rider
+                type: modifier
+                appliesTo: check

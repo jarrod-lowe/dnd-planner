@@ -368,7 +368,9 @@ const coreEvents: RuleModule = {
       ui: {
         section: 'free',
         name: 'planner.record.check',
-        annotationLabels: ['dice.any'],
+        // The skill rollers' label scheme: check.any scopes check-wide
+        // attribution chips (Poisoned) without leaking them onto saves.
+        annotationLabels: ['check.any', 'dice.any'],
         primaryControl: {
           type: 'dice-line',
           dice: [{ sides: 20, purpose: 'check' }],
