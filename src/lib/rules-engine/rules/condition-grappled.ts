@@ -98,7 +98,10 @@ const conditionGrappled: RuleModule = {
             // attack dice-lines default to 2d20-take-low. No `value` → a text
             // chip on the matched panels plus the toast label; the flags
             // themselves are unchanged. appliesTo keeps the toast label off
-            // the weapon panel's damage die.
+            // the weapon panel's damage die. The chip TEXT carries the
+            // grappler exception (SRD "any target other than the grappler" —
+            // target identity is unmodelled, so the player overrides the mode
+            // against the grappler by hand); the FLAGS stay unscoped.
             key: `${CG}.disadvantage`,
             targets: ['attack.any'],
             rider: { label: `${CG}.rider`, type: 'modifier', appliesTo: 'to-hit' }

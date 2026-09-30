@@ -103,7 +103,11 @@ const conditionInvisible: RuleModule = {
             // plus the toast labels; the flags themselves are unchanged.
             // attack.any (weapons + unarmed) and dice.initiative — exactly the
             // two tests the effect raises (the initiative die is purpose
-            // 'check').
+            // 'check'). The attack chip's TEXT carries the sight exception
+            // (SRD "if a creature can somehow see you, you don't gain this
+            // benefit against that creature" — sight is unmodelled, so the
+            // player overrides the mode by hand); Initiative's Surprise has
+            // no exception.
             key: `${CI}.advantage`,
             targets: ['attack.any'],
             rider: { label: `${CI}.rider`, type: 'modifier', appliesTo: 'to-hit' }

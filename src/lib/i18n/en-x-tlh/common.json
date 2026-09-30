@@ -1082,7 +1082,7 @@
         },
         "notice": "qop",
         "notice.body": "Do'lIj chIm 'ej DublaHbe'. qopwI' DIch latlh HIvchugh DIvI' ngor Daghu'nIS. qopwI' vIHDI' SoH qenglaH 'ej wa' qejvam wa' qejvam yInob, mongHom SoH pagh nIvbe'chugh.",
-        "disadvantage": "qop: HIv Daghu'taHvIS DIvI' ngor",
+        "disadvantage": "qop: qopwI' DIch latlh HIv Daghu'DI' DIvI' ngor",
         "rider": "qop"
       },
       "condition-restrained": {
@@ -1137,7 +1137,7 @@
         },
         "notice": "So'lu'pu'",
         "notice.body": "bIHIvmeH HIvlIj 'ej DujlIj nIv ghaH. SoH HIvmeH HIv nIvHa' ghaH (SoH leghlaHbogh SuvwI' lururbe'). SoH 'ej SepmeylIj So'lu'taH, leghlu'meH Qu'mey HuSmoH. Qong Hoch qaSchoHDI' rIn.",
-        "advantage": "So'lu'pu': HIv Daghu'meH nIv DalSuq",
+        "advantage": "So'lu'pu': HIv Daghu'meH nIv DalSuq — SoH leghlaHbogh Doch DIch nIv tu'lu'be'",
         "advantage-initiative": "So'lu'pu': chuwI' Daghu'meH nIv DalSuq",
         "rider": "So'lu'pu'"
       },
