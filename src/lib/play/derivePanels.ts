@@ -1,6 +1,12 @@
 import type { Facts } from '$lib/rules-view';
-import { HIT_DIE_SIZES } from '$lib/rules-engine';
-import { type UiEntry, isUiEntry } from './extractTopBar';
+import {
+  HIT_DIE_SIZES,
+  gateHolds,
+  isUiEntry,
+  type RuleModule,
+  type SubjectPanel,
+  type UiEntry
+} from '$lib/rules-engine';
 
 /**
  * The facts-driven top-bar / resources catalog.
@@ -19,6 +25,11 @@ import { type UiEntry, isUiEntry } from './extractTopBar';
  * character-sheet sections (`magic` spell slots, `abilities`, `stats`, `skills`,
  * `passive`) have their own extractor and are out of scope here — this covers the
  * play-mode top bar + resources panel.
+ *
+ * SUBJECT (companion / vehicle) entries are NOT catalogued here: their modules
+ * declare them as data (`module.panels`), and `declaredEntries` below aggregates
+ * those declarations generically — adding a subject is a declaration on its
+ * module, never a change to this catalog.
  */
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
@@ -145,130 +156,6 @@ const RESOURCES: UiEntry[] = [
   }
 ];
 
-/**
- * Steed (companion) top-bar catalog — the same chips the player gets, minus
- * concentration (a steed never concentrates). Entries carry `subject: 'steed'`
- * so IntentTopBar surfaces them only while the steed view is active.
- */
-const STEED_TOP_BAR: { gate: string; entry: UiEntry }[] = [
-  {
-    gate: 'companion.steed.hp.max',
-    entry: {
-      type: 'usedMax',
-      label: 'play.topBar.hp',
-      total: 'companion.steed.hp.max',
-      remaining: 'companion.steed.hp.current',
-      subject: 'steed'
-    }
-  },
-  {
-    gate: 'companion.steed.ac.value',
-    entry: {
-      type: 'value',
-      label: 'play.topBar.ac',
-      fact: 'companion.steed.ac.value',
-      subject: 'steed'
-    }
-  },
-  {
-    // The modified total (base ×2 while Dashed), matching the player chip.
-    gate: 'companion.steed.movement.total',
-    entry: {
-      type: 'value',
-      label: 'play.topBar.speed',
-      fact: 'companion.steed.movement.total',
-      subject: 'steed'
-    }
-  },
-  {
-    gate: 'companion.steed.str.modifier',
-    entry: {
-      type: 'ability',
-      label: 'play.topBar.abilities',
-      // No proficiencyFact: a steed has no save proficiencies, so find-steed
-      // derives each `.save` as its plain `.modifier`.
-      abilities: ABILITIES.map((a) => ({
-        name: `play.stats.${a}`,
-        fact: `companion.steed.${a}.modifier`,
-        saveFact: `companion.steed.${a}.save`
-      })),
-      subject: 'steed'
-    }
-  }
-];
-
-/**
- * Steed (companion) resources — shown in the ledger under the 'steed' subject view
- * (the Ledger filters `entry.subject === activeSubject`). Surface only when a steed
- * is summoned (its derives are present).
- */
-const STEED_CORE: { label: string; total: string; remaining: string }[] = [
-  {
-    label: 'play.stats.steed.hp',
-    total: 'companion.steed.hp.max',
-    remaining: 'companion.steed.hp.current'
-  },
-  {
-    label: 'play.stats.steed.movement',
-    total: 'companion.steed.movement.total',
-    remaining: 'companion.steed.movement.remaining'
-  }
-];
-
-/** creatureType (0/1/2) → its once-per-rest special-ability pool (only the match shows). */
-const STEED_ABILITY_BY_TYPE: Record<number, { pool: string; label: string }> = {
-  0: { pool: 'healingTouch', label: 'play.stats.steed.healingTouch' },
-  1: { pool: 'feyStep', label: 'play.stats.steed.feyStep' },
-  2: { pool: 'fellGlare', label: 'play.stats.steed.fellGlare' }
-};
-
-function deriveSteedResources(facts: Facts): UiEntry[] {
-  const entries: UiEntry[] = STEED_CORE.filter((e) => present(facts, e.total)).map((e) => ({
-    type: 'usedMax',
-    label: e.label,
-    total: e.total,
-    remaining: e.remaining,
-    subject: 'steed'
-  }));
-  // A steed can have actions-only, bonusActions-only, or both, so gate on the disjunction.
-  const hasActions = present(facts, 'companion.steed.actions.max');
-  const hasBonusActions = present(facts, 'companion.steed.bonusActions.max');
-  if (hasActions || hasBonusActions) {
-    entries.push({
-      type: 'actionPools',
-      label: 'play.stats.steed.actions',
-      subject: 'steed',
-      factPrefix: 'companion.steed.',
-      pools: [
-        {
-          key: 'actions',
-          label: 'play.stats.steed.actions',
-          shortLabel: 'play.ledger.short.steed.actions',
-          tile: 'play.economy.tile.actions'
-        },
-        {
-          key: 'bonusActions',
-          label: 'play.stats.steed.bonusActions',
-          shortLabel: 'play.ledger.short.steed.bonusActions',
-          tile: 'play.economy.tile.bonusActions'
-        }
-      ]
-    });
-  }
-  const ct = facts['companion.steed.creatureType'];
-  const ability = typeof ct === 'number' ? STEED_ABILITY_BY_TYPE[ct] : undefined;
-  if (ability && present(facts, `companion.steed.${ability.pool}.total`)) {
-    entries.push({
-      type: 'usedMax',
-      label: ability.label,
-      total: `companion.steed.${ability.pool}.total`,
-      remaining: `companion.steed.${ability.pool}.remaining`,
-      subject: 'steed'
-    });
-  }
-  return entries;
-}
-
 /** Canonical display order. Kept identical to the copy in `extractTopBar.ts`. */
 const UI_ENTRY_TYPE_ORDER: Record<string, number> = {
   usedMax: 0,
@@ -289,16 +176,41 @@ function sortEntries(entries: UiEntry[]): UiEntry[] {
   );
 }
 
-/** The play top-bar entries for the current facts (owning module loaded ⇒ present). */
-export function deriveTopBarEntries(facts: Facts): UiEntry[] {
-  const entries = [...TOP_BAR, ...STEED_TOP_BAR]
-    .filter(({ gate }) => present(facts, gate))
-    .map(({ entry }) => entry);
+/**
+ * Entries the LOADED modules declare for their subjects (`module.panels`) —
+ * the generic companion / vehicle surface. An entry surfaces when its gate
+ * holds in the evaluated facts; the declaration's `subject` is stamped onto
+ * the emitted entry so the subject-filtering UI (top bar, ledger) needs no
+ * per-subject knowledge. Declarations ride their module (eager registry or
+ * lazy chunk), so they arrive exactly when the module does.
+ */
+function declaredEntries(facts: Facts, modules: RuleModule[], panel: SubjectPanel): UiEntry[] {
+  const entries: UiEntry[] = [];
+  for (const module of modules) {
+    for (const declaration of module.panels ?? []) {
+      if (declaration.panel !== panel || !gateHolds(facts, declaration.gate)) continue;
+      if (isUiEntry(declaration.entry))
+        entries.push({ ...declaration.entry, subject: declaration.subject });
+    }
+  }
+  return entries;
+}
+
+/**
+ * The play top-bar entries for the current facts (owning module loaded ⇒
+ * present), plus the subject entries the loaded modules declare.
+ */
+export function deriveTopBarEntries(facts: Facts, modules: RuleModule[] = []): UiEntry[] {
+  const entries = TOP_BAR.filter(({ gate }) => present(facts, gate)).map(({ entry }) => entry);
+  entries.push(...declaredEntries(facts, modules, 'topBar'));
   return sortEntries(entries);
 }
 
-/** The resources-panel entries for the current facts (incl. the class hit die). */
-export function deriveResourceEntries(facts: Facts): UiEntry[] {
+/**
+ * The resources-panel entries for the current facts (incl. the class hit die),
+ * plus the subject entries the loaded modules declare.
+ */
+export function deriveResourceEntries(facts: Facts, modules: RuleModule[] = []): UiEntry[] {
   const entries: UiEntry[] = RESOURCES.filter(
     (e) =>
       (e.type === 'usedMax' && present(facts, e.total)) ||
@@ -338,7 +250,7 @@ export function deriveResourceEntries(facts: Facts): UiEntry[] {
       fact: 'heroicInspiration.remaining'
     });
   }
-  // Steed resources ride along under the 'steed' subject (Ledger filters by subject).
-  entries.push(...deriveSteedResources(facts));
+  // Subject resources ride along under their subject (Ledger filters by subject).
+  entries.push(...declaredEntries(facts, modules, 'resources'));
   return sortEntries(entries.filter(isUiEntry));
 }

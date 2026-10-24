@@ -21,7 +21,8 @@ import type { UiEntry } from './extractTopBar';
  * the engine and returns everything the UI consumes, already adapted —
  *  - `availableRules` (the offer catalog — already view-shaped),
  *  - `plannedEntries` (per-instance legality folded on, via the W1 adapter),
- *  - `topBarEntries` / `resourceEntries` (the facts-driven panels, `derivePanels`),
+ *  - `topBarEntries` / `resourceEntries` (the facts-driven panels, `derivePanels`:
+ *    the player catalog plus whatever subject entries the loaded modules declare),
  *  - `advertised` (the effects to commit at end of turn),
  *  - `facts`.
  * Pure given the modules; unit-tested with the real rule modules.
@@ -51,8 +52,8 @@ export function evaluateCharacter(
     facts: output.facts,
     availableRules: output.availableRules,
     plannedEntries: plannedEntries(output, planned),
-    topBarEntries: deriveTopBarEntries(output.facts),
-    resourceEntries: deriveResourceEntries(output.facts),
+    topBarEntries: deriveTopBarEntries(output.facts, modules),
+    resourceEntries: deriveResourceEntries(output.facts, modules),
     advertised: output.effects,
     raw: output
   };

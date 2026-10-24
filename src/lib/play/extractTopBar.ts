@@ -1,102 +1,36 @@
 import type { Facts } from '$lib/rules-view';
+import { isUiEntry } from '$lib/rules-engine/panels';
+import type {
+  UiEntry,
+  UiEntryValue,
+  UiEntryConcentration,
+  UiEntryAbility,
+  UiEntryUsedMax,
+  UiEntryType
+} from '$lib/rules-engine/panels';
 import { deriveSlotLevels } from './slotLevels';
 import { deriveActionPools } from './actionPools';
 
 // ── Unified UI Entry Types ──
+//
+// The entry family (and its `isUiEntry` guard) lives in the rules engine
+// (`rules-engine/panels.ts`): rule modules declare subject entries as data on
+// the module, so the payload contract is engine-side. Re-exported here — the
+// play layer's historical import site — for the renderers and tests.
 
-export type UiEntryType =
-  | 'usedMax'
-  | 'value'
-  | 'modifier'
-  | 'hitDie'
-  | 'slotLevels'
-  | 'actionPools'
-  | 'concentration'
-  | 'ability';
-
-interface UiEntryBase {
-  label: string;
-  nameParams?: Record<string, unknown>;
-  subject?: string;
-}
-
-export interface UiEntryUsedMax extends UiEntryBase {
-  type: 'usedMax';
-  total: string;
-  remaining: string;
-}
-
-export interface UiEntryValue extends UiEntryBase {
-  type: 'value';
-  fact: string;
-}
-
-export interface UiEntryModifier extends UiEntryBase {
-  type: 'modifier';
-  fact: string;
-  proficiencyFact?: string;
-}
-
-export interface UiEntryHitDie extends UiEntryBase {
-  type: 'hitDie';
-  total: string;
-  remaining: string;
-  dieSize: number;
-}
-
-/**
- * Per-level spell slots, rendered as a row of tiles plus a breakdown tray.
- *
- * Only the level numbers are stored: the driving facts are
- * `spellcasting.slots.level{n}.total` / `.spent` by construction, exactly as
- * `hitDie` carries only its `dieSize`.
- */
-export interface UiEntrySlotLevels extends UiEntryBase {
-  type: 'slotLevels';
-  levels: number[];
-}
-
-/**
- * Per-pool action economy (Actions / Bonus Actions / Reactions), rendered as a
- * row of tiles plus a breakdown tray — the same display as `slotLevels`.
- *
- * `factPrefix` selects subject: '' (player) reads `actions.max` etc.;
- * 'companion.steed.' reads `companion.steed.actions.max` etc. Each pool carries
- * its own label (full, for the tray), shortLabel (compact, for tray rows), and tile
- * (single-letter i18n key, for cell tiles).
- */
-export interface UiEntryActionPools extends UiEntryBase {
-  type: 'actionPools';
-  /** Fact prefix: '' for the player, 'companion.steed.' for the steed. */
-  factPrefix: string;
-  pools: Array<{ key: string; label: string; shortLabel: string; tile: string }>;
-}
-
-export interface UiEntryConcentration extends UiEntryBase {
-  type: 'concentration';
-  activeLabel: string;
-  noneLabel: string;
-}
-
-export interface UiEntryAbility extends UiEntryBase {
-  type: 'ability';
-  abilities: Array<{
-    name: string;
-    fact: string;
-    saveFact?: string;
-    proficiencyFact?: string;
-  }>;
-}
-
-export type UiEntry =
-  | UiEntryUsedMax
-  | UiEntryValue
-  | UiEntryModifier
-  | UiEntryHitDie
-  | UiEntrySlotLevels
-  | UiEntryActionPools
-  | UiEntryConcentration
-  | UiEntryAbility;
+export type {
+  UiEntryType,
+  UiEntryUsedMax,
+  UiEntryValue,
+  UiEntryModifier,
+  UiEntryHitDie,
+  UiEntrySlotLevels,
+  UiEntryActionPools,
+  UiEntryConcentration,
+  UiEntryAbility,
+  UiEntry
+} from '$lib/rules-engine/panels';
+export { isUiEntry };
 
 // ── Backward-compat aliases (will be removed after migration) ──
 
@@ -112,88 +46,6 @@ export type TopBarAbilityEntry = UiEntryAbility;
 export type TopBarHpEntry = UiEntryUsedMax;
 /** @deprecated Use UiEntryType */
 export type TopBarDisplayType = UiEntryType;
-
-// ── Type Guard ──
-
-export function isUiEntry(entry: unknown): entry is UiEntry {
-  if (typeof entry !== 'object' || entry === null) return false;
-  const obj = entry as Record<string, unknown>;
-
-  if (obj.type === 'usedMax') {
-    return (
-      typeof obj.label === 'string' &&
-      typeof obj.total === 'string' &&
-      typeof obj.remaining === 'string'
-    );
-  }
-
-  if (obj.type === 'value') {
-    return typeof obj.label === 'string' && typeof obj.fact === 'string';
-  }
-
-  if (obj.type === 'modifier') {
-    if (typeof obj.label !== 'string') return false;
-    if (typeof obj.fact !== 'string') return false;
-    if (obj.proficiencyFact !== undefined && typeof obj.proficiencyFact !== 'string') return false;
-    return true;
-  }
-
-  if (obj.type === 'hitDie') {
-    return (
-      typeof obj.label === 'string' &&
-      typeof obj.total === 'string' &&
-      typeof obj.remaining === 'string' &&
-      typeof obj.dieSize === 'number'
-    );
-  }
-
-  if (obj.type === 'slotLevels') {
-    if (typeof obj.label !== 'string') return false;
-    if (!Array.isArray(obj.levels)) return false;
-    return obj.levels.every((level: unknown) => typeof level === 'number');
-  }
-
-  if (obj.type === 'actionPools') {
-    if (typeof obj.label !== 'string') return false;
-    if (typeof obj.factPrefix !== 'string') return false;
-    if (!Array.isArray(obj.pools)) return false;
-    return obj.pools.every(
-      (p: unknown) =>
-        typeof p === 'object' &&
-        p !== null &&
-        typeof (p as Record<string, unknown>).key === 'string' &&
-        typeof (p as Record<string, unknown>).label === 'string' &&
-        typeof (p as Record<string, unknown>).shortLabel === 'string' &&
-        typeof (p as Record<string, unknown>).tile === 'string'
-    );
-  }
-
-  if (obj.type === 'concentration') {
-    return (
-      typeof obj.label === 'string' &&
-      typeof obj.activeLabel === 'string' &&
-      typeof obj.noneLabel === 'string'
-    );
-  }
-
-  if (obj.type === 'ability') {
-    if (typeof obj.label !== 'string') return false;
-    if (!Array.isArray(obj.abilities)) return false;
-    return obj.abilities.every(
-      (a: unknown) =>
-        typeof a === 'object' &&
-        a !== null &&
-        typeof (a as Record<string, unknown>).name === 'string' &&
-        typeof (a as Record<string, unknown>).fact === 'string' &&
-        ((a as Record<string, unknown>).saveFact === undefined ||
-          typeof (a as Record<string, unknown>).saveFact === 'string') &&
-        ((a as Record<string, unknown>).proficiencyFact === undefined ||
-          typeof (a as Record<string, unknown>).proficiencyFact === 'string')
-    );
-  }
-
-  return false;
-}
 
 /** @deprecated Use isUiEntry */
 export const isTopBarEntry = isUiEntry;

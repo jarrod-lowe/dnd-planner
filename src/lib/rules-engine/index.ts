@@ -9,6 +9,22 @@
 // `loadModules` (lazy, dynamic-import based) is the runtime loader.
 export { evaluate, type EvaluateOptions } from './engine';
 export { defineRule, HIT_DIE_SIZES } from './builder';
+export { isUiEntry, gateHolds } from './panels';
+export type {
+  UiEntry,
+  UiEntryType,
+  UiEntryUsedMax,
+  UiEntryValue,
+  UiEntryModifier,
+  UiEntryHitDie,
+  UiEntrySlotLevels,
+  UiEntryActionPools,
+  UiEntryConcentration,
+  UiEntryAbility,
+  SubjectPanel,
+  SubjectPanelGate,
+  SubjectPanelDeclaration
+} from './panels';
 export { EngineTimeoutError, DEFAULT_BUDGET_MS } from './watchdog';
 export { evaluateSheet } from './sheet';
 export { evaluatePlan, type PlanResult } from './plan';

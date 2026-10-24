@@ -160,6 +160,25 @@ the add-picker grouping; `ui.actionCost` tags the cost chip;
 copy an existing offer with the control you need (slider: `movement`,
 dice-line: weapons via the builder, select: `skill-checks`).
 
+### `panels` — a subject's top-bar / resource entries
+
+A module whose rule group owns a SUBJECT (a companion or vehicle view, e.g.
+`find-steed`'s steed) declares that subject's play-panel entries as data on the
+module; `derivePanels` aggregates them generically and stamps the `subject`, so
+adding a subject never touches the play layer. Each entry carries the panel
+(`topBar` / `resources`), a gate, and a `UiEntry`-shaped payload (label i18n
+key + the facts it reads — no `subject` inside the entry). The gate is data:
+
+- `'companion.steed.hp.max'` — the entry surfaces when the fact is present;
+- `{ any: [ ... ] }` — when any listed fact is present;
+- `{ fact: 'companion.steed.creatureType', equals: 2 }` — when the fact holds
+  exactly that number (the creature-type ability pools: all three are baked,
+  only the matching type's row shows);
+- a LIST of gates is a conjunction.
+
+See `STEED_PANELS` in `rules/find-steed.ts` for a worked example, and
+`rules-engine/panels.ts` for the contract.
+
 ### `annotate` — reminders on other panels
 
 `annotate(f, committed)` returns `{ key, targets }` reminders that render on

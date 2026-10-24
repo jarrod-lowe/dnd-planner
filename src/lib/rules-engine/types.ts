@@ -7,6 +7,7 @@
  *
  * See docs/RULES_ENGINE_V2_PLAN.md.
  */
+import type { SubjectPanelDeclaration } from './panels';
 
 /** Flat fact store. Numeric; widened later if needed. */
 export type Facts = Record<string, number>;
@@ -121,6 +122,14 @@ export interface RuleModule {
   equip?: EquipDef;
   /** Prepared-spell declaration — present only on spells a character may prepare. See {@link PrepareDef}. */
   prepare?: PrepareDef;
+  /**
+   * Panel entries this module declares for its SUBJECT (a companion / vehicle
+   * view, e.g. the steed): pure display data — label keys plus the facts each
+   * entry reads, gated on the evaluated facts — that the play layer aggregates
+   * generically onto the top bar / resources ledger. Inert to the engine, like
+   * an offer's `ui`. See {@link SubjectPanelDeclaration} (panels.ts).
+   */
+  panels?: SubjectPanelDeclaration[];
   derive?: (ctx: SheetCtx) => Contribution[];
   offer?: (ctx: SheetCtx) => Offer[];
   /**

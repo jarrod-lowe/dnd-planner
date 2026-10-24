@@ -10,7 +10,8 @@ import {
   type FactReader,
   type Offer,
   type RuleModule,
-  type Section
+  type Section,
+  type SubjectPanelDeclaration
 } from '../builder';
 
 const LEVELS = [2, 3, 4, 5] as const;
@@ -560,6 +561,146 @@ function steedHpModifier(
 }
 
 /**
+ * The steed's panel entries — the data twin of the player's catalog chips,
+ * minus concentration (a steed never concentrates). Each entry surfaces when
+ * its gate holds in the evaluated facts; `derivePanels` stamps the `subject`
+ * and renders, so the steed's top bar / ledger rows are declared here rather
+ * than hardcoded in the play layer (a later companion declares its own the
+ * same way).
+ */
+const STEED_PANELS: SubjectPanelDeclaration[] = [
+  // ── Top bar (the player's chips, minus concentration) ──
+  {
+    subject: 'steed',
+    panel: 'topBar',
+    gate: 'companion.steed.hp.max',
+    entry: {
+      type: 'usedMax',
+      label: 'play.topBar.hp',
+      total: 'companion.steed.hp.max',
+      remaining: 'companion.steed.hp.current'
+    }
+  },
+  {
+    subject: 'steed',
+    panel: 'topBar',
+    gate: 'companion.steed.ac.value',
+    entry: { type: 'value', label: 'play.topBar.ac', fact: 'companion.steed.ac.value' }
+  },
+  {
+    // The modified total (base ×2 while Dashed), matching the player chip.
+    subject: 'steed',
+    panel: 'topBar',
+    gate: 'companion.steed.movement.total',
+    entry: { type: 'value', label: 'play.topBar.speed', fact: 'companion.steed.movement.total' }
+  },
+  {
+    subject: 'steed',
+    panel: 'topBar',
+    gate: 'companion.steed.str.modifier',
+    entry: {
+      type: 'ability',
+      label: 'play.topBar.abilities',
+      // No proficiencyFact: a steed has no save proficiencies, so find-steed
+      // derives each `.save` as its plain `.modifier`.
+      abilities: ABILITIES.map((a) => ({
+        name: `play.stats.${a}`,
+        fact: `companion.steed.${a}.modifier`,
+        saveFact: `companion.steed.${a}.save`
+      }))
+    }
+  },
+  // ── Resources (the ledger's steed view; surfaced only while summoned) ──
+  {
+    subject: 'steed',
+    panel: 'resources',
+    gate: 'companion.steed.hp.max',
+    entry: {
+      type: 'usedMax',
+      label: 'play.stats.steed.hp',
+      total: 'companion.steed.hp.max',
+      remaining: 'companion.steed.hp.current'
+    }
+  },
+  {
+    subject: 'steed',
+    panel: 'resources',
+    gate: 'companion.steed.movement.total',
+    entry: {
+      type: 'usedMax',
+      label: 'play.stats.steed.movement',
+      total: 'companion.steed.movement.total',
+      remaining: 'companion.steed.movement.remaining'
+    }
+  },
+  {
+    // A steed can have actions-only, bonusActions-only, or both, so gate on
+    // the disjunction.
+    subject: 'steed',
+    panel: 'resources',
+    gate: { any: ['companion.steed.actions.max', 'companion.steed.bonusActions.max'] },
+    entry: {
+      type: 'actionPools',
+      label: 'play.stats.steed.actions',
+      factPrefix: 'companion.steed.',
+      pools: [
+        {
+          key: 'actions',
+          label: 'play.stats.steed.actions',
+          shortLabel: 'play.ledger.short.steed.actions',
+          tile: 'play.economy.tile.actions'
+        },
+        {
+          key: 'bonusActions',
+          label: 'play.stats.steed.bonusActions',
+          shortLabel: 'play.ledger.short.steed.bonusActions',
+          tile: 'play.economy.tile.bonusActions'
+        }
+      ]
+    }
+  },
+  // All three creature-type ability pools are baked into the summon; only the
+  // matching type's row surfaces (its gate: the numeric creatureType AND the
+  // pool's own total).
+  {
+    subject: 'steed',
+    panel: 'resources',
+    gate: [
+      { fact: 'companion.steed.creatureType', equals: 0 },
+      'companion.steed.healingTouch.total'
+    ],
+    entry: {
+      type: 'usedMax',
+      label: 'play.stats.steed.healingTouch',
+      total: 'companion.steed.healingTouch.total',
+      remaining: 'companion.steed.healingTouch.remaining'
+    }
+  },
+  {
+    subject: 'steed',
+    panel: 'resources',
+    gate: [{ fact: 'companion.steed.creatureType', equals: 1 }, 'companion.steed.feyStep.total'],
+    entry: {
+      type: 'usedMax',
+      label: 'play.stats.steed.feyStep',
+      total: 'companion.steed.feyStep.total',
+      remaining: 'companion.steed.feyStep.remaining'
+    }
+  },
+  {
+    subject: 'steed',
+    panel: 'resources',
+    gate: [{ fact: 'companion.steed.creatureType', equals: 2 }, 'companion.steed.fellGlare.total'],
+    entry: {
+      type: 'usedMax',
+      label: 'play.stats.steed.fellGlare',
+      total: 'companion.steed.fellGlare.total',
+      remaining: 'companion.steed.fellGlare.remaining'
+    }
+  }
+];
+
+/**
  * Find Steed — a Level 2 conjuration that summons an Otherworldly Steed companion
  * (`companion.steed.*`, a namespaced sub-entity). The cast bakes the steed's whole
  * stat block — scaled by slot level, flavoured by a chosen creature type
@@ -582,6 +723,7 @@ const findSteed: RuleModule = {
     keywords: `${O}.keywords`,
     requires: ['spellcasting', 'prepared-spells']
   },
+  panels: STEED_PANELS,
   derive: () => {
     const c: Contribution[] = [
       preparedSpellCount({
