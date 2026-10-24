@@ -17,8 +17,12 @@ import type { Facts } from '$lib/rules-view';
  * marquee that pauses while pressed/hovered/focused and never runs under
  * prefers-reduced-motion (static clamp + manual swipe instead). The full name
  * stays reachable everywhere it already was: title, aria-label, and the text
- * content itself. The abilities chip and the spell-slot cells stay exempt —
- * unclamped and untickered.
+ * content itself. The abilities chip stays exempt — unclamped and untickered.
+ * In the ledger, round 2 removed the exemptions the tablet re-test caught
+ * escaping at full width: the subject line in the pane title and the
+ * slot/action cells now clamp and tape like every other line. The tray cells
+ * keep exactly one special case — they must not become scroll containers,
+ * because the tray they anchor is absolutely positioned and would clip.
  *
  * jsdom cannot prove any of the motion: it does no layout (scrollWidth and
  * clientWidth are both 0, so the measurement in the action never fires), and
@@ -153,6 +157,19 @@ describe('label overflow — every clamp sits at 8rem', () => {
     expect(maxWidthRem(TOP_BAR, '.intent-top-bar__chip')).toBe(8);
     expect(maxWidthRem(TOP_BAR, '.intent-top-bar__seg-btn')).toBe(8);
     expect(maxWidthRem(LEDGER, '.ledger__cell')).toBe(8);
+    // Round 2: the subject line in the pane title and the tray-hosting cells
+    // were the exemptions, and a long subject name rendered at full width
+    // (492px for the temp-label steed name in the tablet build) — the whole
+    // resources pane now clamps at the same 8rem.
+    expect(maxWidthRem(LEDGER, '.ledger__title')).toBe(8);
+    expect(maxWidthRem(LEDGER, '.ledger__cell--slots')).toBe(8);
+    // The toggle's own 8rem cap is what makes the clamp reachable: the label
+    // line caps itself at 100% of its row, and a percentage against a
+    // fit-content ancestor never resolves — without this definite rem cap the
+    // row measured the full unwrapped label (601px in the probe) and the tape
+    // never engaged. The row then takes its 100% from the definite toggle.
+    expect(maxWidthRem(LEDGER, '.ledger__slot-toggle')).toBe(8);
+    expect(decl(LEDGER, '.ledger__slot-row', 'max-width')).toBe('100%');
   });
 
   it('keeps the clamp above the floors the components already declare', () => {
@@ -231,7 +248,8 @@ describe('ticker utility — the tape lives in base.css, gated on measurement', 
     const pauseHosts: Array<[string, string]> = [
       [TOP_BAR, '.intent-top-bar__chip'],
       [TOP_BAR, '.intent-top-bar__seg-btn'],
-      [LEDGER, '.ledger__cell']
+      [LEDGER, '.ledger__cell'],
+      [LEDGER, '.ledger__title']
     ];
     for (const [source, container] of pauseHosts) {
       const found = cssRules(source).find(
@@ -289,7 +307,7 @@ describe('ticker utility — the tape lives in base.css, gated on measurement', 
     expect(decl(LEDGER, '.ledger__cell', 'white-space')).toBe('nowrap');
   });
 
-  it('exempts the six-column abilities chip and the tray-anchoring slots cell', () => {
+  it('exempts the six-column abilities chip; tray cells only escape scrolling', () => {
     // The abilities chip lays out six fixed columns (STR…CHA); clamping it
     // would scroll a chip that fits every screen it fits on today. The
     // declared `max-width: none` must stay — without it the chip would inherit
@@ -297,11 +315,13 @@ describe('ticker utility — the tape lives in base.css, gated on measurement', 
     expect(rule(TOP_BAR, '.intent-top-bar__chip--abilities').decls).toMatch(
       /(?:^|;)\s*max-width:\s*none/
     );
-    // SlotTray positions itself absolutely against .ledger__cell--slots; the
-    // cell must not become a scroll container that clips the tray it hosts.
+    // The slot/action cells clamp and tape like every other ledger line now,
+    // but SlotTray positions itself absolutely against them: a scroll
+    // container cell would clip the tray it hosts to the 8rem clamp. The
+    // declared visible overflow is the load-bearing half of that contract.
     const slots = rule(LEDGER, '.ledger__cell--slots').decls;
-    expect(slots).not.toMatch(/(?:^|;)\s*overflow-x:\s*(auto|scroll)/);
-    expect(slots).not.toMatch(/(?:^|;)\s*max-width:\s*[\d.]+rem/);
+    expect(slots).toMatch(/(?:^|;)\s*overflow:\s*visible/);
+    expect(slots).not.toMatch(/(?:^|;)\s*overflow(-x)?:\s*(auto|scroll|hidden)/);
   });
 });
 
@@ -377,17 +397,18 @@ describe('ticker action — measurement, timing, teardown', () => {
 
   it('scales the loop duration to the content length (constant px/s)', () => {
     // A fixed duration would make a long label race while a short one crawls;
-    // the tape must read at one pace. 240px → 4s and 480px → 8s pins the
-    // proportionality (60px/s) without pinning the formatting.
+    // the tape must read at one pace. 240px → 8s and 480px → 16s pins the
+    // proportionality (30px/s — round 2 halved the 60px/s pace: "slow the
+    // scroll by half") without pinning the formatting.
     const short = tickerHost('Cargo Capacity (500 lb.)');
     stubMetrics(short, 240, 96);
     ticker(short);
-    expect(durationOf(short)).toBeCloseTo(4, 1);
+    expect(durationOf(short)).toBeCloseTo(8, 1);
 
     const long = tickerHost('Tormentor (Damage Control) — pseudo-seat for generic actions');
     stubMetrics(long, 480, 96);
     ticker(long);
-    expect(durationOf(long)).toBeCloseTo(8, 1);
+    expect(durationOf(long)).toBeCloseTo(16, 1);
   });
 
   it('re-measures when the content resizes, and stands down when it now fits', () => {
@@ -613,7 +634,34 @@ describe('label overflow — Ledger keeps the full name accessible', () => {
     expect(cell?.getAttribute('aria-label')).toBe(cell?.getAttribute('title'));
   });
 
-  it('leaves the tray-anchoring slots cell without a tape', () => {
+  it('tickers the subject name in the pane title, announced once', () => {
+    // Round 2: the pane's own subject line sat next to the clamped cells with
+    // no clamp of its own, so it was the one line still rendering at full
+    // width. It is the same tape as everywhere else, and the title block is
+    // its clamp host and pause host.
+    mount(Ledger, {
+      target: container,
+      props: {
+        resourceEntries: [],
+        facts: {} as Facts,
+        viewLabel: 'play.companion.tormentor-damage-control',
+        activeSubject: 'tormentor-damage-control'
+      }
+    });
+    const line = container.querySelector<HTMLElement>('.ledger__view-label');
+    expect(line).toBeTruthy();
+    expect(line?.classList.contains('ticker')).toBe(true);
+    assertSingleAnnounceableCopy(line!, 'Tormentor (Damage Control)');
+    // Hover still reveals the name without waiting for the tape.
+    expect(line?.getAttribute('title')).toBe('Tormentor (Damage Control)');
+  });
+
+  it('tickers the tray cells’ label line without making the cell scroll', () => {
+    // Round 2 removed the tray cells' clamp exemption: a slot/economy label
+    // without a short form rendered at full width (the temp-label probe
+    // measured the cell at 601px). The label line is a tape now; what the
+    // cell must never become is a scroll container — the tray it anchors is
+    // absolutely positioned and would clip (pinned in the CSS tests above).
     mount(Ledger, {
       target: container,
       props: {
@@ -636,8 +684,11 @@ describe('label overflow — Ledger keeps the full name accessible', () => {
     });
     const slots = container.querySelector('.ledger__cell--slots');
     expect(slots).toBeTruthy();
-    expect(slots?.querySelector('.ticker')).toBeNull();
-    // The clamped cell next to it does carry the tape.
+    // The label line inside the toggle is the tape — one line, not the tiles.
+    const lines = slots!.querySelectorAll<HTMLElement>('.ticker');
+    expect(lines.length).toBe(1);
+    assertSingleAnnounceableCopy(lines[0], 'Cast');
+    // The clamped cell next to it carries its two tapes as before.
     const cells = container.querySelectorAll('.ledger__cell');
     expect(cells.length).toBe(2);
     expect(cells[1].querySelectorAll('.ticker').length).toBe(2);

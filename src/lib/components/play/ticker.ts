@@ -4,9 +4,10 @@ import type { Action } from 'svelte/action';
  * Constant tape speed in px/s. The loop duration is content-length
  * proportional (duration = measured width / speed) so every tape reads at the
  * same pace however long its label — a fixed duration would make long labels
- * race and short ones crawl.
+ * race and short ones crawl. 30px/s is round 2's halved pace: 60px/s read as
+ * a rush on the tablet.
  */
-const PX_PER_SECOND = 60;
+const PX_PER_SECOND = 30;
 
 /**
  * Ticker-tape marquee for a clamped label line. Applied by Ticker.svelte;

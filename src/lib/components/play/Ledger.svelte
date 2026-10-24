@@ -238,7 +238,12 @@
   <div class="ledger__title">
     <span class="ledger__header">{$t('play.ledger.title')}</span>
     {#if viewLabel}
-      <span class="ledger__view-label">{$t(viewLabel)}</span>
+      <!-- The active subject's name — a vehicle seat is as long as "Tormentor
+           (Damage Control)", so this line is the same clamped Ticker tape the
+           cells use; the title block is its clamp host (max-width below). -->
+      <span class="ledger__view-label ticker" use:ticker title={$t(viewLabel)}
+        ><TickerCopies>{$t(viewLabel)}</TickerCopies></span
+      >
     {/if}
   </div>
 
@@ -266,7 +271,9 @@
             bind:this={toggleEls[key]}
           >
             <span class="ledger__slot-row">
-              <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
+              <span class="ledger__cell-label ticker" use:ticker
+                ><TickerCopies>{shortLabelFor(entry)}</TickerCopies></span
+              >
               <!-- Disclosure affordance only. aria-expanded on the button
                    already states the tray's state, so this must add no
                    screen-reader noise. Points up because the tray opens
@@ -322,7 +329,9 @@
             bind:this={toggleEls[key]}
           >
             <span class="ledger__slot-row">
-              <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
+              <span class="ledger__cell-label ticker" use:ticker
+                ><TickerCopies>{shortLabelFor(entry)}</TickerCopies></span
+              >
               <!-- Disclosure affordance only. aria-expanded on the button
                    already states the tray's state, so this must add no
                    screen-reader noise. Points up because the tray opens
@@ -404,10 +413,15 @@
     flex-wrap: wrap;
   }
 
+  /* The title block is the clamp host for the pane's own lines: the header
+     (static, always short) and the active subject's name, which is as long as
+     "Tormentor (Damage Control)" and is the same Ticker tape the cells use.
+     Same 8rem as every other clamp in the pane. */
   .ledger__title {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    max-width: 8rem;
   }
 
   .ledger__header {
@@ -464,10 +478,12 @@
     border-radius: var(--radius-md);
   }
 
-  /* Press, hover, or focus freezes the tape for reading — the cell is the
-     reading unit. The copies are :global because TickerCopies owns them
-     (scoped, the rule would never match; see the top-bar's note). */
-  .ledger__cell:is(:hover, :focus-within, :active) :global(.ticker__copy) {
+  /* Press, hover, or focus freezes the tape for reading — the cell (or, for
+     the subject line, the title block) is the reading unit. The copies are
+     :global because TickerCopies owns them (scoped, the rule would never
+     match; see the top-bar's note). */
+  .ledger__cell:is(:hover, :focus-within, :active) :global(.ticker__copy),
+  .ledger__title:is(:hover, :focus-within, :active) :global(.ticker__copy) {
     animation-play-state: paused;
   }
 
@@ -514,23 +530,31 @@
   }
 
   /* Anchor for the tray, which positions itself absolutely against this cell.
-     Exempt from the cell clamp: this cell must not become a scroll container,
-     or the tray it hosts would be clipped to it. */
+     Clamped at the same 8rem as every other cell (the label line is a Ticker
+     tape), but the clamp stops at the width: this cell must NOT become a
+     scroll container, or the tray it hosts would clip to 8rem. Visible
+     overflow is what lets the absolutely-positioned tray overhang it — the
+     tray sizes itself (min-width 12rem) and is untouched by the clamp. */
   .ledger__cell--slots {
     position: relative;
     padding: 0;
-    max-width: none;
+    max-width: 8rem;
     overflow: visible;
-    white-space: normal;
   }
 
-  /* Disclosure trigger: shaped like a cell, so the row reads as one strip. */
+  /* Disclosure trigger: shaped like a cell, so the row reads as one strip.
+     Its 8rem cap is load-bearing, not redundant with the cell's: the label's
+     tape line caps itself at 100% of its row, and a percentage against a
+     fit-content ancestor never resolves — without this definite rem cap the
+     row measures the full unwrapped label (601px in the round-2 probe) and the
+     tape never engages. */
   .ledger__slot-toggle {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 2px;
     min-height: 2.75rem;
+    max-width: 8rem;
     padding: var(--spacing-xs) var(--spacing-sm);
     background: none;
     border: 1px solid transparent;
@@ -552,11 +576,14 @@
     border-color: var(--md-sys-color-outline-variant);
   }
 
-  /* Horizontal row pattern — shared by the label+caret line and the tiles line. */
+  /* Horizontal row pattern — shared by the label+caret line and the tiles
+     line. Capped at the (now definite) toggle width so the label's tape line
+     has a containing block to take its 100% from; see the toggle's note. */
   .ledger__slot-row {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
+    max-width: 100%;
   }
 
   .ledger__slot-tiles {
