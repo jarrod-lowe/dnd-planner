@@ -1,6 +1,8 @@
 <script lang="ts">
   import { t } from '$lib/i18n';
   import UserDropdown from '$lib/components/UserDropdown.svelte';
+  import TickerCopies from '$lib/components/play/TickerCopies.svelte';
+  import { ticker } from '$lib/components/play/ticker';
   import type { Character } from '$lib/character/types';
   import type {
     UiEntry,
@@ -126,8 +128,13 @@
             class:intent-top-bar__seg-btn--active={!activeSubject}
             role="radio"
             aria-checked={!activeSubject}
-            onclick={() => onSwitchSubject(undefined)}>{$t('play.topBar.viewPlayer')}</button
+            title={$t('play.topBar.viewPlayer')}
+            onclick={() => onSwitchSubject(undefined)}
           >
+            <span class="ticker" use:ticker
+              ><TickerCopies>{$t('play.topBar.viewPlayer')}</TickerCopies></span
+            >
+          </button>
           {#each availableSubjects as subject (subject)}
             <button
               type="button"
@@ -135,8 +142,13 @@
               class:intent-top-bar__seg-btn--active={activeSubject === subject}
               role="radio"
               aria-checked={activeSubject === subject}
-              onclick={() => onSwitchSubject(subject)}>{$t(`play.companion.${subject}`)}</button
+              title={$t(`play.companion.${subject}`)}
+              onclick={() => onSwitchSubject(subject)}
             >
+              <span class="ticker" use:ticker
+                ><TickerCopies>{$t(`play.companion.${subject}`)}</TickerCopies></span
+              >
+            </button>
           {/each}
         </div>
       {/if}
@@ -149,9 +161,17 @@
             current: hpCurrent,
             max: hpMax
           })}"
+          title="{$t(entry.label)} {$t('play.topBar.hpValue', {
+            current: hpCurrent,
+            max: hpMax
+          })}"
         >
-          <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
-          <span class="intent-top-bar__chip-value">{hpCurrent}/{hpMax}</span>
+          <span class="intent-top-bar__chip-label ticker" use:ticker
+            ><TickerCopies>{$t(entry.label)}</TickerCopies></span
+          >
+          <span class="intent-top-bar__chip-value ticker" use:ticker
+            ><TickerCopies>{hpCurrent}/{hpMax}</TickerCopies></span
+          >
           {#if hpPercent !== undefined}
             <div
               class="intent-top-bar__hp-bar"
@@ -173,9 +193,14 @@
           <div
             class="intent-top-bar__chip intent-top-bar__chip--stack"
             aria-label="{$t(entry.label)} {value}"
+            title="{$t(entry.label)} {value}"
           >
-            <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
-            <span class="intent-top-bar__chip-value">{value}</span>
+            <span class="intent-top-bar__chip-label ticker" use:ticker
+              ><TickerCopies>{$t(entry.label)}</TickerCopies></span
+            >
+            <span class="intent-top-bar__chip-value ticker" use:ticker
+              ><TickerCopies>{value}</TickerCopies></span
+            >
           </div>
         {/if}
       {/each}
@@ -188,44 +213,53 @@
           aria-label="{$t(entry.label)}: {concActive
             ? (concentrationEffectName ?? $t(entry.activeLabel))
             : $t(entry.noneLabel)}"
+          title="{$t(entry.label)}: {concActive
+            ? (concentrationEffectName ?? $t(entry.activeLabel))
+            : $t(entry.noneLabel)}"
         >
-          <span class="intent-top-bar__chip-label">
-            <svg
-              class="intent-top-bar__conc-icon"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
-              />
-            </svg>
-            {$t(entry.label)}
+          <span class="intent-top-bar__chip-label ticker" use:ticker>
+            <TickerCopies>
+              <svg
+                class="intent-top-bar__conc-icon"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"
+                />
+              </svg>
+              {$t(entry.label)}
+            </TickerCopies>
           </span>
-          <span class="intent-top-bar__chip-value">
-            {#if concActive && concentrationEffectName}
-              {concentrationEffectName}
-            {:else if concActive}
-              {$t(entry.activeLabel)}
-            {:else}
-              {$t(entry.noneLabel)}
-            {/if}
+          <span class="intent-top-bar__chip-value ticker" use:ticker>
+            <TickerCopies>
+              {#if concActive && concentrationEffectName}
+                {concentrationEffectName}
+              {:else if concActive}
+                {$t(entry.activeLabel)}
+              {:else}
+                {$t(entry.noneLabel)}
+              {/if}
+            </TickerCopies>
           </span>
         </div>
       {/if}
 
       {#if abilityEntry}
+        {@const abilitiesName = `${$t(abilityEntry.label)}: ${abilityEntry.abilities
+          .map((a) => {
+            const mod = Number(facts[a.fact] ?? 0);
+            const save = a.saveFact !== undefined ? Number(facts[a.saveFact] ?? 0) : undefined;
+            const modStr = `${mod >= 0 ? '+' : ''}${mod}`;
+            const saveStr = save !== undefined ? `/${save >= 0 ? '+' : ''}${save}` : '';
+            return `${$t(a.name)} ${modStr}${saveStr}`;
+          })
+          .join(' ')}`}
         <div
           class="intent-top-bar__chip intent-top-bar__chip--abilities"
-          aria-label="{$t(abilityEntry.label)}: {abilityEntry.abilities
-            .map((a) => {
-              const mod = Number(facts[a.fact] ?? 0);
-              const save = a.saveFact !== undefined ? Number(facts[a.saveFact] ?? 0) : undefined;
-              const modStr = `${mod >= 0 ? '+' : ''}${mod}`;
-              const saveStr = save !== undefined ? `/${save >= 0 ? '+' : ''}${save}` : '';
-              return `${$t(a.name)} ${modStr}${saveStr}`;
-            })
-            .join(' ')}"
+          aria-label={abilitiesName}
+          title={abilitiesName}
         >
           {#each abilityEntry.abilities as ability, i (ability.name)}
             {@const mod = Number(facts[ability.fact] ?? 0)}
@@ -346,6 +380,13 @@
     min-width: 0;
   }
 
+  /* Long labels (vehicle subjects, their stats) clamp the chip at 8rem; the
+     label/value lines are Ticker tapes that scroll when they overflow and
+     pause on press/hover/focus (`.ticker` utility in base.css). Never
+     ellipsised, never wrapped: the full name stays in the text content and is
+     repeated on title/aria-label, so nothing is lost to assistive tech or
+     hover. 8rem clears every current chip's natural width, so short labels
+     render exactly as before. */
   .intent-top-bar__chip {
     display: flex;
     align-items: center;
@@ -355,8 +396,22 @@
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-lg);
     white-space: nowrap;
+    max-width: 8rem;
   }
 
+  /* Press, hover, or focus freezes the tape for reading. The pause keys off
+     the clamped container — the chip/button is the reading unit, and a touch
+     landing on the value line must stop the label's tape too. The copies are
+     :global because TickerCopies owns them: scoped, they would either be
+     pruned as unused or demand this component's scope class on an element
+     that never carries it, and the pause would silently die. */
+  .intent-top-bar__chip:is(:hover, :focus-within, :active) :global(.ticker__copy),
+  .intent-top-bar__seg-btn:is(:hover, :focus-within, :active) :global(.ticker__copy) {
+    animation-play-state: paused;
+  }
+
+  /* Typography only — the line's flex/scroll/animation behaviour comes from
+     the `.ticker` utility this element also carries. */
   .intent-top-bar__chip-label {
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
@@ -364,9 +419,6 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--md-sys-color-on-surface-variant);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
   }
 
   .intent-top-bar__chip-value {
@@ -376,6 +428,9 @@
     color: var(--md-sys-color-on-surface);
   }
 
+  /* Centering needs no `safe` guard any more: the Ticker lines cap
+     themselves at 100% of the chip, so no child can overflow the container —
+     a clamped line starts at its leading edge inside its own viewport. */
   .intent-top-bar__chip--stack {
     flex-direction: column;
     align-items: center;
@@ -404,6 +459,10 @@
   .intent-top-bar__conc-icon {
     width: 0.875rem;
     height: 0.875rem;
+    /* Spacing from the label text, which now lives inside the same tape copy
+       as the icon (the copy is the flex item; the line's gap belongs to the
+       tape seam). Travels with the copy, so both copies stay identical. */
+    margin-right: var(--spacing-xs);
   }
 
   .intent-top-bar__chip--conc-active .intent-top-bar__conc-icon {
@@ -418,6 +477,9 @@
     overflow: hidden;
   }
 
+  /* Subject names ("Tormentor (Damage Control)") clamp at the same 8rem and
+     their line is the same Ticker tape — whole text in the content, full name
+     on title, no ellipsis, no wrap. */
   .intent-top-bar__seg-btn {
     display: flex;
     align-items: center;
@@ -436,6 +498,8 @@
     transition:
       background-color var(--transition-fast),
       color var(--transition-fast);
+    white-space: nowrap;
+    max-width: 8rem;
   }
 
   .intent-top-bar__seg-btn:not(:first-child) {
@@ -456,10 +520,14 @@
     outline-offset: -2px;
   }
 
+  /* Exempt from the chip clamp: this chip's width is six structural columns
+     (STR…CHA), not a label — clamping it would scroll a chip that already
+     fits wherever it fits today. */
   .intent-top-bar__chip--abilities {
     padding: 0;
     gap: 0;
     align-items: stretch;
+    max-width: none;
   }
 
   .intent-top-bar__ability-col {

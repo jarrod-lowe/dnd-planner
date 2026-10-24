@@ -322,8 +322,12 @@ describe('Ledger', () => {
     );
     const cell = container.querySelector('.ledger__cell');
     const label = container.querySelector('.ledger__cell-label');
-    // Visible label is the compact short form...
-    expect(label?.textContent).toBe('ACT');
+    // Visible label is the compact short form. The label line is a ticker
+    // tape: its first copy is the announceable label, its second is the
+    // aria-hidden seamless-loop duplicate (display:none unless the label
+    // overflows the clamp), so the whole line reads "ACT ACT" while only one
+    // copy ever reaches a screen reader.
+    expect(label?.querySelector('.ticker__copy')?.textContent).toBe('ACT');
     // ...while the full name (label + counts) is preserved for screen readers
     // and hover, which now agree.
     expect(cell?.getAttribute('title')).toBe('Actions => 0 / 1');
@@ -364,7 +368,9 @@ describe('Ledger', () => {
       { 'hitDie.d8.total': 5, 'hitDie.d8.remaining': 3 }
     );
     const label = container.querySelector('.ledger__cell-label');
-    expect(label?.textContent).toBe('HD');
+    // First ticker copy = the announceable short label (see the tape note in
+    // the short-label test above).
+    expect(label?.querySelector('.ticker__copy')?.textContent).toBe('HD');
   });
 
   it('renders multiple resource entries', () => {
@@ -550,8 +556,12 @@ describe('Ledger — spell slot cell', () => {
     expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(1);
     expect(tileStates()).toEqual(['open']);
     expect(tileDigits()).toEqual(['1']);
-    // The short label is still the ledger's own cell-label element.
-    expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('Cast');
+    // The short label is still the ledger's own cell-label element. It is a
+    // ticker line now, so its text lives in the (aria-hidden) duplicate too —
+    // the announceable copy is the first one.
+    const label = container.querySelector('.ledger__cell-label');
+    expect(label?.classList.contains('ticker')).toBe(true);
+    expect(label?.querySelector('.ticker__copy')?.textContent).toBe('Cast');
   });
 
   it('renders one tile per level, ascending, for a two-level caster', () => {
@@ -897,7 +907,9 @@ describe('Ledger — action economy cell', () => {
     expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(3);
     expect(tileStates()).toEqual(['open', 'open', 'open']);
     expect(tileTexts()).toEqual(['A', 'B', 'R']);
-    expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('ACT');
+    // The label line is a ticker tape: assert its announceable copy (the
+    // duplicate the tape loop renders is aria-hidden).
+    expect(container.querySelector('.ledger__cell-label .ticker__copy')?.textContent).toBe('ACT');
   });
 
   it('places the caret in the same row as the label, before the tiles row', () => {
@@ -1151,7 +1163,8 @@ describe('Ledger — action economy cell', () => {
     );
 
     expect(container.querySelectorAll('.ledger__slot-tile').length).toBe(2);
-    expect(container.querySelector('.ledger__cell-label')?.textContent).toBe('ST.A');
+    // Ticker line: the announceable copy, not the aria-hidden duplicate.
+    expect(container.querySelector('.ledger__cell-label .ticker__copy')?.textContent).toBe('ST.A');
     expect(tileTexts()).toEqual(['A', 'B']);
   });
 

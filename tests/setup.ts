@@ -12,6 +12,16 @@ if (!Element.prototype.animate) {
   });
 }
 
+// Stub ResizeObserver for layout-measuring Svelte actions (jsdom has none).
+// Suites that need to drive observation re-stub a richer fake locally.
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  };
+}
+
 // Mock sveltekit-i18n to prevent actual loader calls during tests
 vi.mock('sveltekit-i18n', () => {
   // Minimal set of translation templates used by unit tests
