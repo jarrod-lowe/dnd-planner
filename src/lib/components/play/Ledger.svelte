@@ -439,11 +439,20 @@
     gap: var(--spacing-sm);
   }
 
+  /* Long resource names (vehicle stats, companion pools) clamp here and
+     scroll inside the cell — never ellipsised, never wrapped. The full
+     "label => N of M" composition is already on the cell's title/aria-label,
+     so the clamp costs nothing. 12rem clears every current label, so short
+     cells render exactly as before. `safe` center keeps a clamped label's
+     start reachable: centered overflow to the left is unscrollable. */
   .ledger__cell {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: safe center;
     min-width: 3.5rem;
+    max-width: 12rem;
+    overflow-x: auto;
+    white-space: nowrap;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-md);
   }
@@ -490,10 +499,15 @@
     color: var(--md-sys-color-on-surface);
   }
 
-  /* Anchor for the tray, which positions itself absolutely against this cell. */
+  /* Anchor for the tray, which positions itself absolutely against this cell.
+     Exempt from the cell clamp: this cell must not become a scroll container,
+     or the tray it hosts would be clipped to it. */
   .ledger__cell--slots {
     position: relative;
     padding: 0;
+    max-width: none;
+    overflow: visible;
+    white-space: normal;
   }
 
   /* Disclosure trigger: shaped like a cell, so the row reads as one strip. */

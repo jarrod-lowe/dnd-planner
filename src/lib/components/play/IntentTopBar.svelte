@@ -126,6 +126,7 @@
             class:intent-top-bar__seg-btn--active={!activeSubject}
             role="radio"
             aria-checked={!activeSubject}
+            title={$t('play.topBar.viewPlayer')}
             onclick={() => onSwitchSubject(undefined)}>{$t('play.topBar.viewPlayer')}</button
           >
           {#each availableSubjects as subject (subject)}
@@ -135,6 +136,7 @@
               class:intent-top-bar__seg-btn--active={activeSubject === subject}
               role="radio"
               aria-checked={activeSubject === subject}
+              title={$t(`play.companion.${subject}`)}
               onclick={() => onSwitchSubject(subject)}>{$t(`play.companion.${subject}`)}</button
             >
           {/each}
@@ -146,6 +148,10 @@
         <div
           class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--hp"
           aria-label="{$t(entry.label)} {$t('play.topBar.hpValue', {
+            current: hpCurrent,
+            max: hpMax
+          })}"
+          title="{$t(entry.label)} {$t('play.topBar.hpValue', {
             current: hpCurrent,
             max: hpMax
           })}"
@@ -173,6 +179,7 @@
           <div
             class="intent-top-bar__chip intent-top-bar__chip--stack"
             aria-label="{$t(entry.label)} {value}"
+            title="{$t(entry.label)} {value}"
           >
             <span class="intent-top-bar__chip-label">{$t(entry.label)}</span>
             <span class="intent-top-bar__chip-value">{value}</span>
@@ -186,6 +193,9 @@
           class="intent-top-bar__chip intent-top-bar__chip--stack intent-top-bar__chip--conc"
           class:intent-top-bar__chip--conc-active={concActive}
           aria-label="{$t(entry.label)}: {concActive
+            ? (concentrationEffectName ?? $t(entry.activeLabel))
+            : $t(entry.noneLabel)}"
+          title="{$t(entry.label)}: {concActive
             ? (concentrationEffectName ?? $t(entry.activeLabel))
             : $t(entry.noneLabel)}"
         >
@@ -215,17 +225,19 @@
       {/if}
 
       {#if abilityEntry}
+        {@const abilitiesName = `${$t(abilityEntry.label)}: ${abilityEntry.abilities
+          .map((a) => {
+            const mod = Number(facts[a.fact] ?? 0);
+            const save = a.saveFact !== undefined ? Number(facts[a.saveFact] ?? 0) : undefined;
+            const modStr = `${mod >= 0 ? '+' : ''}${mod}`;
+            const saveStr = save !== undefined ? `/${save >= 0 ? '+' : ''}${save}` : '';
+            return `${$t(a.name)} ${modStr}${saveStr}`;
+          })
+          .join(' ')}`}
         <div
           class="intent-top-bar__chip intent-top-bar__chip--abilities"
-          aria-label="{$t(abilityEntry.label)}: {abilityEntry.abilities
-            .map((a) => {
-              const mod = Number(facts[a.fact] ?? 0);
-              const save = a.saveFact !== undefined ? Number(facts[a.saveFact] ?? 0) : undefined;
-              const modStr = `${mod >= 0 ? '+' : ''}${mod}`;
-              const saveStr = save !== undefined ? `/${save >= 0 ? '+' : ''}${save}` : '';
-              return `${$t(a.name)} ${modStr}${saveStr}`;
-            })
-            .join(' ')}"
+          aria-label={abilitiesName}
+          title={abilitiesName}
         >
           {#each abilityEntry.abilities as ability, i (ability.name)}
             {@const mod = Number(facts[ability.fact] ?? 0)}
@@ -346,6 +358,11 @@
     min-width: 0;
   }
 
+  /* Long labels (vehicle subjects, their stats) clamp here and scroll inside
+     the chip — never ellipsised, never wrapped: the full name stays in the
+     text content and is repeated on title/aria-label, so nothing is lost to
+     assistive tech or hover. 14rem clears every current chip's natural width,
+     so short labels render exactly as before. */
   .intent-top-bar__chip {
     display: flex;
     align-items: center;
@@ -355,6 +372,8 @@
     border: 1px solid var(--md-sys-color-outline-variant);
     border-radius: var(--radius-lg);
     white-space: nowrap;
+    max-width: 14rem;
+    overflow-x: auto;
   }
 
   .intent-top-bar__chip-label {
@@ -376,9 +395,12 @@
     color: var(--md-sys-color-on-surface);
   }
 
+  /* `safe` center: a centered line wider than the clamped chip must fall back
+     to start alignment, or its left half would sit outside the scrollable
+     area and be unreachable. */
   .intent-top-bar__chip--stack {
     flex-direction: column;
-    align-items: center;
+    align-items: safe center;
     gap: 2px;
   }
 
@@ -418,10 +440,14 @@
     overflow: hidden;
   }
 
+  /* Subject names ("Tormentor (Damage Control)") clamp here and scroll inside
+     the button — same contract as the chips: whole text in the content, full
+     name on title, no ellipsis, no wrap. `safe` keeps the start of a clamped
+     label reachable (see the stacked-chip note). */
   .intent-top-bar__seg-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: safe center;
     gap: var(--spacing-xs);
     padding: var(--spacing-xs) var(--spacing-sm);
     border: none;
@@ -436,6 +462,9 @@
     transition:
       background-color var(--transition-fast),
       color var(--transition-fast);
+    white-space: nowrap;
+    max-width: 14rem;
+    overflow-x: auto;
   }
 
   .intent-top-bar__seg-btn:not(:first-child) {
@@ -456,10 +485,14 @@
     outline-offset: -2px;
   }
 
+  /* Exempt from the chip clamp: this chip's width is six structural columns
+     (STR…CHA), not a label — clamping it would scroll a chip that already
+     fits wherever it fits today. */
   .intent-top-bar__chip--abilities {
     padding: 0;
     gap: 0;
     align-items: stretch;
+    max-width: none;
   }
 
   .intent-top-bar__ability-col {
