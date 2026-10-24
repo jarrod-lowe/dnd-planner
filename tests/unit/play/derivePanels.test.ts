@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
+import findSteed from '$lib/rules-engine/rules/find-steed';
 import type { UiEntryHitDie } from '$lib/play/extractTopBar';
 import { resolveEntryValue, isEntryVisible } from '$lib/play/extractTopBar';
 
@@ -87,9 +88,11 @@ describe('derivePanels — top bar', () => {
 });
 
 describe('derivePanels — top bar (steed subject)', () => {
+  // The steed's entries are declared by the find-steed module (module-declared
+  // subject panels); the faked facts drive the gates.
   it('emits a steed HP entry, tagged subject:steed, when the steed has HP', () => {
     const facts = { 'companion.steed.hp.max': 25, 'companion.steed.hp.current': 18 };
-    const steed = deriveTopBarEntries(facts).filter((e) => e.subject === 'steed');
+    const steed = deriveTopBarEntries(facts, [findSteed]).filter((e) => e.subject === 'steed');
     expect(steed.map((e) => e.label)).toEqual(['play.topBar.hp']);
     expect(resolveEntryValue(steed[0], facts)).toBe('18/25');
   });
@@ -102,13 +105,13 @@ describe('derivePanels — top bar (steed subject)', () => {
       'companion.steed.movement.total': 60,
       'companion.steed.movement.remaining': 45
     };
-    const steed = deriveTopBarEntries(facts).filter((e) => e.subject === 'steed');
+    const steed = deriveTopBarEntries(facts, [findSteed]).filter((e) => e.subject === 'steed');
     expect(steed.map((e) => e.label)).toEqual(['play.topBar.ac', 'play.topBar.speed']);
     expect(steed.map((e) => resolveEntryValue(e, facts))).toEqual(['12', '60']);
   });
 
   it('emits a steed abilities chip with each modifier and its save', () => {
-    const entry = deriveTopBarEntries({ 'companion.steed.str.modifier': 4 }).find(
+    const entry = deriveTopBarEntries({ 'companion.steed.str.modifier': 4 }, [findSteed]).find(
       (e) => e.subject === 'steed'
     );
     expect(entry?.type).toBe('ability');
@@ -157,7 +160,7 @@ describe('derivePanels — top bar (steed subject)', () => {
       'companion.steed.str.modifier': 4,
       'concentration.max': 1
     };
-    const steed = deriveTopBarEntries(facts).filter((e) => e.subject === 'steed');
+    const steed = deriveTopBarEntries(facts, [findSteed]).filter((e) => e.subject === 'steed');
     expect(steed.map((e) => e.type)).not.toContain('concentration');
     expect(steed.map((e) => e.label)).toEqual([
       'play.topBar.hp',
@@ -174,7 +177,7 @@ describe('derivePanels — top bar (steed subject)', () => {
       'companion.steed.hp.max': 25,
       'companion.steed.hp.current': 25
     };
-    const entries = deriveTopBarEntries(facts);
+    const entries = deriveTopBarEntries(facts, [findSteed]);
     const player = entries.filter((e) => e.subject === undefined);
     expect(player.map((e) => e.label)).toEqual(['play.topBar.hp']);
     expect(resolveEntryValue(player[0], facts)).toBe('12/12');
@@ -396,7 +399,7 @@ describe('derivePanels — resources', () => {
       'companion.steed.feyStep.remaining': 1,
       'companion.steed.fellGlare.total': 1
     };
-    const steed = deriveResourceEntries(facts).filter((e) => e.subject === 'steed');
+    const steed = deriveResourceEntries(facts, [findSteed]).filter((e) => e.subject === 'steed');
     const labels = steed.map((e) => e.label);
     expect(labels).toEqual(
       expect.arrayContaining([
@@ -466,9 +469,9 @@ describe('derivePanels — resources', () => {
   });
 
   it('adds no steed resources for a character without a steed', () => {
-    const steed = deriveResourceEntries({ 'actions.max': 1, 'actions.remaining': 1 }).filter(
-      (e) => e.subject === 'steed'
-    );
+    const steed = deriveResourceEntries({ 'actions.max': 1, 'actions.remaining': 1 }, [
+      findSteed
+    ]).filter((e) => e.subject === 'steed');
     expect(steed).toEqual([]);
   });
 
@@ -478,7 +481,7 @@ describe('derivePanels — resources', () => {
       'companion.steed.actions.max': 1,
       'companion.steed.actions.spent': 0
     };
-    const steedActionsOnly = deriveResourceEntries(factsActionsOnly).filter(
+    const steedActionsOnly = deriveResourceEntries(factsActionsOnly, [findSteed]).filter(
       (e) => e.subject === 'steed'
     );
     expect(steedActionsOnly.some((e) => e.type === 'actionPools')).toBe(true);
@@ -488,7 +491,7 @@ describe('derivePanels — resources', () => {
       'companion.steed.bonusActions.max': 1,
       'companion.steed.bonusActions.spent': 0
     };
-    const steedBonusOnly = deriveResourceEntries(factsBonusOnly).filter(
+    const steedBonusOnly = deriveResourceEntries(factsBonusOnly, [findSteed]).filter(
       (e) => e.subject === 'steed'
     );
     expect(steedBonusOnly.some((e) => e.type === 'actionPools')).toBe(true);
@@ -497,7 +500,9 @@ describe('derivePanels — resources', () => {
     const factsNeither = {
       'companion.steed.hp.max': 30
     };
-    const steedNeither = deriveResourceEntries(factsNeither).filter((e) => e.subject === 'steed');
+    const steedNeither = deriveResourceEntries(factsNeither, [findSteed]).filter(
+      (e) => e.subject === 'steed'
+    );
     expect(steedNeither.some((e) => e.type === 'actionPools')).toBe(false);
   });
 });
