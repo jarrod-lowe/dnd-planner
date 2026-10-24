@@ -51,8 +51,8 @@ export function evaluateCharacter(
     facts: output.facts,
     availableRules: output.availableRules,
     plannedEntries: plannedEntries(output, planned),
-    topBarEntries: deriveTopBarEntries(output.facts),
-    resourceEntries: deriveResourceEntries(output.facts),
+    topBarEntries: deriveTopBarEntries(output.facts, modules),
+    resourceEntries: deriveResourceEntries(output.facts, modules),
     advertised: output.effects,
     raw: output
   };

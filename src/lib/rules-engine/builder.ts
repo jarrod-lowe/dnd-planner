@@ -757,6 +757,7 @@ export type {
   AnnotationRider,
   Diagnostic
 } from './types';
+export type { SubjectPanel, SubjectPanelGate, SubjectPanelDeclaration, UiEntry } from './panels';
 
 /**
  * Define a rule module. Currently an identity-with-type-anchor: its value is the

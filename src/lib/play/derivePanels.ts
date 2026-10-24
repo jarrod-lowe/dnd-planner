@@ -1,6 +1,12 @@
 import type { Facts } from '$lib/rules-view';
-import { HIT_DIE_SIZES } from '$lib/rules-engine';
-import { type UiEntry, isUiEntry } from './extractTopBar';
+import {
+  HIT_DIE_SIZES,
+  gateHolds,
+  isUiEntry,
+  type RuleModule,
+  type SubjectPanel,
+  type UiEntry
+} from '$lib/rules-engine';
 
 /**
  * The facts-driven top-bar / resources catalog.
@@ -19,6 +25,11 @@ import { type UiEntry, isUiEntry } from './extractTopBar';
  * character-sheet sections (`magic` spell slots, `abilities`, `stats`, `skills`,
  * `passive`) have their own extractor and are out of scope here — this covers the
  * play-mode top bar + resources panel.
+ *
+ * SUBJECT (companion / vehicle) entries are NOT catalogued here: their modules
+ * declare them as data (`module.panels`), and `declaredEntries` below aggregates
+ * those declarations generically — adding a subject is a declaration on its
+ * module, never a change to this catalog.
  */
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
@@ -289,16 +300,43 @@ function sortEntries(entries: UiEntry[]): UiEntry[] {
   );
 }
 
-/** The play top-bar entries for the current facts (owning module loaded ⇒ present). */
-export function deriveTopBarEntries(facts: Facts): UiEntry[] {
+/**
+ * Entries the LOADED modules declare for their subjects (`module.panels`) —
+ * the generic companion / vehicle surface. An entry surfaces when its gate
+ * holds in the evaluated facts; the declaration's `subject` is stamped onto
+ * the emitted entry so the subject-filtering UI (top bar, ledger) needs no
+ * per-subject knowledge. Declarations ride their module (eager registry or
+ * lazy chunk), so they arrive exactly when the module does.
+ */
+function declaredEntries(facts: Facts, modules: RuleModule[], panel: SubjectPanel): UiEntry[] {
+  const entries: UiEntry[] = [];
+  for (const module of modules) {
+    for (const declaration of module.panels ?? []) {
+      if (declaration.panel !== panel || !gateHolds(facts, declaration.gate)) continue;
+      if (isUiEntry(declaration.entry))
+        entries.push({ ...declaration.entry, subject: declaration.subject });
+    }
+  }
+  return entries;
+}
+
+/**
+ * The play top-bar entries for the current facts (owning module loaded ⇒
+ * present), plus the subject entries the loaded modules declare.
+ */
+export function deriveTopBarEntries(facts: Facts, modules: RuleModule[] = []): UiEntry[] {
   const entries = [...TOP_BAR, ...STEED_TOP_BAR]
     .filter(({ gate }) => present(facts, gate))
     .map(({ entry }) => entry);
+  entries.push(...declaredEntries(facts, modules, 'topBar'));
   return sortEntries(entries);
 }
 
-/** The resources-panel entries for the current facts (incl. the class hit die). */
-export function deriveResourceEntries(facts: Facts): UiEntry[] {
+/**
+ * The resources-panel entries for the current facts (incl. the class hit die),
+ * plus the subject entries the loaded modules declare.
+ */
+export function deriveResourceEntries(facts: Facts, modules: RuleModule[] = []): UiEntry[] {
   const entries: UiEntry[] = RESOURCES.filter(
     (e) =>
       (e.type === 'usedMax' && present(facts, e.total)) ||
@@ -338,7 +376,9 @@ export function deriveResourceEntries(facts: Facts): UiEntry[] {
       fact: 'heroicInspiration.remaining'
     });
   }
-  // Steed resources ride along under the 'steed' subject (Ledger filters by subject).
+  // Steed resources ride along under the 'steed' subject (Ledger filters by
+  // subject); other subjects arrive via their module declarations.
   entries.push(...deriveSteedResources(facts));
+  entries.push(...declaredEntries(facts, modules, 'resources'));
   return sortEntries(entries.filter(isUiEntry));
 }
