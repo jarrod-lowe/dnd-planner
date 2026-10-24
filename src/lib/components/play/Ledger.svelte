@@ -15,6 +15,8 @@
   import { deriveSlotLevels, type SlotLevel } from '$lib/play/slotLevels';
   import { deriveActionPools, type ActionPool } from '$lib/play/actionPools';
   import SlotTray from './SlotTray.svelte';
+  import TickerCopies from './TickerCopies.svelte';
+  import { ticker } from './ticker';
   import type { EffectInstance } from '$lib/rules-engine';
   import type { Facts, Status } from '$lib/rules-view';
 
@@ -378,8 +380,12 @@
           aria-label={ariaLabelFor(entry, remaining, total)}
           title={ariaLabelFor(entry, remaining, total)}
         >
-          <span class="ledger__cell-label">{shortLabelFor(entry)}</span>
-          <span class="ledger__cell-value">{resolveEntryValue(entry, facts)}</span>
+          <span class="ledger__cell-label ticker" use:ticker
+            ><TickerCopies>{shortLabelFor(entry)}</TickerCopies></span
+          >
+          <span class="ledger__cell-value ticker" use:ticker
+            ><TickerCopies>{resolveEntryValue(entry, facts)}</TickerCopies></span
+          >
         </div>
       {/if}
     {/each}
@@ -439,22 +445,30 @@
     gap: var(--spacing-sm);
   }
 
-  /* Long resource names (vehicle stats, companion pools) clamp here and
-     scroll inside the cell — never ellipsised, never wrapped. The full
-     "label => N of M" composition is already on the cell's title/aria-label,
-     so the clamp costs nothing. 12rem clears every current label, so short
-     cells render exactly as before. `safe` center keeps a clamped label's
-     start reachable: centered overflow to the left is unscrollable. */
+  /* Long resource names (vehicle stats, companion pools) clamp the cell at
+     8rem; the label/value lines are Ticker tapes that scroll when they
+     overflow and pause on press/hover/focus (`.ticker` utility in base.css) —
+     never ellipsised, never wrapped. The full "label => N of M" composition
+     is already on the cell's title/aria-label, so the clamp costs nothing.
+     8rem clears every current label, so short cells render exactly as before.
+     No `safe` guard on the centering: the lines cap themselves at 100% of
+     the cell, so nothing can overflow the container. */
   .ledger__cell {
     display: flex;
     flex-direction: column;
-    align-items: safe center;
+    align-items: center;
     min-width: 3.5rem;
-    max-width: 12rem;
-    overflow-x: auto;
+    max-width: 8rem;
     white-space: nowrap;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-md);
+  }
+
+  /* Press, hover, or focus freezes the tape for reading — the cell is the
+     reading unit. The copies are :global because TickerCopies owns them
+     (scoped, the rule would never match; see the top-bar's note). */
+  .ledger__cell:is(:hover, :focus-within, :active) :global(.ticker__copy) {
+    animation-play-state: paused;
   }
 
   /* Depleted. A compound, AA-safe cue — colour alone is not a state signal:

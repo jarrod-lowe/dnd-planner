@@ -322,8 +322,12 @@ describe('Ledger', () => {
     );
     const cell = container.querySelector('.ledger__cell');
     const label = container.querySelector('.ledger__cell-label');
-    // Visible label is the compact short form...
-    expect(label?.textContent).toBe('ACT');
+    // Visible label is the compact short form. The label line is a ticker
+    // tape: its first copy is the announceable label, its second is the
+    // aria-hidden seamless-loop duplicate (display:none unless the label
+    // overflows the clamp), so the whole line reads "ACT ACT" while only one
+    // copy ever reaches a screen reader.
+    expect(label?.querySelector('.ticker__copy')?.textContent).toBe('ACT');
     // ...while the full name (label + counts) is preserved for screen readers
     // and hover, which now agree.
     expect(cell?.getAttribute('title')).toBe('Actions => 0 / 1');
@@ -364,7 +368,9 @@ describe('Ledger', () => {
       { 'hitDie.d8.total': 5, 'hitDie.d8.remaining': 3 }
     );
     const label = container.querySelector('.ledger__cell-label');
-    expect(label?.textContent).toBe('HD');
+    // First ticker copy = the announceable short label (see the tape note in
+    // the short-label test above).
+    expect(label?.querySelector('.ticker__copy')?.textContent).toBe('HD');
   });
 
   it('renders multiple resource entries', () => {

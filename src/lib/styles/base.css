@@ -180,3 +180,77 @@ h6 {
   white-space: nowrap;
   border: 0;
 }
+
+/* Utility: ticker tape for clamped label lines (top-bar chips and
+   seg-buttons, ledger cells). The markup contract is Ticker.svelte (content
+   rendered twice, duplicate aria-hidden) plus the `ticker` action in
+   components/play/ticker.ts, which measures the line and — only when the
+   label overflows its clamp — sets [data-ticker] and a content-proportional
+   --ticker-duration. Until that verdict lands, and on every path below that
+   cancels the animation, the line is an ordinary horizontally scrollable
+   clamp: the manual-swipe fallback is the resting state, not an extra. */
+.ticker {
+  --ticker-gap: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: var(--ticker-gap);
+  /* Capping the line, not the chip, is what lets each line tape (or swipe)
+     independently. Non-visible overflow also drops the flex item's automatic
+     minimum size, which is what lets the line take the clamp at all. */
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.ticker__copy {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* The duplicate exists only for the seamless loop: hidden while the tape is
+   off (no measurement yet, label fits, no JS, reduced motion) so a fitting
+   label renders exactly as the plain line it replaces. */
+.ticker__copy--dup {
+  display: none;
+}
+
+/* Overflowing and motion allowed: a tape. The scrollbar gives way to the
+   loop — a scroll container would show a scrollbar over the animation. */
+.ticker[data-ticker] {
+  overflow: hidden;
+}
+
+.ticker[data-ticker] .ticker__copy {
+  animation: ticker-scroll var(--ticker-duration, 10s) linear infinite;
+}
+
+.ticker[data-ticker] .ticker__copy--dup {
+  display: block;
+}
+
+@keyframes ticker-scroll {
+  to {
+    /* One copy + one gap per loop: both copies travel this far, so the
+       duplicate lands exactly where the original started — a seamless wrap.
+       The gap must be the container's own --ticker-gap for that to hold. */
+    transform: translateX(calc(-100% - var(--ticker-gap)));
+  }
+}
+
+/* Vestibular safety: no tape under reduced motion. The action still sets
+   [data-ticker] (it cannot see media queries), so the stylesheet stands the
+   tape down: animation off, duplicate gone (the swipe reaches all of the
+   single copy), and the viewport's scrollability restored against the
+   tape's overflow: hidden above. */
+@media (prefers-reduced-motion: reduce) {
+  .ticker[data-ticker] {
+    overflow-x: auto;
+  }
+
+  .ticker[data-ticker] .ticker__copy {
+    animation: none;
+  }
+
+  .ticker[data-ticker] .ticker__copy--dup {
+    display: none;
+  }
+}
