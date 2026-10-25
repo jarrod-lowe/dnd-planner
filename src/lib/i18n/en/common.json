@@ -467,11 +467,13 @@
       },
       "knocked-prone": {
         "name": "Knocked Prone",
-        "description": "Record the Tormentor falling prone"
+        "description": "Record the Tormentor falling prone",
+        "already_prone": "The Tormentor is already prone"
       },
       "flip-upright": {
         "name": "Flip Upright",
-        "description": "Right the Tormentor after it falls prone"
+        "description": "Right the Tormentor after it falls prone",
+        "not_prone": "The Tormentor is not prone — there is nothing to flip upright"
       },
       "effect": {
         "name": "Tormentor (Damage Control)"

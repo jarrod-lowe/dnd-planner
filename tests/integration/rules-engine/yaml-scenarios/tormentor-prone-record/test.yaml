@@ -5,14 +5,17 @@ description: >-
   (never the player-global condition.prone, which would flip the PLAYER's
   attack flags and notice), recorded from the station's +ADD by a free offer
   and cleared by Flip Upright's empty same-key eviction (the get-up idiom).
-  PC-prone parity (user feedback): the knock carries drop-prone's own
-  structural gate — it does not exist while already prone, exactly as the
-  player's drop-prone does not — with no Speed leg, because a vehicle has no
-  movement economy. The effect is permanent — no rest clears it, because a
-  rest does not right a vehicle. A NOTICE (the Life-Bond annotate pattern)
-  carries the deficiency gated on the prone fact itself — PC-prone parity: the
-  condition triggers its notice — so it stands ONLY while the vehicle is prone
-  and withdraws the moment it is flipped upright.
+  Both prone offers are gated structurally on the board ALONE: the prone
+  state itself is a LEGALITY gate (the engine's illegal-but-visible contract
+  — plan.ts keeps illegal offers applicable with diagnostics, and a
+  planned-anyway row still executes), never a structural `when`. While
+  UPRIGHT the knock is legal and the flip is illegal (not prone); while PRONE
+  the mirror flips. No Speed leg, because a vehicle has no movement economy.
+  The effect is permanent — no rest clears it, because a rest does not right
+  a vehicle. A NOTICE (the Life-Bond annotate pattern) carries the deficiency
+  gated on the prone fact itself — PC-prone parity: the condition triggers
+  its notice — so it stands ONLY while the vehicle is prone and withdraws
+  the moment it is flipped upright.
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -23,6 +26,8 @@ steps:
         offers:
           exists:
             - board-tormentor
+          # Unboarded, BOTH prone offers are structurally absent (the board is
+          # the one structural gate): no vehicle, nothing to knock or flip.
           notExists:
             - knock-tormentor-prone
             - flip-tormentor-upright
@@ -38,9 +43,14 @@ steps:
           notExists:
             - rule.tormentor.notice
         offers:
+          # Upright: both offers VISIBLE, legality split — the knock legal, the
+          # flip illegal with its not-prone diagnostic (never hidden).
           exists:
             - knock-tormentor-prone
-          notExists:
+            - flip-tormentor-upright
+          legal:
+            - knock-tormentor-prone
+          illegal:
             - flip-tormentor-upright
         offerUi:
           - id: knock-tormentor-prone
@@ -59,7 +69,15 @@ steps:
         facts:
           companion.tormentorDamageControl.prone: 1
         offers:
+          # Prone (the record merely planned): the mirror — the flip is now
+          # the legal one, and the knock stays VISIBLE and ILLEGAL with its
+          # already-prone diagnostic instead of withdrawing.
           exists:
+            - knock-tormentor-prone
+            - flip-tormentor-upright
+          illegal:
+            - knock-tormentor-prone
+          legal:
             - flip-tormentor-upright
         offerUi:
           - id: flip-tormentor-upright
@@ -83,29 +101,57 @@ steps:
             - effect-tormentor-prone
         facts:
           companion.tormentorDamageControl.prone: 1
-  # PC-prone parity (user feedback): drop-prone's own gate — already prone,
-  # the offer does not exist (condition-prone-drop's after-drop assert shape).
-  # The recorder cannot re-fire while the vehicle is down; its flip-upright
-  # mirror is the offer that exists now.
+  # While committed-prone the same split stands: knock visible + illegal,
+  # flip visible + legal (the plan-fold view of the step above).
   - evaluate:
       assert:
         facts:
           companion.tormentorDamageControl.prone: 1
         offers:
-          notExists:
-            - knock-tormentor-prone
           exists:
+            - knock-tormentor-prone
             - flip-tormentor-upright
+          illegal:
+            - knock-tormentor-prone
+          legal:
+            - flip-tormentor-upright
+  # The OVERRIDE path (the plan.ts contract): committing the knock while
+  # ILLEGAL still applies — the keyed replacement re-advertises the one
+  # record (newest-wins, so still a single prone fact) and the row carries
+  # its already-prone diagnostic rather than being withdrawn.
+  - addOffer:
+      id: knock-tormentor-prone
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 1
+        planErrors:
+          - id: knock-tormentor-prone
+            index: 0
+            errors:
+              - rule.tormentor.knocked-prone.already_prone
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-prone
+        facts:
+          companion.tormentorDamageControl.prone: 1
   # Flip Upright: the empty same-key eviction clears the fact and withdraws
-  # the station chip, and the NOTICE goes with the condition it carries.
+  # the station chip, and the NOTICE goes with the condition it carries. The
+  # flip itself stays VISIBLE once upright — merely illegal (nothing to flip).
   - addOffer:
       id: flip-tormentor-upright
       assert:
         facts:
           companion.tormentorDamageControl.prone: 0
         offers:
-          notExists:
+          exists:
             - flip-tormentor-upright
+            - knock-tormentor-prone
+          illegal:
+            - flip-tormentor-upright
+          legal:
+            - knock-tormentor-prone
         annotations:
           notExists:
             - rule.tormentor.notice

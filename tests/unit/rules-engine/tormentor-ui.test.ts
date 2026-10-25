@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, type RuleModule } from '$lib/rules-engine';
+import { evaluate, type FactReader, type RuleModule } from '$lib/rules-engine';
 import { getModule, isRegistered } from '$lib/rules-engine/registry';
 import { lazyRuleGroupIds } from '$lib/rules-engine/lazy';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
@@ -385,13 +385,23 @@ describe('module-declared panel entries', () => {
  * namespaced (`companion.tormentorDamageControl.prone`) under its own keyed
  * effect, never the player-global `condition.prone` (the builder's
  * `proneEffect()` would flip the PLAYER's attack flags, notice and movement
- * legs). Recorded from the station's +ADD gated exactly like the PC's
- * drop-prone (structurally absent while already prone; no Speed leg — the
- * vehicle has no movement economy), flipped upright by an empty same-key
- * eviction, evicted with the board, and carried as a NOTICE while prone (the
- * Life-Bond annotate pattern gated on the prone fact — PC-prone parity: the
- * condition triggers its notice).
+ * legs). Recorded from the station's +ADD and flipped upright by an empty
+ * same-key eviction; the BOARD is each offer's one structural gate (`when`),
+ * while the prone state itself is a LEGALITY gate (illegal-but-visible, the
+ * plan.ts contract — illegal rows stay applicable with diagnostics and still
+ * execute; no Speed leg, the vehicle has no movement economy), evicted with
+ * the board, and carried as a NOTICE while prone (the Life-Bond annotate
+ * pattern gated on the prone fact — PC-prone parity: the condition triggers
+ * its notice).
  */
+
+/** A reader for the boarded vehicle at the given prone state (gate pins). */
+function readerAt(prone: number): FactReader {
+  return {
+    num: (n) => (n === `${F}.prone` ? prone : n === `${F}.active` ? 1 : 0),
+    has: (n) => n === `${F}.prone` || n === `${F}.active`
+  };
+}
 
 /** The prone record, through the real plan fold (boarded, then knocked). */
 function proneEffect(): EffectInstance {
@@ -406,7 +416,7 @@ function proneEffect(): EffectInstance {
 }
 
 describe('knocked-prone offer', () => {
-  it('is a station free-section offer while boarded, with no legality gates', () => {
+  it('is a station free-section offer while boarded, LEGAL while upright', () => {
     const out = evaluate({ modules: [module()], committed: [boardEffect()] });
     const offer = out.availableRules.find((r) => r.rule.id === 'knock-tormentor-prone');
     expect(offer, 'the station +ADD carries the knocked-prone offer').toBeDefined();
@@ -424,18 +434,29 @@ describe('knocked-prone offer', () => {
     // 'held' sub-bucket (#467 taxonomy), not the HANDLE gear bucket the
     // boarding offers use.
     expect(ui.intents).toEqual({ CONDITION: 'held' });
+    // Boarded and upright: legal, no diagnostics.
+    expect(offer!.legal).toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
   });
 
-  it("is gated structurally on boarded-AND-upright (when), PC drop-prone's gate", () => {
+  it('is gated structurally on boarded ONLY (when); the prone state is a legality gate', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'knock-tormentor-prone')!;
     // `when` like the other station actions: unboarded, recording a prone for
-    // a vehicle nobody rides does not exist at all. PC-prone parity (user
-    // feedback): the player's drop-prone is `when: condition.prone === 0`, so
-    // the knock adds the same already-prone leg on the namespaced fact. No
-    // `legalWhen`: the only PC leg beyond the prone gate is Speed, and a
-    // vehicle has no movement economy.
+    // a vehicle nobody rides does not exist at all. The ALREADY-PRONE state is
+    // `legalWhen`, never `when` (the engine's illegal-but-visible contract —
+    // the PC's drop-prone structural gate was the deviation, corrected): while
+    // prone the offer stays visible and applicable, flagged illegal with its
+    // diagnostic, and a planned-anyway row still executes.
     expect(typeof raw.when).toBe('function');
-    expect(raw.legalWhen).toBeUndefined();
+    expect(raw.legalWhen).toHaveLength(1);
+    // The structural gate is the board alone: it holds while prone.
+    expect(raw.when!(readerAt(1))).toBe(true);
+    // …and the legality leg is the already-prone one.
+    expect(raw.legalWhen![0]!.condition(readerAt(0))).toBe(true);
+    expect(raw.legalWhen![0]!.condition(readerAt(1))).toBe(false);
+    expect(raw.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.knocked-prone.already_prone`, severity: 'error' }
+    ]);
   });
 
   it('is absent while unboarded', () => {
@@ -443,18 +464,25 @@ describe('knocked-prone offer', () => {
     expect(out.availableRules.some((r) => r.rule.id === 'knock-tormentor-prone')).toBe(false);
   });
 
-  it("is absent while already prone (drop-prone's structural gate — PC parity)", () => {
-    // PC-prone parity (user feedback): the player's drop-prone does not exist
-    // while the condition is held, and neither does the vehicle's knock — the
-    // recorder cannot re-fire while the vehicle is down. Its mirror,
-    // flip-upright, is the offer that exists now.
+  it('stays VISIBLE but ILLEGAL while already prone, with its diagnostic (never hidden)', () => {
+    // The engine's illegal-but-visible contract (plan.ts): an illegal offer
+    // stays applicable with its diagnostic — the player overrides; the engine
+    // never makes an illegal action impossible. Its mirror, flip-upright, is
+    // the LEGAL offer now.
     const out = evaluate({
       modules: [module()],
       committed: [boardEffect(), proneEffect()]
     });
-    expect(out.availableRules.some((r) => r.rule.id === 'knock-tormentor-prone')).toBe(false);
-    expect(out.availableRules.some((r) => r.rule.id === 'flip-tormentor-upright')).toBe(true);
-    // The gate hides the offer; it does not touch the committed state.
+    const knock = out.availableRules.find((r) => r.rule.id === 'knock-tormentor-prone');
+    expect(knock, 'the knock is still offered while prone').toBeDefined();
+    expect(knock!.legal).toBe(false);
+    expect(knock!.diagnostics).toEqual([
+      { code: `${T}.knocked-prone.already_prone`, severity: 'error' }
+    ]);
+    const flip = out.availableRules.find((r) => r.rule.id === 'flip-tormentor-upright');
+    expect(flip, 'the flip is offered while prone').toBeDefined();
+    expect(flip!.legal).toBe(true);
+    // The committed state is untouched by the gate.
     expect(out.facts[`${F}.prone`]).toBe(1);
   });
 
@@ -481,37 +509,72 @@ describe('knocked-prone offer', () => {
     });
   });
 
-  it('a planned-anyway re-record while prone does not execute (the closed when gate)', () => {
-    // The engine's structural-`when` contract (plan.ts): a planned row whose
-    // gate is closed does not execute — the UI cannot build this row anymore
-    // (the offer is absent), but a stale plan carried over the commit must not
-    // advertise a second record either. The committed record stands alone.
+  it('a planned-anyway re-record while ILLEGAL still applies, carrying its diagnostic', () => {
+    // The plan.ts contract (the player-override path): an illegal planned row
+    // EXECUTES — the keyed replacement re-advertises the one record
+    // (newest-wins, so still a single prone fact) while the row carries the
+    // already-prone diagnostic, instead of the closed structural gate
+    // silently doing nothing.
     const out = evaluate({
       modules: [module()],
       committed: [boardEffect(), proneEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
     const keyed = out.effects.filter((e) => e.key === 'tormentor-prone');
-    expect(keyed).toHaveLength(0);
+    expect(keyed, 'the illegal row still advertises the record').toHaveLength(1);
     expect(out.facts[`${F}.prone`]).toBe(1);
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.knocked-prone.already_prone`, severity: 'error' }
+    ]);
+  });
+
+  it('carries the already-prone diagnostic message in BOTH locales (tlh is the canary)', () => {
+    const messages: Record<string, string | undefined> = {
+      en: en.rule.tormentor['knocked-prone']?.already_prone,
+      'en-x-tlh': tlh.rule.tormentor['knocked-prone']?.already_prone
+    };
+    for (const [where, value] of Object.entries(messages))
+      expect(value, where).toEqual(expect.any(String));
   });
 });
 
 describe('flip-upright offer', () => {
-  it('exists only while boarded AND prone (a structural when, not a legality gate)', () => {
+  it('is gated structurally on boarded ONLY (when); prone is a legality gate, both states visible', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'flip-tormentor-upright')!;
+    // `when` is the board alone (like the knock — the mirror structural gate
+    // was the deviation): while UPRIGHT the offer stays visible and applicable
+    // but is flagged ILLEGAL with its not-prone diagnostic (the engine's
+    // illegal-but-visible contract, the get-up shape).
     expect(typeof raw.when).toBe('function');
-    expect(raw.legalWhen).toBeUndefined();
-    // Boarded but upright: nothing to flip — the offer does not exist.
+    expect(raw.when!(readerAt(0))).toBe(true);
+    expect(raw.when!(readerAt(1))).toBe(true);
+    expect(raw.legalWhen).toHaveLength(1);
+    expect(raw.legalWhen![0]!.condition(readerAt(1))).toBe(true);
+    expect(raw.legalWhen![0]!.condition(readerAt(0))).toBe(false);
+    expect(raw.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.flip-upright.not_prone`, severity: 'error' }
+    ]);
+  });
+
+  it('is offered in BOTH prone states: legal while prone, illegal-but-visible while upright', () => {
+    // Boarded and upright: the flip EXISTS (nothing hides it) and is illegal.
     const upright = evaluate({ modules: [module()], committed: [boardEffect()] });
-    expect(upright.availableRules.some((r) => r.rule.id === 'flip-tormentor-upright')).toBe(false);
+    const uprightFlip = upright.availableRules.find((r) => r.rule.id === 'flip-tormentor-upright');
+    expect(uprightFlip, 'the flip is offered while upright').toBeDefined();
+    expect(uprightFlip!.legal).toBe(false);
+    expect(uprightFlip!.diagnostics).toEqual([
+      { code: `${T}.flip-upright.not_prone`, severity: 'error' }
+    ]);
     // Boarded and prone (the record planned this very turn): flippable now.
     const prone = evaluate({
       modules: [module()],
       committed: [boardEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
-    expect(prone.availableRules.some((r) => r.rule.id === 'flip-tormentor-upright')).toBe(true);
+    const proneFlip = prone.availableRules.find((r) => r.rule.id === 'flip-tormentor-upright');
+    expect(proneFlip).toBeDefined();
+    expect(proneFlip!.legal).toBe(true);
+    expect(proneFlip!.diagnostics).toEqual([]);
   });
 
   it('sits in the station panel, free section, while prone', () => {
@@ -553,6 +616,33 @@ describe('flip-upright offer', () => {
     // The fact is GONE the moment the row is merely planned (newest-wins): no
     // effect writes it, so the key vanishes — unset reads as 0 downstream.
     expect(out.facts[`${F}.prone`]).toBeUndefined();
+  });
+
+  it('a planned-anyway flip while upright still executes as a no-op eviction, with its diagnostic', () => {
+    // The get-up-while-standing precedent: the illegal row still runs, so the
+    // empty same-key eviction lands beside nothing to evict (a fact no-op) and
+    // the row carries the not-prone diagnostic — the override path never
+    // silently swallows the plan.
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'flip-tormentor-upright' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
+    expect(evict, 'the illegal row still advertises the eviction').toBeDefined();
+    expect(out.facts[`${F}.prone`]).toBeUndefined();
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.flip-upright.not_prone`, severity: 'error' }
+    ]);
+  });
+
+  it('carries the not-prone diagnostic message in BOTH locales (tlh is the canary)', () => {
+    const messages: Record<string, string | undefined> = {
+      en: en.rule.tormentor['flip-upright']?.not_prone,
+      'en-x-tlh': tlh.rule.tormentor['flip-upright']?.not_prone
+    };
+    for (const [where, value] of Object.entries(messages))
+      expect(value, where).toEqual(expect.any(String));
   });
 });
 

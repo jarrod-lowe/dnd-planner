@@ -2,6 +2,7 @@ import {
   defineRule,
   type ActionResult,
   type Annotation,
+  type Diagnostic,
   type EffectInstance,
   type FactReader,
   type RuleModule,
@@ -39,15 +40,17 @@ import {
  * `companion.tormentorDamageControl.prone` fact under its own keyed effect —
  * NEVER the player-global `condition.prone` (the builder's `proneEffect()`
  * would flip the PLAYER's attack flags, notice and movement legs). The
- * station's +ADD records it (free, gated exactly like the PC's drop-prone —
- * structurally absent while already prone, with no Speed leg because a
- * vehicle has no movement economy) and flips it upright (empty same-key
- * eviction); the effect is PERMANENT (a rest does not right a vehicle), the
- * board/de-board lifecycle evicts it, and a NOTICE carries the deficiency
- * while the vehicle is PRONE (PC-prone parity: the condition triggers its
- * notice — boarded but upright, there is nothing to know). Both prone offers
- * file under the CONDITION 'held' sub-bucket (#467 taxonomy), so a vehicle
- * condition groups with PC conditions in the station +ADD.
+ * station's +ADD records it and flips it upright (empty same-key eviction);
+ * the BOARD is each offer's one structural `when`, while the prone state
+ * itself is a LEGALITY gate on both (the engine's illegal-but-visible
+ * contract — plan.ts keeps illegal offers applicable with diagnostics and a
+ * planned-anyway row still executes; no Speed leg, because a vehicle has no
+ * movement economy). The effect is PERMANENT (a rest does not right a
+ * vehicle), the board/de-board lifecycle evicts it, and a NOTICE carries the
+ * deficiency while the vehicle is PRONE (PC-prone parity: the condition
+ * triggers its notice — boarded but upright, there is nothing to know). Both
+ * prone offers file under the CONDITION 'held' sub-bucket (#467 taxonomy), so
+ * a vehicle condition groups with PC conditions in the station +ADD.
  *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
  * Harpoon Flinger stations and the Juke reaction, movement economy, damage
@@ -71,6 +74,10 @@ const OCCUPANCY_KEY = 'tormentor-occupancy';
 /** The vehicle-prone record's effect id and replacement key (ONE live record). */
 const PRONE_EFFECT_ID = 'effect-tormentor-prone';
 const PRONE_KEY = 'tormentor-prone';
+
+/** Each prone offer's single legality leg (the get-up not_prone idiom). */
+const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
+const NOT_PRONE = `${T}.flip-upright.not_prone`;
 
 /** The stat block boarding bakes. Display-only: HP has no current/spent pair. */
 const BOARD_STATE: Record<string, number> = {
@@ -360,16 +367,26 @@ const vehicleTormentor: RuleModule = {
     },
     {
       // The STATION's prone RECORDER: models the vehicle BEING knocked prone
-      // (imposed by the outside world), free. PC-prone parity (user feedback:
-      // same gating as the PCs): it carries the player drop-prone offer's own
-      // structural gate — drop-prone is `when: condition.prone === 0`, so the
-      // knock does not exist while already prone either (the mirror of
-      // flip-upright's prone-only gate). No legality gates: the only PC leg
-      // beyond the prone gate is Speed, and a vehicle has no movement
-      // economy. State tracking only: no attack flags, no movement legs, no
-      // incapacitated modelling this pass.
+      // (imposed by the outside world), free. The BOARD is the one structural
+      // gate (unboarded there is no vehicle to knock); the already-prone state
+      // is a LEGALITY gate, never a `when` (the engine's illegal-but-visible
+      // contract — plan.ts keeps illegal offers applicable with diagnostics
+      // and a planned-anyway row still executes; the PC drop-prone structural
+      // gate was the deviation, corrected): while prone the offer stays
+      // visible and applicable, flagged illegal with its already-prone
+      // diagnostic, and committing it anyway re-advertises the one keyed
+      // record (newest-wins — still a single prone fact). No Speed leg: a
+      // vehicle has no movement economy. State tracking only: no attack flags,
+      // no movement legs, no incapacitated modelling this pass.
       id: 'knock-tormentor-prone',
-      when: (f: FactReader): boolean => boarded(f) && f.num(`${F}.prone`) === 0,
+      when: boarded,
+      legalWhen: [
+        {
+          // Illegal while already prone (the state the record would write).
+          condition: (f: FactReader): boolean => f.num(`${F}.prone`) === 0,
+          diagnostics: [{ code: ALREADY_PRONE, severity: 'error' }]
+        }
+      ],
       ui: {
         section: 'free',
         subject: SUBJECT,
@@ -384,20 +401,35 @@ const vehicleTormentor: RuleModule = {
         intents: { CONDITION: 'held' },
         actionCost: []
       },
-      apply: (): ActionResult => ({ advertise: [tormentorProneEffect()] })
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostics from the fold.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num(`${F}.prone`) > 0) diagnostics.push({ code: ALREADY_PRONE, severity: 'error' });
+        return { advertise: [tormentorProneEffect()], diagnostics };
+      }
     },
     {
       // The way a prone vehicle rights itself: it cannot — something else
-      // has to flip it upright. Structurally absent while upright (`when`, the
-      // mirror of the knock's drop-prone gate: there is nothing to flip), free,
-      // no legality gates. PC get-up parity check: of Get Up's three legality
-      // legs, prone-only is enforced by this `when`, and Speed-0 and
-      // half-Speed affordability do not translate — a vehicle has no movement
-      // economy to gate on. The apply is the EMPTY same-key eviction (the
-      // player's Get Up idiom) — newest-wins clears the record while merely
-      // planned.
+      // has to flip it upright. The board is again the one structural gate;
+      // NOT-prone is a legality gate (the get-up shape, the engine's
+      // illegal-but-visible contract): while upright the offer stays visible
+      // and applicable, flagged illegal with its not-prone diagnostic, and a
+      // planned-anyway row still executes — its EMPTY same-key eviction (the
+      // player's Get Up idiom) committing as a no-op beside nothing to evict,
+      // exactly like Get Up while standing. Newest-wins clears the record
+      // while merely planned. PC get-up parity check: of Get Up's three
+      // legality legs, prone-only is this gate; Speed-0 and half-Speed
+      // affordability do not translate — a vehicle has no movement economy.
       id: 'flip-tormentor-upright',
-      when: (f: FactReader): boolean => boarded(f) && f.num(`${F}.prone`) > 0,
+      when: boarded,
+      legalWhen: [
+        {
+          // Illegal while upright (nothing to flip).
+          condition: (f: FactReader): boolean => f.num(`${F}.prone`) > 0,
+          diagnostics: [{ code: NOT_PRONE, severity: 'error' }]
+        }
+      ],
       ui: {
         section: 'free',
         subject: SUBJECT,
@@ -411,7 +443,13 @@ const vehicleTormentor: RuleModule = {
         intents: { CONDITION: 'held' },
         actionCost: []
       },
-      apply: (): ActionResult => ({ advertise: [evictProneEffect()] })
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostics from the fold.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num(`${F}.prone`) === 0) diagnostics.push({ code: NOT_PRONE, severity: 'error' });
+        return { advertise: [evictProneEffect()], diagnostics };
+      }
     },
     {
       // The STATION-side way out: gated on the board (structurally — unboarded,

@@ -6,8 +6,11 @@ description: >-
   same while clearing every baked fact. The notice follows the prone record
   (PC-prone parity: the condition triggers its notice), so the re-board's
   eviction withdraws it too — a fresh board starts upright and un-noticed.
-  The raw mount-chip removal path declares the same eviction via the board
-  effect's dependents (unit-pinned, not assertible here).
+  The prone state itself never gates the offers structurally (the board is
+  the one `when`): the knock stays visible-but-illegal while prone and the
+  flip while upright (the engine's illegal-but-visible contract). The raw
+  mount-chip removal path declares the same eviction via the board effect's
+  dependents (unit-pinned, not assertible here).
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -28,13 +31,17 @@ steps:
       assert:
         facts:
           companion.tormentorDamageControl.prone: 1
-        # PC-parity gate (user feedback): the moment the record is planned the
-        # vehicle is prone, so the knock withdraws — drop-prone's in-plan
-        # mirror — and flip-upright is the offer that exists.
+        # The moment the record is planned the vehicle is prone: the knock
+        # does NOT withdraw — it stays visible and is marked ILLEGAL with its
+        # already-prone diagnostic (plan.ts's illegal-but-visible contract),
+        # and flip-upright is the offer that is legal now.
         offers:
-          notExists:
-            - knock-tormentor-prone
           exists:
+            - knock-tormentor-prone
+            - flip-tormentor-upright
+          illegal:
+            - knock-tormentor-prone
+          legal:
             - flip-tormentor-upright
   - endTurn:
       assert:
@@ -56,6 +63,15 @@ steps:
         annotations:
           notExists:
             - rule.tormentor.notice
+        # Upright again after the eviction: the legality split is back — the
+        # knock legal, the flip visible-but-illegal.
+        offers:
+          exists:
+            - flip-tormentor-upright
+          legal:
+            - knock-tormentor-prone
+          illegal:
+            - flip-tormentor-upright
   - endTurn:
       assert:
         effects:

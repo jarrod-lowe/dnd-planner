@@ -467,11 +467,13 @@
       },
       "knocked-prone": {
         "name": "pummoH",
-        "description": "Duj Sep pum yIcher"
+        "description": "Duj Sep pum yIcher",
+        "already_prone": "Duj Sep pumtaH — pumqa' chIm"
       },
       "flip-upright": {
         "name": "Duj yIngheSqa'moH",
-        "description": "pumbogh Duj Sep yIngheSqa'choHmoH"
+        "description": "pumbogh Duj Sep yIngheSqa'choHmoH",
+        "not_prone": "Duj Sep pumbe' — Duj Sep IngheSqa'moH chIm"
       },
       "effect": {
         "name": "Duj Sep (Sep Irneh)"
