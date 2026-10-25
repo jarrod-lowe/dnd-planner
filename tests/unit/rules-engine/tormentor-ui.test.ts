@@ -59,6 +59,7 @@ describe('board offer ui', () => {
     expect(offers.map((o) => o.id)).toEqual([
       'board-tormentor',
       'set-tormentor-occupancy',
+      'set-tormentor-ac-mode',
       'record-tormentor-damage',
       'record-tormentor-heal',
       'knock-tormentor-prone',
@@ -154,7 +155,10 @@ describe('board effect', () => {
     expect(e.expiry).toEqual({ kind: 'permanent' });
     expect(e.state).toEqual({
       [`${F}.active`]: 1,
-      [`${F}.ac.value`]: 21,
+      // AC mode (pass 4): the board selection is baked as the 0/1 MODE fact —
+      // the flat ac.value bake is GONE (AC is derived as ac.effective below, so
+      // a legacy persisted board's stale ac.value is inert, never a conflict).
+      [`${F}.acMotionless`]: 0,
       // HP bakes its BASE (the pool derives max/current from it — the steed
       // shape) plus the stat block's damage threshold as DATA, so the recorder
       // gates on a fact rather than a literal in the module.
@@ -182,6 +186,7 @@ describe('board effect', () => {
     // de-boarded vehicle.
     expect(boardEffect().dependents).toEqual([
       'tormentor-occupancy',
+      'tormentor-ac-mode',
       'tormentor-prone',
       'tormentor-hp-damage',
       'tormentor-hp-heal',
@@ -326,7 +331,7 @@ describe('creature capacity derive', () => {
 // HP chip renders).
 const BOARDED = {
   [`${F}.active`]: 1,
-  [`${F}.ac.value`]: 21,
+  [`${F}.ac.effective`]: 21,
   [`${F}.hp.max`]: 60,
   [`${F}.hp.current`]: 60,
   [`${F}.speed`]: 100,
@@ -353,7 +358,7 @@ describe('module-declared panel entries', () => {
       {
         type: 'value',
         label: 'play.stats.tormentor-damage-control.ac',
-        fact: `${F}.ac.value`,
+        fact: `${F}.ac.effective`,
         subject: SUBJECT
       },
       {
@@ -1110,6 +1115,302 @@ describe('pass 3 i18n (tlh is the canary)', () => {
       'en-x-tlh destroyed notice label': tlh.rule.tormentor['destroyed-notice'],
       'en destroyed notice body': en.rule.tormentor['destroyed-notice.body'],
       'en-x-tlh destroyed notice body': tlh.rule.tormentor['destroyed-notice.body']
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+/**
+ * Pass 4 — AC mode (v2: the segmented-control rework; v1's annotation state
+ * chip was abandoned, see the plan). The stat block's "AC 21 (19 while
+ * motionless)" becomes a MODE the player records, not a standing flag:
+ *
+ * - The BOARD offer carries a [Moving | Motionless] segmented SECONDARY control
+ *   (the find-steed creature-type precedent — a segmented control can only be a
+ *   secondaryControl in PanelRenderer) defaulting to Moving, and the board
+ *   effect bakes the selection as the 0/1 `acMotionless` mode fact. The board
+ *   effect NO LONGER bakes a flat `ac.value`.
+ * - AC is DERIVED as `ac.effective` (19 motionless, else 21, gated on active) —
+ *   a deliberately NEW fact name: legacy persisted boards bake flat ac.value,
+ *   and nothing may derive ac.value or the sheet's input/contribution overlap
+ *   would throw on every evaluation (the pass-3 hp.max lesson). The stale
+ *   legacy ac.value is simply inert, and a legacy board derives 21 (Moving)
+ *   with the station record working on top of it — no load-seam migration.
+ * - The station's +ADD carries an always-present (while boarded) "AC Mode"
+ *   record offer — the occupancy intent class, applied IMMEDIATELY — with the
+ *   same segmented control pre-showing the CURRENT mode. Its ONE permanent
+ *   keyed effect (`tormentor-ac-mode`) stores the mode as the DISTINCT
+ *   `acMotionless.recorded` fact: the engine sum-combines two live effects
+ *   writing one fact, so a record writing `acMotionless` itself could never
+ *   flip a Motionless board back to Moving (1 + 0 still reads 1). The derive
+ *   prefers the record when present (the occupancy has-preference idiom), so
+ *   the record overrides the board bake in BOTH directions.
+ * - The mode key joins CHILD_KEYS: re-board/de-board evict the record, and a
+ *   fresh board resets to the board SELECTION.
+ */
+describe('board offer AC-mode control', () => {
+  it('carries a [Moving | Motionless] segmented SECONDARY control defaulting to Moving (creatureType precedent)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'board-tormentor')!;
+    // Segmented controls are secondaryControl-only in PanelRenderer — find-steed
+    // is the precedent for a cast offer's secondary picker.
+    expect(raw.ui!.secondaryControl).toEqual({
+      type: 'segmented',
+      var: 'mode',
+      prefix: 'play.choices.tormentor.mode',
+      options: [
+        { value: 0, label: `${T}.mode.moving` },
+        { value: 1, label: `${T}.mode.motionless` }
+      ]
+    });
+    expect(raw.vars).toEqual({ mode: { capture: true, default: { number: 0 } } });
+  });
+
+  it('bakes the SELECTED mode (no ac.value bake — AC is derived from here on)', () => {
+    // Default (no selection): Moving.
+    const moving = boardEffect();
+    expect(moving.state?.[`${F}.acMotionless`]).toBe(0);
+    expect(moving.state?.[`${F}.ac.value`]).toBeUndefined();
+    // Motionless selected: the selection flows into the effect state exactly
+    // the way creatureType flows into the steed effect.
+    const out = evaluate({
+      modules: [module()],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor', selections: { mode: 1 } }]
+    });
+    const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-damage-control'));
+    expect(advertised).toHaveLength(1);
+    expect(advertised[0]!.state?.[`${F}.acMotionless`]).toBe(1);
+    expect(advertised[0]!.state?.[`${F}.ac.value`]).toBeUndefined();
+  });
+});
+
+/** A committed board effect at the given board-time mode (the real plan fold). */
+function boardEffectAt(mode: number): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    planned: [{ instanceId: 'i0', ruleId: 'board-tormentor', selections: { mode } }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-damage-control'));
+  expect(advertised, 'boarding at a mode advertises exactly one board effect').toHaveLength(1);
+  return advertised[0]!;
+}
+
+/** The AC-mode record a station row at `mode` advertises (exactly one). */
+function acModeEffect(mode: number): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [boardEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-ac-mode', selections: { mode } }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-ac-mode'));
+  expect(advertised, `an AC-mode row at ${mode} advertises exactly one record`).toHaveLength(1);
+  return advertised[0]!;
+}
+
+describe('ac.effective derive', () => {
+  it('reads 21 boarded-and-moving, 19 boarded-and-motionless, 0 unboarded', () => {
+    const moving = evaluate({ modules: [module()], committed: [boardEffect()] });
+    expect(moving.facts[`${F}.ac.effective`]).toBe(21);
+    expect(moving.facts[`${F}.acMotionless.current`]).toBe(0);
+    const motionless = evaluate({ modules: [module()], committed: [boardEffectAt(1)] });
+    expect(motionless.facts[`${F}.ac.effective`]).toBe(19);
+    expect(motionless.facts[`${F}.acMotionless.current`]).toBe(1);
+    const unboarded = evaluate({ modules: [module()] });
+    expect(unboarded.facts[`${F}.ac.effective`]).toBe(0);
+  });
+
+  it('the station record overrides the board bake in BOTH directions (never summed)', () => {
+    // The edge a same-fact write could never survive: a MOTIONLESS board plus a
+    // recorded MOVING must read 21 — sum-combining 1 + 0 would still read 1,
+    // which is why the record is a distinct fact the derive prefers.
+    const backToMoving = evaluate({
+      modules: [module()],
+      committed: [boardEffectAt(1), acModeEffect(0)]
+    });
+    expect(backToMoving.facts[`${F}.acMotionless`]).toBe(1);
+    expect(backToMoving.facts[`${F}.acMotionless.recorded`]).toBe(0);
+    expect(backToMoving.facts[`${F}.acMotionless.current`]).toBe(0);
+    expect(backToMoving.facts[`${F}.ac.effective`]).toBe(21);
+    const toMotionless = evaluate({
+      modules: [module()],
+      committed: [boardEffectAt(0), acModeEffect(1)]
+    });
+    expect(toMotionless.facts[`${F}.acMotionless.current`]).toBe(1);
+    expect(toMotionless.facts[`${F}.ac.effective`]).toBe(19);
+  });
+
+  it('a LEGACY persisted board (flat ac.value, no acMotionless) evaluates and derives 21', () => {
+    // The pre-pass-4 board shape, as persisted on a test character: the flat
+    // ac.value bake is an INPUT no module derives or reads any more, so it is
+    // inert rather than a two-writer conflict, and the missing mode fact reads
+    // as the Moving default.
+    const legacy: EffectInstance = {
+      id: 'effect-tormentor-damage-control',
+      key: 'tormentor-damage-control',
+      state: {
+        [`${F}.active`]: 1,
+        [`${F}.ac.value`]: 21,
+        [`${F}.hp.base`]: 60,
+        [`${F}.damageThreshold`]: 10,
+        [`${F}.speed`]: 100,
+        [`${F}.cargo`]: 500,
+        [`${F}.str`]: 16,
+        [`${F}.dex`]: 14,
+        [`${F}.con`]: 14,
+        [`${F}.str.modifier`]: 3,
+        [`${F}.dex.modifier`]: 2,
+        [`${F}.con.modifier`]: 2,
+        [`${F}.creatureCapacity.max`]: 4
+      },
+      expiry: { kind: 'permanent' }
+    };
+    const out = evaluate({ modules: [module()], committed: [legacy] });
+    expect(out.facts[`${F}.ac.value`]).toBe(21);
+    expect(out.facts[`${F}.ac.effective`]).toBe(21);
+    expect(out.facts[`${F}.acMotionless.current`]).toBe(0);
+    // The station record works on a legacy board (dismiss + re-add is the
+    // accepted migration; the record needs no mode fact to exist).
+    expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-ac-mode')).toBe(true);
+  });
+});
+
+describe('set-tormentor-ac-mode offer', () => {
+  it('is a station free-section record offer while boarded, segmented pre-showing the CURRENT mode', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'set-tormentor-ac-mode');
+    expect(offer, 'the station +ADD carries the AC-mode offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.ac-mode.name`);
+    expect(ui.description).toBe(`${T}.ac-mode.description`);
+    expect(ui.actionCost).toEqual([]);
+    // The occupancy intent class (a HANDLE gear record, not a condition).
+    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+    expect(ui.secondaryControl).toEqual({
+      type: 'segmented',
+      var: 'mode',
+      prefix: 'play.choices.tormentor.mode',
+      options: [
+        { value: 0, label: `${T}.mode.moving` },
+        { value: 1, label: `${T}.mode.motionless` }
+      ]
+    });
+    // Opens at the CURRENT mode (recorded value once set, board bake otherwise).
+    expect(offer!.rule.vars).toEqual({
+      mode: { capture: true, default: { fact: `${F}.acMotionless.current` } }
+    });
+    // Always applicable while boarded: no legality gates (the mode is a fact,
+    // not a resource).
+    expect(offer!.legal).toBe(true);
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-ac-mode')!;
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toBeUndefined();
+  });
+
+  it('is absent while unboarded (structural gate on the board)', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-ac-mode')).toBe(false);
+  });
+
+  it('apply advertises ONE permanent keyed effect storing the mode as the distinct recorded fact', () => {
+    const e = acModeEffect(1);
+    expect(e.id).toContain('effect-tormentor-ac-mode');
+    expect(e.key).toBe('tormentor-ac-mode');
+    // The RECORDED fact, not the board-baked acMotionless: the engine
+    // sum-combines two live effects writing one fact, so the record must be its
+    // own fact for the derive to prefer it in both directions.
+    expect(e.state).toEqual({ [`${F}.acMotionless.recorded`]: 1 });
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    expect(e.display).toEqual({
+      name: `${T}.ac-mode-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('re-apply REPLACES by key and the AC flips immediately both ways', () => {
+    // Committed Motionless record, planned Moving row: the projection folds the
+    // newest keyed effect at once — 21, and only ONE record effect by key.
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), acModeEffect(1)],
+      planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-ac-mode', selections: { mode: 0 } }]
+    });
+    expect(out.facts[`${F}.acMotionless.recorded`]).toBe(0);
+    expect(out.facts[`${F}.ac.effective`]).toBe(21);
+    // …and the reverse on a Moving record: 19 the moment the row is planned.
+    const reverse = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), acModeEffect(0)],
+      planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-ac-mode', selections: { mode: 1 } }]
+    });
+    expect(reverse.facts[`${F}.ac.effective`]).toBe(19);
+  });
+});
+
+describe('the AC-mode record rides the board lifecycle', () => {
+  it('a re-board evicts the record and resets the mode to the board SELECTION', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffectAt(1), acModeEffect(0)],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-ac-mode'));
+    expect(evict, 're-board advertises the AC-mode eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-ac-mode');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    // The fresh board (no selection) resets to Moving: 21, no record.
+    expect(out.facts[`${F}.acMotionless.recorded`]).toBeUndefined();
+    expect(out.facts[`${F}.ac.effective`]).toBe(21);
+    // A re-board SELECTING Motionless stands: 19.
+    const selected = evaluate({
+      modules: [module()],
+      committed: [boardEffectAt(0), acModeEffect(0)],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor', selections: { mode: 1 } }]
+    });
+    expect(selected.facts[`${F}.acMotionless`]).toBe(1);
+    expect(selected.facts[`${F}.ac.effective`]).toBe(19);
+  });
+
+  it('de-board evicts the record with the board', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), acModeEffect(1)],
+      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-ac-mode'));
+    expect(evict, 'de-board advertises the AC-mode eviction').toBeDefined();
+    expect(evict!.state).toBeUndefined();
+    expect(out.facts[`${F}.acMotionless.recorded`]).toBeUndefined();
+    expect(out.facts[`${F}.ac.effective`]).toBe(0);
+  });
+});
+
+describe('pass 4 i18n (tlh is the canary)', () => {
+  it('the mode labels exist in BOTH locales, shared by the board and station controls', () => {
+    const strings: Record<string, string | undefined> = {
+      'en moving': en.rule.tormentor.mode?.moving,
+      'en-x-tlh moving': tlh.rule.tormentor.mode?.moving,
+      'en motionless': en.rule.tormentor.mode?.motionless,
+      'en-x-tlh motionless': tlh.rule.tormentor.mode?.motionless,
+      'en segmented prefix': (en.play.choices as Record<string, { mode?: string }>).tormentor?.mode,
+      'en-x-tlh segmented prefix': (tlh.play.choices as Record<string, { mode?: string }>).tormentor
+        ?.mode
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+
+  it('the AC-mode offer name/description and the record chip name exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en offer name': en.rule.tormentor['ac-mode']?.name,
+      'en-x-tlh offer name': tlh.rule.tormentor['ac-mode']?.name,
+      'en offer description': en.rule.tormentor['ac-mode']?.description,
+      'en-x-tlh offer description': tlh.rule.tormentor['ac-mode']?.description,
+      'en chip name': en.rule.tormentor['ac-mode-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['ac-mode-effect']?.name
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));

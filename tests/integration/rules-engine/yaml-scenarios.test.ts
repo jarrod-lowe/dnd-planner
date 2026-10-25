@@ -270,6 +270,14 @@ const EXPECTED_RUNNABLE = [
   'tormentor-hp-threshold',
   'tormentor-destroyed-at-zero',
   'tormentor-hp-lifecycle',
+  // …PR 7 — pass 4 v2: the AC mode — a [Moving | Motionless] segmented control
+  // on the board offer (creatureType precedent) baking acMotionless, a station
+  // AC-mode record (keyed, replaces) storing the distinct recorded fact, the
+  // derived ac.effective (19 motionless, else 21), and legacy-board tolerance
+  'tormentor-ac-mode-board',
+  'tormentor-ac-mode-station',
+  'tormentor-ac-mode-lifecycle',
+  'tormentor-ac-mode-legacy',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

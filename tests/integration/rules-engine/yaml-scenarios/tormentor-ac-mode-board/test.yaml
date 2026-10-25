@@ -1,0 +1,76 @@
+name: 'Tormentor (Damage Control) - Board AC Mode Selection'
+description: >-
+  The board offer carries a [Moving | Motionless] segmented secondary control
+  (the find-steed creature-type precedent) defaulting to Moving. The board
+  effect bakes the selection as the 0/1 acMotionless mode fact and NO LONGER
+  bakes a flat ac.value — AC is derived from here on (ac.effective: 21 moving,
+  19 motionless), which is what lets a legacy persisted board's stale ac.value
+  sit inert instead of two-writer conflicting.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Unboarded: no derived AC (the pool derives settle to 0; the panel gates on
+  # active) and no mode facts at all.
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentorDamageControl.ac.effective: 0
+          companion.tormentorDamageControl.acMotionless: 0
+        offers:
+          exists:
+            - board-tormentor
+  # The segmented control on the board offer: two options, Moving (0) default.
+  - evaluate:
+      assert:
+        offerUi:
+          - id: board-tormentor
+            ui:
+              secondaryControl:
+                type: segmented
+                var: mode
+                prefix: play.choices.tormentor.mode
+                options:
+                  - value: 0
+                    label: rule.tormentor.mode.moving
+                  - value: 1
+                    label: rule.tormentor.mode.motionless
+        offerVars:
+          - id: board-tormentor
+            vars:
+              mode:
+                capture: true
+                default:
+                  number: 0
+  # Board with the default (no selection): Moving — derived AC 21, and the flat
+  # ac.value is NOT baked (0 == absent; the derive owns AC from here on).
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.acMotionless: 0
+          companion.tormentorDamageControl.acMotionless.current: 0
+          companion.tormentorDamageControl.ac.effective: 21
+          companion.tormentorDamageControl.ac.value: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+        facts:
+          companion.tormentorDamageControl.ac.effective: 21
+          companion.tormentorDamageControl.ac.value: 0
+  # Re-board with Motionless selected (the keyed replacement): derived AC 19.
+  - addOffer:
+      id: board-tormentor
+      selections:
+        mode: 1
+      assert:
+        facts:
+          companion.tormentorDamageControl.acMotionless: 1
+          companion.tormentorDamageControl.acMotionless.current: 1
+          companion.tormentorDamageControl.ac.effective: 19
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentorDamageControl.ac.effective: 19

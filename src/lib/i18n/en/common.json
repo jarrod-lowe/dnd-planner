@@ -465,6 +465,14 @@
         "name": "Set Occupancy",
         "description": "Record how many creatures the Tormentor carries"
       },
+      "mode": {
+        "moving": "Moving",
+        "motionless": "Motionless"
+      },
+      "ac-mode": {
+        "name": "Set AC Mode",
+        "description": "Record whether the Tormentor is moving (AC 21) or motionless (AC 19)"
+      },
       "record-damage": {
         "name": "Record Vehicle Damage",
         "description": "Record damage dealt to the Tormentor",
@@ -489,6 +497,9 @@
       },
       "occupancy-effect": {
         "name": "Occupancy {{score}}"
+      },
+      "ac-mode-effect": {
+        "name": "AC Mode"
       },
       "hp-damage-effect": {
         "name": "Vehicle Damage {{score}}"
@@ -1874,6 +1885,9 @@
       },
       "find-steed": {
         "type": "Type"
+      },
+      "tormentor": {
+        "mode": "Mode"
       }
     },
     "plan": {

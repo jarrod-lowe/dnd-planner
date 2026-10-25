@@ -71,6 +71,34 @@ const flag = (fact: string, value = 1): EffectInstance => ({
 });
 
 /**
+ * A persisted LEGACY Tormentor board — the shape `tormentorBoardEffect()`
+ * produced before the AC-mode pass: the flat `ac.value` 21 baked, no
+ * `acMotionless` mode fact (the board offer's segmented control did not exist
+ * yet). Today's module must evaluate it without error and derive the Moving
+ * defaults; the stale `ac.value` is inert because nothing derives it.
+ */
+const legacyTormentorBoard = (): EffectInstance => ({
+  id: 'effect-tormentor-damage-control',
+  key: 'tormentor-damage-control',
+  state: {
+    'companion.tormentorDamageControl.active': 1,
+    'companion.tormentorDamageControl.ac.value': 21,
+    'companion.tormentorDamageControl.hp.base': 60,
+    'companion.tormentorDamageControl.damageThreshold': 10,
+    'companion.tormentorDamageControl.speed': 100,
+    'companion.tormentorDamageControl.cargo': 500,
+    'companion.tormentorDamageControl.str': 16,
+    'companion.tormentorDamageControl.dex': 14,
+    'companion.tormentorDamageControl.con': 14,
+    'companion.tormentorDamageControl.str.modifier': 3,
+    'companion.tormentorDamageControl.dex.modifier': 2,
+    'companion.tormentorDamageControl.con.modifier': 2,
+    'companion.tormentorDamageControl.creatureCapacity.max': 4
+  },
+  expiry: permanent
+});
+
+/**
  * Heroic Inspiration already granted — the keyed permanent effect `grant-hi`
  * advertises. The key matches so a planned `use-hi` (or a long-rest grant)
  * replaces/dedupes it rather than stacking.
@@ -243,6 +271,12 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   // === Reactions (an equipped weapon; reaction tracked via steps) ===
   'reaction-tracking': [weaponEquipped('greataxe')],
   'rebuke-the-violent-illegal-no-reaction': [weaponEquipped('greataxe')],
+
+  // === Tormentor — a persisted LEGACY board (the pre-AC-mode shape) ===
+  // Pins pass 4's tolerance contract: the flat ac.value bake is an input no
+  // module derives or reads any more (inert, never a two-writer conflict) and
+  // the missing acMotionless mode fact reads as the Moving default.
+  'tormentor-ac-mode-legacy': [legacyTormentorBoard()],
 
   // === Steed behaviour (a granted slot; the steed is summoned in a cast step) ===
   'steed-saves': [slot(2)],
