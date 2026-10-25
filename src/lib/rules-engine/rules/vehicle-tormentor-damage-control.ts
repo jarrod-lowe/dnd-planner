@@ -101,6 +101,17 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     }
   },
   {
+    // Cargo capacity: display-only alongside the other stat-block values.
+    subject: SUBJECT,
+    panel: 'topBar',
+    gate: `${F}.active`,
+    entry: {
+      type: 'value',
+      label: 'play.stats.tormentor-damage-control.cargo',
+      fact: `${F}.cargo`
+    }
+  },
+  {
     // Like the steed's chip, but three abilities, no saveFact (a vehicle makes
     // no saves of its own here) and no Int/Wis/Cha — the stat block has none.
     subject: SUBJECT,

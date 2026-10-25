@@ -105,13 +105,14 @@ const BOARDED = {
   [`${F}.ac.value`]: 21,
   [`${F}.hp.max`]: 60,
   [`${F}.speed`]: 100,
+  [`${F}.cargo`]: 500,
   [`${F}.str.modifier`]: 3,
   [`${F}.dex.modifier`]: 2,
   [`${F}.con.modifier`]: 2
 };
 
 describe('module-declared panel entries', () => {
-  it('top bar: HP/AC/Speed value chips + a STR/DEX/CON ability chip, stamped with the subject', () => {
+  it('top bar: HP/AC/Speed/Cargo value chips + a STR/DEX/CON ability chip, stamped with the subject', () => {
     expect(deriveTopBarEntries(BOARDED, [module()]).filter((e) => e.subject === SUBJECT)).toEqual([
       {
         type: 'value',
@@ -129,6 +130,13 @@ describe('module-declared panel entries', () => {
         type: 'value',
         label: 'play.stats.tormentor-damage-control.speed',
         fact: `${F}.speed`,
+        subject: SUBJECT
+      },
+      {
+        // Cargo capacity: display-only like the rest of the stat block.
+        type: 'value',
+        label: 'play.stats.tormentor-damage-control.cargo',
+        fact: `${F}.cargo`,
         subject: SUBJECT
       },
       {

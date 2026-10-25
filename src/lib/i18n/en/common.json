@@ -2001,7 +2001,8 @@
         "tormentor-damage-control": {
           "hp": "HP",
           "ac": "AC",
-          "speed": "SPD"
+          "speed": "SPD",
+          "cargo": "Cargo"
         }
       }
     },
