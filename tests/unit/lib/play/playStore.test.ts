@@ -3001,3 +3001,91 @@ describe('slimLegacyFrightenedDisadvantage (the #465 standing-flags blob)', () =
     ]);
   });
 });
+
+describe('rekeyLegacyTormentorHpBase (the pass-2 flat-hp.max board blob)', () => {
+  /**
+   * The board effect a character boarded under the pre-#476 build persisted:
+   * the stat block baked a FLAT hp.max fact (HP was display-only then). The
+   * damageable pass turned that fact into a module DERIVE reading a baked
+   * hp.base — and the sheet rejects a fact with both a data writer and an
+   * override derive writer, so every evaluation on such a character threw.
+   */
+  const F = 'companion.tormentorDamageControl';
+  const legacyBoard: EffectInstance = {
+    id: 'effect-tormentor-damage-control',
+    key: 'tormentor-damage-control',
+    ruleGroupId: 'tormentor',
+    state: {
+      [`${F}.active`]: 1,
+      [`${F}.hp.max`]: 60,
+      [`${F}.creatureCapacity.max`]: 4
+    },
+    display: {
+      name: 'rule.tormentor.effect.name',
+      section: 'mount',
+      subject: 'tormentor-damage-control'
+    },
+    expiry: { kind: 'permanent' }
+  };
+
+  it('re-keys the flat hp.max to hp.base so the #476 derive owns the fact — the pool evaluates', async () => {
+    const { rekeyLegacyTormentorHpBase } = await import('$lib/play/playStore.svelte');
+    const [rekeyed] = rekeyLegacyTormentorHpBase([legacyBoard]);
+    expect(rekeyed.state).toEqual({
+      [`${F}.active`]: 1,
+      [`${F}.hp.base`]: 60,
+      [`${F}.creatureCapacity.max`]: 4
+    });
+    // The interaction the yaml corpus missed: the TRANSFORMED blob must
+    // evaluate under the current module. The raw pass-2 blob throws (below).
+    const { evaluate } = await import('$lib/rules-engine');
+    const { getModule } = await import('$lib/rules-engine/registry');
+    const out = evaluate({ modules: [getModule('tormentor')!], committed: [rekeyed!] });
+    expect(out.facts[`${F}.hp.max`]).toBe(60);
+    expect(out.facts[`${F}.hp.current`]).toBe(60);
+  });
+
+  it('pins why the transform exists: the RAW pass-2 blob throws (data writer + override derive on one fact)', async () => {
+    const { evaluate } = await import('$lib/rules-engine');
+    const { getModule } = await import('$lib/rules-engine/registry');
+    expect(() =>
+      evaluate({ modules: [getModule('tormentor')!], committed: [legacyBoard] })
+    ).toThrow(/hp\.max/);
+  });
+
+  it('passes fresh and unrelated effects through untouched (idempotent)', async () => {
+    const { rekeyLegacyTormentorHpBase } = await import('$lib/play/playStore.svelte');
+    const fresh: EffectInstance = {
+      ...legacyBoard,
+      state: {
+        [`${F}.active`]: 1,
+        [`${F}.hp.base`]: 60,
+        [`${F}.damageThreshold`]: 10,
+        [`${F}.creatureCapacity.max`]: 4
+      }
+    };
+    // A station record from either build: no hp.max in state, so untouched.
+    const occupancy: EffectInstance = {
+      id: 'effect-tormentor-occupancy',
+      key: 'tormentor-occupancy',
+      state: { [`${F}.creatureCapacity.occupancy`]: 3 },
+      display: { name: 'x', section: 'mount', subject: 'tormentor-damage-control' },
+      expiry: { kind: 'permanent' }
+    };
+    const steed: EffectInstance = {
+      id: 'effect-steed',
+      key: 'steed',
+      state: { 'companion.steed.hp.base': 60 },
+      expiry: { kind: 'untilLongRest' }
+    };
+    expect(rekeyLegacyTormentorHpBase([fresh, occupancy, steed])).toEqual([
+      fresh,
+      occupancy,
+      steed
+    ]);
+    // Already-transformed is the identity: the re-keyed legacy board carries
+    // hp.base, never flat hp.max.
+    const [once] = rekeyLegacyTormentorHpBase([legacyBoard]);
+    expect(rekeyLegacyTormentorHpBase([once!])).toEqual([once]);
+  });
+});

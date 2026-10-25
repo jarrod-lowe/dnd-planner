@@ -145,6 +145,39 @@ export function slimLegacyFrightenedDisadvantage(effects: EffectInstance[]): Eff
   });
 }
 
+/**
+ * Re-key, once at load, the FLAT HP fact a pre-#476 Tormentor board effect
+ * persisted. The earlier Tormentor passes baked HP as display-only data
+ * (`companion.tormentorDamageControl.hp.max`); the damageable pass turned that
+ * fact into a module DERIVE reading a baked `hp.base` — and the sheet rejects
+ * a fact with both a data writer and an override derive writer, so EVERY
+ * evaluation on a character that boarded under the old build threw (the
+ * engine-error banner) until the board chip was removed by hand. The rename
+ * preserves the board and its value: `hp.max` 60 becomes `hp.base` 60, and the
+ * pool derives 60/60 exactly as a fresh board would. The `damageThreshold`
+ * fact is NOT stamped — it is new stat-block data that arrives on the next
+ * (re-)board, and an unset threshold reads 0 in the recorder's gate (never
+ * gates) until then. The transform is the repo's legacy-blob seam (the two
+ * above), not a migration: the module itself must keep throwing on two
+ * writers, because that throw is the authored-rules safety net. Idempotent: a
+ * #476 board effect bakes `hp.base`, never flat `hp.max`, so a transformed or
+ * fresh blob — and every other effect — passes through untouched. When BOTH
+ * keys are present (a shape no build produced) the base wins and the flat
+ * entry is dropped, so the derive stays the single writer.
+ */
+export function rekeyLegacyTormentorHpBase(effects: EffectInstance[]): EffectInstance[] {
+  const FLAT = 'companion.tormentorDamageControl.hp.max';
+  const BASE = 'companion.tormentorDamageControl.hp.base';
+  return effects.map((e) => {
+    const flat = e.state?.[FLAT];
+    if (flat === undefined) return e;
+    const state = { ...e.state };
+    delete state[FLAT];
+    if (!(BASE in state)) state[BASE] = flat;
+    return { ...e, state };
+  });
+}
+
 function performEvaluation(): void {
   // A direct evaluation supersedes any still-scheduled one.
   cancelScheduledEvaluation();
@@ -436,8 +469,10 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       if (effectsResponse?.ok) {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
-          const committed = slimLegacyFrightenedDisadvantage(
-            dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson))
+          const committed = rekeyLegacyTormentorHpBase(
+            slimLegacyFrightenedDisadvantage(
+              dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson))
+            )
           );
           const effects = committed.map(effectInstanceToRule);
           state = { ...state, committed, effects };
