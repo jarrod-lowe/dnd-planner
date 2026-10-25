@@ -461,8 +461,15 @@
         "name": "Duj Sepvo' mej",
         "description": "Duj Sep Sep Irnehvo' mej"
       },
+      "occupancy": {
+        "name": "Duj Sep lo'wI' mI' yIcher",
+        "description": "Duj Sep SuvwI' mI' yIjon"
+      },
       "effect": {
         "name": "Duj Sep (Sep Irneh)"
+      },
+      "occupancy-effect": {
+        "name": "Lo'wI' mI' {{score}}"
       }
     },
     "dnd-5e-2024": {
@@ -1714,7 +1721,8 @@
         "hp": "HP",
         "ac": "DIch Jun",
         "speed": "SPD",
-        "cargo": "ngIS"
+        "cargo": "ngIS",
+        "creatureCapacity": "SuvwI' Sep"
       },
       "sections": {
         "resources": "DIvI' Duj",
@@ -2009,6 +2017,9 @@
           "healingTouch": "Heal",
           "feyStep": "Fey",
           "fellGlare": "Glare"
+        },
+        "tormentor-damage-control": {
+          "creatureCapacity": "SuvwI'"
         }
       }
     },

@@ -253,6 +253,10 @@ const EXPECTED_RUNNABLE = [
   'tormentor-board-offer',
   'tormentor-board-stats',
   'tormentor-unboard',
+  // …PR 4 — creature capacity: the occupancy slider (steed HP-modifier
+  // pattern) writing one keyed effect the board/de-board lifecycle evicts
+  'tormentor-occupancy-slider',
+  'tormentor-occupancy-lifecycle',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:
