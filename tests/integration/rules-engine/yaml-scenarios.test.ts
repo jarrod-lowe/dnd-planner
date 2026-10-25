@@ -115,6 +115,7 @@ const EXPECTED_RUNNABLE = [
   'core-events-check-offered',
   'core-events-damage-offered',
   'core-events-damage-slider',
+  'core-events-damage-threshold',
   'core-events-heal-slider',
   'core-events-note-offered',
   'core-events-save-select',
@@ -246,6 +247,7 @@ const EXPECTED_RUNNABLE = [
   'steed-hp-mods',
   'steed-move-partial-distance',
   'steed-damage-accumulates',
+  'steed-damage-threshold',
   'steed-overheal-caps-at-damage',
   // Tormentor — the vehicle group: a player-side ungated board offer bakes the
   // display-only stat block as one permanent keyed effect; the station panel

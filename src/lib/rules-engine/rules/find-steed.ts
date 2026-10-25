@@ -1,6 +1,7 @@
 import {
   currentHp,
   defineRule,
+  hpRecorders,
   preparedSpellCount,
   statToModifier,
   type ActionResult,
@@ -1108,107 +1109,41 @@ const findSteed: RuleModule = {
       -30,
       30
     ),
-    {
-      id: 'steed-record-damage',
+    // HP: the damage/heal recorders, on the shared factory (the player's and
+    // the Tormentor's ride the same code path). Keyed running totals — records
+    // accumulate while the dismiss cascade still evicts by key and removing
+    // the single chip clears the whole record. A steed reduced to 0 HP dies
+    // (the retire cascade REPLACES the record: its same-key child evictions
+    // would supersede a record advertised beside them anyway). The threshold
+    // fact is the steed's natural `companion.steed.damageThreshold`: nothing
+    // derives it, so it reads 0 and never gates today; a future stat-block
+    // bake adapts the recorder for free (diagnostic in this namespace).
+    ...hpRecorders({
+      idStem: 'steed-record',
       when: summoned,
-      ui: {
-        section: 'free',
-        subject: 'steed',
+      subject: 'steed',
+      facts: {
+        max: 'companion.steed.hp.max',
+        modifierCurrent: 'companion.steed.hp.modifier.current',
+        damageRecorded: 'companion.steed.hp.damageRecorded',
+        healRecorded: 'companion.steed.hp.healRecorded',
+        damageThreshold: 'companion.steed.damageThreshold'
+      },
+      damage: {
         name: `${S}.steed-record-damage.name`,
-        primaryControl: {
-          type: 'slider',
-          var: 'amount',
-          min: { number: 0 },
-          max: { fact: 'companion.steed.hp.max' },
-          unit: 'hp'
-        },
-        intents: { HEALTH: 'hp' },
-        actionCost: []
+        effectId: 'effect-steed-hp-damage',
+        effectName: `${S}.steed-record-damage.effect.name`
       },
-      vars: { amount: { capture: true, default: { number: 0 } } },
-      // Each record REPLACES the one keyed effect with the accumulated running
-      // total (prior total + this amount) — records add up, while the dismiss
-      // cascade still evicts by key and removing the single chip clears the
-      // whole damage record. A same-key effect that merely carried its own
-      // amount would evict the previous record instead of adding to it.
-      apply: (f, selections): ActionResult => {
-        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        const newDamage = f.num('companion.steed.hp.damageRecorded') + amount;
-        // A steed reduced to 0 HP dies: retire it permanently (like Dismiss), so
-        // the `untilLongRest` damage record can't expire on a long rest and revive
-        // it. Mirror the hp.current derive: recording `amount` more damage lowers
-        // the net current-HP modifier by `amount` (this reads the live modifier,
-        // so a manual setter counts too).
-        const hpAfter = steedCurrentHp(
-          f.num('companion.steed.hp.max'),
-          f.num('companion.steed.hp.modifier.current') - amount
-        );
-        if (hpAfter <= 0) return { advertise: retireSteedEffects() };
-        return {
-          advertise: [
-            {
-              id: 'effect-steed-hp-damage',
-              key: 'effect-steed-hp-damage',
-              state: { 'companion.steed.hp.damageRecorded': newDamage },
-              display: {
-                name: `${S}.steed-record-damage.effect.name`,
-                section: 'health',
-                subject: 'steed',
-                displayFact: 'companion.steed.hp.damageRecorded'
-              },
-              expiry: { kind: 'untilLongRest' }
-            }
-          ]
-        };
-      }
-    },
-    {
-      id: 'steed-record-heal',
-      when: summoned,
-      ui: {
-        section: 'free',
-        subject: 'steed',
+      heal: {
         name: `${S}.steed-record-heal.name`,
-        primaryControl: {
-          type: 'slider',
-          var: 'amount',
-          min: { number: 0 },
-          max: { fact: 'companion.steed.hp.max' },
-          unit: 'hp'
-        },
-        intents: { HEALTH: 'hp' },
-        actionCost: []
+        effectId: 'effect-steed-hp-heal',
+        effectName: `${S}.steed-record-heal.effect.name`
       },
-      vars: { amount: { capture: true, default: { number: 0 } } },
-      // Mirrors the player heal recorder (core-events `record-heal`): the added
-      // heal caps at the current NET missing HP — `max(0, -hp.modifier.current)`,
-      // which folds in recorded damage AND a manual current-HP modifier — so
-      // healing offsets any HP loss (not just recorded damage) and never banks
-      // overheal past full. Still one keyed running total, like steed-record-damage.
-      apply: (f, selections): ActionResult => {
-        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        const missing = Math.max(0, -f.num('companion.steed.hp.modifier.current'));
-        return {
-          advertise: [
-            {
-              id: 'effect-steed-hp-heal',
-              key: 'effect-steed-hp-heal',
-              state: {
-                'companion.steed.hp.healRecorded':
-                  f.num('companion.steed.hp.healRecorded') + Math.min(amount, missing)
-              },
-              display: {
-                name: `${S}.steed-record-heal.effect.name`,
-                section: 'health',
-                subject: 'steed',
-                displayFact: 'companion.steed.hp.healRecorded'
-              },
-              expiry: { kind: 'untilLongRest' }
-            }
-          ]
-        };
-      }
-    },
+      accumulation: 'keyed-total',
+      chipSection: 'health',
+      belowThresholdCode: `${S}.steed-record-damage.below_threshold`,
+      lethal: { effects: retireSteedEffects, keepRecord: false }
+    }),
     // Dismiss — the steed vanishes (replaces the summon effect). Costs the
     // caster's action (as legacy did).
     {
