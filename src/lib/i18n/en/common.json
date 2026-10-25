@@ -449,6 +449,22 @@
         "name": "Aura of the Guardian {{score}}"
       }
     },
+    "tormentor": {
+      "name": "Tormentor",
+      "keywords": "vehicle tormentor war machine crew station board mount ride",
+      "description": "The Tormentor war vehicle and its crew stations",
+      "board": {
+        "name": "Board the Tormentor",
+        "description": "Take the damage-control station on the Tormentor"
+      },
+      "deboard": {
+        "name": "De-board the Tormentor",
+        "description": "Leave the damage-control station"
+      },
+      "effect": {
+        "name": "Tormentor (Damage Control)"
+      }
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "armor-training": {
@@ -1674,6 +1690,12 @@
         "fellGlare": "Fell Glare",
         "movement": "Move"
       },
+      "tormentor-damage-control": {
+        "hp": "HP",
+        "ac": "AC",
+        "speed": "SPD",
+        "cargo": "Cargo"
+      },
       "sections": {
         "resources": "Resources",
         "stats": "Stats",
@@ -1991,7 +2013,8 @@
       }
     },
     "companion": {
-      "steed": "🐴 Steed"
+      "steed": "🐴 Steed",
+      "tormentor-damage-control": "🛞 Tormentor (Damage Control)"
     },
     "topBar": {
       "hp": "HP",
@@ -2141,6 +2164,7 @@
       "title": "Add Action",
       "label": "+ ADD",
       "steedSublabel": "Steed",
+      "tormentor-damage-controlSublabel": "Tormentor (Damage Control)",
       "planGroup": "plan →",
       "recordGroup": "record →",
       "buildGroup": "build →",

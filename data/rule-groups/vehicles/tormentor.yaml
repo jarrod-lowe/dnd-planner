@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: tormentor
+    # The ONE group for the whole vehicle: seats (action stations) join this
+    # group as their own subjects, because seats change during play. Only the
+    # Damage Control pseudo-seat exists yet. Ungated: available to every
+    # character (boarding legality is not checked this pass — multiple
+    # boardings are illegal-but-possible).
+    translations:
+      en:
+        name: Tormentor
+        description: The Tormentor war vehicle and its crew stations. Board it
+          on damage-control duty to see its AC, HP, Speed, cargo capacity, and
+          STR/DEX/CON while you ride.
+        keywords:
+          - vehicle
+          - tormentor
+          - board
+          - mount
+          - crew
+          - damage control
+      en-x-tlh:
+        name: Duj Sep
+        description: Duj Sep 'ej Duj Sep Sep. Duj Sep Sep Irneh yI'och. Sep,
+          wa', chal, Duj Sep Sep 'ej Sep wa' 'ej Sep.
+        keywords:
+          - vehicle
+          - tormentor
+          - board
+          - mount
+          - crew
+          - damage control
+    # The Tormentor is not SRD content: this detail is our own wording —
+    # numbers and short factual phrases only, never trait prose. It reads
+    # in-world (the vehicle and its numbers); nothing about the app.
+    detail:
+      key: vehicle/tormentor-damage-control
+      source: custom
+      translations:
+        en:
+          meta: Huge Vehicle
+          fields:
+            - labelKey: rules.field.armorClass
+              value: '21'
+            - labelKey: rules.field.weight
+              value: 3,000 lb.
+          body: |
+            A huge infernal war vehicle, 3,000 lb., built for raiding and
+            scouting on bladed iron wheels. It carries 4 Medium creatures and
+            500 lb. of cargo. This posting is damage control: crew duty that
+            is neither the helm nor the harpoon.
+
+            Armor Class 21 (19 while motionless); 60 hit points; Speed
+            100 ft.; STR 16 (+3), DEX 14 (+2), CON 14 (+2). The vehicle has
+            no Intelligence, Wisdom, or Charisma, and shrugs off fire,
+            poison, and psychic damage.
+
+            **Stations.** The Helm drives and steers the Tormentor. The
+            Harpoon Flinger fires its 10 harpoons at +7 to hit, range
+            120 ft., for 2d8+2 piercing damage.
+
+            **Juke.** The driver can spend their reaction, while the
+            Tormentor is able to move, to gain advantage on a Dexterity
+            saving throw.

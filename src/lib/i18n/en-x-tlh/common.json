@@ -449,6 +449,22 @@
         "name": "HubwI' Hurgh {{score}}"
       }
     },
+    "tormentor": {
+      "name": "Duj Sep",
+      "keywords": "vehicle tormentor war machine crew station board mount ride",
+      "description": "Duj Sep 'ej Duj Sep Sep",
+      "board": {
+        "name": "Duj Sep Irneh",
+        "description": "Duj Sep Sep Irneh yI'och"
+      },
+      "deboard": {
+        "name": "Duj Sepvo' mej",
+        "description": "Duj Sep Sep Irnehvo' mej"
+      },
+      "effect": {
+        "name": "Duj Sep (Sep Irneh)"
+      }
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "armor-training": {
@@ -1694,6 +1710,12 @@
         "fellGlare": "So' Qoy",
         "movement": "Do"
       },
+      "tormentor-damage-control": {
+        "hp": "HP",
+        "ac": "DIch Jun",
+        "speed": "SPD",
+        "cargo": "ngIS"
+      },
       "sections": {
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
@@ -1991,7 +2013,8 @@
       }
     },
     "companion": {
-      "steed": "🐴 Sargh"
+      "steed": "🐴 Sargh",
+      "tormentor-damage-control": "🛞 Duj Sep (Sep Irneh)"
     },
     "topBar": {
       "hp": "HP",
@@ -2141,6 +2164,7 @@
       "title": "ADD ACTION",
       "label": "+ ADD",
       "steedSublabel": "Steed",
+      "tormentor-damage-controlSublabel": "Duj Sep (Sep Irneh)",
       "planGroup": "PLAN →",
       "recordGroup": "RECORD →",
       "buildGroup": "BUILD →",

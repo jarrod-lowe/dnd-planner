@@ -1,0 +1,77 @@
+name: 'Tormentor (Damage Control) - Board Bakes The Stat Block'
+description: >-
+  Boarding the Tormentor advertises ONE permanent keyed effect baking the
+  display-only stat block into facts: active, AC 21, HP 60, Speed 100 ft.,
+  Cargo 500 lb., STR/DEX/CON 16/14/14 with +3/+2/+2 modifiers. The keyed
+  effect replaces on re-board (facts never double), and end of turn commits
+  it so the stats persist on later turns. Boarding also makes the STATION's
+  +ADD panel available: the de-board offer appears under the station's
+  subject, in the free section, gated on the board.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Board: the advertised effect's state is visible in the projection at once.
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.hp.max: 60
+          companion.tormentorDamageControl.speed: 100
+          companion.tormentorDamageControl.cargo: 500
+          companion.tormentorDamageControl.str: 16
+          companion.tormentorDamageControl.dex: 14
+          companion.tormentorDamageControl.con: 14
+          companion.tormentorDamageControl.str.modifier: 3
+          companion.tormentorDamageControl.dex.modifier: 2
+          companion.tormentorDamageControl.con.modifier: 2
+        planErrors:
+          - id: board-tormentor
+            index: 0
+            errors: []
+  # Boarded: the station's +ADD panel now carries the de-board offer.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - deboard-tormentor
+          legal:
+            - deboard-tormentor
+        offerUi:
+          - id: deboard-tormentor
+            ui:
+              section: free
+              subject: tormentor-damage-control
+              actionCost: []
+  # A second boarding is illegal-but-possible this pass; the keyed effect
+  # REPLACES, so every fact stays single (no stacking, active stays 1).
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.str: 16
+          companion.tormentorDamageControl.hp.max: 60
+  # End of turn commits the board effect; the stats persist.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.hp.max: 60
+          companion.tormentorDamageControl.speed: 100
+          companion.tormentorDamageControl.cargo: 500
+  # A later turn still reads the committed stat block.
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.str.modifier: 3
+        offers:
+          exists:
+            - board-tormentor
+            - deboard-tormentor

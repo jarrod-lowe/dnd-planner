@@ -247,6 +247,12 @@ const EXPECTED_RUNNABLE = [
   'steed-move-partial-distance',
   'steed-damage-accumulates',
   'steed-overheal-caps-at-damage',
+  // Tormentor — the vehicle group: a player-side ungated board offer bakes the
+  // display-only stat block as one permanent keyed effect; the station panel
+  // carries de-board, and raw chip removal stays the override path
+  'tormentor-board-offer',
+  'tormentor-board-stats',
+  'tormentor-unboard',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:
