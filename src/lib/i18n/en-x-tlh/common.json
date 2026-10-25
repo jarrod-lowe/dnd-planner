@@ -465,6 +465,14 @@
         "name": "Duj Sep lo'wI' mI' yIcher",
         "description": "Duj Sep SuvwI' mI' yIjon"
       },
+      "mode": {
+        "moving": "lengtaH",
+        "motionless": "QamtaHbe'"
+      },
+      "ac-mode": {
+        "name": "Duj Sep leng yIcher",
+        "description": "Duj Sep lengtaH'a' QamtaHbe'ghach yIcher"
+      },
       "record-damage": {
         "name": "Duj Sep qIp yIcher",
         "description": "Duj Sep qIpmeH qIp yIcher",
@@ -489,6 +497,9 @@
       },
       "occupancy-effect": {
         "name": "Lo'wI' mI' {{score}}"
+      },
+      "ac-mode-effect": {
+        "name": "leng chovang"
       },
       "hp-damage-effect": {
         "name": "Duj qIp {{score}}"
@@ -1874,6 +1885,9 @@
       },
       "find-steed": {
         "type": "Segh"
+      },
+      "tormentor": {
+        "mode": "leng"
       }
     },
     "plan": {

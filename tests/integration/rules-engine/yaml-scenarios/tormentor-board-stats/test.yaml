@@ -1,12 +1,13 @@
 name: 'Tormentor (Damage Control) - Board Bakes The Stat Block'
 description: >-
   Boarding the Tormentor advertises ONE permanent keyed effect baking the
-  display-only stat block into facts: active, AC 21, HP 60, Speed 100 ft.,
-  Cargo 500 lb., STR/DEX/CON 16/14/14 with +3/+2/+2 modifiers. The keyed
-  effect replaces on re-board (facts never double), and end of turn commits
-  it so the stats persist on later turns. Boarding also makes the STATION's
-  +ADD panel available: the de-board offer appears under the station's
-  subject, in the free section, gated on the board.
+  display-only stat block into facts: active, the AC MODE (Moving by default —
+  the derived ac.effective reads 21; the flat ac.value bake is retired), HP 60,
+  Speed 100 ft., Cargo 500 lb., STR/DEX/CON 16/14/14 with +3/+2/+2 modifiers.
+  The keyed effect replaces on re-board (facts never double), and end of turn
+  commits it so the stats persist on later turns. Boarding also makes the
+  STATION's +ADD panel available: the de-board offer appears under the
+  station's subject, in the free section, gated on the board.
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -16,7 +17,7 @@ steps:
       assert:
         facts:
           companion.tormentorDamageControl.active: 1
-          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.ac.effective: 21
           companion.tormentorDamageControl.hp.max: 60
           companion.tormentorDamageControl.speed: 100
           companion.tormentorDamageControl.cargo: 500
@@ -61,7 +62,7 @@ steps:
             - effect-tormentor-damage-control
         facts:
           companion.tormentorDamageControl.active: 1
-          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.ac.effective: 21
           companion.tormentorDamageControl.hp.max: 60
           companion.tormentorDamageControl.speed: 100
           companion.tormentorDamageControl.cargo: 500

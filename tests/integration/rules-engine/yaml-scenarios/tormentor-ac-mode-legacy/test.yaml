@@ -1,0 +1,52 @@
+name: 'Tormentor (Damage Control) - Legacy Board AC Tolerance'
+description: >-
+  A persisted LEGACY board effect (the pre-AC-mode shape: a flat ac.value 21
+  baked, no acMotionless mode fact — seeded via INITIAL_EFFECTS) must evaluate
+  without error and derive ac.effective 21 (the Moving default), and the
+  station AC-mode record works on top of it. Nothing derives ac.value, so the
+  stale bake is inert rather than a two-writer conflict; there is deliberately
+  no load-seam migration (dismiss + re-add is the accepted path for the one
+  test character that carries one).
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.acMotionless.current: 0
+          companion.tormentorDamageControl.ac.effective: 21
+        offers:
+          exists:
+            - set-tormentor-ac-mode
+          legal:
+            - set-tormentor-ac-mode
+  # The segmented control opens at the CURRENT mode — Moving on a legacy board.
+  - evaluate:
+      assert:
+        offerVars:
+          - id: set-tormentor-ac-mode
+            vars:
+              mode:
+                capture: true
+                default:
+                  fact: companion.tormentorDamageControl.acMotionless.current
+  # The record works on a legacy board: Motionless reads 19 immediately, and
+  # the stale ac.value stays exactly where it was (inert).
+  - addOffer:
+      id: set-tormentor-ac-mode
+      selections:
+        mode: 1
+      assert:
+        facts:
+          companion.tormentorDamageControl.ac.effective: 19
+          companion.tormentorDamageControl.ac.value: 21
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-ac-mode
+        facts:
+          companion.tormentorDamageControl.ac.effective: 19
+          companion.tormentorDamageControl.ac.value: 21

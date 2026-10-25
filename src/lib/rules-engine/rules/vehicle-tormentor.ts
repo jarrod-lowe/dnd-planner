@@ -71,14 +71,34 @@ import {
  * inspectable; the destroyed NOTICE says what that means). The HP records and
  * the wreck join the board lifecycle like every other record.
  *
+ * The stat block's "AC 21 (19 while motionless)" is a MODE the player
+ * records (v2 — v1's annotation state chip was abandoned; see the plan): the
+ * BOARD offer carries a [Moving | Motionless] segmented secondary control
+ * (the steed creature-type precedent) whose selection the board effect bakes
+ * as the 0/1 `acMotionless` fact — NO flat `ac.value` bake any more. AC is
+ * DERIVED as `ac.effective` (19 motionless, else 21, gated on active), a
+ * deliberately NEW name: legacy persisted boards bake flat ac.value, and
+ * nothing may derive that name or every evaluation of such a character would
+ * two-writer-conflict (the pass-3 hp.max lesson) — the stale legacy bake is
+ * simply inert, the legacy board derives 21, and there is NO load-seam
+ * migration. The station's +ADD carries an always-present (while boarded)
+ * "AC Mode" record offer (the occupancy intent class, applied immediately)
+ * with the same control pre-showing the CURRENT mode; its ONE permanent keyed
+ * effect stores the mode as the DISTINCT `acMotionless.recorded` fact, which
+ * the resolved-mode derive prefers when present — the engine sum-combines two
+ * live effects writing one fact, so a record writing `acMotionless` itself
+ * could never flip a Motionless board back to Moving (1 + 0 still reads 1).
+ * The mode key joins the board lifecycle like every other record: a re-board
+ * resets to the fresh board SELECTION.
+ *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
  * Harpoon Flinger stations and the Juke reaction, movement economy, damage
  * immunities and the mishap threshold as MECHANICS (they are detail text
  * only — the recorder never refuses fire/poison/psychic and no mishap is
- * modelled), the AC-while-motionless mode, any prone attack/movement or
- * incapacitated mechanics beyond the record, and any legality check on
- * boarding (multiple boardings are illegal-but-possible; the keyed effect
- * keeps the facts single and diagnostics are deferred).
+ * modelled), any prone attack/movement or incapacitated mechanics beyond the
+ * record, and any legality check on boarding (multiple boardings are
+ * illegal-but-possible; the keyed effect keeps the facts single and
+ * diagnostics are deferred).
  */
 
 const ID = 'tormentor';
@@ -91,6 +111,10 @@ const F = 'companion.tormentorDamageControl';
 /** The occupancy record's effect id and replacement key (ONE live record). */
 const OCCUPANCY_EFFECT_ID = 'effect-tormentor-occupancy';
 const OCCUPANCY_KEY = 'tormentor-occupancy';
+
+/** The AC-mode record's effect id and replacement key (ONE live record). */
+const AC_MODE_EFFECT_ID = 'effect-tormentor-ac-mode';
+const AC_MODE_KEY = 'tormentor-ac-mode';
 
 /** The vehicle-prone record's effect id and replacement key (ONE live record). */
 const PRONE_EFFECT_ID = 'effect-tormentor-prone';
@@ -120,14 +144,22 @@ const NOT_PRONE = `${T}.flip-upright.not_prone`;
  * replacement — a keyed replacement alone does not fire `dependents` (the
  * steed cast/dismiss child-eviction pattern).
  */
-const CHILD_KEYS = [OCCUPANCY_KEY, PRONE_KEY, HP_DAMAGE_KEY, HP_HEAL_KEY, DESTROYED_KEY] as const;
+const CHILD_KEYS = [
+  OCCUPANCY_KEY,
+  AC_MODE_KEY,
+  PRONE_KEY,
+  HP_DAMAGE_KEY,
+  HP_HEAL_KEY,
+  DESTROYED_KEY
+] as const;
 
 /** The stat block boarding bakes. HP bakes its BASE (the pool derives from
  * it — the steed shape) plus the damage threshold as DATA the recorder gates
- * on; everything else is display-only. */
+ * on; everything else is display-only. AC bakes NO value at all — the board
+ * selection's MODE fact is the bake, and `ac.effective` derives the number
+ * (see the derive below for why the flat `ac.value` name is retired). */
 const BOARD_STATE: Record<string, number> = {
   [`${F}.active`]: 1,
-  [`${F}.ac.value`]: 21,
   [`${F}.hp.base`]: 60,
   [`${F}.damageThreshold`]: 10,
   [`${F}.speed`]: 100,
@@ -143,22 +175,49 @@ const BOARD_STATE: Record<string, number> = {
 };
 
 /**
+ * The [Moving | Motionless] picker both AC-mode controls render — the steed
+ * creature-type segmented precedent (a segmented control can only ever be a
+ * `secondaryControl` in PanelRenderer). The values ARE the 0/1 motionless
+ * flag: 0 Moving (the default), 1 Motionless.
+ */
+const AC_MODE_CONTROL = {
+  type: 'segmented',
+  var: 'mode',
+  prefix: 'play.choices.tormentor.mode',
+  options: [
+    { value: 0, label: `${T}.mode.moving` },
+    { value: 1, label: `${T}.mode.motionless` }
+  ]
+} as const;
+
+/** The selected AC mode from a segmented capture (Moving when unset). */
+const modeFrom = (selections: Record<string, unknown>): number =>
+  typeof selections.mode === 'number' ? selections.mode : 0;
+
+/**
  * The board effect (permanent, keyed so a re-board or de-board REPLACES rather
  * than stacks). Exported so tests and later passes can seed an already-boarded
  * vehicle without driving the offer. `display` opts it onto the strip as a
  * MOUNT chip under its subject, and the `detailKey` is what the strip's flip
  * path reads — the first mount chip that flips to a stat-block detail (the
- * steed's never carried one). Every station record (occupancy, prone, the HP
- * totals, the destroyed wreck) is a DEPENDENT, so raw mount-chip removal
- * (playStore's `removeEffect`) evicts them with the board instead of
+ * steed's never carried one). Every station record (occupancy, the AC mode,
+ * prone, the HP totals, the destroyed wreck) is a DEPENDENT, so raw mount-chip
+ * removal (playStore's `removeEffect`) evicts them with the board instead of
  * stranding a record under a de-boarded vehicle (the steed
  * mount/STEED_CHILD_EFFECTS pattern).
+ *
+ * `acMotionless` is the MODE the board-offer segmented control selected (0
+ * Moving — the default — 1 Motionless): the selection flows into the effect
+ * state exactly the way the creature-type choice flows into the steed effect.
+ * A LEGACY persisted board (pre-AC-mode) baked flat `ac.value` and no mode
+ * fact; that shape still evaluates (the mode reads as Moving) and its stale
+ * `ac.value` is inert — nothing derives that name any more.
  */
-export function tormentorBoardEffect(): EffectInstance {
+export function tormentorBoardEffect(acMotionless = 0): EffectInstance {
   return {
     id: 'effect-tormentor-damage-control',
     key: 'tormentor-damage-control',
-    state: { ...BOARD_STATE },
+    state: { ...BOARD_STATE, [`${F}.acMotionless`]: acMotionless },
     dependents: [...CHILD_KEYS],
     display: {
       name: `${T}.effect.name`,
@@ -189,12 +248,14 @@ function tormentorDeboardEffect(): EffectInstance {
 /**
  * Eviction of EVERY station record (an empty same-key effect each — newest
  * wins, so the stored occupancy vanishes and `used` falls back to the board
- * default, the prone record clears, the HP running totals and the destroyed
+ * default, the AC-mode record clears and the mode falls back to the board
+ * bake, the prone record clears, the HP running totals and the destroyed
  * wreck go). Advertised beside BOTH the board effect (a re-board starts
- * FRESH: the boarder counts, upright, whole — a new vehicle, not a persisted
- * one) and the de-board marker (no record outlives the board that justifies
- * it) — the steed cast/dismiss child-eviction pattern: a keyed replacement
- * alone does not fire `dependents`.
+ * FRESH: the boarder counts, upright, whole, in the mode THIS row selected —
+ * a new vehicle, not a persisted one) and the de-board marker (no record
+ * outlives the board that justifies it) — the steed cast/dismiss
+ * child-eviction pattern: a keyed replacement alone does not fire
+ * `dependents`.
  */
 function evictChildEffects(): EffectInstance[] {
   return CHILD_KEYS.map(
@@ -294,10 +355,17 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     }
   },
   {
+    // The DERIVED AC (the mode resolve above): 21 moving, 19 motionless — the
+    // flat ac.value read is retired with the bake (a legacy board's stale
+    // ac.value must never reach the chip).
     subject: SUBJECT,
     panel: 'topBar',
     gate: `${F}.active`,
-    entry: { type: 'value', label: 'play.stats.tormentor-damage-control.ac', fact: `${F}.ac.value` }
+    entry: {
+      type: 'value',
+      label: 'play.stats.tormentor-damage-control.ac',
+      fact: `${F}.ac.effective`
+    }
   },
   {
     subject: SUBJECT,
@@ -402,6 +470,32 @@ const vehicleTormentor: RuleModule = {
       fact: `${F}.hp.modifier.current`,
       combine: 'sum',
       value: (f) => f.num(`${F}.hp.healRecorded`) - f.num(`${F}.hp.damageRecorded`)
+    },
+    // The RESOLVED AC mode: the station record when one stands, else the board
+    // bake — the occupancy has-preference idiom, and deliberately a DISTINCT
+    // recorded fact: the engine sum-combines two live effects writing one
+    // fact, so a mode record writing `acMotionless` itself could never flip a
+    // Motionless board back to Moving (1 + 0 still reads 1). A LEGACY board
+    // (no acMotionless baked) resolves to Moving here.
+    {
+      fact: `${F}.acMotionless.current`,
+      value: (f) =>
+        (f.has(`${F}.acMotionless.recorded`)
+          ? f.num(`${F}.acMotionless.recorded`)
+          : f.num(`${F}.acMotionless`)) > 0
+          ? 1
+          : 0
+    },
+    // The stat block's "AC 21 (19 while motionless)" as a DERIVED fact under a
+    // deliberately NEW name: legacy persisted boards bake flat `ac.value`, and
+    // a derive on the same name would two-writer-conflict on every evaluation
+    // of such a character (the pass-3 hp.max lesson). The stale legacy bake is
+    // inert — nothing derives or reads `ac.value` any more. Gated on `active`
+    // like the pool, so an unboarded vehicle reads 0 and the panel gate holds
+    // the chip back.
+    {
+      fact: `${F}.ac.effective`,
+      value: (f) => (boarded(f) ? (f.num(`${F}.acMotionless.current`) > 0 ? 19 : 21) : 0)
     }
   ],
   offer: () => [
@@ -410,22 +504,27 @@ const vehicleTormentor: RuleModule = {
       // group is loaded, for every character) and carrying NO station subject,
       // so it files under the player's +ADD rather than a station panel that
       // cannot exist before the board effect does. No `when`, no `legalWhen`
-      // (see the scope note above).
+      // (see the scope note above). The segmented secondary control picks the
+      // AC MODE the fresh board starts in (the steed creature-type precedent:
+      // the selection flows into the board effect's state).
       id: 'board-tormentor',
       ui: {
         section: 'free',
         name: `${T}.board.name`,
         description: `${T}.board.description`,
         detailKey: 'vehicle/tormentor-damage-control',
+        secondaryControl: AC_MODE_CONTROL,
         intents: { HANDLE: 'gear' },
         actionCost: []
       },
+      vars: { mode: { capture: true, default: { number: 0 } } },
       // The evicts beside the replacement: a keyed replacement alone does not
       // fire dependents, so a re-board resets occupancy to the board default
       // (the boarder counts), starts the vehicle upright AND whole — no damage
-      // banked, no wreck — explicitly (the steed recast/child-eviction pattern).
-      apply: (): ActionResult => ({
-        advertise: [tormentorBoardEffect(), ...evictChildEffects()]
+      // banked, no wreck — and resets the AC MODE to this row's selection,
+      // explicitly (the steed recast/child-eviction pattern).
+      apply: (_f, selections): ActionResult => ({
+        advertise: [tormentorBoardEffect(modeFrom(selections)), ...evictChildEffects()]
       })
     },
     {
@@ -467,6 +566,44 @@ const vehicleTormentor: RuleModule = {
               section: 'mount',
               subject: SUBJECT,
               displayFact: `${F}.creatureCapacity.used`
+            },
+            expiry: { kind: 'permanent' }
+          }
+        ]
+      })
+    },
+    {
+      // The STATION's AC-mode record: always present while boarded (a mode is
+      // a fact, not a resource — no legality gates), free, in the occupancy
+      // intent class, with the same [Moving | Motionless] segmented control the
+      // board offer carries — pre-showing the CURRENT mode, so the row opens on
+      // the mode in force. Apply is IMMEDIATE (record-class): ONE permanent
+      // KEYED effect storing the mode as the DISTINCT `acMotionless.recorded`
+      // fact the resolved-mode derive prefers — re-applying replaces by key
+      // (never stacks), and the board lifecycle evicts it (a fresh board resets
+      // to the board selection).
+      id: 'set-tormentor-ac-mode',
+      when: boarded,
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.ac-mode.name`,
+        description: `${T}.ac-mode.description`,
+        secondaryControl: AC_MODE_CONTROL,
+        intents: { HANDLE: 'gear' },
+        actionCost: []
+      },
+      vars: { mode: { capture: true, default: { fact: `${F}.acMotionless.current` } } },
+      apply: (_f, selections): ActionResult => ({
+        advertise: [
+          {
+            id: AC_MODE_EFFECT_ID,
+            key: AC_MODE_KEY,
+            state: { [`${F}.acMotionless.recorded`]: modeFrom(selections) },
+            display: {
+              name: `${T}.ac-mode-effect.name`,
+              section: 'mount',
+              subject: SUBJECT
             },
             expiry: { kind: 'permanent' }
           }
