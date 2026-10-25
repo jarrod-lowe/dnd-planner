@@ -465,12 +465,27 @@
         "name": "Duj Sep lo'wI' mI' yIcher",
         "description": "Duj Sep SuvwI' mI' yIjon"
       },
+      "knocked-prone": {
+        "name": "pummoH",
+        "description": "Duj Sep pum yIcher",
+        "already_prone": "Duj Sep pumtaH — pumqa' chIm"
+      },
+      "flip-upright": {
+        "name": "Duj yIngheSqa'moH",
+        "description": "pumbogh Duj Sep yIngheSqa'choHmoH",
+        "not_prone": "Duj Sep pumbe' — Duj Sep IngheSqa'moH chIm"
+      },
       "effect": {
         "name": "Duj Sep (Sep Irneh)"
       },
       "occupancy-effect": {
         "name": "Lo'wI' mI' {{score}}"
-      }
+      },
+      "prone-effect": {
+        "name": "pum"
+      },
+      "notice": "pum qay'",
+      "notice.body": "Pumpu' Duj Sep 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'."
     },
     "dnd-5e-2024": {
       "action-economy": {},

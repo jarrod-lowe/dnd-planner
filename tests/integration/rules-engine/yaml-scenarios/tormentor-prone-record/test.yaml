@@ -1,0 +1,164 @@
+name: 'Tormentor (Damage Control) - Vehicle Prone and Flip Upright'
+description: >-
+  The vehicle's Prone Deficiency tracked as STATE ONLY: a namespaced
+  companion.tormentorDamageControl.prone fact under a keyed effect of its own
+  (never the player-global condition.prone, which would flip the PLAYER's
+  attack flags and notice), recorded from the station's +ADD by a free offer
+  and cleared by Flip Upright's empty same-key eviction (the get-up idiom).
+  Both prone offers are gated structurally on the board ALONE: the prone
+  state itself is a LEGALITY gate (the engine's illegal-but-visible contract
+  — plan.ts keeps illegal offers applicable with diagnostics, and a
+  planned-anyway row still executes), never a structural `when`. While
+  UPRIGHT the knock is legal and the flip is illegal (not prone); while PRONE
+  the mirror flips. No Speed leg, because a vehicle has no movement economy.
+  The effect is permanent — no rest clears it, because a rest does not right
+  a vehicle. A NOTICE (the Life-Bond annotate pattern) carries the deficiency
+  gated on the prone fact itself — PC-prone parity: the condition triggers
+  its notice — so it stands ONLY while the vehicle is prone and withdraws
+  the moment it is flipped upright.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 0
+        offers:
+          exists:
+            - board-tormentor
+          # Unboarded, BOTH prone offers are structurally absent (the board is
+          # the one structural gate): no vehicle, nothing to knock or flip.
+          notExists:
+            - knock-tormentor-prone
+            - flip-tormentor-upright
+        annotations:
+          notExists:
+            - rule.tormentor.notice
+  - addOffer:
+      id: board-tormentor
+      assert:
+        # Boarded but upright: NO notice — the notice is the condition's, not
+        # the board's (the player's Prone notice stands only while prone).
+        annotations:
+          notExists:
+            - rule.tormentor.notice
+        offers:
+          # Upright: both offers VISIBLE, legality split — the knock legal, the
+          # flip illegal with its not-prone diagnostic (never hidden).
+          exists:
+            - knock-tormentor-prone
+            - flip-tormentor-upright
+          legal:
+            - knock-tormentor-prone
+          illegal:
+            - flip-tormentor-upright
+        offerUi:
+          - id: knock-tormentor-prone
+            ui:
+              section: free
+              subject: tormentor-damage-control
+              # A vehicle CONDITION files like the PC's (#467 taxonomy).
+              intents:
+                CONDITION: held
+              # Both prone offers flip to the VEHICLE's own condition text.
+              detailKey: vehicle/tormentor-prone
+              actionCost: []
+  - addOffer:
+      id: knock-tormentor-prone
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 1
+        offers:
+          # Prone (the record merely planned): the mirror — the flip is now
+          # the legal one, and the knock stays VISIBLE and ILLEGAL with its
+          # already-prone diagnostic instead of withdrawing.
+          exists:
+            - knock-tormentor-prone
+            - flip-tormentor-upright
+          illegal:
+            - knock-tormentor-prone
+          legal:
+            - flip-tormentor-upright
+        offerUi:
+          - id: flip-tormentor-upright
+            ui:
+              section: free
+              subject: tormentor-damage-control
+              intents:
+                CONDITION: held
+              detailKey: vehicle/tormentor-prone
+              actionCost: []
+        annotations:
+          exists:
+            - rule.tormentor.notice
+          targets:
+            - key: rule.tormentor.notice
+              targets: [notice]
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-prone
+        facts:
+          companion.tormentorDamageControl.prone: 1
+  # While committed-prone the same split stands: knock visible + illegal,
+  # flip visible + legal (the plan-fold view of the step above).
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 1
+        offers:
+          exists:
+            - knock-tormentor-prone
+            - flip-tormentor-upright
+          illegal:
+            - knock-tormentor-prone
+          legal:
+            - flip-tormentor-upright
+  # The OVERRIDE path (the plan.ts contract): committing the knock while
+  # ILLEGAL still applies — the keyed replacement re-advertises the one
+  # record (newest-wins, so still a single prone fact) and the row carries
+  # its already-prone diagnostic rather than being withdrawn.
+  - addOffer:
+      id: knock-tormentor-prone
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 1
+        planErrors:
+          - id: knock-tormentor-prone
+            index: 0
+            errors:
+              - rule.tormentor.knocked-prone.already_prone
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-prone
+        facts:
+          companion.tormentorDamageControl.prone: 1
+  # Flip Upright: the empty same-key eviction clears the fact and withdraws
+  # the station chip, and the NOTICE goes with the condition it carries. The
+  # flip itself stays VISIBLE once upright — merely illegal (nothing to flip).
+  - addOffer:
+      id: flip-tormentor-upright
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 0
+        offers:
+          exists:
+            - flip-tormentor-upright
+            - knock-tormentor-prone
+          illegal:
+            - flip-tormentor-upright
+          legal:
+            - knock-tormentor-prone
+        annotations:
+          notExists:
+            - rule.tormentor.notice
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-prone
+        facts:
+          companion.tormentorDamageControl.prone: 0

@@ -465,12 +465,27 @@
         "name": "Set Occupancy",
         "description": "Record how many creatures the Tormentor carries"
       },
+      "knocked-prone": {
+        "name": "Knocked Prone",
+        "description": "Record the Tormentor falling prone",
+        "already_prone": "The Tormentor is already prone"
+      },
+      "flip-upright": {
+        "name": "Flip Upright",
+        "description": "Right the Tormentor after it falls prone",
+        "not_prone": "The Tormentor is not prone — there is nothing to flip upright"
+      },
       "effect": {
         "name": "Tormentor (Damage Control)"
       },
       "occupancy-effect": {
         "name": "Occupancy {{score}}"
-      }
+      },
+      "prone-effect": {
+        "name": "Prone"
+      },
+      "notice": "Prone Deficiency",
+      "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright."
     },
     "dnd-5e-2024": {
       "action-economy": {},

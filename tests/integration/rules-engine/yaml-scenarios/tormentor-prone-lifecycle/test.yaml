@@ -1,0 +1,109 @@
+name: 'Tormentor (Damage Control) - Prone Eviction on Re-board and De-board'
+description: >-
+  The prone record never outlives the board that justifies it: a re-board
+  (a keyed replacement of the board effect, which does not fire dependents)
+  explicitly evicts it with an empty same-key marker, and de-board does the
+  same while clearing every baked fact. The notice follows the prone record
+  (PC-prone parity: the condition triggers its notice), so the re-board's
+  eviction withdraws it too — a fresh board starts upright and un-noticed.
+  The prone state itself never gates the offers structurally (the board is
+  the one `when`): the knock stays visible-but-illegal while prone and the
+  flip while upright (the engine's illegal-but-visible contract). The raw
+  mount-chip removal path declares the same eviction via the board effect's
+  dependents (unit-pinned, not assertible here).
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: board-tormentor
+      assert:
+        offers:
+          exists:
+            - knock-tormentor-prone
+        offerUi:
+          - id: knock-tormentor-prone
+            ui:
+              # The recorder flips to the vehicle's own prone detail, through
+              # every knock/re-board cycle alike.
+              detailKey: vehicle/tormentor-prone
+  - addOffer:
+      id: knock-tormentor-prone
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 1
+        # The moment the record is planned the vehicle is prone: the knock
+        # does NOT withdraw — it stays visible and is marked ILLEGAL with its
+        # already-prone diagnostic (plan.ts's illegal-but-visible contract),
+        # and flip-upright is the offer that is legal now.
+        offers:
+          exists:
+            - knock-tormentor-prone
+            - flip-tormentor-upright
+          illegal:
+            - knock-tormentor-prone
+          legal:
+            - flip-tormentor-upright
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-prone
+        facts:
+          companion.tormentorDamageControl.prone: 1
+  # Re-boarding REPLACES the board effect and evicts the prone record with it:
+  # a fresh board starts upright (the occupancy re-board pattern — no rest
+  # clears the vehicle's prone, but a fresh board does), so the notice — now
+  # the prone condition's — goes with the record.
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 0
+          companion.tormentorDamageControl.active: 1
+        annotations:
+          notExists:
+            - rule.tormentor.notice
+        # Upright again after the eviction: the legality split is back — the
+        # knock legal, the flip visible-but-illegal.
+        offers:
+          exists:
+            - flip-tormentor-upright
+          legal:
+            - knock-tormentor-prone
+          illegal:
+            - flip-tormentor-upright
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+          notExists:
+            - effect-tormentor-prone
+  # Knock prone again, commit, then de-board: the keyed replacement clears
+  # every baked fact including the prone record, and the notice — which stands
+  # only while prone — goes with it.
+  - addOffer:
+      id: knock-tormentor-prone
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-prone
+  - addOffer:
+      id: deboard-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 0
+          companion.tormentorDamageControl.active: 0
+        offers:
+          notExists:
+            - knock-tormentor-prone
+        annotations:
+          notExists:
+            - rule.tormentor.notice
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-prone
+            - effect-tormentor-damage-control

@@ -1,6 +1,8 @@
 import {
   defineRule,
   type ActionResult,
+  type Annotation,
+  type Diagnostic,
   type EffectInstance,
   type FactReader,
   type RuleModule,
@@ -34,9 +36,26 @@ import {
  * board. Over-capacity occupancy stays illegal-but-possible: the derive clamps
  * the READ to 0..max and diagnostics are deferred with boarding's.
  *
+ * The vehicle's Prone Deficiency is STATE TRACKING ONLY: a namespaced
+ * `companion.tormentorDamageControl.prone` fact under its own keyed effect —
+ * NEVER the player-global `condition.prone` (the builder's `proneEffect()`
+ * would flip the PLAYER's attack flags, notice and movement legs). The
+ * station's +ADD records it and flips it upright (empty same-key eviction);
+ * the BOARD is each offer's one structural `when`, while the prone state
+ * itself is a LEGALITY gate on both (the engine's illegal-but-visible
+ * contract — plan.ts keeps illegal offers applicable with diagnostics and a
+ * planned-anyway row still executes; no Speed leg, because a vehicle has no
+ * movement economy). The effect is PERMANENT (a rest does not right a
+ * vehicle), the board/de-board lifecycle evicts it, and a NOTICE carries the
+ * deficiency while the vehicle is PRONE (PC-prone parity: the condition
+ * triggers its notice — boarded but upright, there is nothing to know). Both
+ * prone offers file under the CONDITION 'held' sub-bucket (#467 taxonomy), so
+ * a vehicle condition groups with PC conditions in the station +ADD.
+ *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
  * Harpoon Flinger stations and the Juke reaction, movement economy, damage
- * tracking, thresholds and immunities, the AC-while-motionless mode, and any
+ * tracking, thresholds and immunities, the AC-while-motionless mode, any
+ * prone attack/movement or incapacitated mechanics beyond the record, and any
  * legality check on boarding (multiple boardings are illegal-but-possible; the
  * keyed effect keeps the facts single and diagnostics are deferred).
  */
@@ -51,6 +70,14 @@ const F = 'companion.tormentorDamageControl';
 /** The occupancy record's effect id and replacement key (ONE live record). */
 const OCCUPANCY_EFFECT_ID = 'effect-tormentor-occupancy';
 const OCCUPANCY_KEY = 'tormentor-occupancy';
+
+/** The vehicle-prone record's effect id and replacement key (ONE live record). */
+const PRONE_EFFECT_ID = 'effect-tormentor-prone';
+const PRONE_KEY = 'tormentor-prone';
+
+/** Each prone offer's single legality leg (the get-up not_prone idiom). */
+const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
+const NOT_PRONE = `${T}.flip-upright.not_prone`;
 
 /** The stat block boarding bakes. Display-only: HP has no current/spent pair. */
 const BOARD_STATE: Record<string, number> = {
@@ -75,17 +102,17 @@ const BOARD_STATE: Record<string, number> = {
  * vehicle without driving the offer. `display` opts it onto the strip as a
  * MOUNT chip under its subject, and the `detailKey` is what the strip's flip
  * path reads — the first mount chip that flips to a stat-block detail (the
- * steed's never carried one). The occupancy record is a DEPENDENT, so raw
- * mount-chip removal (playStore's `removeEffect`) evicts it with the board
- * instead of stranding a recorded occupancy under a de-boarded vehicle (the
- * steed mount/STEED_CHILD_EFFECTS pattern).
+ * steed's never carried one). The occupancy and prone records are DEPENDENTS,
+ * so raw mount-chip removal (playStore's `removeEffect`) evicts them with the
+ * board instead of stranding a recorded occupancy or a prone record under a
+ * de-boarded vehicle (the steed mount/STEED_CHILD_EFFECTS pattern).
  */
 export function tormentorBoardEffect(): EffectInstance {
   return {
     id: 'effect-tormentor-damage-control',
     key: 'tormentor-damage-control',
     state: { ...BOARD_STATE },
-    dependents: [OCCUPANCY_KEY],
+    dependents: [OCCUPANCY_KEY, PRONE_KEY],
     display: {
       name: `${T}.effect.name`,
       section: 'mount',
@@ -122,6 +149,48 @@ function tormentorDeboardEffect(): EffectInstance {
  */
 function evictOccupancyEffect(): EffectInstance {
   return { id: `evict-${OCCUPANCY_KEY}`, key: OCCUPANCY_KEY, expiry: { kind: 'permanent' } };
+}
+
+/**
+ * The vehicle's Prone Deficiency, as STATE TRACKING ONLY. The Tormentor is not
+ * immune to Prone (its condition-immunity list omits it), and — unlike a
+ * creature — it cannot right itself: flipped on its side it stays there and
+ * can do nothing until something flips it upright. The fact is NAMESPACED
+ * (`companion.tormentorDamageControl.prone`) under its own key, NEVER the
+ * player-global `condition.prone`: conditions are player-global today, and
+ * the builder's `proneEffect()` would flip the PLAYER's attack disadvantage
+ * flags, notice and movement legs — a prone vehicle is not a prone rider.
+ * PERMANENT, unlike the player's `untilShortRest` prone: no rest clears it,
+ * because a rest does not right a vehicle — only Flip Upright (or the board
+ * lifecycle) does. `display` files the chip under the station view like the
+ * occupancy record's.
+ */
+function tormentorProneEffect(): EffectInstance {
+  return {
+    id: PRONE_EFFECT_ID,
+    key: PRONE_KEY,
+    state: { [`${F}.prone`]: 1 },
+    display: {
+      name: `${T}.prone-effect.name`,
+      section: 'mount',
+      subject: SUBJECT,
+      // The chip flips to the vehicle's own prone detail — the same path the
+      // board chip uses (the player's condition/prone text would promise a
+      // creature's crawling and self-righting).
+      detailKey: 'vehicle/tormentor-prone'
+    },
+    expiry: { kind: 'permanent' }
+  };
+}
+
+/**
+ * Eviction of the prone record — the same empty same-key idiom the player's
+ * Get Up uses, advertised three ways: beside the flip-upright offer (the
+ * clear), the board effect (a re-board starts upright) and the de-board
+ * marker (the record never outlives the board).
+ */
+function evictProneEffect(): EffectInstance {
+  return { id: `evict-${PRONE_KEY}`, key: PRONE_KEY, expiry: { kind: 'permanent' } };
 }
 
 /** The structural gate every STATION action shares: the board effect is live. */
@@ -243,11 +312,12 @@ const vehicleTormentor: RuleModule = {
         intents: { HANDLE: 'gear' },
         actionCost: []
       },
-      // The evict beside the replacement: a keyed replacement alone does not
+      // The evicts beside the replacement: a keyed replacement alone does not
       // fire dependents, so a re-board resets occupancy to the board default
-      // explicitly (the steed recast/child-eviction pattern).
+      // (the boarder counts) and starts the vehicle upright, explicitly (the
+      // steed recast/child-eviction pattern).
       apply: (): ActionResult => ({
-        advertise: [tormentorBoardEffect(), evictOccupancyEffect()]
+        advertise: [tormentorBoardEffect(), evictOccupancyEffect(), evictProneEffect()]
       })
     },
     {
@@ -296,11 +366,97 @@ const vehicleTormentor: RuleModule = {
       })
     },
     {
+      // The STATION's prone RECORDER: models the vehicle BEING knocked prone
+      // (imposed by the outside world), free. The BOARD is the one structural
+      // gate (unboarded there is no vehicle to knock); the already-prone state
+      // is a LEGALITY gate, never a `when` (the engine's illegal-but-visible
+      // contract — plan.ts keeps illegal offers applicable with diagnostics
+      // and a planned-anyway row still executes; the PC drop-prone structural
+      // gate was the deviation, corrected): while prone the offer stays
+      // visible and applicable, flagged illegal with its already-prone
+      // diagnostic, and committing it anyway re-advertises the one keyed
+      // record (newest-wins — still a single prone fact). No Speed leg: a
+      // vehicle has no movement economy. State tracking only: no attack flags,
+      // no movement legs, no incapacitated modelling this pass.
+      id: 'knock-tormentor-prone',
+      when: boarded,
+      legalWhen: [
+        {
+          // Illegal while already prone (the state the record would write).
+          condition: (f: FactReader): boolean => f.num(`${F}.prone`) === 0,
+          diagnostics: [{ code: ALREADY_PRONE, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.knocked-prone.name`,
+        description: `${T}.knocked-prone.description`,
+        // Both prone offers flip to the vehicle's own condition text — what
+        // fallen-prone means for a war machine, not for a rider.
+        detailKey: 'vehicle/tormentor-prone',
+        // A vehicle CONDITION files like the PC's: record-prone's CONDITION
+        // 'held' sub-bucket (#467 taxonomy — "Prone (both offers)"), not the
+        // HANDLE gear bucket the boarding offers use.
+        intents: { CONDITION: 'held' },
+        actionCost: []
+      },
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostics from the fold.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num(`${F}.prone`) > 0) diagnostics.push({ code: ALREADY_PRONE, severity: 'error' });
+        return { advertise: [tormentorProneEffect()], diagnostics };
+      }
+    },
+    {
+      // The way a prone vehicle rights itself: it cannot — something else
+      // has to flip it upright. The board is again the one structural gate;
+      // NOT-prone is a legality gate (the get-up shape, the engine's
+      // illegal-but-visible contract): while upright the offer stays visible
+      // and applicable, flagged illegal with its not-prone diagnostic, and a
+      // planned-anyway row still executes — its EMPTY same-key eviction (the
+      // player's Get Up idiom) committing as a no-op beside nothing to evict,
+      // exactly like Get Up while standing. Newest-wins clears the record
+      // while merely planned. PC get-up parity check: of Get Up's three
+      // legality legs, prone-only is this gate; Speed-0 and half-Speed
+      // affordability do not translate — a vehicle has no movement economy.
+      id: 'flip-tormentor-upright',
+      when: boarded,
+      legalWhen: [
+        {
+          // Illegal while upright (nothing to flip).
+          condition: (f: FactReader): boolean => f.num(`${F}.prone`) > 0,
+          diagnostics: [{ code: NOT_PRONE, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.flip-upright.name`,
+        description: `${T}.flip-upright.description`,
+        detailKey: 'vehicle/tormentor-prone',
+        // The condition-END offer files with its condition ('held', like the
+        // recorder) so both prone offers sit under the Conditions grouping in
+        // the station +ADD. The PLAYER's Get Up is a MOVE 'rise' offer because
+        // it spends movement; this free flip is not a movement action.
+        intents: { CONDITION: 'held' },
+        actionCost: []
+      },
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostics from the fold.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num(`${F}.prone`) === 0) diagnostics.push({ code: NOT_PRONE, severity: 'error' });
+        return { advertise: [evictProneEffect()], diagnostics };
+      }
+    },
+    {
       // The STATION-side way out: gated on the board (structurally — unboarded,
       // the action does not exist at all), sitting under the station's +ADD
       // panel so it appears exactly once boarding has made that panel
       // available. Replaces the board effect by key (evicting the occupancy
-      // record with it); no cost, no legality gates.
+      // and prone records with it); no cost, no legality gates.
       id: 'deboard-tormentor',
       when: boarded,
       ui: {
@@ -312,10 +468,32 @@ const vehicleTormentor: RuleModule = {
         actionCost: []
       },
       apply: (): ActionResult => ({
-        advertise: [tormentorDeboardEffect(), evictOccupancyEffect()]
+        advertise: [tormentorDeboardEffect(), evictOccupancyEffect(), evictProneEffect()]
       })
     }
-  ]
+  ],
+  // The Prone Deficiency trait, surfaced as a NOTICE while the vehicle is
+  // PRONE (the Life-Bond annotate pattern gated on the condition — PC-prone
+  // parity: the condition triggers its notice, so boarded-but-upright carries
+  // nothing). It is a condition the player must know BEFORE acting on the
+  // vehicle's behalf: the Tormentor cannot right itself, so it stays prone
+  // and can do nothing until something flips it upright. The gate is the
+  // prone fact alone — the record never outlives the board (the effect's
+  // dependents plus the explicit board/de-board evictions), so no separate
+  // boarded check is needed. Own wording (the Tormentor is not SRD);
+  // 'notice' == NOTICE_TARGET, a reserved label rule modules spell as a
+  // literal (see condition-prone / find-steed).
+  annotate: (f: FactReader): Annotation[] =>
+    f.num(`${F}.prone`) > 0
+      ? [
+          {
+            key: `${T}.notice`,
+            targets: ['notice'],
+            source: `${T}.effect.name`,
+            body: `${T}.notice.body`
+          }
+        ]
+      : []
 };
 
 export default defineRule(vehicleTormentor);

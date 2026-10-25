@@ -257,39 +257,43 @@ describe('rule group dependencies', () => {
   });
 });
 
+/** Phrases that would read as app meta in a tormentor detail body. */
+const BANNED_APP_META = [
+  'not modeled',
+  'modeled',
+  'modelled',
+  'later pass',
+  'later update',
+  'this pass',
+  'this app',
+  'the app',
+  'implemented',
+  'placeholder',
+  'seat',
+  'pseudo',
+  'update'
+];
+
+/** The en body of a detail block carried anywhere in vehicles/tormentor.yaml. */
+function tormentorDetailBody(detailKey: string): string | undefined {
+  const sharedDefs = loadSharedDefinitions(path.resolve(process.cwd(), 'data/rule-groups'));
+  const data = loadYamlFile(
+    path.resolve(process.cwd(), 'data/rule-groups/vehicles/tormentor.yaml'),
+    sharedDefs
+  );
+  return data.ruleGroups!.find((rg) => rg.detail?.key === detailKey)?.detail?.translations.en?.body;
+}
+
 describe('tormentor detail body', () => {
   // The board-flip detail is the VEHICLE's stat block, in our own words (the
   // Tormentor is not SRD: numbers and short factual phrases only, never trait
   // prose). It must read in-world: no app meta (what is or is not "modeled",
   // which pass something arrives in) — a player flipping the chip wants the
   // war machine, not release notes.
-  const body = (() => {
-    const sharedDefs = loadSharedDefinitions(path.resolve(process.cwd(), 'data/rule-groups'));
-    const data = loadYamlFile(
-      path.resolve(process.cwd(), 'data/rule-groups/vehicles/tormentor.yaml'),
-      sharedDefs
-    );
-    const detail = data.ruleGroups!.find((rg) => rg.id === 'tormentor')!.detail!;
-    return detail.translations.en!.body;
-  })();
+  const body = tormentorDetailBody('vehicle/tormentor-damage-control');
 
   it('carries no app-meta phrasing', () => {
-    const banned = [
-      'not modeled',
-      'modeled',
-      'modelled',
-      'later pass',
-      'later update',
-      'this pass',
-      'this app',
-      'the app',
-      'implemented',
-      'placeholder',
-      'seat',
-      'pseudo',
-      'update'
-    ];
-    const found = banned.filter((phrase) => body.toLowerCase().includes(phrase));
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
     expect(found, `app-meta phrases in the tormentor detail body: ${found.join(', ')}`).toEqual([]);
   });
 
@@ -310,6 +314,32 @@ describe('tormentor detail body', () => {
       'Juke'
     ]) {
       expect(body, `the detail body states "${fact}"`).toContain(fact);
+    }
+  });
+});
+
+describe('tormentor prone detail body', () => {
+  // The prone flips (both offers + the chip) land on the vehicle's OWN
+  // condition text, not the player's condition/prone detail: a war machine
+  // cannot crawl or spend movement to rise, so the PC prose would lie. Same
+  // discipline as the stat block — our own words (not SRD), in-world voice,
+  // no app meta.
+  const body = tormentorDetailBody('vehicle/tormentor-prone');
+
+  it('exists as a detail block in tormentor.yaml', () => {
+    expect(body, 'a catalog group in vehicles/tormentor.yaml carries the prone detail').toEqual(
+      expect.any(String)
+    );
+  });
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the prone detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the deficiency and the way clear of it', () => {
+    for (const notion of ['prone', 'Prone Deficiency', 'cannot right itself', 'upright']) {
+      expect(body, `the prone detail body states "${notion}"`).toContain(notion);
     }
   });
 });
