@@ -413,6 +413,10 @@ describe('knocked-prone offer', () => {
     expect(ui.subject).toBe(SUBJECT);
     expect(ui.name).toBe(`${T}.knocked-prone.name`);
     expect(ui.description).toBe(`${T}.knocked-prone.description`);
+    // Tapping the offer flips to the VEHICLE's prone detail — the player's
+    // condition/prone text would promise crawling and half-Speed recovery a
+    // war machine cannot do.
+    expect(ui.detailKey).toBe('vehicle/tormentor-prone');
     expect(ui.actionCost).toEqual([]);
     // A vehicle CONDITION files like the PC's: record-prone's CONDITION
     // 'held' sub-bucket (#467 taxonomy), not the HANDLE gear bucket the
@@ -446,11 +450,15 @@ describe('knocked-prone offer', () => {
     expect(e.expiry).toEqual({ kind: 'permanent' });
   });
 
-  it('the effect displays as a station chip under the subject (no detailKey: it does not flip)', () => {
+  it('the effect displays as a station chip under the subject that FLIPS to the prone detail', () => {
+    // Same flip path as the board chip: the bridge copies display.detailKey
+    // onto the chip's ui, so tapping the Prone chip opens the vehicle's own
+    // condition text (not the player's condition/prone detail).
     expect(proneEffect().display).toEqual({
       name: `${T}.prone-effect.name`,
       section: 'mount',
-      subject: SUBJECT
+      subject: SUBJECT,
+      detailKey: 'vehicle/tormentor-prone'
     });
   });
 
@@ -498,6 +506,9 @@ describe('flip-upright offer', () => {
     expect(ui.subject).toBe(SUBJECT);
     expect(ui.name).toBe(`${T}.flip-upright.name`);
     expect(ui.description).toBe(`${T}.flip-upright.description`);
+    // The condition-END offer flips to the same vehicle-prone detail as its
+    // recorder: the player tapping either wants what fallen-prone means here.
+    expect(ui.detailKey).toBe('vehicle/tormentor-prone');
     expect(ui.actionCost).toEqual([]);
     // The vehicle's condition-END offer files with its condition (the 'held'
     // bucket — "Prone (both offers)" in the #467 taxonomy), so both prone

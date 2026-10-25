@@ -66,3 +66,54 @@ ruleGroups:
             **Juke.** The driver can spend their reaction, while the
             Tormentor is able to move, to gain advantage on a Dexterity
             saving throw.
+  # The vehicle's OWN prone text — the flip target for both prone offers and
+  # the prone chip. A catalog-only entry (the find-steed `*-detail` pattern):
+  # it exists to publish the detail JSON and contributes nothing to play.
+  # Like the stat block above, our own wording (the Tormentor is not SRD) in
+  # an in-world voice — the player's condition/prone prose would promise a
+  # war machine crawling and righting itself at the cost of movement.
+  - id: tormentor-prone-detail
+    translations:
+      en:
+        name: Prone (Tormentor)
+        description: Detail text for the Tormentor's fallen-prone condition
+        keywords:
+          - prone
+          - tormentor
+          - vehicle
+          - fallen
+          - flip upright
+          - knocked down
+          - condition
+      en-x-tlh:
+        name: Prone (Tormentor)
+        description: Detail text for the Tormentor's fallen-prone condition
+        keywords:
+          - prone
+          - tormentor
+          - vehicle
+          - fallen
+          - flip upright
+          - condition
+    detail:
+      key: vehicle/tormentor-prone
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Condition
+          body: |
+            **Fallen Prone.** Even a war machine can be knocked flat. Tipped
+            onto its side — by a crash, a collision, or a blow too heavy to
+            shrug off — the Tormentor has fallen prone, and its bladed iron
+            wheels are off the ground.
+
+            **Prone Deficiency.** The Tormentor is a vehicle, not a creature,
+            and it cannot right itself. It cannot crawl, and no amount of
+            movement lifts it: fallen prone, it can do nothing. It stays on
+            its side through every turn and every rest, until something
+            flips it upright.
+
+            **The Way Clear.** Flipping the war machine upright is the one
+            way out of the condition — its crew hauling it over, or allies
+            heaving together. The moment its wheels are back under it, the
+            Tormentor is upright and ready to roll again.

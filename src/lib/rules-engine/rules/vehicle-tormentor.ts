@@ -164,7 +164,11 @@ function tormentorProneEffect(): EffectInstance {
     display: {
       name: `${T}.prone-effect.name`,
       section: 'mount',
-      subject: SUBJECT
+      subject: SUBJECT,
+      // The chip flips to the vehicle's own prone detail — the same path the
+      // board chip uses (the player's condition/prone text would promise a
+      // creature's crawling and self-righting).
+      detailKey: 'vehicle/tormentor-prone'
     },
     expiry: { kind: 'permanent' }
   };
@@ -366,6 +370,9 @@ const vehicleTormentor: RuleModule = {
         subject: SUBJECT,
         name: `${T}.knocked-prone.name`,
         description: `${T}.knocked-prone.description`,
+        // Both prone offers flip to the vehicle's own condition text — what
+        // fallen-prone means for a war machine, not for a rider.
+        detailKey: 'vehicle/tormentor-prone',
         // A vehicle CONDITION files like the PC's: record-prone's CONDITION
         // 'held' sub-bucket (#467 taxonomy — "Prone (both offers)"), not the
         // HANDLE gear bucket the boarding offers use.
@@ -387,6 +394,7 @@ const vehicleTormentor: RuleModule = {
         subject: SUBJECT,
         name: `${T}.flip-upright.name`,
         description: `${T}.flip-upright.description`,
+        detailKey: 'vehicle/tormentor-prone',
         // The condition-END offer files with its condition ('held', like the
         // recorder) so both prone offers sit under the Conditions grouping in
         // the station +ADD. The PLAYER's Get Up is a MOVE 'rise' offer because

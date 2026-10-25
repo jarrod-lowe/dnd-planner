@@ -15,6 +15,13 @@ steps:
       id: board-tormentor
   - addOffer:
       id: knock-tormentor-prone
+      assert:
+        offerUi:
+          - id: knock-tormentor-prone
+            ui:
+              # The recorder flips to the vehicle's own prone detail, through
+              # every knock/re-board cycle alike.
+              detailKey: vehicle/tormentor-prone
   - endTurn:
       assert:
         effects:

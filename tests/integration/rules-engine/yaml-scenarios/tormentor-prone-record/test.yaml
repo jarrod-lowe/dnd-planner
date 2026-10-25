@@ -47,6 +47,8 @@ steps:
               # A vehicle CONDITION files like the PC's (#467 taxonomy).
               intents:
                 CONDITION: held
+              # Both prone offers flip to the VEHICLE's own condition text.
+              detailKey: vehicle/tormentor-prone
               actionCost: []
   - addOffer:
       id: knock-tormentor-prone
@@ -63,6 +65,7 @@ steps:
               subject: tormentor-damage-control
               intents:
                 CONDITION: held
+              detailKey: vehicle/tormentor-prone
               actionCost: []
         annotations:
           exists:
