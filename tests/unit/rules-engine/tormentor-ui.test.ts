@@ -6,18 +6,23 @@ import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePane
 import type { EffectInstance } from '$lib/rules-engine';
 
 /**
- * Tormentor (Damage Control) — the first VEHICLE subject. Boarding is an
- * ungated free-section offer whose apply advertises one permanent KEYED
- * effect (the steed `steedEffect` pattern) baking the display-only stat
- * block into `companion.tormentorDamageControl.*` facts. The effect display
- * carries `section: 'mount'` plus a `detailKey` — the first mount chip that
- * FLIPS to a stat-block detail (the steed's chip never had one) — and the
- * module declares its subject's top-bar entries as data (`panels`), so the
- * vehicle surfaces without any play-layer change.
+ * Tormentor — the rule group owning the whole VEHICLE and every seat it has so
+ * far (seats change during play, so they are not separate groups). Only the
+ * Damage Control pseudo-seat exists yet, as its own SUBJECT
+ * (`tormentor-damage-control`): boarding is a PLAYER action (an ungated
+ * free-section offer with NO station subject) whose apply advertises one
+ * permanent KEYED effect baking the display-only stat block into
+ * `companion.tormentorDamageControl.*` facts. Having boarded makes the
+ * STATION's +ADD panel available: the de-board offer carries the station
+ * subject and replaces the board effect by key (the steed dismiss pattern).
+ * The effect display carries `section: 'mount'` plus a `detailKey` — the first
+ * mount chip that FLIPS to a stat-block detail — and the module declares its
+ * subject's top-bar entries as data (`panels`), so the vehicle surfaces
+ * without any play-layer change.
  */
 
-const ID = 'vehicle-tormentor-damage-control';
-const T = 'rule.vehicle-tormentor-damage-control';
+const ID = 'tormentor';
+const T = 'rule.tormentor';
 const SUBJECT = 'tormentor-damage-control';
 const F = 'companion.tormentorDamageControl';
 
@@ -39,7 +44,7 @@ function boardEffect(): EffectInstance {
   return advertised[0]!;
 }
 
-describe('tormentor (damage control) registration', () => {
+describe('tormentor registration', () => {
   it('is registered in the registry AND the lazy chunk map', () => {
     expect(isRegistered(ID)).toBe(true);
     expect(lazyRuleGroupIds()).toContain(ID);
@@ -47,12 +52,15 @@ describe('tormentor (damage control) registration', () => {
 });
 
 describe('board offer ui', () => {
-  it('is an ungated free-section offer on its own subject, linking the detail', () => {
+  it('is an ungated free-section PLAYER offer: no station subject, linking the detail', () => {
     const offers = module().offer!({ selections: {} });
-    expect(offers.map((o) => o.id)).toEqual(['board-tormentor']);
+    expect(offers.map((o) => o.id)).toEqual(['board-tormentor', 'deboard-tormentor']);
     const ui = offers[0]!.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
-    expect(ui.subject).toBe(SUBJECT);
+    // Boarding is a PLAYER action: the offer must NOT carry the station
+    // subject, or it would file under the station's +ADD panel instead of the
+    // player's — a panel that does not exist until the board effect does.
+    expect(ui.subject).toBeUndefined();
     expect(ui.name).toBe(`${T}.board.name`);
     expect(ui.description).toBe(`${T}.board.description`);
     expect(ui.detailKey).toBe('vehicle/tormentor-damage-control');
@@ -62,6 +70,57 @@ describe('board offer ui', () => {
     // illegal-but-possible this pass; diagnostics deferred).
     expect(offers[0]!.when).toBeUndefined();
     expect(offers[0]!.legalWhen).toBeUndefined();
+  });
+});
+
+describe('de-board offer', () => {
+  it('sits in the STATION panel under the subject, free section, while boarded', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const deboard = out.availableRules.find((r) => r.rule.id === 'deboard-tormentor');
+    expect(deboard, 'the station +ADD carries the de-board offer').toBeDefined();
+    const ui = deboard!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.deboard.name`);
+    expect(ui.description).toBe(`${T}.deboard.description`);
+    expect(ui.actionCost).toEqual([]);
+    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+  });
+
+  it('is gated structurally on active (when) with no legality gates', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'deboard-tormentor')!;
+    // `when` (not `legalWhen`): unboarded, the de-board action does not exist
+    // at all — there is nothing to show as illegal.
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toBeUndefined();
+  });
+
+  it('is absent while unboarded (structural gate on active)', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.availableRules.some((r) => r.rule.id === 'deboard-tormentor')).toBe(false);
+  });
+
+  it('apply replaces the board effect by key, clearing every baked fact', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+    });
+    // One advertised marker sharing the board key — the steed dismiss pattern:
+    // newest same-key effect evicts the older, so the facts go with it.
+    const advertised = out.effects.filter((e) =>
+      e.id.endsWith('effect-deboard-tormentor-damage-control')
+    );
+    expect(advertised).toHaveLength(1);
+    expect(advertised[0]!.key).toBe('tormentor-damage-control');
+    expect(advertised[0]!.expiry).toEqual({ kind: 'permanent' });
+    // Hidden bookkeeping: no display, or a chip would linger on the strip.
+    expect(advertised[0]!.display).toBeUndefined();
+    // The baked facts are GONE (absent — unset facts read as 0 downstream, and
+    // the panel gates key on presence, so the subject's chips all withdraw).
+    expect(out.facts[`${F}.active`]).toBeUndefined();
+    expect(out.facts[`${F}.ac.value`]).toBeUndefined();
+    expect(out.facts[`${F}.hp.max`]).toBeUndefined();
   });
 });
 

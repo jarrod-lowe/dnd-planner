@@ -91,7 +91,7 @@ import shieldOfFaith from './rules/shield-of-faith';
 import searingSmite from './rules/searing-smite';
 import cureWounds from './rules/cure-wounds';
 import detectEvilAndGood from './rules/detect-evil-and-good';
-import vehicleTormentorDamageControl from './rules/vehicle-tormentor-damage-control';
+import vehicleTormentor from './rules/vehicle-tormentor';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -198,7 +198,7 @@ const MODULES: RuleModule[] = [
   searingSmite,
   cureWounds,
   detectEvilAndGood,
-  vehicleTormentorDamageControl
+  vehicleTormentor
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

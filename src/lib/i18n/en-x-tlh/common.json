@@ -449,11 +449,17 @@
         "name": "HubwI' Hurgh {{score}}"
       }
     },
-    "vehicle-tormentor-damage-control": {
+    "tormentor": {
+      "name": "Duj Sep",
+      "keywords": "vehicle tormentor war machine crew station board mount ride",
+      "description": "Duj Sep 'ej Duj Sep Sep",
       "board": {
         "name": "Duj Sep Irneh",
-        "keywords": "vehicle tormentor board mount ride crew damage control",
         "description": "Duj Sep Sep Irneh yI'och"
+      },
+      "deboard": {
+        "name": "Duj Sepvo' mej",
+        "description": "Duj Sep Sep Irnehvo' mej"
       },
       "effect": {
         "name": "Duj Sep (Sep Irneh)"
@@ -1704,6 +1710,12 @@
         "fellGlare": "So' Qoy",
         "movement": "Do"
       },
+      "tormentor-damage-control": {
+        "hp": "HP",
+        "ac": "DIch Jun",
+        "speed": "SPD",
+        "cargo": "ngIS"
+      },
       "sections": {
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
@@ -1997,18 +2009,12 @@
           "healingTouch": "Heal",
           "feyStep": "Fey",
           "fellGlare": "Glare"
-        },
-        "tormentor-damage-control": {
-          "hp": "HP",
-          "ac": "AC",
-          "speed": "SPD",
-          "cargo": "ngIS"
         }
       }
     },
     "companion": {
       "steed": "🐴 Sargh",
-      "tormentor-damage-control": "Duj Sep (Sep Irneh)"
+      "tormentor-damage-control": "🛞 Duj Sep (Sep Irneh)"
     },
     "topBar": {
       "hp": "HP",

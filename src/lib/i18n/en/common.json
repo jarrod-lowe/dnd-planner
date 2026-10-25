@@ -449,11 +449,17 @@
         "name": "Aura of the Guardian {{score}}"
       }
     },
-    "vehicle-tormentor-damage-control": {
+    "tormentor": {
+      "name": "Tormentor",
+      "keywords": "vehicle tormentor war machine crew station board mount ride",
+      "description": "The Tormentor war vehicle and its crew stations",
       "board": {
         "name": "Board the Tormentor",
-        "keywords": "vehicle tormentor board mount ride crew damage control",
         "description": "Take the damage-control station on the Tormentor"
+      },
+      "deboard": {
+        "name": "De-board the Tormentor",
+        "description": "Leave the damage-control station"
       },
       "effect": {
         "name": "Tormentor (Damage Control)"
@@ -1684,6 +1690,12 @@
         "fellGlare": "Fell Glare",
         "movement": "Move"
       },
+      "tormentor-damage-control": {
+        "hp": "HP",
+        "ac": "AC",
+        "speed": "SPD",
+        "cargo": "Cargo"
+      },
       "sections": {
         "resources": "Resources",
         "stats": "Stats",
@@ -1997,18 +2009,12 @@
           "healingTouch": "Heal",
           "feyStep": "Fey",
           "fellGlare": "Glare"
-        },
-        "tormentor-damage-control": {
-          "hp": "HP",
-          "ac": "AC",
-          "speed": "SPD",
-          "cargo": "Cargo"
         }
       }
     },
     "companion": {
       "steed": "🐴 Steed",
-      "tormentor-damage-control": "Tormentor (Damage Control)"
+      "tormentor-damage-control": "🛞 Tormentor (Damage Control)"
     },
     "topBar": {
       "hp": "HP",

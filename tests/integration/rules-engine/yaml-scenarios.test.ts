@@ -247,9 +247,9 @@ const EXPECTED_RUNNABLE = [
   'steed-move-partial-distance',
   'steed-damage-accumulates',
   'steed-overheal-caps-at-damage',
-  // Tormentor (Damage Control) — the first vehicle subject: an ungated board
-  // offer bakes the display-only stat block as one permanent keyed effect;
-  // unboarding is mount-chip removal (no dismiss offer this pass)
+  // Tormentor — the vehicle group: a player-side ungated board offer bakes the
+  // display-only stat block as one permanent keyed effect; the station panel
+  // carries de-board, and raw chip removal stays the override path
   'tormentor-board-offer',
   'tormentor-board-stats',
   'tormentor-unboard',

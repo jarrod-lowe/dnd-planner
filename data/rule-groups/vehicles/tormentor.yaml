@@ -1,14 +1,17 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
-  - id: vehicle-tormentor-damage-control
-    # Ungated: available to every character (boarding legality is not checked
-    # this pass — multiple boardings are illegal-but-possible).
+  - id: tormentor
+    # The ONE group for the whole vehicle: seats (action stations) join this
+    # group as their own subjects, because seats change during play. Only the
+    # Damage Control pseudo-seat exists yet. Ungated: available to every
+    # character (boarding legality is not checked this pass — multiple
+    # boardings are illegal-but-possible).
     translations:
       en:
-        name: Tormentor (Damage Control)
-        description: Board the Tormentor war vehicle on damage-control duty.
-          Shows its AC, HP, Speed, cargo capacity, and STR/DEX/CON while you
-          ride.
+        name: Tormentor
+        description: The Tormentor war vehicle and its crew stations. Board it
+          on damage-control duty to see its AC, HP, Speed, cargo capacity, and
+          STR/DEX/CON while you ride.
         keywords:
           - vehicle
           - tormentor
@@ -17,9 +20,9 @@ ruleGroups:
           - crew
           - damage control
       en-x-tlh:
-        name: Duj Sep (Sep Irneh)
-        description: Duj Sep Sep Irneh yI'och. Sep, wa', chal, Duj Sep Sep
-          'ej Sep wa' 'ej Sep.
+        name: Duj Sep
+        description: Duj Sep 'ej Duj Sep Sep. Duj Sep Sep Irneh yI'och. Sep,
+          wa', chal, Duj Sep Sep 'ej Sep wa' 'ej Sep.
         keywords:
           - vehicle
           - tormentor
@@ -41,9 +44,9 @@ ruleGroups:
             - labelKey: rules.field.weight
               value: 3,000 lb.
           body: |
-            A huge war vehicle, 3,000 lb. This group is the damage-control
-            station: riding along on crew duty that is neither the helm nor a
-            weapon seat.
+            A huge war vehicle, 3,000 lb. This station is damage control:
+            riding along on crew duty that is neither the helm nor a weapon
+            seat.
 
             **Modeled here.** Armor Class 21; Hit Points 60 (a fixed stat —
             damage tracking is not modeled yet); Speed 100 ft.; cargo capacity

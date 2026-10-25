@@ -442,8 +442,9 @@ const translations: Record<string, string> = {
   'species.human': 'Human',
   'play.topBar.viewPlayer': 'Player',
   'play.companion.steed': 'Steed',
-  // The long subject name PR 3 will render.
-  'play.companion.tormentor-damage-control': 'Tormentor (Damage Control)',
+  // The long subject name PR 3 will render (emoji starter like "👤 You" /
+  // "🐴 Steed").
+  'play.companion.tormentor-damage-control': '🛞 Tormentor (Damage Control)',
   // A long stat label of the kind vehicles bring (label + value in one chip).
   'play.stats.tormentor.cargo': 'Cargo Capacity (500 lb.)',
   'play.stats.tormentor.capacity': 'Creature Capacity (4 Medium creatures)',
@@ -568,9 +569,9 @@ describe('label overflow — IntentTopBar keeps the full name accessible', () =>
     const long = buttons[2];
     const line = long.querySelector('.ticker');
     expect(line).toBeTruthy();
-    assertSingleAnnounceableCopy(line as HTMLElement, 'Tormentor (Damage Control)');
+    assertSingleAnnounceableCopy(line as HTMLElement, '🛞 Tormentor (Damage Control)');
     // Hover still reveals the name without waiting for the tape.
-    expect(long.getAttribute('title')).toBe('Tormentor (Damage Control)');
+    expect(long.getAttribute('title')).toBe('🛞 Tormentor (Damage Control)');
   });
 
   it('leaves the abilities chip without a tape — its width is structural', () => {
@@ -651,9 +652,9 @@ describe('label overflow — Ledger keeps the full name accessible', () => {
     const line = container.querySelector<HTMLElement>('.ledger__view-label');
     expect(line).toBeTruthy();
     expect(line?.classList.contains('ticker')).toBe(true);
-    assertSingleAnnounceableCopy(line!, 'Tormentor (Damage Control)');
+    assertSingleAnnounceableCopy(line!, '🛞 Tormentor (Damage Control)');
     // Hover still reveals the name without waiting for the tape.
-    expect(line?.getAttribute('title')).toBe('Tormentor (Damage Control)');
+    expect(line?.getAttribute('title')).toBe('🛞 Tormentor (Damage Control)');
   });
 
   it('tickers the tray cells’ label line without making the cell scroll', () => {

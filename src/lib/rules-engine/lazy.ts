@@ -113,7 +113,7 @@ const LOADERS: Record<string, () => Promise<{ default: RuleModule }>> = {
   'spell-searing-smite': () => import('./rules/searing-smite'),
   'spell-cure-wounds': () => import('./rules/cure-wounds'),
   'spell-detect-evil-and-good': () => import('./rules/detect-evil-and-good'),
-  'vehicle-tormentor-damage-control': () => import('./rules/vehicle-tormentor-damage-control')
+  tormentor: () => import('./rules/vehicle-tormentor')
 };
 
 export interface LoadResult {
