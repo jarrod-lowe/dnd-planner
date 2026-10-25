@@ -732,8 +732,7 @@ const vehicleTormentor: RuleModule = {
       // gate (unboarded there is no vehicle to knock); the already-prone state
       // is a LEGALITY gate, never a `when` (the engine's illegal-but-visible
       // contract — plan.ts keeps illegal offers applicable with diagnostics
-      // and a planned-anyway row still executes; the PC drop-prone structural
-      // gate was the deviation, corrected): while prone the offer stays
+      // and a planned-anyway row still executes): while prone the offer stays
       // visible and applicable, flagged illegal with its already-prone
       // diagnostic, and committing it anyway re-advertises the one keyed
       // record (newest-wins — still a single prone fact). No Speed leg: a

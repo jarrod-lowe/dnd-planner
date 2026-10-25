@@ -472,10 +472,9 @@ describe('knocked-prone offer', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'knock-tormentor-prone')!;
     // `when` like the other station actions: unboarded, recording a prone for
     // a vehicle nobody rides does not exist at all. The ALREADY-PRONE state is
-    // `legalWhen`, never `when` (the engine's illegal-but-visible contract —
-    // the PC's drop-prone structural gate was the deviation, corrected): while
-    // prone the offer stays visible and applicable, flagged illegal with its
-    // diagnostic, and a planned-anyway row still executes.
+    // `legalWhen`, never `when` (the engine's illegal-but-visible contract):
+    // while prone the offer stays visible and applicable, flagged illegal with
+    // its diagnostic, and a planned-anyway row still executes.
     expect(typeof raw.when).toBe('function');
     expect(raw.legalWhen).toHaveLength(1);
     // The structural gate is the board alone: it holds while prone.
@@ -542,8 +541,7 @@ describe('knocked-prone offer', () => {
     // The plan.ts contract (the player-override path): an illegal planned row
     // EXECUTES — the keyed replacement re-advertises the one record
     // (newest-wins, so still a single prone fact) while the row carries the
-    // already-prone diagnostic, instead of the closed structural gate
-    // silently doing nothing.
+    // already-prone diagnostic.
     const out = evaluate({
       modules: [module()],
       committed: [boardEffect(), proneEffect()],
@@ -570,10 +568,9 @@ describe('knocked-prone offer', () => {
 describe('flip-upright offer', () => {
   it('is gated structurally on boarded ONLY (when); prone is a legality gate, both states visible', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'flip-tormentor-upright')!;
-    // `when` is the board alone (like the knock — the mirror structural gate
-    // was the deviation): while UPRIGHT the offer stays visible and applicable
-    // but is flagged ILLEGAL with its not-prone diagnostic (the engine's
-    // illegal-but-visible contract, the get-up shape).
+    // `when` is the board alone (like the knock): while UPRIGHT the offer
+    // stays visible and applicable but is flagged ILLEGAL with its not-prone
+    // diagnostic (the engine's illegal-but-visible contract, the get-up shape).
     expect(typeof raw.when).toBe('function');
     expect(raw.when!(readerAt(0))).toBe(true);
     expect(raw.when!(readerAt(1))).toBe(true);
