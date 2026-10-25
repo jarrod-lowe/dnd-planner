@@ -231,16 +231,15 @@ describe('ticker utility — the tape lives in base.css, gated on measurement', 
     }
   });
 
-  it('loops seamlessly: one full copy per translation, copies flush', () => {
+  it('loops seamlessly: one copy per translation, seam inside the copy', () => {
     // Round 3 (tablet blink at the wrap): the loop used to space the copies
     // with a flex gap and translate by copy + gap — arithmetically seamless at
     // the wrap instant, but the gap itself was 12px of BLANK that swept
     // through the viewport every cycle and sat on the leading edge for the
     // last fraction of each loop, reading as "the label briefly goes blank
-    // when it restarts". The seam must be zero-width: no gap (and no margin)
-    // between the copies, and each copy travels exactly its own border-box
-    // width — padding included, gap terms banned — so copy N lands pixel-on
-    // copy 1's start with nothing empty in between.
+    // when it restarts". So no gap (and no margin) between the elements, and
+    // each copy travels exactly its own border-box width — gap terms banned —
+    // so copy N lands pixel-on copy 1's start.
     expect(rule(BASE_CSS, '.ticker').decls, 'no gap between the copies').not.toMatch(
       /(?:^|;)\s*(column-|row-)?gap:/
     );
@@ -251,6 +250,23 @@ describe('ticker utility — the tape lives in base.css, gated on measurement', 
     expect(keyframes.decls).toMatch(/transform:\s*translateX\(-100%\)/);
     expect(keyframes.decls, 'the distance is one copy exactly — no gap/padding term').not.toMatch(
       /calc\(|var\(--ticker/
+    );
+    // Round 4 (tablet seam report): perfectly flush copies put the next
+    // repetition's leading emoji hard against "(Damage Control)" — no space,
+    // so the 🛞 read as glued to the END of the text, not starting the next
+    // one. The seam is a modest TRAILING padding INSIDE .ticker__copy: as
+    // part of the copy's border-box it rides inside the translateX(-100%)
+    // travel (the keyframe above needs no seam term), the elements stay
+    // adjacent, and at the wrap instant the duplicate's leading edge — the
+    // emoji — lands on the viewport's leading edge, so the blank stays
+    // mid-tape behind the text instead of parking on the leading edge (the
+    // round-3 blink). spacing-sm ≈ two word spaces at the chips' font sizes:
+    // clearly "the next one starts here", well short of the 12px that blinked.
+    expect(decl(BASE_CSS, '.ticker__copy', 'padding-right')).toBe('var(--spacing-sm)');
+    // Trailing only: leading padding would put the blank ON the leading edge
+    // at the wrap — the round-3 blink reintroduced from the other end.
+    expect(rule(BASE_CSS, '.ticker__copy').decls, 'seam trails, never leads').not.toMatch(
+      /(?:^|;)\s*padding-left:/
     );
   });
 

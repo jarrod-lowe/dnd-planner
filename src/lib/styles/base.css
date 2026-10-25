@@ -190,10 +190,15 @@ h6 {
    cancels the animation, the line is an ordinary horizontally scrollable
    clamp: the manual-swipe fallback is the resting state, not an extra.
 
-   The two copies sit FLUSH — no gap, no margin. Any space between them is
-   blank that sweeps through the viewport once per cycle and parks on the
-   leading edge at the wrap, which reads as the label blinking out just
-   before it restarts (the round-3 tablet report). */
+   The two copies sit adjacent — no gap, no margin between the ELEMENTS. Any
+   inter-element space is blank that parks on the leading edge at the wrap and
+   reads as the label blinking out just before it restarts (the round-3 tablet
+   report). But perfectly flush boxes glued the next repetition's leading
+   emoji onto the tail of the text (the round-4 seam report), so each copy
+   carries a modest seam as its own TRAILING padding: inside the copy's
+   border-box, the translateX(-100%) travel already covers it, and at the wrap
+   the duplicate's leading edge — the label, not the blank — lands on the
+   viewport's leading edge. */
 .ticker {
   display: flex;
   align-items: center;
@@ -207,6 +212,10 @@ h6 {
 .ticker__copy {
   flex-shrink: 0;
   white-space: nowrap;
+  /* The seam (see above): whitespace between one repetition and the next,
+     inside the copy so the loop's travel and the action's scrollWidth
+     measurement both include it — the tape keeps its constant px/s pace. */
+  padding-right: var(--spacing-sm);
 }
 
 /* The duplicate exists only for the seamless loop: hidden while the tape is
@@ -232,10 +241,11 @@ h6 {
 
 @keyframes ticker-scroll {
   to {
-    /* Exactly one copy's own border-box width (padding included, nothing
-       else): the duplicate lands pixel-on where the original started, and
-       because the copies are flush the seam between them is zero wide — no
-       blank anywhere in the loop, the wrap included. */
+    /* Exactly one copy's own border-box width — text plus the copy's own
+       trailing seam padding, nothing else (no gap/margin term): the duplicate
+       lands pixel-on where the original started, seam and all, so the loop
+       wraps without a stutter while the seam stays mid-tape as the space
+       before the next repetition. */
     transform: translateX(-100%);
   }
 }
