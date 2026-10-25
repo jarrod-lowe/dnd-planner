@@ -112,6 +112,7 @@
       "steed-record-damage": {
         "name": "Record Damage",
         "keywords": "hit points health damage",
+        "below_threshold": "Below the damage threshold — the steed takes no damage",
         "effect": {
           "name": "Steed Damage"
         }
@@ -544,6 +545,9 @@
         },
         "effect-hit-die-heal": {
           "name": "Hit Dice {{score}}"
+        },
+        "record-damage": {
+          "below_threshold": "Below the damage threshold — no damage is taken"
         },
         "record-short-rest-offer": {
           "die_already_spent": "That hit die is already spent",

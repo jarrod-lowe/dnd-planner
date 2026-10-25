@@ -1,0 +1,78 @@
+name: 'Core Events - Seeded damage threshold gates record-damage'
+description: >-
+  The player's damage recorder consults the builder's generic threshold gate
+  on the player's natural fact name, hp.damageThreshold. No module derives it,
+  so today it is unset (reads 0, never gates — the zero-behavior-change
+  contract); this scenario seeds it as a committed effect exactly the way a
+  future stat-block bake would, and the recorder adapts on its own: a blow
+  BELOW the fact records NOTHING and flags the row with the core-events
+  below-threshold diagnostic (the offer stays legal — the apply-level gate, the
+  dash idiom), while a blow AT the threshold records in full.
+ruleGroups:
+  - dnd-5e-2024/hp
+  - dnd-5e-2024/ability-scores
+  - dnd-5e-2024/action-economy
+  - dnd-5e-2024/free-actions
+  - class-paladin/class-paladin-level1
+  - dnd-5e-2024/core-events
+steps:
+  # Set CON to 14 (modifier +2) → hp.max = 12, hp.current = 12.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-constitution
+  - addOffer:
+      id: set-constitution
+      selections:
+        score: 14
+      assert:
+        facts:
+          hp.max: 12
+          hp.current: 12
+  # Sub-threshold (4 < the seeded 5): the blow bounces — no record, no fact
+  # change, and the row (not the offer) carries the diagnostic.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 4
+      assert:
+        facts:
+          hp.current: 12
+        planErrors:
+          - id: record-damage
+            index: 0
+            errors:
+              - rule.dnd-5e-2024.core-events.record-damage.below_threshold
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-hp-damage
+        facts:
+          hp.current: 12
+  # The recorder stays LEGAL whatever the slider reads (an apply-level gate,
+  # never a legalWhen) — and at the threshold the blow lands in FULL.
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - record-damage
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        facts:
+          hp.current: 7
+        planErrors:
+          - id: record-damage
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-hp-damage
+        facts:
+          hp.current: 7

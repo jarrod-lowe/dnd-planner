@@ -1,15 +1,55 @@
 import {
   defineRule,
   HIT_DIE_SIZES,
+  hpRecorders,
   type ActionResult,
   type Diagnostic,
   type EffectInstance,
+  type FactReader,
   type Offer,
   type RuleModule
 } from '../builder';
 
 const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 const CE = 'rule.dnd-5e-2024.core-events';
+
+/**
+ * Taking damage while concentrating (the slot is held → remaining ≤ 0) trips
+ * the concentration group's check trigger, carrying the amount so the reminder
+ * can SAY the save DC (SRD 5.2: the DC equals 10 or half the damage taken,
+ * round down, whichever is higher, max 30 — computed by the concentration
+ * group's annotation, not here). Keyed + endOfTurn so it lasts only this turn
+ * and a planned concentration-check can clear it (same key, newest wins).
+ * Newest-wins is an accepted limitation: damage rows batched before any check
+ * is resolved collapse into ONE check at the latest row's DC (the first save is
+ * skipped) — the supported flow is interleaved (record damage, resolve the
+ * check, record the next), and a faithful fix needs a pending-damage queue the
+ * engine deliberately lacks. Its sibling — a resolved check's captured DC not
+ * following later edits of its damage row — is owned by the `dc` capture in the
+ * concentration group. Gated on the group being loaded so it never sets a
+ * phantom fact when concentration isn't in play, and on the amount: a row left
+ * at the slider's default 0 is no damage taken, so it must not put a
+ * concentration check in front of the player.
+ *
+ * The PLAYER-ONLY extra the shared HP recorder carries via `onDamageRecorded`
+ * (a steed never concentrates, a vehicle has nobody concentrating): it fires
+ * only when a damage record LANDS — a blow bounced by a (seeded) damage
+ * threshold took no damage, so it owes no check.
+ */
+const concentrationDamageMarker = (f: FactReader, amount: number): EffectInstance[] =>
+  amount > 0 && f.has('concentration.remaining') && f.num('concentration.remaining') <= 0
+    ? [
+        {
+          id: 'concentration-damage-taken',
+          key: 'concentration-damage-taken',
+          state: {
+            'concentration.damage-taken': 1,
+            'concentration.last-damage': amount
+          },
+          expiry: { kind: 'endOfTurn' }
+        }
+      ]
+    : [];
 
 /**
  * The rest-flag effect both rest recorders advertise: sets the flag for this
@@ -238,130 +278,42 @@ function shortRestOffer(): Offer {
 const coreEvents: RuleModule = {
   id: 'core-events',
   offer: () => [
-    {
-      id: 'record-damage',
-      ui: {
-        section: 'free',
+    // The player's own damage/heal recorders, on the shared factory (the steed
+    // and the Tormentor ride the same code path). Keyless stacking records —
+    // each hit its own removable chip holding its own amount — with the
+    // player-ONLY concentration trigger riding `onDamageRecorded`. The
+    // threshold fact is the player's natural `hp.damageThreshold`: nothing
+    // derives it, so it reads 0 and never gates today; a future subject that
+    // bakes one adapts the recorder for free (diagnostic in this namespace).
+    ...hpRecorders({
+      idStem: 'record',
+      facts: {
+        max: 'hp.max',
+        modifierCurrent: 'hp.modifier.current',
+        damageThreshold: 'hp.damageThreshold'
+      },
+      damage: {
         name: 'planner.record.damage',
         // The recorder idiom (record-heal carries 'healing.any'): the panel
         // the post-hoc damage reminders ride — concentration's
         // save-to-keep-the-spell annotation (with the computed DC) while the
         // slot is held.
         annotationLabels: ['damage.any'],
-        primaryControl: {
-          type: 'slider',
-          var: 'amount',
-          min: { number: 0 },
-          max: { fact: 'hp.max' },
-          unit: 'hp'
-        },
-        intents: { HEALTH: 'hp' },
-        actionCost: []
+        // The ids are what the scenarios assert (effect-hp-damage / -heal).
+        effectId: 'effect-hp-damage',
+        effectName: `${CE}.effect-hp-damage.name`
       },
-      vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (f, selections): ActionResult => {
-        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // The RAW amount is recorded, not one clamped to the HP held: a clamp
-        // would bake an order-dependent value into an independently removable
-        // chip, so deleting an earlier damage chip would leave this one wrong.
-        // Overkill therefore banks in `hp.modifier.current` (the `hp.current`
-        // derive floors the display at 0); that is tracked separately.
-        const advertise: EffectInstance[] = [
-          // id is what the scenarios assert (effect-hp-damage).
-          {
-            id: 'effect-hp-damage',
-            state: { 'hp.modifier.current': -amount },
-            // The chip name is `Damage {{score}}`; records are keyless and stack,
-            // so each carries its own amount as a display literal.
-            display: {
-              name: 'rule.dnd-5e-2024.core-events.effect-hp-damage.name',
-              section: 'health',
-              value: amount
-            },
-            expiry: { kind: 'untilLongRest' }
-          }
-        ];
-        // Taking damage while concentrating (the slot is held → remaining ≤ 0)
-        // trips the concentration group's check trigger, carrying the amount so
-        // the reminder can SAY the save DC (SRD 5.2: the DC equals 10 or half
-        // the damage taken, round down, whichever is higher, max 30 — computed
-        // by the concentration group's annotation, not here). Keyed +
-        // endOfTurn so it lasts only this turn and a planned
-        // concentration-check can clear it (same key, newest wins). Newest-wins
-        // is an accepted limitation: damage rows batched before any check is
-        // resolved collapse into ONE check at the latest row's DC (the first
-        // save is skipped) — the supported flow is interleaved (record damage,
-        // resolve the check, record the next), and a faithful fix needs a
-        // pending-damage queue the engine deliberately lacks. Its sibling — a
-        // resolved check's captured DC not following later edits of its damage
-        // row — is owned by the `dc` capture in the concentration group. Gated on
-        // the group being loaded so it never sets a phantom fact when
-        // concentration isn't in play, and on the amount: a row left at the
-        // slider's default 0 is no damage taken, so it must not put a
-        // concentration check in front of the player.
-        if (
-          amount > 0 &&
-          f.has('concentration.remaining') &&
-          f.num('concentration.remaining') <= 0
-        ) {
-          advertise.push({
-            id: 'concentration-damage-taken',
-            key: 'concentration-damage-taken',
-            state: {
-              'concentration.damage-taken': 1,
-              'concentration.last-damage': amount
-            },
-            expiry: { kind: 'endOfTurn' }
-          });
-        }
-        return { advertise };
-      }
-    },
-    {
-      id: 'record-heal',
-      ui: {
-        section: 'free',
+      heal: {
         name: 'planner.record.heal',
         annotationLabels: ['healing.any'],
-        primaryControl: {
-          type: 'slider',
-          var: 'amount',
-          min: { number: 0 },
-          max: { fact: 'hp.max' },
-          unit: 'hp'
-        },
-        intents: { HEALTH: 'hp' },
-        actionCost: []
+        effectId: 'effect-hp-heal',
+        effectName: `${CE}.effect-hp-heal.name`
       },
-      vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (f, selections): ActionResult => {
-        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // Effective healing caps at the HP missing when it is recorded (5e:
-        // regained HP cannot exceed the max — the surplus is simply lost). The
-        // hp.current clamp only HIDES a positive modifier; persisting the raw
-        // amount would bank the surplus and pre-cancel damage taken later
-        // (heal 15 on 10 damage, then take 7 → −2 instead of −7).
-        const missing = Math.max(0, -f.num('hp.modifier.current'));
-        const effective = Math.min(amount, missing);
-        return {
-          advertise: [
-            // id is what the scenarios assert (effect-hp-heal).
-            {
-              id: 'effect-hp-heal',
-              state: { 'hp.modifier.current': effective },
-              // The chip name is `Healing {{score}}`; show the EFFECTIVE amount —
-              // the same value the effect records (surplus healing is lost).
-              display: {
-                name: 'rule.dnd-5e-2024.core-events.effect-hp-heal.name',
-                section: 'health',
-                value: effective
-              },
-              expiry: { kind: 'untilLongRest' }
-            }
-          ]
-        };
-      }
-    },
+      accumulation: 'keyless-stack',
+      chipSection: 'health',
+      belowThresholdCode: `${CE}.record-damage.below_threshold`,
+      onDamageRecorded: concentrationDamageMarker
+    }),
     ...ABILITIES.map(saveOffer),
     {
       id: 'record-check',

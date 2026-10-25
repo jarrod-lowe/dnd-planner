@@ -1,7 +1,7 @@
 import {
   currentHp,
-  damageThresholdGate,
   defineRule,
+  hpRecorders,
   type ActionResult,
   type Annotation,
   type Diagnostic,
@@ -610,122 +610,53 @@ const vehicleTormentor: RuleModule = {
         ]
       })
     },
-    {
-      // The STATION's damage RECORDER (the steed steed-record-damage shape):
-      // free, boarded, an HP record (the HEALTH bucket, like the steed's and
-      // the player's — not a condition). The ONE keyed untilLongRest effect
-      // carries the RUNNING total (prior + this amount), so records accumulate
-      // while the board/de-board lifecycle still evicts by key and removing
-      // the single chip clears the whole record. The stat block's damage
-      // threshold is an APPLY-level gate via the builder's generic helper (the
-      // dash idiom — the offer stays legal whatever the slider reads): a blow
-      // below the baked fact records NOTHING and flags the row with the
-      // below-threshold diagnostic; at or above it the FULL amount lands (the
-      // threshold is a floor, not a cap). Damage that brings the pool to 0
-      // ALSO writes the permanent destroyed wreck (see below). The offer
-      // carries the damage DETAIL — threshold, immunities and the mishap
-      // trigger live there, not on standing notices (nothing else behaves
-      // differently, so there is nothing to warn about before acting).
-      id: 'record-tormentor-damage',
+    // The STATION's damage/repair recorders, on the shared factory (the
+    // player's and the steed's ride the same code path): free, boarded, an HP
+    // record (the HEALTH bucket, like the steed's and the player's — not a
+    // condition), keyed running totals the board/de-board lifecycle evicts by
+    // key. The stat block's damage threshold is a BAKED FACT the factory's
+    // generic gate consults (the dash idiom — the offer stays legal whatever
+    // the slider reads): a blow below it records NOTHING and flags the row
+    // with the below-threshold diagnostic; at or above it the FULL amount
+    // lands (the threshold is a floor, not a cap). Damage that brings the
+    // pool to 0 ALSO writes the permanent destroyed wreck BESIDE the record
+    // (the record lands — the blow happened; the wreck is permanent, because
+    // a long rest must not un-burn a war machine). The damage offer carries
+    // the damage DETAIL — threshold, immunities and the mishap trigger live
+    // there, not on standing notices (nothing else behaves differently, so
+    // there is nothing to warn about before acting); the repair offer keeps
+    // the minimal surface (no detailKey).
+    ...hpRecorders({
+      idStem: 'record-tormentor',
       when: boarded,
-      ui: {
-        section: 'free',
-        subject: SUBJECT,
+      subject: SUBJECT,
+      facts: {
+        max: `${F}.hp.max`,
+        modifierCurrent: `${F}.hp.modifier.current`,
+        damageRecorded: `${F}.hp.damageRecorded`,
+        healRecorded: `${F}.hp.healRecorded`,
+        damageThreshold: `${F}.damageThreshold`
+      },
+      damage: {
         name: `${T}.record-damage.name`,
         description: `${T}.record-damage.description`,
         detailKey: 'vehicle/tormentor-damage',
-        primaryControl: {
-          type: 'slider',
-          var: 'amount',
-          min: { number: 0 },
-          max: { fact: `${F}.hp.max` },
-          unit: 'hp'
-        },
-        intents: { HEALTH: 'hp' },
-        actionCost: []
+        effectId: HP_DAMAGE_EFFECT_ID,
+        effectKey: HP_DAMAGE_KEY,
+        effectName: `${T}.hp-damage-effect.name`
       },
-      vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (f, selections): ActionResult => {
-        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        // Below the threshold the blow bounces off: NO record, and the row (not
-        // the offer — that stays legal) carries the diagnostic.
-        const bounced = damageThresholdGate(f, amount, `${F}.damageThreshold`, BELOW_THRESHOLD);
-        if (bounced) return { advertise: [], diagnostics: [bounced] };
-        const advertise: EffectInstance[] = [
-          {
-            id: HP_DAMAGE_EFFECT_ID,
-            key: HP_DAMAGE_KEY,
-            state: { [`${F}.hp.damageRecorded`]: f.num(`${F}.hp.damageRecorded`) + amount },
-            display: {
-              name: `${T}.hp-damage-effect.name`,
-              section: 'mount',
-              subject: SUBJECT,
-              displayFact: `${F}.hp.damageRecorded`
-            },
-            expiry: { kind: 'untilLongRest' }
-          }
-        ];
-        // The lethal check (the steed record-damage placement), but NO
-        // auto-unboard: the steed retires itself at 0 HP, a vehicle becomes a
-        // WRECK — `destroyed` under its own permanent key, the board effect
-        // left live so the wreck stays inspectable and the crew can de-board.
-        // The damage record lands regardless (the blow happened); permanent,
-        // because a long rest must not un-burn a war machine (it ages the HP
-        // records out and the pool reads full again — the wreck stays).
-        const hpAfter = currentHp(f.num(`${F}.hp.max`), f.num(`${F}.hp.modifier.current`) - amount);
-        if (hpAfter <= 0) advertise.push(tormentorDestroyedEffect());
-        return { advertise };
-      }
-    },
-    {
-      // The STATION's repair recorder — the steed steed-record-heal mirror:
-      // same slider, same HEALTH bucket, same keyed running total, and the
-      // added heal CAPS at the current net missing HP (`max(0,
-      // -hp.modifier.current)`, which folds in all recorded damage), so
-      // repairs offset HP loss and never bank surplus past full to pre-cancel
-      // a later blow. Minimal surface: no detailKey (the damage semantics
-      // detail rides the damage offer alone).
-      id: 'record-tormentor-heal',
-      when: boarded,
-      ui: {
-        section: 'free',
-        subject: SUBJECT,
+      heal: {
         name: `${T}.record-heal.name`,
         description: `${T}.record-heal.description`,
-        primaryControl: {
-          type: 'slider',
-          var: 'amount',
-          min: { number: 0 },
-          max: { fact: `${F}.hp.max` },
-          unit: 'hp'
-        },
-        intents: { HEALTH: 'hp' },
-        actionCost: []
+        effectId: HP_HEAL_EFFECT_ID,
+        effectKey: HP_HEAL_KEY,
+        effectName: `${T}.hp-heal-effect.name`
       },
-      vars: { amount: { capture: true, default: { number: 0 } } },
-      apply: (f, selections): ActionResult => {
-        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
-        const missing = Math.max(0, -f.num(`${F}.hp.modifier.current`));
-        return {
-          advertise: [
-            {
-              id: HP_HEAL_EFFECT_ID,
-              key: HP_HEAL_KEY,
-              state: {
-                [`${F}.hp.healRecorded`]: f.num(`${F}.hp.healRecorded`) + Math.min(amount, missing)
-              },
-              display: {
-                name: `${T}.hp-heal-effect.name`,
-                section: 'mount',
-                subject: SUBJECT,
-                displayFact: `${F}.hp.healRecorded`
-              },
-              expiry: { kind: 'untilLongRest' }
-            }
-          ]
-        };
-      }
-    },
+      accumulation: 'keyed-total',
+      chipSection: 'mount',
+      belowThresholdCode: BELOW_THRESHOLD,
+      lethal: { effects: () => [tormentorDestroyedEffect()], keepRecord: true }
+    }),
     {
       // The STATION's prone RECORDER: models the vehicle BEING knocked prone
       // (imposed by the outside world), free. The BOARD is the one structural

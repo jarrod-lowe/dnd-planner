@@ -278,6 +278,13 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   // the missing acMotionless mode fact reads as the Moving default.
   'tormentor-ac-mode-legacy': [legacyTormentorBoard()],
 
+  // === HP-recorder threshold adaptation (a threshold fact seeded as a bake) ===
+  // The player/steed recorders consult the builder's generic threshold gate on
+  // their natural fact names; nothing derives those facts, so seeding one as a
+  // committed effect is exactly the shape a future stat-block bake would take.
+  'core-events-damage-threshold': [flag('hp.damageThreshold', 5)],
+  'steed-damage-threshold': [slot(2), flag('companion.steed.damageThreshold', 10)],
+
   // === Steed behaviour (a granted slot; the steed is summoned in a cast step) ===
   'steed-saves': [slot(2)],
   'steed-skill-checks': [slot(2)],
