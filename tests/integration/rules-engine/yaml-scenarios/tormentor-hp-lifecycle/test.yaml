@@ -1,0 +1,92 @@
+name: 'Tormentor (Damage Control) - HP Records and Destroyed Ride the Board Lifecycle'
+description: >-
+  The HP records and the destroyed wreck never outlive the board that
+  justifies them: a re-board (a keyed replacement of the board effect, which
+  does not fire dependents) explicitly evicts all three records with empty
+  same-key markers — a fresh board starts whole — and de-board does the same
+  while clearing every baked fact, so the derived pool reads 0/0 and the
+  station's recorders go with the panel. No notice stands on a fresh board.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: board-tormentor
+      assert:
+        # Boarded and whole: no destroyed notice.
+        annotations:
+          notExists:
+            - rule.tormentor.destroyed-notice
+  # Wreck it: 60 damage destroys the vehicle outright.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 60
+      assert:
+        facts:
+          companion.tormentorDamageControl.destroyed: 1
+          companion.tormentorDamageControl.hp.current: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-damage
+            - effect-tormentor-destroyed
+  # Re-boarding REPLACES the board effect and evicts the HP records and the
+  # destroyed wreck with it: a fresh board starts whole and un-noticed.
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.hp.max: 60
+          companion.tormentorDamageControl.hp.current: 60
+          companion.tormentorDamageControl.destroyed: 0
+        annotations:
+          notExists:
+            - rule.tormentor.destroyed-notice
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+          notExists:
+            - effect-tormentor-hp-damage
+            - effect-tormentor-hp-heal
+            - effect-tormentor-destroyed
+        facts:
+          companion.tormentorDamageControl.hp.current: 60
+  # Damage again, commit, then de-board: the keyed replacement clears every
+  # baked fact INCLUDING the HP records and the wreck, and the recorders' gate
+  # closes with the panel.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 15
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-damage
+  - addOffer:
+      id: deboard-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 0
+          companion.tormentorDamageControl.hp.max: 0
+          companion.tormentorDamageControl.hp.current: 0
+          companion.tormentorDamageControl.hp.damageRecorded: 0
+        offers:
+          notExists:
+            - record-tormentor-damage
+            - record-tormentor-heal
+        annotations:
+          notExists:
+            - rule.tormentor.destroyed-notice
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-damage-control
+            - effect-tormentor-hp-damage
+            - effect-tormentor-hp-heal
+            - effect-tormentor-destroyed

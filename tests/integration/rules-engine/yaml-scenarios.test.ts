@@ -262,6 +262,14 @@ const EXPECTED_RUNNABLE = [
   // an empty same-key eviction, evicted with the board, noticed while prone
   'tormentor-prone-record',
   'tormentor-prone-lifecycle',
+  // …PR 6 — pass 3: damageable HP — the steed-shaped pool derived from a baked
+  // hp.base, station damage/heal recorders (running keyed totals), the generic
+  // damage-threshold gate, and the permanent destroyed wreck at 0 HP
+  'tormentor-hp-damage-records',
+  'tormentor-hp-heal-caps',
+  'tormentor-hp-threshold',
+  'tormentor-destroyed-at-zero',
+  'tormentor-hp-lifecycle',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

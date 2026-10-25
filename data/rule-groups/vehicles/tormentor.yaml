@@ -117,3 +117,54 @@ ruleGroups:
             way out of the condition — its crew hauling it over, or allies
             heaving together. The moment its wheels are back under it, the
             Tormentor is upright and ready to roll again.
+  # The DAMAGE recorder's flip detail — the settled home for the stat block's
+  # damage semantics (threshold, immunities, mishap): nothing here behaves
+  # differently beyond the threshold the recorder gates on, so the explanation
+  # rides the offer instead of standing notices. A catalog-only entry like the
+  # prone detail above: our own wording (the Tormentor is not SRD), in-world
+  # voice, numbers and short factual phrases only.
+  - id: tormentor-damage-detail
+    translations:
+      en:
+        name: Damage (Tormentor)
+        description: Detail text for recording damage against the Tormentor
+        keywords:
+          - damage
+          - tormentor
+          - vehicle
+          - threshold
+          - immunity
+          - mishap
+          - repairs
+      en-x-tlh:
+        name: Damage (Tormentor)
+        description: Detail text for recording damage against the Tormentor
+        keywords:
+          - damage
+          - tormentor
+          - vehicle
+          - threshold
+          - immunity
+          - mishap
+          - repairs
+    detail:
+      key: vehicle/tormentor-damage
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Damage
+          body: |
+            The Tormentor is a huge war machine of bladed iron, and damage
+            against it does not land the way it does against flesh.
+
+            **Damage Threshold 10.** A blow that deals less than ten damage
+            leaves the Tormentor unmarked — record nothing at all. A blow of
+            ten or more lands in full: the threshold is a floor, not a cap,
+            and never subtracts from what gets through.
+
+            **Immunities.** Fire, poison, and psychic damage cannot hurt the
+            vehicle at all. Record none of it, however heavy the blow.
+
+            **Mishap Threshold 20.** A single source that deals twenty or more
+            damage to the Tormentor triggers a mishap — consult the
+            mishap table for what breaks loose.

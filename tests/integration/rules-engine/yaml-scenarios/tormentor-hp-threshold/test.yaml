@@ -1,0 +1,76 @@
+name: 'Tormentor (Damage Control) - Damage Threshold Gates the Recorder'
+description: >-
+  The stat block's damage threshold 10 is a BAKED FACT, and the builder's
+  generic threshold helper gates the damage apply: an amount BELOW the fact
+  records NOTHING (no effect, no fact change — the blow simply bounces off) and
+  returns the below-threshold diagnostic on the row, while the OFFER itself
+  stays legal (the apply-level gate, the dash idiom — the recorder is always
+  applicable; the table rule is the diagnostic). An amount AT or ABOVE the
+  threshold records the FULL amount.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: board-tormentor
+      assert:
+        # The threshold is data on the board effect, not code in the module.
+        facts:
+          companion.tormentorDamageControl.damageThreshold: 10
+  # Sub-threshold: 9 < 10 records NOTHING and flags the row with the diagnostic.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 9
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 0
+          companion.tormentorDamageControl.hp.current: 60
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors:
+              - rule.tormentor.record-damage.below_threshold
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-hp-damage
+        facts:
+          companion.tormentorDamageControl.hp.current: 60
+  # The recorder stays LEGAL (an apply-level gate, never a legalWhen): the
+  # player may plan it again — and at the threshold the blow lands in FULL.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-tormentor-damage
+          legal:
+            - record-tormentor-damage
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 10
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 10
+          companion.tormentorDamageControl.hp.current: 50
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-damage
+        facts:
+          companion.tormentorDamageControl.hp.current: 50
+  # Above the threshold records in full too (the threshold is a floor, not a cap).
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 20
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 30
+          companion.tormentorDamageControl.hp.current: 30

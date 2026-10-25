@@ -465,6 +465,15 @@
         "name": "Duj Sep lo'wI' mI' yIcher",
         "description": "Duj Sep SuvwI' mI' yIjon"
       },
+      "record-damage": {
+        "name": "Duj Sep qIp yIcher",
+        "description": "Duj Sep qIpmeH qIp yIcher",
+        "below_threshold": "qIp chuqHa' (10) — Duj Sep qIpbe' 'e' chaw'be'"
+      },
+      "record-heal": {
+        "name": "Duj Sep tej yIcher",
+        "description": "Duj Sep tI'meH tej yIcher"
+      },
       "knocked-prone": {
         "name": "pummoH",
         "description": "Duj Sep pum yIcher",
@@ -481,11 +490,22 @@
       "occupancy-effect": {
         "name": "Lo'wI' mI' {{score}}"
       },
+      "hp-damage-effect": {
+        "name": "Duj qIp {{score}}"
+      },
+      "hp-heal-effect": {
+        "name": "Duj tej {{score}}"
+      },
       "prone-effect": {
         "name": "pum"
       },
+      "destroyed-effect": {
+        "name": "Qaw'lu'pu'"
+      },
       "notice": "pum qay'",
-      "notice.body": "Pumpu' Duj Sep 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'."
+      "notice.body": "Pumpu' Duj Sep 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'.",
+      "destroyed-notice": "Duj Sep Qaw'lu'pu'",
+      "destroyed-notice.body": "Qaw'pu' Duj Sep — meQtaHbogh Duj. Paghtagh Daghu'laHbe'; chenmoHwI'pu' tlhutlhDI' yImej."
     },
     "dnd-5e-2024": {
       "action-economy": {},

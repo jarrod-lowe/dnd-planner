@@ -172,6 +172,35 @@ export const currentHp = (hpMax: number, modifierCurrent: number): number =>
   Math.max(0, hpMax + Math.min(0, modifierCurrent));
 
 /**
+ * The GENERIC damage-threshold gate a damage-recording apply consults
+ * (builder-level, not vehicle-local — the Tormentor is its first caller, not
+ * its owner). Some stat blocks carry a damage threshold (a Huge war machine's
+ * 10): a single blow BELOW it deals no damage at all, so the record must
+ * advertise NOTHING — the blow bounces off, it is not a zero recorded.
+ *
+ * The threshold is a FACT the caller's board effect bakes (data, not code), so
+ * a later subject with a different threshold — or none — needs no helper
+ * change: an UNSET fact reads 0 here and never gates anything. The diagnostic
+ * CODE is the caller's too (its own i18n namespace); `Diagnostic` carries no
+ * interpolation values, so the threshold number is baked into the caller's
+ * copy rather than interpolated here.
+ *
+ * This is an APPLY-level gate, not a `legalWhen` leg (the dash idiom): the
+ * recorder offer stays legal and applicable whatever the slider reads — the
+ * table rule is explained by the row's diagnostic and the offer's detail text,
+ * never by hiding or disabling the action. When the gate trips the caller
+ * returns `{ advertise: [], diagnostics: [gate] }`; at or above the threshold
+ * (null here) the caller records the FULL amount — the threshold is a floor,
+ * not a cap, and does not subtract from what lands.
+ */
+export const damageThresholdGate = (
+  f: FactReader,
+  amount: number,
+  thresholdFact: string,
+  code: string
+): Diagnostic | null => (amount < f.num(thresholdFact) ? { code, severity: 'error' } : null);
+
+/**
  * The live prepared-count contribution paired with the `prepare` declaration on
  * each spell module (the `prepared-spells` group's set picker writes the
  * prepared facts this reads). Contributes 1 to `spellcasting.prepared.count`

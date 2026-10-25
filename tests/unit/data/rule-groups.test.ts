@@ -343,3 +343,39 @@ describe('tormentor prone detail body', () => {
     }
   });
 });
+
+describe('tormentor damage detail body', () => {
+  // The damage recorder carries the stat block's damage semantics — threshold,
+  // immunities, mishap — as its flip detail. Nothing here BEHAVES differently
+  // in the engine (the threshold aside, which the apply gates); the detail is
+  // the settled home for the explanation, so it must state the three notions
+  // plainly. Same discipline: our own words (the Tormentor is not SRD),
+  // in-world voice, no app meta.
+  const body = tormentorDetailBody('vehicle/tormentor-damage');
+
+  it('exists as a detail block in tormentor.yaml', () => {
+    expect(body, 'a catalog group in vehicles/tormentor.yaml carries the damage detail').toEqual(
+      expect.any(String)
+    );
+  });
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the damage detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the threshold, the immunities and the mishap trigger', () => {
+    for (const notion of [
+      'Damage Threshold 10',
+      'less than ten',
+      'Fire',
+      'poison',
+      'psychic',
+      'Mishap Threshold 20',
+      'twenty',
+      'mishap table'
+    ]) {
+      expect(body, `the damage detail body states "${notion}"`).toContain(notion);
+    }
+  });
+});
