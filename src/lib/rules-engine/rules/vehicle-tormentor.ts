@@ -71,11 +71,21 @@ import {
  * inspectable; the destroyed NOTICE says what that means). The HP records and
  * the wreck join the board lifecycle like every other record.
  *
+ * The vehicle's AC is a MODE, not a constant (the stat block's "AC 21 (19
+ * while motionless)"): `ac.value` DERIVES on a `acMotionless` fact the board
+ * never bakes (absent = Moving = 21, the default), and the state chip — the
+ * #466 Frightened LoS toggle idiom on a panel with no dice to govern — is
+ * the free, legality-free record of which holds. A tap commits ONE permanent
+ * keyed `tormentor-ac-mode` seed (motionless, AC 19) or its empty same-key
+ * eviction (back to 21) through the follow-up channel; the seed displays as a
+ * chip under the station view, and the mode key joins the board lifecycle
+ * like every other record — a re-board or de-board resets to Moving.
+ *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
  * Harpoon Flinger stations and the Juke reaction, movement economy, damage
  * immunities and the mishap threshold as MECHANICS (they are detail text
  * only — the recorder never refuses fire/poison/psychic and no mishap is
- * modelled), the AC-while-motionless mode, any prone attack/movement or
+ * modelled), any prone attack/movement or
  * incapacitated mechanics beyond the record, and any legality check on
  * boarding (multiple boardings are illegal-but-possible; the keyed effect
  * keeps the facts single and diagnostics are deferred).
@@ -106,6 +116,20 @@ const HP_HEAL_KEY = 'tormentor-hp-heal';
 const DESTROYED_EFFECT_ID = 'effect-tormentor-destroyed';
 const DESTROYED_KEY = 'tormentor-destroyed';
 
+/** The AC-mode seed's effect id and replacement key (ONE live mode record). */
+const AC_MODE_EFFECT_ID = 'effect-tormentor-ac-mode';
+const AC_MODE_KEY = 'tormentor-ac-mode';
+
+/**
+ * The annotation label every STATION offer carries so the AC-mode state chip
+ * renders on the vehicle's panels. Subject-scoped the way every companion
+ * panel label is (the steed's `.companion` convention, pinned registry-wide
+ * by companion-annotation-labels.test.ts): the mode is THE VEHICLE's state,
+ * so the chip belongs on the station's rows alone and no player-self rider
+ * can reach it by spelling.
+ */
+const AC_MODE_LABEL = 'tormentor.ac-mode.companion';
+
 /** The damage recorder's below-threshold diagnostic (the apply-level gate). */
 const BELOW_THRESHOLD = `${T}.record-damage.below_threshold`;
 
@@ -120,14 +144,23 @@ const NOT_PRONE = `${T}.flip-upright.not_prone`;
  * replacement — a keyed replacement alone does not fire `dependents` (the
  * steed cast/dismiss child-eviction pattern).
  */
-const CHILD_KEYS = [OCCUPANCY_KEY, PRONE_KEY, HP_DAMAGE_KEY, HP_HEAL_KEY, DESTROYED_KEY] as const;
+const CHILD_KEYS = [
+  OCCUPANCY_KEY,
+  PRONE_KEY,
+  HP_DAMAGE_KEY,
+  HP_HEAL_KEY,
+  DESTROYED_KEY,
+  AC_MODE_KEY
+] as const;
 
 /** The stat block boarding bakes. HP bakes its BASE (the pool derives from
  * it — the steed shape) plus the damage threshold as DATA the recorder gates
- * on; everything else is display-only. */
+ * on; everything else is display-only EXCEPT the AC, which bakes NOTHING:
+ * `ac.value` is a derive on the mode fact (21 moving / 19 motionless) and the
+ * mode fact itself is absent while Moving (the default — the state chip owns
+ * it, not the board). */
 const BOARD_STATE: Record<string, number> = {
   [`${F}.active`]: 1,
-  [`${F}.ac.value`]: 21,
   [`${F}.hp.base`]: 60,
   [`${F}.damageThreshold`]: 10,
   [`${F}.speed`]: 100,
@@ -242,6 +275,50 @@ function tormentorProneEffect(): EffectInstance {
  */
 function evictProneEffect(): EffectInstance {
   return { id: `evict-${PRONE_KEY}`, key: PRONE_KEY, expiry: { kind: 'permanent' } };
+}
+
+/**
+ * The MOTIONLESS half of the AC mode — the keyed SEED the state chip's tap
+ * commits (stat block: AC 21, 19 while motionless). The board effect bakes no
+ * mode fact, so an ABSENT fact is Moving (21, the default) and this effect is
+ * the only writer of the deviation. Permanent: the mode persists until
+ * switched or unboarded — no rest ages it out, and the board lifecycle
+ * (dependents + the board/de-board evictions) is what resets it. `display`
+ * files it as a chip under the station view (inspectable — and dismissable,
+ * the manual override back to Moving — even with an empty plan). Exported so
+ * tests and later passes can seed a motionless vehicle; `ruleGroupId` is
+ * authored because the follow-up commit channel bypasses the plan fold's
+ * group stamping (the Frightened sight-seed precedent).
+ */
+export function tormentorAcModeEffect(): EffectInstance {
+  return {
+    id: AC_MODE_EFFECT_ID,
+    key: AC_MODE_KEY,
+    ruleGroupId: ID,
+    state: { [`${F}.acMotionless`]: 1 },
+    display: {
+      name: `${T}.ac-mode-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    },
+    expiry: { kind: 'permanent' }
+  };
+}
+
+/**
+ * The MOVING half — the empty same-`key` EVICTION (the get-up idiom): no
+ * state, its whole job is to replace the motionless seed so the fact reverts
+ * to unset. Display-less, so the strip stays quiet while moving; the state
+ * chip (and the top-bar AC reading 21) is the state's indicator. Carries the
+ * authored group stamp for the same follow-up-channel reason as the seed.
+ */
+function evictAcModeEffect(): EffectInstance {
+  return {
+    id: `evict-${AC_MODE_KEY}`,
+    key: AC_MODE_KEY,
+    ruleGroupId: ID,
+    expiry: { kind: 'permanent' }
+  };
 }
 
 /**
@@ -402,6 +479,16 @@ const vehicleTormentor: RuleModule = {
       fact: `${F}.hp.modifier.current`,
       combine: 'sum',
       value: (f) => f.num(`${F}.hp.healRecorded`) - f.num(`${F}.hp.damageRecorded`)
+    },
+    {
+      // The AC MODE (the stat block's "AC 21 (19 while motionless)"): a
+      // derive on the mode fact, in the hp pool's boarded-gated shape. The
+      // board bakes neither the value nor the mode — Moving (fact absent,
+      // AC 21) is the default and the state chip's seed is the only writer
+      // of the 19. Unboarded the contribution settles to 0 like the pool
+      // (the top-bar gate keys on `active`, which is gone).
+      fact: `${F}.ac.value`,
+      value: (f) => (boarded(f) ? (f.num(`${F}.acMotionless`) > 0 ? 19 : 21) : 0)
     }
   ],
   offer: () => [
@@ -441,6 +528,9 @@ const vehicleTormentor: RuleModule = {
       ui: {
         section: 'free',
         subject: SUBJECT,
+        // The AC-mode state chip rides every station row (the label the
+        // module's toggle annotation targets — see the annotate pass).
+        annotationLabels: [AC_MODE_LABEL],
         name: `${T}.occupancy.name`,
         description: `${T}.occupancy.description`,
         primaryControl: {
@@ -494,6 +584,7 @@ const vehicleTormentor: RuleModule = {
       ui: {
         section: 'free',
         subject: SUBJECT,
+        annotationLabels: [AC_MODE_LABEL],
         name: `${T}.record-damage.name`,
         description: `${T}.record-damage.description`,
         detailKey: 'vehicle/tormentor-damage',
@@ -553,6 +644,7 @@ const vehicleTormentor: RuleModule = {
       ui: {
         section: 'free',
         subject: SUBJECT,
+        annotationLabels: [AC_MODE_LABEL],
         name: `${T}.record-heal.name`,
         description: `${T}.record-heal.description`,
         primaryControl: {
@@ -614,6 +706,7 @@ const vehicleTormentor: RuleModule = {
       ui: {
         section: 'free',
         subject: SUBJECT,
+        annotationLabels: [AC_MODE_LABEL],
         name: `${T}.knocked-prone.name`,
         description: `${T}.knocked-prone.description`,
         // Both prone offers flip to the vehicle's own condition text — what
@@ -657,6 +750,7 @@ const vehicleTormentor: RuleModule = {
       ui: {
         section: 'free',
         subject: SUBJECT,
+        annotationLabels: [AC_MODE_LABEL],
         name: `${T}.flip-upright.name`,
         description: `${T}.flip-upright.description`,
         detailKey: 'vehicle/tormentor-prone',
@@ -686,6 +780,7 @@ const vehicleTormentor: RuleModule = {
       ui: {
         section: 'free',
         subject: SUBJECT,
+        annotationLabels: [AC_MODE_LABEL],
         name: `${T}.deboard.name`,
         description: `${T}.deboard.description`,
         intents: { HANDLE: 'gear' },
@@ -696,6 +791,23 @@ const vehicleTormentor: RuleModule = {
       })
     }
   ],
+  // The AC MODE is a free state record of whether the vehicle is moving —
+  // like occupancy, no legality gates (nothing is illegal about either state;
+  // the vehicle simply is or is not moving). The surface is the #466
+  // Frightened dice-line state-chip mechanism (an AnnotationToggle committing
+  // a keyed SEED through the follow-up channel — `addFollowupEffect`), with
+  // one transplant: a vehicle's panels roll NO dice, so the toggle authors an
+  // EMPTY `appliesTo` — the chip renders on the matched PANEL itself, and
+  // every station offer carries the label so whichever row is planned shows
+  // it. The pressed state reads the LIVE fact (unlike Frightened's per-row
+  // captures, the mode is one vehicle-wide state — every chip agrees with the
+  // seed); a tap commits one of the two authored effects: the seed writing
+  // `acMotionless` 1 (AC 19) or its empty same-key eviction (back to 21).
+  // `onWhen: 0` makes MOVING the pressed default (the unset fact is Moving,
+  // so the seed only ever records the deviation), and the annotation gates on
+  // the board alone — unboarded there is no vehicle to be moving, and the
+  // rows that carry the label are structurally gone anyway.
+  //
   // The Prone Deficiency trait, surfaced as a NOTICE while the vehicle is
   // PRONE (the Life-Bond annotate pattern gated on the condition — PC-prone
   // parity: the condition triggers its notice, so boarded-but-upright carries
@@ -715,6 +827,23 @@ const vehicleTormentor: RuleModule = {
   // notice, so a prone wreck (somehow) carries both.
   annotate: (f: FactReader): Annotation[] => {
     const out: Annotation[] = [];
+    if (boarded(f))
+      out.push({
+        key: `${T}.ac-mode`,
+        targets: [AC_MODE_LABEL],
+        toggle: {
+          fact: `${F}.acMotionless`,
+          onWhen: 0,
+          // Direction contract (pinned in the unit tests): onEffect takes the
+          // fact TO onWhen (back to MOVING — the empty eviction), offEffect
+          // takes it away (MOTIONLESS — the seed).
+          onEffect: evictAcModeEffect(),
+          offEffect: tormentorAcModeEffect(),
+          labelOn: `${T}.ac-mode.moving`,
+          labelOff: `${T}.ac-mode.motionless`,
+          appliesTo: []
+        }
+      });
     if (f.num(`${F}.prone`) > 0)
       out.push({
         key: `${T}.notice`,

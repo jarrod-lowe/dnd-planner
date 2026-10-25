@@ -1,4 +1,8 @@
 import type { EffectInstance } from '$lib/rules-engine';
+import {
+  tormentorAcModeEffect,
+  tormentorBoardEffect
+} from '$lib/rules-engine/rules/vehicle-tormentor';
 
 /**
  * Committed-effect translations of scenarios' legacy `initialEffects` blocks — the
@@ -277,5 +281,11 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   'find-steed-hp-modifier-no-stacking': [slot(2)],
   // The scenario's initialEffects grant a L2 slot AND equip the Spear +1; the
   // equip half was masked while the plan fold ignored `when` gates.
-  'attack-with-summoned-steed': [slot(2), weaponEquipped('spear-plus1')]
+  'attack-with-summoned-steed': [slot(2), weaponEquipped('spear-plus1')],
+
+  // === Tormentor (Damage Control) — pass 4: the AC-mode states the chip's
+  // tap commits mid-turn (the board effect + the keyed motionless seed).
+  // Both are the module's own exported effects, so the seed can never drift
+  // from what the chip actually commits. ===
+  'tormentor-ac-mode-motionless': [tormentorBoardEffect(), tormentorAcModeEffect()]
 };

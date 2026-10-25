@@ -145,6 +145,32 @@ export function slimLegacyFrightenedDisadvantage(effects: EffectInstance[]): Eff
   });
 }
 
+/**
+ * Strip, once at load, the FLAT AC fact a pre-AC-mode Tormentor board effect
+ * persisted. Every Tormentor pass before the AC-mode one baked the stat
+ * block's `companion.tormentorDamageControl.ac.value` as display-only data;
+ * the AC-mode pass turned that fact into a module DERIVE reading the mode
+ * fact — and the sheet rejects a fact with both a data writer and an override
+ * derive writer, so every evaluation on a character that boarded under the
+ * old build would throw (the same regression the flat-hp.max board blob hit,
+ * fixed the same way at this seam). Nothing is re-keyed: no legacy blob
+ * carries a mode fact, so the derive reproduces the 21 (Moving default)
+ * exactly as a fresh board would. The transform is the repo's legacy-blob
+ * seam (the two above), not a migration: the module itself must keep
+ * throwing on two writers, because that throw is the authored-rules safety
+ * net. Idempotent: an AC-mode board effect bakes no ac.value, so a stripped
+ * or fresh blob — and every other effect — passes through untouched.
+ */
+export function stripLegacyTormentorAcValue(effects: EffectInstance[]): EffectInstance[] {
+  const FLAT = 'companion.tormentorDamageControl.ac.value';
+  return effects.map((e) => {
+    if (e.state === undefined || !(FLAT in e.state)) return e;
+    const state = { ...e.state };
+    delete state[FLAT];
+    return { ...e, state };
+  });
+}
+
 function performEvaluation(): void {
   // A direct evaluation supersedes any still-scheduled one.
   cancelScheduledEvaluation();
@@ -436,8 +462,10 @@ async function loadRuleGroups(characterId: string): Promise<void> {
       if (effectsResponse?.ok) {
         const { effects: effectsJson } = await effectsResponse.json();
         if (effectsJson) {
-          const committed = slimLegacyFrightenedDisadvantage(
-            dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson))
+          const committed = stripLegacyTormentorAcValue(
+            slimLegacyFrightenedDisadvantage(
+              dismissLegacyKeylessConcentration(parsePersistedEffects(effectsJson))
+            )
           );
           const effects = committed.map(effectInstanceToRule);
           state = { ...state, committed, effects };

@@ -3,6 +3,7 @@ import { evaluate, type FactReader, type RuleModule } from '$lib/rules-engine';
 import { getModule, isRegistered } from '$lib/rules-engine/registry';
 import { lazyRuleGroupIds } from '$lib/rules-engine/lazy';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
+import { tormentorAcModeEffect } from '$lib/rules-engine/rules/vehicle-tormentor';
 import type { EffectInstance } from '$lib/rules-engine';
 import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
@@ -135,12 +136,13 @@ describe('de-board offer', () => {
     // The baked facts are GONE (absent — unset facts read as 0 downstream, and
     // the panel gates key on presence, so the subject's chips all withdraw).
     expect(out.facts[`${F}.active`]).toBeUndefined();
-    expect(out.facts[`${F}.ac.value`]).toBeUndefined();
     expect(out.facts[`${F}.hp.base`]).toBeUndefined();
     expect(out.facts[`${F}.damageThreshold`]).toBeUndefined();
-    // hp.max/hp.current are DERIVED now (the steed shape): the contributions
-    // stay registered, so unboarded they settle to 0 rather than vanishing —
-    // the top-bar gate keys on `active`, which IS gone, so the chip withdraws.
+    // ac.value/hp.max/hp.current are DERIVED (the AC-mode pass gave the AC the
+    // steed pool's shape): the contributions stay registered, so unboarded
+    // they settle to 0 rather than vanishing — the top-bar gate keys on
+    // `active`, which IS gone, so the chip withdraws.
+    expect(out.facts[`${F}.ac.value`]).toBe(0);
     expect(out.facts[`${F}.hp.max`]).toBe(0);
     expect(out.facts[`${F}.hp.current`]).toBe(0);
   });
@@ -154,7 +156,9 @@ describe('board effect', () => {
     expect(e.expiry).toEqual({ kind: 'permanent' });
     expect(e.state).toEqual({
       [`${F}.active`]: 1,
-      [`${F}.ac.value`]: 21,
+      // NO ac.value: the AC mode pass moves it to a DERIVE (21 moving / 19
+      // motionless — the hp.pool shape), so the board bakes neither the flat
+      // value nor the mode fact (absent = Moving, the default).
       // HP bakes its BASE (the pool derives max/current from it — the steed
       // shape) plus the stat block's damage threshold as DATA, so the recorder
       // gates on a fact rather than a literal in the module.
@@ -185,7 +189,10 @@ describe('board effect', () => {
       'tormentor-prone',
       'tormentor-hp-damage',
       'tormentor-hp-heal',
-      'tormentor-destroyed'
+      'tormentor-destroyed',
+      // The AC-mode seed the state chip commits (pass 4) — a de-boarded
+      // vehicle must not stay motionless on paper.
+      'tormentor-ac-mode'
     ]);
   });
 
@@ -1110,6 +1117,209 @@ describe('pass 3 i18n (tlh is the canary)', () => {
       'en-x-tlh destroyed notice label': tlh.rule.tormentor['destroyed-notice'],
       'en destroyed notice body': en.rule.tormentor['destroyed-notice.body'],
       'en-x-tlh destroyed notice body': tlh.rule.tormentor['destroyed-notice.body']
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+/**
+ * Pass 4 — the AC-mode state chip: the Tormentor's AC is 21 while moving and
+ * 19 while motionless, a FREE state record of which holds (like occupancy, no
+ * legality — the vehicle simply is or is not moving). The mechanism is the
+ * #466 Frightened dice-line state-chip idiom (an AnnotationToggle committing
+ * a keyed SEED effect through the follow-up channel), transplanted to a panel
+ * with no dice to govern: the toggle authors an EMPTY `appliesTo`, so the
+ * chip renders on the matched PANEL itself (every station offer carries the
+ * `tormentor.ac-mode` label) instead of on a dice line. The seed is ONE
+ * permanent keyed `tormentor-ac-mode` effect writing `acMotionless` 1; the
+ * flip back is its empty same-key EVICTION; `ac.value` becomes a DERIVE on
+ * the mode fact (21 moving / 19 motionless, hp-style gated on active), and
+ * the mode key joins the board lifecycle — a re-board or de-board resets to
+ * Moving, and the board effect's dependents carry it for raw chip removal.
+ */
+describe('AC derive (21 moving / 19 motionless)', () => {
+  it('reads 21 boarded-and-moving (the default — the board effect bakes no mode fact)', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    expect(out.facts[`${F}.ac.value`]).toBe(21);
+    expect(out.facts[`${F}.acMotionless`]).toBeUndefined();
+  });
+
+  it('reads 19 while motionless (the seed the chip commits)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), tormentorAcModeEffect()]
+    });
+    expect(out.facts[`${F}.acMotionless`]).toBe(1);
+    expect(out.facts[`${F}.ac.value`]).toBe(19);
+  });
+
+  it('settles to 0 while unboarded (hp-pool shape: the contribution stays registered)', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.facts[`${F}.ac.value`]).toBe(0);
+  });
+});
+
+describe('the motionless seed (what the chip commits)', () => {
+  it('is ONE permanent keyed effect writing exactly the mode fact, as a station chip', () => {
+    const e = tormentorAcModeEffect();
+    expect(e.id).toBe('effect-tormentor-ac-mode');
+    expect(e.key).toBe('tormentor-ac-mode');
+    // EXACT equality: the state writes the mode fact and nothing else.
+    expect(e.state).toEqual({ [`${F}.acMotionless`]: 1 });
+    // Persists until switched or unboarded — no rest ages it out.
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    // The authored group stamp: the follow-up commit channel bypasses the
+    // plan fold's stamping (the javelin Slow precedent).
+    expect(e.ruleGroupId).toBe(ID);
+    // A strip chip under the station view, so the state is inspectable (and
+    // dismissable — the manual override back to Moving) even with an empty plan.
+    expect(e.display).toEqual({
+      name: `${T}.ac-mode-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+});
+
+/** The ac-mode toggle annotation, from any evaluation while boarded. */
+function acModeAnnotation() {
+  const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+  const ann = out.annotations.find((a) => a.key === `${T}.ac-mode`);
+  expect(ann, 'the ac-mode toggle annotation exists while boarded').toBeDefined();
+  return ann!;
+}
+
+describe('the ac-mode toggle annotation (the chip contract)', () => {
+  it('targets the station label and authors NO dice purposes — a PANEL-level chip', () => {
+    const ann = acModeAnnotation();
+    // The `.companion` suffix is the subject-scoping convention every
+    // companion/vehicle panel label carries (companion-annotation-labels).
+    expect(ann.targets).toEqual(['tormentor.ac-mode.companion']);
+    const toggle = ann.toggle!;
+    expect(toggle.fact).toBe(`${F}.acMotionless`);
+    // onWhen 0: MOVING (the unset fact) is the pressed state — the
+    // defaults-to-on idiom, so the fact only records the deviation.
+    expect(toggle.onWhen).toBe(0);
+    // EMPTY appliesTo is what makes the chip render on the matched panel
+    // itself rather than on a dice line it would govern (a vehicle's panels
+    // roll no dice).
+    expect(toggle.appliesTo).toEqual([]);
+  });
+
+  it('carries the keyed effects the chip commits (the direction contract)', () => {
+    const toggle = acModeAnnotation().toggle!;
+    // onEffect takes the fact TO onWhen (back to MOVING — the empty same-key
+    // eviction, display-less so the strip stays quiet):
+    expect(toggle.onEffect.id).toBe('evict-tormentor-ac-mode');
+    expect(toggle.onEffect.key).toBe('tormentor-ac-mode');
+    expect(toggle.onEffect.state).toBeUndefined();
+    expect(toggle.onEffect.display).toBeUndefined();
+    expect(toggle.onEffect.ruleGroupId).toBe(ID);
+    // offEffect takes it away (to MOTIONLESS — the seed):
+    expect(toggle.offEffect.id).toBe('effect-tormentor-ac-mode');
+    expect(toggle.offEffect.key).toBe('tormentor-ac-mode');
+    expect(toggle.offEffect.state).toEqual({ [`${F}.acMotionless`]: 1 });
+    expect(toggle.offEffect.ruleGroupId).toBe(ID);
+  });
+
+  it('the chip mapping actually FLIPS the mode both ways, with the AC following', () => {
+    const toggle = acModeAnnotation().toggle!;
+    // What the panel chip commits: pressed ? offEffect : onEffect.
+    const chipCommits = (pressed: boolean) => (pressed ? toggle.offEffect : toggle.onEffect);
+
+    // Moving (fact unset = onWhen → pressed): the tap commits the seed → 19.
+    const afterStill = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), chipCommits(true)]
+    });
+    expect(afterStill.facts[`${F}.acMotionless`]).toBe(1);
+    expect(afterStill.facts[`${F}.ac.value`]).toBe(19);
+
+    // Motionless (fact 1 → not pressed): the tap commits the eviction → 21.
+    const afterMoving = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), tormentorAcModeEffect(), chipCommits(false)]
+    });
+    expect(afterMoving.facts[`${F}.acMotionless`]).toBeUndefined();
+    expect(afterMoving.facts[`${F}.ac.value`]).toBe(21);
+  });
+
+  it('disappears while unboarded (no chip to flip with no vehicle)', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.annotations.some((a) => a.key === `${T}.ac-mode`)).toBe(false);
+  });
+
+  it('every STATION offer carries the label; the player-side board offer does not', () => {
+    const offers = module().offer!({ selections: {} });
+    const stationIds = [
+      'set-tormentor-occupancy',
+      'record-tormentor-damage',
+      'record-tormentor-heal',
+      'knock-tormentor-prone',
+      'flip-tormentor-upright',
+      'deboard-tormentor'
+    ];
+    for (const id of stationIds) {
+      const ui = offers.find((o) => o.id === id)!.ui as Record<string, unknown>;
+      expect(ui.annotationLabels, `${id} carries the ac-mode label`).toEqual([
+        'tormentor.ac-mode.companion'
+      ]);
+    }
+    const board = offers.find((o) => o.id === 'board-tormentor')!.ui as Record<string, unknown>;
+    // Boarding is a PLAYER action with no vehicle to be moving yet.
+    expect(board.annotationLabels).toBeUndefined();
+  });
+});
+
+describe('the mode rides the board lifecycle', () => {
+  it('a re-board advertises the empty same-key eviction beside the board effect', () => {
+    // A keyed replacement alone does not fire dependents, so the re-board
+    // resets the mode explicitly: a fresh board starts MOVING.
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), tormentorAcModeEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-ac-mode'));
+    expect(evict, 're-board advertises the ac-mode eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-ac-mode');
+    expect(evict!.state).toBeUndefined();
+    expect(out.facts[`${F}.acMotionless`]).toBeUndefined();
+    expect(out.facts[`${F}.ac.value`]).toBe(21);
+  });
+
+  it('de-board advertises the same eviction while the AC settles to 0', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), tormentorAcModeEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-ac-mode'));
+    expect(evict, 'de-board advertises the ac-mode eviction').toBeDefined();
+    expect(out.facts[`${F}.active`]).toBeUndefined();
+    expect(out.facts[`${F}.ac.value`]).toBe(0);
+  });
+});
+
+describe('pass 4 i18n (tlh is the canary)', () => {
+  it('both chip labels exist in BOTH locales and are distinct (a11y: the two states must name differently)', () => {
+    const labels: Record<string, string | undefined> = {
+      'en moving': en.rule.tormentor['ac-mode']?.moving,
+      'en-x-tlh moving': tlh.rule.tormentor['ac-mode']?.moving,
+      'en motionless': en.rule.tormentor['ac-mode']?.motionless,
+      'en-x-tlh motionless': tlh.rule.tormentor['ac-mode']?.motionless
+    };
+    for (const [where, value] of Object.entries(labels))
+      expect(value, where).toEqual(expect.any(String));
+    for (const locale of [en.rule.tormentor, tlh.rule.tormentor])
+      expect(locale['ac-mode']?.moving).not.toBe(locale['ac-mode']?.motionless);
+  });
+
+  it('the motionless strip-chip name exists in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en chip name': en.rule.tormentor['ac-mode-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['ac-mode-effect']?.name
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));

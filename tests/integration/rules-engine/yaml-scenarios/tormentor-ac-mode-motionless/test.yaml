@@ -1,0 +1,65 @@
+name: 'Tormentor (Damage Control) - Motionless AC And Mode Lifecycle'
+description: >-
+  The motionless half of the AC mode, seeded as committed effects the chip's
+  tap produces (board + the keyed tormentor-ac-mode seed writing
+  acMotionless 1): AC reads 19 while the chip's annotation stays live for the
+  flip back. The mode key rides the BOARD lifecycle like every station
+  record: a re-board (a keyed replacement of the board effect, which does not
+  fire dependents) explicitly evicts it with an empty same-key marker — a
+  fresh board starts MOVING at AC 21 — and the de-board does the same while
+  the whole stat block goes, the AC derive settling to 0 with no chip left to
+  flip. The tap path itself (which of the toggle's two effects a press
+  commits) is unit-pinned.
+ruleGroups:
+  - vehicles/tormentor
+initialEffects:
+  # Real committed translations in tests/integration/rules-engine/initial-effects.ts.
+  - id: effect-tormentor-damage-control
+  - id: effect-tormentor-ac-mode
+steps:
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.acMotionless: 1
+          companion.tormentorDamageControl.ac.value: 19
+        # The chip still renders while motionless — pressed flips to
+        # Motionless and a further tap returns the vehicle to Moving.
+        annotations:
+          exists:
+            - rule.tormentor.ac-mode
+  # A re-board REPLACES the board effect and evicts the mode record with it
+  # (the occupancy re-board pattern): a fresh board starts MOVING, AC 21.
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.acMotionless: 0
+          companion.tormentorDamageControl.ac.value: 21
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+          notExists:
+            - effect-tormentor-ac-mode
+  # De-board clears the whole stat block: the AC derive settles to 0 (the
+  # hp-pool shape — the contribution stays registered) and the chip goes with
+  # the board (no vehicle, no mode to record).
+  - addOffer:
+      id: deboard-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 0
+          companion.tormentorDamageControl.acMotionless: 0
+          companion.tormentorDamageControl.ac.value: 0
+        annotations:
+          notExists:
+            - rule.tormentor.ac-mode
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-damage-control
+            - effect-tormentor-ac-mode

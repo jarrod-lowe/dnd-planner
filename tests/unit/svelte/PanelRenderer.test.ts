@@ -154,6 +154,150 @@ describe('PanelRenderer roll toast', () => {
   });
 });
 
+describe('PanelRenderer panel-level state chips', () => {
+  // The Tormentor AC-mode shape: a toggle that authors NO dice purposes — a
+  // standing state with no roll to govern, so the chip renders on the matched
+  // PANEL itself (the #466 dice-line chip idiom, transplanted to a vehicle's
+  // panel). The panel carries the module-scoped label the annotation targets.
+  const vehicleEntry = makeEntry({
+    name: 'rule.demo.station.name',
+    annotationLabels: ['tormentor.ac-mode']
+  });
+  const modeToggle = (): Annotation[] => [
+    {
+      key: 'rule.demo.ac-mode',
+      targets: ['tormentor.ac-mode'],
+      toggle: {
+        fact: 'companion.tormentorDamageControl.acMotionless',
+        onWhen: 0,
+        onEffect: { id: 'evict-ac-mode', key: 'tormentor-ac-mode', expiry: { kind: 'permanent' } },
+        offEffect: {
+          id: 'effect-ac-mode',
+          key: 'tormentor-ac-mode',
+          state: { 'companion.tormentorDamageControl.acMotionless': 1 },
+          expiry: { kind: 'permanent' }
+        },
+        labelOn: 'rule.demo.ac-mode.moving',
+        labelOff: 'rule.demo.ac-mode.motionless',
+        appliesTo: []
+      }
+    }
+  ];
+
+  it('renders an empty-appliesTo toggle as the panel’s own state chip, pressed from the LIVE fact', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: vehicleEntry,
+        editable: true,
+        facts: { 'companion.tormentorDamageControl.acMotionless': 0 },
+        activeAnnotations: modeToggle(),
+        onFollowup: vi.fn()
+      }
+    });
+    const chip = container.querySelector(
+      '.panel-renderer__state-chip[data-toggle-key="rule.demo.ac-mode"]'
+    );
+    expect(chip).toBeInstanceOf(HTMLButtonElement);
+    // Unset fact = onWhen 0 → PRESSED = Moving, and the accessible name says so.
+    expect(chip!.getAttribute('aria-pressed')).toBe('true');
+    expect(chip!.textContent).toContain('rule.demo.ac-mode.moving');
+  });
+
+  it('a tap commits the authored effect for the CURRENT state (pressed → offEffect, unpressed → onEffect)', async () => {
+    // Moving (pressed): the tap commits offEffect — the motionless seed.
+    const moving = vi.fn();
+    const movingRender = render(PanelRenderer, {
+      props: {
+        entry: vehicleEntry,
+        editable: true,
+        facts: {},
+        activeAnnotations: modeToggle(),
+        onFollowup: moving
+      }
+    });
+    await fireEvent.click(movingRender.container.querySelector('.panel-renderer__state-chip')!);
+    expect(moving).toHaveBeenCalledTimes(1);
+    expect(moving.mock.calls[0]![0].id).toBe('effect-ac-mode');
+
+    // Motionless (fact 1 → unpressed): the tap commits onEffect — the eviction.
+    const still = vi.fn();
+    const stillRender = render(PanelRenderer, {
+      props: {
+        entry: vehicleEntry,
+        editable: true,
+        facts: { 'companion.tormentorDamageControl.acMotionless': 1 },
+        activeAnnotations: modeToggle(),
+        onFollowup: still
+      }
+    });
+    const chip = stillRender.container.querySelector('.panel-renderer__state-chip')!;
+    expect(chip.getAttribute('aria-pressed')).toBe('false');
+    expect(chip.textContent).toContain('rule.demo.ac-mode.motionless');
+    await fireEvent.click(chip);
+    expect(still).toHaveBeenCalledTimes(1);
+    expect(still.mock.calls[0]![0].id).toBe('evict-ac-mode');
+  });
+
+  it('never double-renders a dice-governed toggle at panel level (the dice line owns it)', () => {
+    // The Frightened shape: appliesTo names dice purposes, so even on a panel
+    // whose dice it does not match, the chip stays off the panel body — the
+    // dice-line channel is its surface, and a panel-level copy would be a
+    // second flipper for the same seed.
+    const losAnnotations: Annotation[] = [
+      {
+        key: 'rule.demo.los',
+        targets: ['tormentor.ac-mode'],
+        toggle: {
+          fact: 'frightened.sourceHidden',
+          onWhen: 0,
+          onEffect: { id: 'on', key: 'k', expiry: { kind: 'permanent' } },
+          offEffect: { id: 'off', key: 'k', expiry: { kind: 'permanent' } },
+          labelOn: 'rule.demo.los.in-sight',
+          labelOff: 'rule.demo.los.out-of-sight',
+          appliesTo: ['to-hit', 'check']
+        }
+      }
+    ];
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: vehicleEntry,
+        editable: true,
+        activeAnnotations: losAnnotations,
+        onFollowup: vi.fn()
+      }
+    });
+    expect(container.querySelector('.panel-renderer__state-chip')).toBeNull();
+  });
+
+  it('renders indication-only (a span, no handler) on a non-editable panel', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: vehicleEntry,
+        editable: false,
+        facts: { 'companion.tormentorDamageControl.acMotionless': 1 },
+        activeAnnotations: modeToggle()
+      }
+    });
+    const chip = container.querySelector('.panel-renderer__state-chip')!;
+    expect(chip).toBeInstanceOf(HTMLSpanElement);
+    expect(chip.getAttribute('aria-pressed')).toBeNull();
+    expect(chip.textContent).toContain('rule.demo.ac-mode.motionless');
+  });
+
+  it('renders nothing in summary mode (nothing in a collapsed row is focusable)', () => {
+    const { container } = render(PanelRenderer, {
+      props: {
+        entry: vehicleEntry,
+        editable: true,
+        activeAnnotations: modeToggle(),
+        onFollowup: vi.fn(),
+        summary: true
+      }
+    });
+    expect(container.querySelector('.panel-renderer__state-chip')).toBeNull();
+  });
+});
+
 describe('PanelRenderer actionable annotations', () => {
   const diceEntry = makeEntry({
     name: 'rule.check.name',

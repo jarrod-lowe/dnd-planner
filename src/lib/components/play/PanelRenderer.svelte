@@ -31,7 +31,8 @@
     CountdownInformation,
     RollResult,
     RollModifier,
-    DiceLineToggle
+    DiceLineToggle,
+    PanelStateToggle
   } from './panel-renderer/types';
 
   interface Props {
@@ -467,6 +468,30 @@
       })
   );
 
+  // A toggle that authors NO dice purposes is a PANEL-LEVEL state chip — the
+  // dice-line channel above filters by die purpose, so an empty `appliesTo`
+  // never reaches a dice line and the panel itself is the chip's only surface
+  // (a vehicle's motionless mode: a standing state with no roll to govern).
+  // Unlike the dice-line chip there is no per-row capture to honour — the
+  // state is one subject-wide seed — so `pressed` resolves from the LIVE
+  // facts and every chip on every matched panel agrees with it. A tap commits
+  // one of the authored effects through the same follow-up channel.
+  const panelToggles = $derived<PanelStateToggle[]>(
+    matchingAnnotations
+      .filter((ann) => ann.toggle !== undefined && ann.toggle.appliesTo.length === 0)
+      .map((ann) => {
+        const toggle = ann.toggle!;
+        return {
+          key: ann.key,
+          labelOn: toggle.labelOn,
+          labelOff: toggle.labelOff,
+          pressed: ((facts?.[toggle.fact] as number | undefined) ?? 0) === toggle.onWhen,
+          onEffect: toggle.onEffect,
+          offEffect: toggle.offEffect
+        };
+      })
+  );
+
   const visibleFollowups = $derived(
     editable && onFollowup
       ? (descriptor.followups ?? []).filter(
@@ -866,6 +891,43 @@
         </div>
       {/if}
     {/each}
+    {#if panelToggles.length > 0 && !summary}
+      <!--
+      Panel-level STATE chips (a vehicle's AC mode): the dice-line toggle's
+      sibling for a standing state that governs no roll. Same two-state
+      contract as the dice-line chip — aria-pressed with distinct accessible
+      names, a tap committing the authored effect for the CURRENT state —
+      except pressed reads the LIVE fact (one subject-wide seed, no per-row
+      capture) and nothing is written back to this row's selections. Like the
+      informational block below, it stays off collapsed rows: nothing in the
+      strip is focusable.
+    -->
+      <div class="panel-renderer__state-chips" role="group">
+        {#each panelToggles as tg (tg.key)}
+          {#if editable && onFollowup}
+            <button
+              type="button"
+              class="panel-renderer__state-chip"
+              class:panel-renderer__state-chip--on={tg.pressed}
+              aria-pressed={tg.pressed}
+              data-toggle-key={tg.key}
+              onclick={(e) => {
+                e.stopPropagation();
+                onFollowup(tg.pressed ? tg.offEffect : tg.onEffect);
+              }}
+            >
+              {$t(tg.pressed ? tg.labelOn : tg.labelOff)}
+            </button>
+          {:else}
+            <span
+              class="panel-renderer__state-chip"
+              class:panel-renderer__state-chip--on={tg.pressed}
+              data-toggle-key={tg.key}>{$t(tg.pressed ? tg.labelOn : tg.labelOff)}</span
+            >
+          {/if}
+        {/each}
+      </div>
+    {/if}
     {#if informationalAnnotations.length > 0 && !summary}
       <!--
       Informational annotations (e.g. the Great Weapon Fighting reroll
@@ -1265,6 +1327,60 @@
     flex-direction: column;
     gap: var(--spacing-xs);
     padding-top: var(--spacing-xs);
+  }
+
+  /* Panel-level STATE chips (a vehicle's AC mode): a row of pressed/unpressed
+     toggles, so they sit in one inline group above the informational block.
+     The chip look reuses the dice-line modifier chip's exact tokens (surface
+     container, outline-variant border, small radius; the on state fills the
+     primary pair) — the two surfaces are the same kind of control, and a
+     player moving between a weapon's LoS chip and a vehicle's mode chip
+     should read them as one idiom. No new colours: every token is the dice
+     line's own pairing. */
+  .panel-renderer__state-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding-top: var(--spacing-xs);
+  }
+
+  .panel-renderer__state-chip {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    white-space: nowrap;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  button.panel-renderer__state-chip {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  /* Filled with the primary pair — the dice-line modifier chip's "on" look
+     (state must be visible, not just announced). */
+  .panel-renderer__state-chip--on {
+    color: var(--md-sys-color-on-primary);
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+  }
+
+  /* Hover scoped to the off state, exactly as the dice-line chip scopes it:
+     an unscoped :hover would outrank --on and repaint an active chip as off. */
+  button.panel-renderer__state-chip:not(.panel-renderer__state-chip--on):hover {
+    background: var(--md-sys-color-surface-container-highest);
+  }
+
+  button.panel-renderer__state-chip:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: 2px;
   }
 
   /* Sizing lives on the base chip, not on the actionable variant, so the two

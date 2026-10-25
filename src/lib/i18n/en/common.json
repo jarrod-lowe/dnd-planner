@@ -484,6 +484,13 @@
         "description": "Right the Tormentor after it falls prone",
         "not_prone": "The Tormentor is not prone — there is nothing to flip upright"
       },
+      "ac-mode": {
+        "moving": "Moving (AC 21)",
+        "motionless": "Motionless (AC 19)"
+      },
+      "ac-mode-effect": {
+        "name": "Motionless"
+      },
       "effect": {
         "name": "Tormentor (Damage Control)"
       },

@@ -484,6 +484,13 @@
         "description": "pumbogh Duj Sep yIngheSqa'choHmoH",
         "not_prone": "Duj Sep pumbe' — Duj Sep IngheSqa'moH chIm"
       },
+      "ac-mode": {
+        "moving": "vIH (AC 21)",
+        "motionless": "vIHbe' (AC 19)"
+      },
+      "ac-mode-effect": {
+        "name": "vIHbe'"
+      },
       "effect": {
         "name": "Duj Sep (Sep Irneh)"
       },

@@ -1,0 +1,65 @@
+name: 'Tormentor (Damage Control) - AC Mode State Chip'
+description: >-
+  The vehicle's AC is a MODE, not a constant: 21 while moving (the default the
+  moment the board effect lands — the board bakes no mode fact, and an absent
+  fact reads as Moving) and 19 while motionless. The mode is mechanised with
+  the #466 Frightened dice-line state-chip idiom on a panel that rolls no
+  dice: an AnnotationToggle whose EMPTY appliesTo makes the chip render on the
+  matched PANEL itself, and every station offer carries the subject-scoped
+  `tormentor.ac-mode.companion` label (the `.companion` convention every
+  companion/vehicle panel label follows) so whichever station row is planned
+  shows the chip. A tap commits one
+  of the toggle's two keyed effects through the follow-up channel (the seed
+  writing acMotionless 1, or its empty same-key eviction) — the tap path is
+  unit-pinned; what the scenario pins is the chip's CONTRACT: the toggle
+  annotation stands while boarded, targets the station label, reads the mode
+  fact with onWhen 0 (Moving = pressed = the default), and governs no dice
+  purposes. The chip's flip path is exercised by the seeded motionless
+  scenario beside this one.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Board: AC reads 21 at once (a DERIVE on the mode fact now — the board
+  # effect bakes no ac.value), the mode fact is unset (Moving), and the chip's
+  # annotation is live.
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.acMotionless: 0
+        annotations:
+          exists:
+            - rule.tormentor.ac-mode
+          targets:
+            - key: rule.tormentor.ac-mode
+              targets: [tormentor.ac-mode.companion]
+          toggles:
+            - key: rule.tormentor.ac-mode
+              toggle:
+                fact: companion.tormentorDamageControl.acMotionless
+                onWhen: 0
+                appliesTo: []
+        # Every station offer carries the label the annotation targets, so the
+        # chip rides whatever station row the crew plans.
+        offerUi:
+          - id: set-tormentor-occupancy
+            ui:
+              annotationLabels: [tormentor.ac-mode.companion]
+          - id: deboard-tormentor
+            ui:
+              annotationLabels: [tormentor.ac-mode.companion]
+  # End of turn commits the board: the mode default (Moving, AC 21) and the
+  # chip persist onto later turns — the state is sticky until switched.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+        facts:
+          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.acMotionless: 0
+        annotations:
+          exists:
+            - rule.tormentor.ac-mode

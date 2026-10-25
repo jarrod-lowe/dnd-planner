@@ -452,7 +452,10 @@ export interface AnnotationToggle {
   labelOff: string;
   /**
    * Dice purposes this chip renders on — the rider `appliesTo` filter, so a
-   * `dice.any`-targeted toggle stays off save dice it never governed.
+   * `dice.any`-targeted toggle stays off save dice it never governed. An
+   * EMPTY array marks a PANEL-LEVEL state chip: a standing state with no roll
+   * to govern (a vehicle's motionless mode), rendered on the matched panel
+   * itself rather than on any dice line.
    */
   appliesTo: RollPurpose[];
 }

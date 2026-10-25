@@ -66,6 +66,28 @@ export interface DiceLineToggle {
   offEffect: EffectInstance;
 }
 
+/**
+ * A state-toggle chip rendered on the PANEL itself — the dice-line toggle's
+ * sibling for a standing state that governs NO roll (a vehicle's motionless
+ * mode). Authored by a toggle annotation whose `appliesTo` is empty, so the
+ * dice-line channel (which filters by die purpose) never picks it up and the
+ * panel is its only surface. Unlike the dice-line chip there is no per-row
+ * capture: the state is one subject-wide seed, so `pressed` resolves from the
+ * LIVE facts and every chip on every matched panel agrees with the seed.
+ */
+export interface PanelStateToggle {
+  key: string;
+  /** i18n keys for the pressed/unpressed accessible names (distinct). */
+  labelOn: string;
+  labelOff: string;
+  /** Live-fact-resolved: `(facts[fact] ?? 0) === onWhen`. */
+  pressed: boolean;
+  /** Committed when tapped while NOT pressed. */
+  onEffect: EffectInstance;
+  /** Committed when tapped while pressed. */
+  offEffect: EffectInstance;
+}
+
 export interface RollResult {
   total: number;
   natural: number;

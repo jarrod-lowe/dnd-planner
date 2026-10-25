@@ -270,6 +270,11 @@ const EXPECTED_RUNNABLE = [
   'tormentor-hp-threshold',
   'tormentor-destroyed-at-zero',
   'tormentor-hp-lifecycle',
+  // …PR 7 — pass 4: the AC-mode state chip (#466 toggle idiom on a panel with
+  // no dice) — ac.value derives 21 moving / 19 motionless; the mode key rides
+  // the board lifecycle like every station record
+  'tormentor-ac-mode',
+  'tormentor-ac-mode-motionless',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

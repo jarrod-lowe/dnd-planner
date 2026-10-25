@@ -3001,3 +3001,73 @@ describe('slimLegacyFrightenedDisadvantage (the #465 standing-flags blob)', () =
     ]);
   });
 });
+
+describe('stripLegacyTormentorAcValue (the pre-AC-mode flat ac.value blob)', () => {
+  /**
+   * The board effect every Tormentor pass before the AC-mode one persisted:
+   * the stat block baked a FLAT `companion.tormentorDamageControl.ac.value`
+   * fact. The AC-mode pass turned that fact into a module DERIVE reading the
+   * mode fact — and the sheet rejects a fact with both a data writer and an
+   * override derive writer, so every evaluation on a character that boarded
+   * under the old build would throw until the board chip was removed by hand
+   * (the exact regression the flat-hp.max board blob hit, fixed the same way
+   * at this load seam). The value is NOT re-keyed anywhere: no legacy blob
+   * carries a mode fact, so the derive reproduces the 21 (Moving default)
+   * exactly as a fresh board would.
+   */
+  const F = 'companion.tormentorDamageControl';
+  const legacyBoard: EffectInstance = {
+    id: 'effect-tormentor-damage-control',
+    key: 'tormentor-damage-control',
+    ruleGroupId: 'tormentor',
+    state: {
+      [`${F}.active`]: 1,
+      [`${F}.ac.value`]: 21,
+      [`${F}.hp.base`]: 60
+    },
+    display: {
+      name: 'rule.tormentor.effect.name',
+      section: 'mount',
+      subject: 'tormentor-damage-control'
+    },
+    expiry: { kind: 'permanent' }
+  };
+
+  it('strips the flat ac.value while preserving the board and every other fact', async () => {
+    const { stripLegacyTormentorAcValue } = await import('$lib/play/playStore.svelte');
+    const [stripped] = stripLegacyTormentorAcValue([legacyBoard]);
+    expect(stripped.state).toEqual({ [`${F}.active`]: 1, [`${F}.hp.base`]: 60 });
+    // The board itself survives untouched — key, display, expiry.
+    expect(stripped.key).toBe('tormentor-damage-control');
+    expect(stripped.display).toEqual(legacyBoard.display);
+    expect(stripped.expiry).toEqual({ kind: 'permanent' });
+  });
+
+  it('passes fresh and unrelated effects through untouched (idempotent)', async () => {
+    const { stripLegacyTormentorAcValue } = await import('$lib/play/playStore.svelte');
+    // A board effect persisted by the AC-mode build bakes no ac.value (the
+    // derive owns the fact), so it passes through; so does every other effect.
+    const freshBoard: EffectInstance = {
+      ...legacyBoard,
+      state: { [`${F}.active`]: 1, [`${F}.hp.base`]: 60 }
+    };
+    const modeSeed: EffectInstance = {
+      id: 'effect-tormentor-ac-mode',
+      key: 'tormentor-ac-mode',
+      ruleGroupId: 'tormentor',
+      state: { [`${F}.acMotionless`]: 1 },
+      expiry: { kind: 'permanent' }
+    };
+    const playerEffect: EffectInstance = {
+      id: 'effect-hi-set',
+      key: 'heroic-inspiration',
+      state: { 'heroicInspiration.remaining': 1 },
+      expiry: { kind: 'permanent' }
+    };
+    expect(stripLegacyTormentorAcValue([freshBoard, modeSeed, playerEffect])).toEqual([
+      freshBoard,
+      modeSeed,
+      playerEffect
+    ]);
+  });
+});
