@@ -59,6 +59,8 @@ describe('board offer ui', () => {
     expect(offers.map((o) => o.id)).toEqual([
       'board-tormentor',
       'set-tormentor-occupancy',
+      'knock-tormentor-prone',
+      'flip-tormentor-upright',
       'deboard-tormentor'
     ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
@@ -159,13 +161,13 @@ describe('board effect', () => {
     });
   });
 
-  it('owns the occupancy record as a dependent (raw mount-chip removal cascades)', () => {
+  it('owns the occupancy and prone records as dependents (raw mount-chip removal cascades)', () => {
     // Raw chip removal runs through playStore's removeEffect, which evicts the
     // removed effect's declared dependents by key (the generic mechanism is
     // pinned in playStore.test.ts). What THIS pins is the declaration: the
-    // occupancy effect's key, so removing the mount chip can never strand a
-    // recorded occupancy under a de-boarded vehicle.
-    expect(boardEffect().dependents).toEqual(['tormentor-occupancy']);
+    // occupancy and prone effect keys, so removing the mount chip can never
+    // strand a recorded occupancy or a prone record under a de-boarded vehicle.
+    expect(boardEffect().dependents).toEqual(['tormentor-occupancy', 'tormentor-prone']);
   });
 
   it('displays as a mount chip on its subject that FLIPS to the detail', () => {
@@ -375,5 +377,225 @@ describe('module-declared panel entries', () => {
 
   it('holds every entry back while unboarded (the gate fact is absent)', () => {
     expect(deriveTopBarEntries({}, [module()]).some((e) => e.subject === SUBJECT)).toBe(false);
+  });
+});
+
+/**
+ * Pass 2 — vehicle prone + Prone Deficiency: STATE TRACKING ONLY. The fact is
+ * namespaced (`companion.tormentorDamageControl.prone`) under its own keyed
+ * effect, never the player-global `condition.prone` (the builder's
+ * `proneEffect()` would flip the PLAYER's attack flags, notice and movement
+ * legs). Recorded from the station's +ADD with no legality gates, flipped
+ * upright by an empty same-key eviction, evicted with the board, and carried
+ * as a standing NOTICE while boarded (the Life-Bond annotate pattern).
+ */
+
+/** The prone record, through the real plan fold (boarded, then knocked). */
+function proneEffect(): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [boardEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-prone'));
+  expect(advertised, 'knocked-prone applies exactly one named effect').toHaveLength(1);
+  return advertised[0]!;
+}
+
+describe('knocked-prone offer', () => {
+  it('is a station free-section offer while boarded, with no legality gates', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'knock-tormentor-prone');
+    expect(offer, 'the station +ADD carries the knocked-prone offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.knocked-prone.name`);
+    expect(ui.description).toBe(`${T}.knocked-prone.description`);
+    expect(ui.actionCost).toEqual([]);
+    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+  });
+
+  it('is gated structurally on active (when) with no legality gates', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'knock-tormentor-prone')!;
+    // `when` like the other station actions: unboarded, recording a prone for
+    // a vehicle nobody rides does not exist at all. No `legalWhen`: however
+    // the vehicle came to fall over, the record is legal (illegal-but-possible
+    // is not even in play — there is nothing to check).
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toBeUndefined();
+  });
+
+  it('is absent while unboarded', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.availableRules.some((r) => r.rule.id === 'knock-tormentor-prone')).toBe(false);
+  });
+
+  it('apply advertises ONE permanent keyed effect writing exactly the namespaced fact', () => {
+    const e = proneEffect();
+    expect(e.key).toBe('tormentor-prone');
+    // EXACT equality: the state writes the namespaced fact and NOTHING else —
+    // no player-global legs ride along (pinned again, behaviourally, below).
+    expect(e.state).toEqual({ [`${F}.prone`]: 1 });
+    // Permanent, not the player's untilShortRest: a rest does not right a
+    // vehicle — only Flip Upright (or the board lifecycle) clears it.
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+  });
+
+  it('the effect displays as a station chip under the subject (no detailKey: it does not flip)', () => {
+    expect(proneEffect().display).toEqual({
+      name: `${T}.prone-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('re-recording replaces by key (idempotent — the fact stays single)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+    });
+    const keyed = out.effects.filter((e) => e.key === 'tormentor-prone');
+    // Newest-wins: the committed record and the planned re-record collapse to
+    // ONE live effect, never a stacked pair.
+    expect(keyed).toHaveLength(1);
+    expect(out.facts[`${F}.prone`]).toBe(1);
+  });
+});
+
+describe('flip-upright offer', () => {
+  it('exists only while boarded AND prone (a structural when, not a legality gate)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'flip-tormentor-upright')!;
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toBeUndefined();
+    // Boarded but upright: nothing to flip — the offer does not exist.
+    const upright = evaluate({ modules: [module()], committed: [boardEffect()] });
+    expect(upright.availableRules.some((r) => r.rule.id === 'flip-tormentor-upright')).toBe(false);
+    // Boarded and prone (the record planned this very turn): flippable now.
+    const prone = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+    });
+    expect(prone.availableRules.some((r) => r.rule.id === 'flip-tormentor-upright')).toBe(true);
+  });
+
+  it('sits in the station panel, free section, while prone', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+    });
+    const offer = out.availableRules.find((r) => r.rule.id === 'flip-tormentor-upright');
+    expect(offer).toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.flip-upright.name`);
+    expect(ui.description).toBe(`${T}.flip-upright.description`);
+    expect(ui.actionCost).toEqual([]);
+    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+  });
+
+  it('apply advertises the EMPTY same-key eviction (the get-up idiom)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'flip-tormentor-upright' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
+    expect(evict, 'flip-upright advertises the prone eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-prone');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    // The fact is GONE the moment the row is merely planned (newest-wins): no
+    // effect writes it, so the key vanishes — unset reads as 0 downstream.
+    expect(out.facts[`${F}.prone`]).toBeUndefined();
+  });
+});
+
+describe('prone never touches the player-global condition', () => {
+  it('condition.prone and its attack flags stay unset by this module', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+    });
+    // The player-global prone chassis (condition.prone + the STR/DEX attack
+    // disadvantage flags the rollers read) must never be written by the
+    // vehicle's record — a prone VEHICLE is not a prone PLAYER.
+    expect(out.facts['condition.prone']).toBeUndefined();
+    expect(out.facts['attack.str.disadvantage']).toBeUndefined();
+    expect(out.facts['attack.dex.disadvantage']).toBeUndefined();
+    // …while the namespaced fact is live.
+    expect(out.facts[`${F}.prone`]).toBe(1);
+  });
+});
+
+describe('prone eviction rides the board lifecycle', () => {
+  it('a re-board advertises the empty same-key eviction beside the board effect', () => {
+    // A keyed replacement alone does not fire dependents, so the re-board
+    // resets prone explicitly (the occupancy re-board pattern): a fresh board
+    // starts upright.
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
+    expect(evict, 're-board advertises the prone eviction').toBeDefined();
+    expect(evict!.state).toBeUndefined();
+    expect(out.facts[`${F}.prone`]).toBeUndefined();
+  });
+
+  it('de-board advertises the same eviction while clearing every baked fact', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
+    expect(evict, 'de-board advertises the prone eviction').toBeDefined();
+    expect(evict!.state).toBeUndefined();
+    expect(out.facts[`${F}.prone`]).toBeUndefined();
+    expect(out.facts[`${F}.active`]).toBeUndefined();
+  });
+});
+
+describe('prone-deficiency notice', () => {
+  it('stands while boarded with the vehicle as its source (Life-Bond pattern)', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const notice = out.annotations.find((a) => a.key === `${T}.notice`);
+    expect(notice, 'a notice stands while boarded').toBeDefined();
+    expect(notice!.targets).toEqual(['notice']);
+    expect(notice!.source).toBe(`${T}.effect.name`);
+    expect(notice!.body).toBe(`${T}.notice.body`);
+  });
+
+  it('is standing, not state-tracking: it ignores prone and follows the board', () => {
+    // Prone does not gate the notice (the deficiency holds BEFORE the vehicle
+    // ever falls)…
+    const prone = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect()]
+    });
+    expect(prone.annotations.some((a) => a.key === `${T}.notice`)).toBe(true);
+    // …and de-boarding withdraws it with the vehicle.
+    const unboarded = evaluate({ modules: [module()] });
+    expect(unboarded.annotations.some((a) => a.key === `${T}.notice`)).toBe(false);
+  });
+
+  it('carries the notice label, body and chip name in BOTH locales (tlh is the canary)', () => {
+    const strings: Record<string, string | undefined> = {
+      'en notice label': en.rule.tormentor.notice,
+      'en-x-tlh notice label': tlh.rule.tormentor.notice,
+      'en notice body': en.rule.tormentor['notice.body'],
+      'en-x-tlh notice body': tlh.rule.tormentor['notice.body'],
+      'en chip name': en.rule.tormentor['prone-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['prone-effect']?.name
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
   });
 });

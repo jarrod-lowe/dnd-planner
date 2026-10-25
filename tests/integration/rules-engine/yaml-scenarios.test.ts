@@ -257,6 +257,11 @@ const EXPECTED_RUNNABLE = [
   // pattern) writing one keyed effect the board/de-board lifecycle evicts
   'tormentor-occupancy-slider',
   'tormentor-occupancy-lifecycle',
+  // …PR 5 — pass 2: vehicle prone + Prone Deficiency — a namespaced prone fact
+  // (never condition.prone) recorded from the station +ADD, flipped upright by
+  // an empty same-key eviction, evicted with the board, noticed while boarded
+  'tormentor-prone-record',
+  'tormentor-prone-lifecycle',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

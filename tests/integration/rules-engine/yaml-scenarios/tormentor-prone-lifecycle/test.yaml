@@ -1,0 +1,69 @@
+name: 'Tormentor (Damage Control) - Prone Eviction on Re-board and De-board'
+description: >-
+  The prone record never outlives the board that justifies it: a re-board
+  (a keyed replacement of the board effect, which does not fire dependents)
+  explicitly evicts it with an empty same-key marker, and de-board does the
+  same while clearing every baked fact. The notice follows the board, not the
+  prone state. The raw mount-chip removal path declares the same eviction via
+  the board effect's dependents (unit-pinned, not assertible here).
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: board-tormentor
+  - addOffer:
+      id: knock-tormentor-prone
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-prone
+        facts:
+          companion.tormentorDamageControl.prone: 1
+  # Re-boarding REPLACES the board effect and evicts the prone record with it:
+  # a fresh board starts upright (the occupancy re-board pattern — no rest
+  # clears the vehicle's prone, but a fresh board does).
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 0
+          companion.tormentorDamageControl.active: 1
+        annotations:
+          exists:
+            - rule.tormentor.notice
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+          notExists:
+            - effect-tormentor-prone
+  # Knock prone again, commit, then de-board: the keyed replacement clears
+  # every baked fact including the prone record, and the notice goes with the
+  # board.
+  - addOffer:
+      id: knock-tormentor-prone
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-prone
+  - addOffer:
+      id: deboard-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 0
+          companion.tormentorDamageControl.active: 0
+        offers:
+          notExists:
+            - knock-tormentor-prone
+        annotations:
+          notExists:
+            - rule.tormentor.notice
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-prone
+            - effect-tormentor-damage-control
