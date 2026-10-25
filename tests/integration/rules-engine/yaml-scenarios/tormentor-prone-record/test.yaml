@@ -4,8 +4,11 @@ description: >-
   companion.tormentorDamageControl.prone fact under a keyed effect of its own
   (never the player-global condition.prone, which would flip the PLAYER's
   attack flags and notice), recorded from the station's +ADD by a free offer
-  with no legality gates and cleared by Flip Upright's empty same-key eviction
-  (the get-up idiom). The effect is permanent — no rest clears it, because a
+  and cleared by Flip Upright's empty same-key eviction (the get-up idiom).
+  PC-prone parity (user feedback): the knock carries drop-prone's own
+  structural gate — it does not exist while already prone, exactly as the
+  player's drop-prone does not — with no Speed leg, because a vehicle has no
+  movement economy. The effect is permanent — no rest clears it, because a
   rest does not right a vehicle. A NOTICE (the Life-Bond annotate pattern)
   carries the deficiency gated on the prone fact itself — PC-prone parity: the
   condition triggers its notice — so it stands ONLY while the vehicle is prone
@@ -80,14 +83,19 @@ steps:
             - effect-tormentor-prone
         facts:
           companion.tormentorDamageControl.prone: 1
-  # Re-recording is idempotent: the keyed effect replaces itself (no stacking,
-  # no legality gates — however the vehicle came to fall over, it can be
-  # recorded).
-  - addOffer:
-      id: knock-tormentor-prone
+  # PC-prone parity (user feedback): drop-prone's own gate — already prone,
+  # the offer does not exist (condition-prone-drop's after-drop assert shape).
+  # The recorder cannot re-fire while the vehicle is down; its flip-upright
+  # mirror is the offer that exists now.
+  - evaluate:
       assert:
         facts:
           companion.tormentorDamageControl.prone: 1
+        offers:
+          notExists:
+            - knock-tormentor-prone
+          exists:
+            - flip-tormentor-upright
   # Flip Upright: the empty same-key eviction clears the fact and withdraws
   # the station chip, and the NOTICE goes with the condition it carries.
   - addOffer:

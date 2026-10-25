@@ -13,15 +13,29 @@ ruleGroups:
 steps:
   - addOffer:
       id: board-tormentor
-  - addOffer:
-      id: knock-tormentor-prone
       assert:
+        offers:
+          exists:
+            - knock-tormentor-prone
         offerUi:
           - id: knock-tormentor-prone
             ui:
               # The recorder flips to the vehicle's own prone detail, through
               # every knock/re-board cycle alike.
               detailKey: vehicle/tormentor-prone
+  - addOffer:
+      id: knock-tormentor-prone
+      assert:
+        facts:
+          companion.tormentorDamageControl.prone: 1
+        # PC-parity gate (user feedback): the moment the record is planned the
+        # vehicle is prone, so the knock withdraws — drop-prone's in-plan
+        # mirror — and flip-upright is the offer that exists.
+        offers:
+          notExists:
+            - knock-tormentor-prone
+          exists:
+            - flip-tormentor-upright
   - endTurn:
       assert:
         effects:

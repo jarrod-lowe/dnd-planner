@@ -385,10 +385,12 @@ describe('module-declared panel entries', () => {
  * namespaced (`companion.tormentorDamageControl.prone`) under its own keyed
  * effect, never the player-global `condition.prone` (the builder's
  * `proneEffect()` would flip the PLAYER's attack flags, notice and movement
- * legs). Recorded from the station's +ADD with no legality gates, flipped
- * upright by an empty same-key eviction, evicted with the board, and carried
- * as a NOTICE while prone (the Life-Bond annotate pattern gated on the prone
- * fact — PC-prone parity: the condition triggers its notice).
+ * legs). Recorded from the station's +ADD gated exactly like the PC's
+ * drop-prone (structurally absent while already prone; no Speed leg — the
+ * vehicle has no movement economy), flipped upright by an empty same-key
+ * eviction, evicted with the board, and carried as a NOTICE while prone (the
+ * Life-Bond annotate pattern gated on the prone fact — PC-prone parity: the
+ * condition triggers its notice).
  */
 
 /** The prone record, through the real plan fold (boarded, then knocked). */
@@ -424,12 +426,14 @@ describe('knocked-prone offer', () => {
     expect(ui.intents).toEqual({ CONDITION: 'held' });
   });
 
-  it('is gated structurally on active (when) with no legality gates', () => {
+  it("is gated structurally on boarded-AND-upright (when), PC drop-prone's gate", () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'knock-tormentor-prone')!;
     // `when` like the other station actions: unboarded, recording a prone for
-    // a vehicle nobody rides does not exist at all. No `legalWhen`: however
-    // the vehicle came to fall over, the record is legal (illegal-but-possible
-    // is not even in play — there is nothing to check).
+    // a vehicle nobody rides does not exist at all. PC-prone parity (user
+    // feedback): the player's drop-prone is `when: condition.prone === 0`, so
+    // the knock adds the same already-prone leg on the namespaced fact. No
+    // `legalWhen`: the only PC leg beyond the prone gate is Speed, and a
+    // vehicle has no movement economy.
     expect(typeof raw.when).toBe('function');
     expect(raw.legalWhen).toBeUndefined();
   });
@@ -437,6 +441,21 @@ describe('knocked-prone offer', () => {
   it('is absent while unboarded', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.availableRules.some((r) => r.rule.id === 'knock-tormentor-prone')).toBe(false);
+  });
+
+  it("is absent while already prone (drop-prone's structural gate — PC parity)", () => {
+    // PC-prone parity (user feedback): the player's drop-prone does not exist
+    // while the condition is held, and neither does the vehicle's knock — the
+    // recorder cannot re-fire while the vehicle is down. Its mirror,
+    // flip-upright, is the offer that exists now.
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect()]
+    });
+    expect(out.availableRules.some((r) => r.rule.id === 'knock-tormentor-prone')).toBe(false);
+    expect(out.availableRules.some((r) => r.rule.id === 'flip-tormentor-upright')).toBe(true);
+    // The gate hides the offer; it does not touch the committed state.
+    expect(out.facts[`${F}.prone`]).toBe(1);
   });
 
   it('apply advertises ONE permanent keyed effect writing exactly the namespaced fact', () => {
@@ -462,16 +481,18 @@ describe('knocked-prone offer', () => {
     });
   });
 
-  it('re-recording replaces by key (idempotent — the fact stays single)', () => {
+  it('a planned-anyway re-record while prone does not execute (the closed when gate)', () => {
+    // The engine's structural-`when` contract (plan.ts): a planned row whose
+    // gate is closed does not execute — the UI cannot build this row anymore
+    // (the offer is absent), but a stale plan carried over the commit must not
+    // advertise a second record either. The committed record stands alone.
     const out = evaluate({
       modules: [module()],
       committed: [boardEffect(), proneEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
     const keyed = out.effects.filter((e) => e.key === 'tormentor-prone');
-    // Newest-wins: the committed record and the planned re-record collapse to
-    // ONE live effect, never a stacked pair.
-    expect(keyed).toHaveLength(1);
+    expect(keyed).toHaveLength(0);
     expect(out.facts[`${F}.prone`]).toBe(1);
   });
 });
