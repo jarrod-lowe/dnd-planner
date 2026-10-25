@@ -469,7 +469,7 @@
         "name": "Tormentor (Damage Control)"
       },
       "occupancy-effect": {
-        "name": "Occupancy"
+        "name": "Occupancy {{score}}"
       }
     },
     "dnd-5e-2024": {

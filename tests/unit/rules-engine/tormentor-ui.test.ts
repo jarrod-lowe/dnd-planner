@@ -4,6 +4,8 @@ import { getModule, isRegistered } from '$lib/rules-engine/registry';
 import { lazyRuleGroupIds } from '$lib/rules-engine/lazy';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
 import type { EffectInstance } from '$lib/rules-engine';
+import en from '$lib/i18n/en/common.json';
+import tlh from '$lib/i18n/en-x-tlh/common.json';
 
 /**
  * Tormentor — the rule group owning the whole VEHICLE and every seat it has so
@@ -245,6 +247,24 @@ describe('occupancy offer', () => {
       subject: SUBJECT,
       displayFact: `${F}.creatureCapacity.used`
     });
+  });
+
+  it('the chip name template carries the live count — {{score}} in BOTH locales', () => {
+    // EffectChip renders a displayFact chip as $t(name, { score: liveValue }):
+    // a name without the {{score}} placeholder drops the occupant count and
+    // shows bare "Occupancy". sveltekit-i18n interpolates DOUBLE braces only,
+    // and score is the chip's sole param — pinned per locale (en-x-tlh is the
+    // canary for exactly this class of bug).
+    const templates: Record<string, string | undefined> = {
+      en: en.rule.tormentor['occupancy-effect'].name,
+      'en-x-tlh': tlh.rule.tormentor['occupancy-effect'].name
+    };
+    for (const [locale, name] of Object.entries(templates)) {
+      expect(name, `${locale} name template exists`).toBeDefined();
+      expect(name?.match(/{{[a-zA-Z]+}}/g), `${locale} interpolates exactly {{score}}`).toEqual([
+        '{{score}}'
+      ]);
+    }
   });
 });
 
