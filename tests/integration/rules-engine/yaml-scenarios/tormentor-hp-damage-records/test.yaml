@@ -1,0 +1,78 @@
+name: 'Tormentor (Damage Control) - Vehicle Damage Records and Accumulates'
+description: >-
+  Boarding bakes hp.base 60 (replacing the flat display-only hp.max fact) and
+  the module derives the steed-shaped HP pool from it: hp.max = base,
+  hp.modifier.current = heals recorded − damage recorded, hp.current =
+  currentHp(max, modifier). The station's +ADD carries a damage recorder (free,
+  station subject, HEALTH intent) whose ONE keyed untilLongRest effect carries
+  the RUNNING total — each record bakes prior-total + amount, so records add up
+  rather than replacing, exactly like the steed's damage recorder.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Board: the derived pool reads 60/60 out of the box.
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.hp.base: 60
+          companion.tormentorDamageControl.hp.max: 60
+          companion.tormentorDamageControl.hp.current: 60
+          companion.tormentorDamageControl.hp.modifier.current: 0
+        planErrors:
+          - id: board-tormentor
+            index: 0
+            errors: []
+  # Boarded: the station +ADD carries BOTH HP recorders, legal, no cost.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-tormentor-damage
+            - record-tormentor-heal
+          legal:
+            - record-tormentor-damage
+            - record-tormentor-heal
+        offerUi:
+          - id: record-tormentor-damage
+            ui:
+              section: free
+              subject: tormentor-damage-control
+              detailKey: vehicle/tormentor-damage
+              actionCost: []
+  # Record 25 damage: current drops the moment the row is planned.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 25
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 25
+          companion.tormentorDamageControl.hp.modifier.current: -25
+          companion.tormentorDamageControl.hp.current: 35
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-damage
+        facts:
+          companion.tormentorDamageControl.hp.current: 35
+  # A later 15-damage record ADDS to the earlier 25 (40 total), not replaces it.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 15
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 40
+          companion.tormentorDamageControl.hp.current: 20
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 40
+          companion.tormentorDamageControl.hp.current: 20

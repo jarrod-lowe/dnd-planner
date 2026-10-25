@@ -59,6 +59,8 @@ describe('board offer ui', () => {
     expect(offers.map((o) => o.id)).toEqual([
       'board-tormentor',
       'set-tormentor-occupancy',
+      'record-tormentor-damage',
+      'record-tormentor-heal',
       'knock-tormentor-prone',
       'flip-tormentor-upright',
       'deboard-tormentor'
@@ -134,7 +136,13 @@ describe('de-board offer', () => {
     // the panel gates key on presence, so the subject's chips all withdraw).
     expect(out.facts[`${F}.active`]).toBeUndefined();
     expect(out.facts[`${F}.ac.value`]).toBeUndefined();
-    expect(out.facts[`${F}.hp.max`]).toBeUndefined();
+    expect(out.facts[`${F}.hp.base`]).toBeUndefined();
+    expect(out.facts[`${F}.damageThreshold`]).toBeUndefined();
+    // hp.max/hp.current are DERIVED now (the steed shape): the contributions
+    // stay registered, so unboarded they settle to 0 rather than vanishing —
+    // the top-bar gate keys on `active`, which IS gone, so the chip withdraws.
+    expect(out.facts[`${F}.hp.max`]).toBe(0);
+    expect(out.facts[`${F}.hp.current`]).toBe(0);
   });
 });
 
@@ -147,7 +155,11 @@ describe('board effect', () => {
     expect(e.state).toEqual({
       [`${F}.active`]: 1,
       [`${F}.ac.value`]: 21,
-      [`${F}.hp.max`]: 60,
+      // HP bakes its BASE (the pool derives max/current from it — the steed
+      // shape) plus the stat block's damage threshold as DATA, so the recorder
+      // gates on a fact rather than a literal in the module.
+      [`${F}.hp.base`]: 60,
+      [`${F}.damageThreshold`]: 10,
       [`${F}.speed`]: 100,
       [`${F}.cargo`]: 500,
       [`${F}.str`]: 16,
@@ -161,13 +173,20 @@ describe('board effect', () => {
     });
   });
 
-  it('owns the occupancy and prone records as dependents (raw mount-chip removal cascades)', () => {
+  it('owns every station record as a dependent (raw mount-chip removal cascades)', () => {
     // Raw chip removal runs through playStore's removeEffect, which evicts the
     // removed effect's declared dependents by key (the generic mechanism is
-    // pinned in playStore.test.ts). What THIS pins is the declaration: the
-    // occupancy and prone effect keys, so removing the mount chip can never
-    // strand a recorded occupancy or a prone record under a de-boarded vehicle.
-    expect(boardEffect().dependents).toEqual(['tormentor-occupancy', 'tormentor-prone']);
+    // pinned in playStore.test.ts). What THIS pins is the declaration: every
+    // record effect key, so removing the mount chip can never strand a recorded
+    // occupancy, a prone record, an HP record or a destroyed wreck under a
+    // de-boarded vehicle.
+    expect(boardEffect().dependents).toEqual([
+      'tormentor-occupancy',
+      'tormentor-prone',
+      'tormentor-hp-damage',
+      'tormentor-hp-heal',
+      'tormentor-destroyed'
+    ]);
   });
 
   it('displays as a mount chip on its subject that FLIPS to the detail', () => {
@@ -303,11 +322,13 @@ describe('creature capacity derive', () => {
   });
 });
 
-// The boarded stat facts (every gate the declarations read).
+// The boarded stat facts (every gate the declarations read, plus the pool the
+// HP chip renders).
 const BOARDED = {
   [`${F}.active`]: 1,
   [`${F}.ac.value`]: 21,
   [`${F}.hp.max`]: 60,
+  [`${F}.hp.current`]: 60,
   [`${F}.speed`]: 100,
   [`${F}.cargo`]: 500,
   [`${F}.str.modifier`]: 3,
@@ -318,12 +339,15 @@ const BOARDED = {
 };
 
 describe('module-declared panel entries', () => {
-  it('top bar: HP/AC/Speed/Cargo value chips + a STR/DEX/CON ability chip, stamped with the subject', () => {
+  it('top bar: a usedMax HP chip (current/max) + AC/Speed/Cargo value chips + a STR/DEX/CON ability chip, stamped with the subject', () => {
     expect(deriveTopBarEntries(BOARDED, [module()]).filter((e) => e.subject === SUBJECT)).toEqual([
       {
-        type: 'value',
+        // The HP chip becomes a POOL with the damageable pass: usedMax renders
+        // "remaining/total", so it reads "45/60" — the steed's HP chip shape.
+        type: 'usedMax',
         label: 'play.stats.tormentor-damage-control.hp',
-        fact: `${F}.hp.max`,
+        total: `${F}.hp.max`,
+        remaining: `${F}.hp.current`,
         subject: SUBJECT
       },
       {
@@ -740,6 +764,352 @@ describe('prone-deficiency notice', () => {
       'en-x-tlh notice body': tlh.rule.tormentor['notice.body'],
       'en chip name': en.rule.tormentor['prone-effect']?.name,
       'en-x-tlh chip name': tlh.rule.tormentor['prone-effect']?.name
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+/**
+ * Pass 3 — damageable HP: the flat display-only `hp.max` baked fact gives way
+ * to the steed-shaped pool (base baked on the board effect; max/current/
+ * modifier derived), recorded from the STATION's +ADD by damage and heal
+ * recorders whose ONE keyed untilLongRest effect carries the running total
+ * (the steed recorder idiom). The stat block's damage threshold is a BAKED
+ * FACT, and the builder's generic `damageThresholdGate` gates the damage
+ * apply: a blow below the fact records NOTHING and flags the row with the
+ * below-threshold diagnostic while the OFFER stays legal (the apply-level
+ * gate, the dash idiom — the engine's illegal-but-visible contract is not
+ * needed; nothing is illegal, the blow just bounces off). Damage that brings
+ * hp.current to 0 ALSO advertises a permanent keyed `tormentor-destroyed`
+ * wreck (the steed lethal-check placement, but NO auto-unboard: the board
+ * effect persists so the wreck stays inspectable) with a standing NOTICE
+ * gated on the destroyed fact. Re-boarding/de-boarding evict the HP records
+ * and the wreck with everything else.
+ */
+
+/** The HP record effect ids/keys the station recorders advertise. */
+const HP_DAMAGE_EFFECT = 'effect-tormentor-hp-damage';
+const HP_HEAL_EFFECT = 'effect-tormentor-hp-heal';
+const DESTROYED_EFFECT = 'effect-tormentor-destroyed';
+
+/** Plan ONE damage row at `amount` on a committed board (the real plan fold). */
+function planDamage(amount: number) {
+  return evaluate({
+    modules: [module()],
+    committed: [boardEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount } }]
+  });
+}
+
+/** The damage-record effect a row at `amount` advertises (exactly one). */
+function damageRecordEffect(amount: number): EffectInstance {
+  const out = planDamage(amount);
+  const advertised = out.effects.filter((e) => e.id.endsWith(HP_DAMAGE_EFFECT));
+  expect(advertised, `a ${amount}-damage row advertises exactly one record`).toHaveLength(1);
+  return advertised[0]!;
+}
+
+/** The destroyed-wreck effect a row at `amount` advertises (exactly one). */
+function destroyedEffect(): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [boardEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount: 60 } }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith(DESTROYED_EFFECT));
+  expect(advertised, 'a destroying blow advertises exactly one wreck').toHaveLength(1);
+  return advertised[0]!;
+}
+
+describe('vehicle HP pool derives', () => {
+  it('derives the steed-shaped pool from the baked base while boarded', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    expect(out.facts[`${F}.hp.max`]).toBe(60);
+    expect(out.facts[`${F}.hp.current`]).toBe(60);
+    expect(out.facts[`${F}.hp.modifier.current`]).toBe(0);
+    // The threshold is data beside the pool it gates.
+    expect(out.facts[`${F}.damageThreshold`]).toBe(10);
+  });
+
+  it('current = currentHp(max, modifier): damage drops it, heals lift it, floored at 0', () => {
+    // 25 damage planned: 60/60 → 35/60.
+    expect(planDamage(25).facts[`${F}.hp.current`]).toBe(35);
+    // The modifier reads heals − damage (the steed derive), so a committed
+    // damage record plus a planned heal nets out.
+    const healed = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), damageRecordEffect(30)],
+      planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-heal', selections: { amount: 10 } }]
+    });
+    expect(healed.facts[`${F}.hp.modifier.current`]).toBe(-20);
+    expect(healed.facts[`${F}.hp.current`]).toBe(40);
+  });
+
+  it('reads 0 while unboarded (contributions stay registered, gated on active)', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.facts[`${F}.hp.max`]).toBe(0);
+    expect(out.facts[`${F}.hp.current`]).toBe(0);
+  });
+});
+
+describe('record-tormentor-damage offer', () => {
+  it('is a station free-section HEALTH slider while boarded, gated on the board ONLY', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'record-tormentor-damage');
+    expect(offer, 'the station +ADD carries the damage recorder').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.record-damage.name`);
+    expect(ui.description).toBe(`${T}.record-damage.description`);
+    // The recorder carries the DAMAGE detail (threshold/immunities/mishap) —
+    // the settled home for the stat block's damage semantics.
+    expect(ui.detailKey).toBe('vehicle/tormentor-damage');
+    expect(ui.actionCost).toEqual([]);
+    // An HP record, not a condition: the steed damage recorder's HEALTH bucket.
+    expect(ui.intents).toEqual({ HEALTH: 'hp' });
+    expect(ui.primaryControl).toEqual({
+      type: 'slider',
+      var: 'amount',
+      min: { number: 0 },
+      max: { fact: `${F}.hp.max` },
+      unit: 'hp'
+    });
+    expect(offer!.rule.vars).toEqual({ amount: { capture: true, default: { number: 0 } } });
+    // LEGAL with no legality gates: the threshold is an apply-level gate (the
+    // dash idiom) — the offer is always applicable, the blow may just bounce.
+    expect(offer!.legal).toBe(true);
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'record-tormentor-damage'
+    )!;
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toBeUndefined();
+  });
+
+  it('is absent while unboarded', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.availableRules.some((r) => r.rule.id === 'record-tormentor-damage')).toBe(false);
+  });
+
+  it('records the RUNNING total in one keyed untilLongRest effect with a live-value chip', () => {
+    const e = damageRecordEffect(25);
+    expect(e.key).toBe('tormentor-hp-damage');
+    // prior total + this amount — records ADD UP (the steed recorder idiom),
+    // never each carrying only its own amount (which would evict the prior).
+    expect(e.state).toEqual({ [`${F}.hp.damageRecorded`]: 25 });
+    expect(e.expiry).toEqual({ kind: 'untilLongRest' });
+    expect(e.display).toEqual({
+      name: `${T}.hp-damage-effect.name`,
+      section: 'mount',
+      subject: SUBJECT,
+      displayFact: `${F}.hp.damageRecorded`
+    });
+  });
+
+  it('sub-threshold damage records NOTHING and flags the row (the offer stays legal)', () => {
+    const out = planDamage(9);
+    // No record effect, no fact change — the blow bounces off the armor plate.
+    expect(out.effects.filter((e) => e.id.endsWith(HP_DAMAGE_EFFECT))).toHaveLength(0);
+    expect(out.facts[`${F}.hp.damageRecorded`]).toBeUndefined();
+    expect(out.facts[`${F}.hp.current`]).toBe(60);
+    // …and the row carries the below-threshold diagnostic from the apply fold.
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.record-damage.below_threshold`, severity: 'error' }
+    ]);
+  });
+
+  it('threshold and above record the FULL amount (the threshold is a floor, not a cap)', () => {
+    expect(planDamage(10).facts[`${F}.hp.damageRecorded`]).toBe(10);
+    expect(planDamage(60).facts[`${F}.hp.damageRecorded`]).toBe(60);
+  });
+});
+
+describe('record-tormentor-heal offer', () => {
+  it("is the damage recorder's mirror: station free-section HEALTH slider, no detailKey", () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'record-tormentor-heal');
+    expect(offer, 'the station +ADD carries the heal recorder').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.record-heal.name`);
+    expect(ui.description).toBe(`${T}.record-heal.description`);
+    // Minimal: the damage semantics detail rides the damage offer alone.
+    expect(ui.detailKey).toBeUndefined();
+    expect(ui.intents).toEqual({ HEALTH: 'hp' });
+    expect(ui.primaryControl).toEqual({
+      type: 'slider',
+      var: 'amount',
+      min: { number: 0 },
+      max: { fact: `${F}.hp.max` },
+      unit: 'hp'
+    });
+    expect(offer!.rule.vars).toEqual({ amount: { capture: true, default: { number: 0 } } });
+  });
+
+  it('records the running heal CAPPED at the net missing HP (the steed idiom)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), damageRecordEffect(30)],
+      planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-heal', selections: { amount: 40 } }]
+    });
+    const advertised = out.effects.filter((e) => e.id.endsWith(HP_HEAL_EFFECT));
+    expect(advertised).toHaveLength(1);
+    expect(advertised[0]!.key).toBe('tormentor-hp-heal');
+    // 40 healing on 30 damage: back to full, the surplus is lost (never banked
+    // to pre-cancel a later blow).
+    expect(advertised[0]!.state).toEqual({ [`${F}.hp.healRecorded`]: 30 });
+    expect(advertised[0]!.expiry).toEqual({ kind: 'untilLongRest' });
+    expect(advertised[0]!.display).toEqual({
+      name: `${T}.hp-heal-effect.name`,
+      section: 'mount',
+      subject: SUBJECT,
+      displayFact: `${F}.hp.healRecorded`
+    });
+    expect(out.facts[`${F}.hp.current`]).toBe(60);
+  });
+});
+
+describe('destroyed at zero HP', () => {
+  it('a destroying blow advertises the permanent keyed wreck BESIDE the damage record', () => {
+    const out = planDamage(60);
+    expect(out.facts[`${F}.hp.current`]).toBe(0);
+    expect(out.facts[`${F}.destroyed`]).toBe(1);
+    const e = destroyedEffect();
+    expect(e.key).toBe('tormentor-destroyed');
+    expect(e.state).toEqual({ [`${F}.destroyed`]: 1 });
+    // PERMANENT, unlike the untilLongRest damage record: a long rest restores
+    // the pool but never un-burns a war machine.
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    expect(e.display).toEqual({
+      name: `${T}.destroyed-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+    // The damage record still lands (the blow happened)…
+    expect(out.effects.some((x) => x.id.endsWith(HP_DAMAGE_EFFECT))).toBe(true);
+    // …and the BOARD persists (NO auto-unboard — the steed lethal-check
+    // placement deliberately stops short of retiring the vehicle): the wreck
+    // stays inspectable and the crew can de-board.
+    expect(out.facts[`${F}.active`]).toBe(1);
+  });
+
+  it('overkill destroys too (exact-0 is the boundary, not the only trigger)', () => {
+    expect(planDamage(70).facts[`${F}.destroyed`]).toBe(1);
+    expect(planDamage(70).facts[`${F}.hp.current`]).toBe(0);
+  });
+
+  it('a destroying-adjacent blow does NOT destroy: 59 of 60 leaves it whole', () => {
+    expect(planDamage(59).facts[`${F}.destroyed`]).toBeUndefined();
+    expect(planDamage(59).facts[`${F}.hp.current`]).toBe(1);
+  });
+
+  it('more damage on a committed wreck keeps the single keyed wreck (idempotent)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), damageRecordEffect(60), destroyedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount: 10 } }]
+    });
+    expect(out.facts[`${F}.destroyed`]).toBe(1);
+    expect(out.effects.filter((e) => e.key === 'tormentor-destroyed')).toHaveLength(1);
+  });
+});
+
+describe('destroyed notice', () => {
+  it('stands only while the vehicle is destroyed, with the vehicle as its source', () => {
+    const whole = evaluate({ modules: [module()], committed: [boardEffect()] });
+    expect(
+      whole.annotations.some((a) => a.key === `${T}.destroyed-notice`),
+      'no destroyed notice on a whole vehicle'
+    ).toBe(false);
+    const wrecked = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), destroyedEffect()]
+    });
+    const notice = wrecked.annotations.find((a) => a.key === `${T}.destroyed-notice`);
+    expect(notice, 'a notice stands while the vehicle is destroyed').toBeDefined();
+    expect(notice!.targets).toEqual(['notice']);
+    expect(notice!.source).toBe(`${T}.effect.name`);
+    expect(notice!.body).toBe(`${T}.destroyed-notice.body`);
+  });
+
+  it('stands beside the prone notice when both states hold (distinct keys)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect(), destroyedEffect()]
+    });
+    const keys = out.annotations.filter((a) => a.targets.includes('notice')).map((a) => a.key);
+    expect(keys).toEqual(expect.arrayContaining([`${T}.notice`, `${T}.destroyed-notice`]));
+  });
+});
+
+describe('HP records and the wreck ride the board lifecycle', () => {
+  it('a re-board advertises the empty same-key evictions beside the board effect', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), damageRecordEffect(20), destroyedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    });
+    for (const key of ['tormentor-hp-damage', 'tormentor-hp-heal', 'tormentor-destroyed']) {
+      const evict = out.effects.find((e) => e.id.endsWith(`evict-${key}`));
+      expect(evict, `re-board advertises the ${key} eviction`).toBeDefined();
+      expect(evict!.key).toBe(key);
+      expect(evict!.state).toBeUndefined();
+      expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    }
+    // A fresh board starts whole: no damage banked, no wreck, no notice.
+    expect(out.facts[`${F}.hp.damageRecorded`]).toBeUndefined();
+    expect(out.facts[`${F}.destroyed`]).toBeUndefined();
+    expect(out.facts[`${F}.hp.current`]).toBe(60);
+    expect(out.annotations.some((a) => a.key === `${T}.destroyed-notice`)).toBe(false);
+  });
+
+  it('de-board advertises the same evictions while clearing every baked fact', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), damageRecordEffect(20), destroyedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+    });
+    for (const key of ['tormentor-hp-damage', 'tormentor-hp-heal', 'tormentor-destroyed']) {
+      expect(
+        out.effects.find((e) => e.id.endsWith(`evict-${key}`)),
+        `de-board advertises the ${key} eviction`
+      ).toBeDefined();
+    }
+    expect(out.facts[`${F}.active`]).toBeUndefined();
+    expect(out.facts[`${F}.hp.current`]).toBe(0);
+  });
+});
+
+describe('pass 3 i18n (tlh is the canary)', () => {
+  it('the record chip name templates carry the live total — {{score}} in BOTH locales', () => {
+    // EffectChip renders a displayFact chip as $t(name, { score: liveValue }):
+    // a name without the {{score}} placeholder drops the running total.
+    const templates: Record<string, string | undefined> = {
+      'en damage chip': en.rule.tormentor['hp-damage-effect']?.name,
+      'en-x-tlh damage chip': tlh.rule.tormentor['hp-damage-effect']?.name,
+      'en heal chip': en.rule.tormentor['hp-heal-effect']?.name,
+      'en-x-tlh heal chip': tlh.rule.tormentor['hp-heal-effect']?.name
+    };
+    for (const [where, name] of Object.entries(templates)) {
+      expect(name, `${where} template exists`).toBeDefined();
+      expect(name?.match(/{{[a-zA-Z]+}}/g), `${where} interpolates exactly {{score}}`).toEqual([
+        '{{score}}'
+      ]);
+    }
+  });
+
+  it('the below-threshold diagnostic, destroyed chip and destroyed notice exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en below-threshold diagnostic': en.rule.tormentor['record-damage']?.below_threshold,
+      'en-x-tlh below-threshold diagnostic': tlh.rule.tormentor['record-damage']?.below_threshold,
+      'en destroyed chip': en.rule.tormentor['destroyed-effect']?.name,
+      'en-x-tlh destroyed chip': tlh.rule.tormentor['destroyed-effect']?.name,
+      'en destroyed notice label': en.rule.tormentor['destroyed-notice'],
+      'en-x-tlh destroyed notice label': tlh.rule.tormentor['destroyed-notice'],
+      'en destroyed notice body': en.rule.tormentor['destroyed-notice.body'],
+      'en-x-tlh destroyed notice body': tlh.rule.tormentor['destroyed-notice.body']
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));

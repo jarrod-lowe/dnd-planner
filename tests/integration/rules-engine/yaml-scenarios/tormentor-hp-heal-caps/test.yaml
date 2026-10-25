@@ -1,0 +1,48 @@
+name: 'Tormentor (Damage Control) - Vehicle Repairs Cap At Missing HP'
+description: >-
+  The station's heal recorder mirrors the steed's: the added heal caps at the
+  current NET missing HP (max(0, −hp.modifier.current)), so repairs offset
+  recorded damage and never bank surplus past full — a later blow lands in full
+  rather than being absorbed by an over-repair. Still one keyed running total
+  (heals accumulate like damage), untilLongRest.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: board-tormentor
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 30
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.current: 30
+  # Over-repair: 40 healing on 30 damage — back to full, the surplus is lost.
+  - addOffer:
+      id: record-tormentor-heal
+      selections:
+        amount: 40
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.healRecorded: 30
+          companion.tormentorDamageControl.hp.modifier.current: 0
+          companion.tormentorDamageControl.hp.current: 60
+        planErrors:
+          - id: record-tormentor-heal
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-heal
+        facts:
+          companion.tormentorDamageControl.hp.current: 60
+  # Later damage lands in full: 60 − 10 = 50 (a banked surplus would absorb it).
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 10
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.current: 50

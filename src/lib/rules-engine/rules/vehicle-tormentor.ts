@@ -1,4 +1,6 @@
 import {
+  currentHp,
+  damageThresholdGate,
   defineRule,
   type ActionResult,
   type Annotation,
@@ -52,12 +54,31 @@ import {
  * prone offers file under the CONDITION 'held' sub-bucket (#467 taxonomy), so
  * a vehicle condition groups with PC conditions in the station +ADD.
  *
+ * The vehicle is DAMAGEABLE (the steed HP pool, adapted): boarding bakes
+ * `hp.base` 60 and `damageThreshold` 10 as DATA, and the module derives
+ * max/current/modifier (`currentHp` from the builder — a fixed stat block, so
+ * no max-modifier and no manual setters; the top-bar HP chip becomes a
+ * usedMax pool). The station's +ADD carries damage and repair recorders (the
+ * steed recorder idiom: ONE keyed `untilLongRest` effect holding the RUNNING
+ * total, chip showing the live value; repairs cap at the net missing HP).
+ * The threshold is an APPLY-level gate through the builder's GENERIC
+ * `damageThresholdGate` (not vehicle-local): a blow below the fact records
+ * NOTHING and flags the row — the offer itself stays legal (the dash idiom;
+ * the explanation lives on the damage offer's DETAIL, not on standing
+ * notices, because nothing else behaves differently). Damage that empties the
+ * pool ALSO writes a permanent `destroyed` wreck (the steed lethal-check
+ * placement, but NO auto-unboard — the board persists so the wreck stays
+ * inspectable; the destroyed NOTICE says what that means). The HP records and
+ * the wreck join the board lifecycle like every other record.
+ *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
  * Harpoon Flinger stations and the Juke reaction, movement economy, damage
- * tracking, thresholds and immunities, the AC-while-motionless mode, any
- * prone attack/movement or incapacitated mechanics beyond the record, and any
- * legality check on boarding (multiple boardings are illegal-but-possible; the
- * keyed effect keeps the facts single and diagnostics are deferred).
+ * immunities and the mishap threshold as MECHANICS (they are detail text
+ * only — the recorder never refuses fire/poison/psychic and no mishap is
+ * modelled), the AC-while-motionless mode, any prone attack/movement or
+ * incapacitated mechanics beyond the record, and any legality check on
+ * boarding (multiple boardings are illegal-but-possible; the keyed effect
+ * keeps the facts single and diagnostics are deferred).
  */
 
 const ID = 'tormentor';
@@ -75,15 +96,40 @@ const OCCUPANCY_KEY = 'tormentor-occupancy';
 const PRONE_EFFECT_ID = 'effect-tormentor-prone';
 const PRONE_KEY = 'tormentor-prone';
 
+/** The HP records' effect ids and replacement keys (ONE running total each). */
+const HP_DAMAGE_EFFECT_ID = 'effect-tormentor-hp-damage';
+const HP_DAMAGE_KEY = 'tormentor-hp-damage';
+const HP_HEAL_EFFECT_ID = 'effect-tormentor-hp-heal';
+const HP_HEAL_KEY = 'tormentor-hp-heal';
+
+/** The destroyed wreck's effect id and replacement key. */
+const DESTROYED_EFFECT_ID = 'effect-tormentor-destroyed';
+const DESTROYED_KEY = 'tormentor-destroyed';
+
+/** The damage recorder's below-threshold diagnostic (the apply-level gate). */
+const BELOW_THRESHOLD = `${T}.record-damage.below_threshold`;
+
 /** Each prone offer's single legality leg (the get-up not_prone idiom). */
 const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
 const NOT_PRONE = `${T}.flip-upright.not_prone`;
 
-/** The stat block boarding bakes. Display-only: HP has no current/spent pair. */
+/**
+ * Every station record that must die with the board. The board effect declares
+ * them as `dependents` (so a RAW mount-chip removal cascades), and the
+ * board/de-board applies advertise empty same-key evictions beside their
+ * replacement — a keyed replacement alone does not fire `dependents` (the
+ * steed cast/dismiss child-eviction pattern).
+ */
+const CHILD_KEYS = [OCCUPANCY_KEY, PRONE_KEY, HP_DAMAGE_KEY, HP_HEAL_KEY, DESTROYED_KEY] as const;
+
+/** The stat block boarding bakes. HP bakes its BASE (the pool derives from
+ * it — the steed shape) plus the damage threshold as DATA the recorder gates
+ * on; everything else is display-only. */
 const BOARD_STATE: Record<string, number> = {
   [`${F}.active`]: 1,
   [`${F}.ac.value`]: 21,
-  [`${F}.hp.max`]: 60,
+  [`${F}.hp.base`]: 60,
+  [`${F}.damageThreshold`]: 10,
   [`${F}.speed`]: 100,
   [`${F}.cargo`]: 500,
   [`${F}.str`]: 16,
@@ -102,17 +148,18 @@ const BOARD_STATE: Record<string, number> = {
  * vehicle without driving the offer. `display` opts it onto the strip as a
  * MOUNT chip under its subject, and the `detailKey` is what the strip's flip
  * path reads — the first mount chip that flips to a stat-block detail (the
- * steed's never carried one). The occupancy and prone records are DEPENDENTS,
- * so raw mount-chip removal (playStore's `removeEffect`) evicts them with the
- * board instead of stranding a recorded occupancy or a prone record under a
- * de-boarded vehicle (the steed mount/STEED_CHILD_EFFECTS pattern).
+ * steed's never carried one). Every station record (occupancy, prone, the HP
+ * totals, the destroyed wreck) is a DEPENDENT, so raw mount-chip removal
+ * (playStore's `removeEffect`) evicts them with the board instead of
+ * stranding a record under a de-boarded vehicle (the steed
+ * mount/STEED_CHILD_EFFECTS pattern).
  */
 export function tormentorBoardEffect(): EffectInstance {
   return {
     id: 'effect-tormentor-damage-control',
     key: 'tormentor-damage-control',
     state: { ...BOARD_STATE },
-    dependents: [OCCUPANCY_KEY, PRONE_KEY],
+    dependents: [...CHILD_KEYS],
     display: {
       name: `${T}.effect.name`,
       section: 'mount',
@@ -140,15 +187,19 @@ function tormentorDeboardEffect(): EffectInstance {
 }
 
 /**
- * Eviction of the occupancy record (an empty same-key effect — newest wins, so
- * the stored occupancy vanishes and `used` falls back to the board default).
- * Advertised beside BOTH the board effect (a re-board resets occupancy to 1:
- * the boarder counts) and the de-board marker (the record never outlives the
- * board that justifies it) — the steed cast/dismiss child-eviction pattern: a
- * keyed replacement alone does not fire `dependents`.
+ * Eviction of EVERY station record (an empty same-key effect each — newest
+ * wins, so the stored occupancy vanishes and `used` falls back to the board
+ * default, the prone record clears, the HP running totals and the destroyed
+ * wreck go). Advertised beside BOTH the board effect (a re-board starts
+ * FRESH: the boarder counts, upright, whole — a new vehicle, not a persisted
+ * one) and the de-board marker (no record outlives the board that justifies
+ * it) — the steed cast/dismiss child-eviction pattern: a keyed replacement
+ * alone does not fire `dependents`.
  */
-function evictOccupancyEffect(): EffectInstance {
-  return { id: `evict-${OCCUPANCY_KEY}`, key: OCCUPANCY_KEY, expiry: { kind: 'permanent' } };
+function evictChildEffects(): EffectInstance[] {
+  return CHILD_KEYS.map(
+    (k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } })
+  );
 }
 
 /**
@@ -193,6 +244,31 @@ function evictProneEffect(): EffectInstance {
   return { id: `evict-${PRONE_KEY}`, key: PRONE_KEY, expiry: { kind: 'permanent' } };
 }
 
+/**
+ * The destroyed wreck, written by the damage recorder the moment recorded
+ * damage brings the pool to 0 (the steed's lethal-check placement — but a
+ * steed RETIRES at 0 HP while a vehicle becomes a burning wreck it can still
+ * inspect: no auto-unboard, the board effect stays live beside this). Its own
+ * permanent key, so the untilLongRest HP records age out on a rest without
+ * touching it — a rest restores the pool, it never un-burns a war machine —
+ * and the board lifecycle (dependents + the explicit evictions) is the only
+ * thing that clears it: re-boarding is a fresh vehicle. `display` files the
+ * chip under the station view like every other record.
+ */
+function tormentorDestroyedEffect(): EffectInstance {
+  return {
+    id: DESTROYED_EFFECT_ID,
+    key: DESTROYED_KEY,
+    state: { [`${F}.destroyed`]: 1 },
+    display: {
+      name: `${T}.destroyed-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    },
+    expiry: { kind: 'permanent' }
+  };
+}
+
 /** The structural gate every STATION action shares: the board effect is live. */
 const boarded = (f: FactReader): boolean => f.num(`${F}.active`) > 0;
 
@@ -202,12 +278,20 @@ const boarded = (f: FactReader): boolean => f.num(`${F}.active`) > 0;
  * it).
  */
 const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
-  // HP is a display-only value, not a usedMax pool — no damage tracking yet.
   {
+    // HP is a POOL now (the damageable pass): the steed's chip shape —
+    // usedMax renders "remaining/total", so it reads "45/60" and drops with
+    // recorded damage. The gate stays `active` (a baked fact, absent when the
+    // board goes), not the derived hp.max (which settles to 0, never absent).
     subject: SUBJECT,
     panel: 'topBar',
     gate: `${F}.active`,
-    entry: { type: 'value', label: 'play.stats.tormentor-damage-control.hp', fact: `${F}.hp.max` }
+    entry: {
+      type: 'usedMax',
+      label: 'play.stats.tormentor-damage-control.hp',
+      total: `${F}.hp.max`,
+      remaining: `${F}.hp.current`
+    }
   },
   {
     subject: SUBJECT,
@@ -294,6 +378,30 @@ const vehicleTormentor: RuleModule = {
           : 1;
         return Math.min(Math.max(recorded, 0), max);
       }
+    },
+    // The HP POOL, in the steed's shape (a fixed stat block: max = base, no
+    // max-modifier, no manual setters — damage and repairs are RECORDS): max
+    // derives from the baked base, current starts at the max and follows the
+    // net modifier down (floored at 0, never over the max — `currentHp` is the
+    // player's own formula, shared so the two can never disagree), and the
+    // modifier reads heals recorded − damage recorded. All gated on `active`:
+    // unboarded the pool settles to 0 rather than vanishing (the contributions
+    // stay registered), which is why the panel gates key on `active`.
+    {
+      fact: `${F}.hp.max`,
+      value: (f) => (boarded(f) ? f.num(`${F}.hp.base`) : 0)
+    },
+    {
+      fact: `${F}.hp.current`,
+      value: (f) =>
+        boarded(f) ? currentHp(f.num(`${F}.hp.max`), f.num(`${F}.hp.modifier.current`)) : 0
+    },
+    {
+      // `sum` like the steed's, so later writers (a repair-kit-style grant, a
+      // future pass) can join the modifier without a conflict throw.
+      fact: `${F}.hp.modifier.current`,
+      combine: 'sum',
+      value: (f) => f.num(`${F}.hp.healRecorded`) - f.num(`${F}.hp.damageRecorded`)
     }
   ],
   offer: () => [
@@ -314,10 +422,10 @@ const vehicleTormentor: RuleModule = {
       },
       // The evicts beside the replacement: a keyed replacement alone does not
       // fire dependents, so a re-board resets occupancy to the board default
-      // (the boarder counts) and starts the vehicle upright, explicitly (the
-      // steed recast/child-eviction pattern).
+      // (the boarder counts), starts the vehicle upright AND whole — no damage
+      // banked, no wreck — explicitly (the steed recast/child-eviction pattern).
       apply: (): ActionResult => ({
-        advertise: [tormentorBoardEffect(), evictOccupancyEffect(), evictProneEffect()]
+        advertise: [tormentorBoardEffect(), ...evictChildEffects()]
       })
     },
     {
@@ -364,6 +472,122 @@ const vehicleTormentor: RuleModule = {
           }
         ]
       })
+    },
+    {
+      // The STATION's damage RECORDER (the steed steed-record-damage shape):
+      // free, boarded, an HP record (the HEALTH bucket, like the steed's and
+      // the player's — not a condition). The ONE keyed untilLongRest effect
+      // carries the RUNNING total (prior + this amount), so records accumulate
+      // while the board/de-board lifecycle still evicts by key and removing
+      // the single chip clears the whole record. The stat block's damage
+      // threshold is an APPLY-level gate via the builder's generic helper (the
+      // dash idiom — the offer stays legal whatever the slider reads): a blow
+      // below the baked fact records NOTHING and flags the row with the
+      // below-threshold diagnostic; at or above it the FULL amount lands (the
+      // threshold is a floor, not a cap). Damage that brings the pool to 0
+      // ALSO writes the permanent destroyed wreck (see below). The offer
+      // carries the damage DETAIL — threshold, immunities and the mishap
+      // trigger live there, not on standing notices (nothing else behaves
+      // differently, so there is nothing to warn about before acting).
+      id: 'record-tormentor-damage',
+      when: boarded,
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.record-damage.name`,
+        description: `${T}.record-damage.description`,
+        detailKey: 'vehicle/tormentor-damage',
+        primaryControl: {
+          type: 'slider',
+          var: 'amount',
+          min: { number: 0 },
+          max: { fact: `${F}.hp.max` },
+          unit: 'hp'
+        },
+        intents: { HEALTH: 'hp' },
+        actionCost: []
+      },
+      vars: { amount: { capture: true, default: { number: 0 } } },
+      apply: (f, selections): ActionResult => {
+        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+        // Below the threshold the blow bounces off: NO record, and the row (not
+        // the offer — that stays legal) carries the diagnostic.
+        const bounced = damageThresholdGate(f, amount, `${F}.damageThreshold`, BELOW_THRESHOLD);
+        if (bounced) return { advertise: [], diagnostics: [bounced] };
+        const advertise: EffectInstance[] = [
+          {
+            id: HP_DAMAGE_EFFECT_ID,
+            key: HP_DAMAGE_KEY,
+            state: { [`${F}.hp.damageRecorded`]: f.num(`${F}.hp.damageRecorded`) + amount },
+            display: {
+              name: `${T}.hp-damage-effect.name`,
+              section: 'mount',
+              subject: SUBJECT,
+              displayFact: `${F}.hp.damageRecorded`
+            },
+            expiry: { kind: 'untilLongRest' }
+          }
+        ];
+        // The lethal check (the steed record-damage placement), but NO
+        // auto-unboard: the steed retires itself at 0 HP, a vehicle becomes a
+        // WRECK — `destroyed` under its own permanent key, the board effect
+        // left live so the wreck stays inspectable and the crew can de-board.
+        // The damage record lands regardless (the blow happened); permanent,
+        // because a long rest must not un-burn a war machine (it ages the HP
+        // records out and the pool reads full again — the wreck stays).
+        const hpAfter = currentHp(f.num(`${F}.hp.max`), f.num(`${F}.hp.modifier.current`) - amount);
+        if (hpAfter <= 0) advertise.push(tormentorDestroyedEffect());
+        return { advertise };
+      }
+    },
+    {
+      // The STATION's repair recorder — the steed steed-record-heal mirror:
+      // same slider, same HEALTH bucket, same keyed running total, and the
+      // added heal CAPS at the current net missing HP (`max(0,
+      // -hp.modifier.current)`, which folds in all recorded damage), so
+      // repairs offset HP loss and never bank surplus past full to pre-cancel
+      // a later blow. Minimal surface: no detailKey (the damage semantics
+      // detail rides the damage offer alone).
+      id: 'record-tormentor-heal',
+      when: boarded,
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.record-heal.name`,
+        description: `${T}.record-heal.description`,
+        primaryControl: {
+          type: 'slider',
+          var: 'amount',
+          min: { number: 0 },
+          max: { fact: `${F}.hp.max` },
+          unit: 'hp'
+        },
+        intents: { HEALTH: 'hp' },
+        actionCost: []
+      },
+      vars: { amount: { capture: true, default: { number: 0 } } },
+      apply: (f, selections): ActionResult => {
+        const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+        const missing = Math.max(0, -f.num(`${F}.hp.modifier.current`));
+        return {
+          advertise: [
+            {
+              id: HP_HEAL_EFFECT_ID,
+              key: HP_HEAL_KEY,
+              state: {
+                [`${F}.hp.healRecorded`]: f.num(`${F}.hp.healRecorded`) + Math.min(amount, missing)
+              },
+              display: {
+                name: `${T}.hp-heal-effect.name`,
+                section: 'mount',
+                subject: SUBJECT,
+                displayFact: `${F}.hp.healRecorded`
+              },
+              expiry: { kind: 'untilLongRest' }
+            }
+          ]
+        };
+      }
     },
     {
       // The STATION's prone RECORDER: models the vehicle BEING knocked prone
@@ -455,8 +679,8 @@ const vehicleTormentor: RuleModule = {
       // The STATION-side way out: gated on the board (structurally — unboarded,
       // the action does not exist at all), sitting under the station's +ADD
       // panel so it appears exactly once boarding has made that panel
-      // available. Replaces the board effect by key (evicting the occupancy
-      // and prone records with it); no cost, no legality gates.
+      // available. Replaces the board effect by key (evicting every station
+      // record with it); no cost, no legality gates.
       id: 'deboard-tormentor',
       when: boarded,
       ui: {
@@ -468,7 +692,7 @@ const vehicleTormentor: RuleModule = {
         actionCost: []
       },
       apply: (): ActionResult => ({
-        advertise: [tormentorDeboardEffect(), evictOccupancyEffect(), evictProneEffect()]
+        advertise: [tormentorDeboardEffect(), ...evictChildEffects()]
       })
     }
   ],
@@ -483,17 +707,30 @@ const vehicleTormentor: RuleModule = {
   // boarded check is needed. Own wording (the Tormentor is not SRD);
   // 'notice' == NOTICE_TARGET, a reserved label rule modules spell as a
   // literal (see condition-prone / find-steed).
-  annotate: (f: FactReader): Annotation[] =>
-    f.num(`${F}.prone`) > 0
-      ? [
-          {
-            key: `${T}.notice`,
-            targets: ['notice'],
-            source: `${T}.effect.name`,
-            body: `${T}.notice.body`
-          }
-        ]
-      : []
+  //
+  // The DESTROYED wreck carries its own notice the same way: a state the crew
+  // must know before acting on the vehicle's behalf (it can no longer act;
+  // the way out is people, not repairs), gated on the destroyed fact alone —
+  // the wreck never outlives the board either. Distinct key from the prone
+  // notice, so a prone wreck (somehow) carries both.
+  annotate: (f: FactReader): Annotation[] => {
+    const out: Annotation[] = [];
+    if (f.num(`${F}.prone`) > 0)
+      out.push({
+        key: `${T}.notice`,
+        targets: ['notice'],
+        source: `${T}.effect.name`,
+        body: `${T}.notice.body`
+      });
+    if (f.num(`${F}.destroyed`) > 0)
+      out.push({
+        key: `${T}.destroyed-notice`,
+        targets: ['notice'],
+        source: `${T}.effect.name`,
+        body: `${T}.destroyed-notice.body`
+      });
+    return out;
+  }
 };
 
 export default defineRule(vehicleTormentor);

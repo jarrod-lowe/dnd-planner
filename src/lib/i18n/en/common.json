@@ -465,6 +465,15 @@
         "name": "Set Occupancy",
         "description": "Record how many creatures the Tormentor carries"
       },
+      "record-damage": {
+        "name": "Record Vehicle Damage",
+        "description": "Record damage dealt to the Tormentor",
+        "below_threshold": "Below the damage threshold (10) — the Tormentor takes no damage"
+      },
+      "record-heal": {
+        "name": "Record Vehicle Repairs",
+        "description": "Record repairs made to the Tormentor"
+      },
       "knocked-prone": {
         "name": "Knocked Prone",
         "description": "Record the Tormentor falling prone",
@@ -481,11 +490,22 @@
       "occupancy-effect": {
         "name": "Occupancy {{score}}"
       },
+      "hp-damage-effect": {
+        "name": "Vehicle Damage {{score}}"
+      },
+      "hp-heal-effect": {
+        "name": "Vehicle Repairs {{score}}"
+      },
       "prone-effect": {
         "name": "Prone"
       },
+      "destroyed-effect": {
+        "name": "Destroyed"
+      },
       "notice": "Prone Deficiency",
-      "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright."
+      "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright.",
+      "destroyed-notice": "Tormentor Destroyed",
+      "destroyed-notice.body": "The Tormentor is destroyed — a burning wreck. It can no longer act; de-board when the crew scrambles."
     },
     "dnd-5e-2024": {
       "action-economy": {},
