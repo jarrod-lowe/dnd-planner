@@ -1,12 +1,18 @@
-name: 'Tormentor (Damage Control) - Damage Threshold Gates the Recorder'
+name: 'Tormentor (Damage Control) - Damage Threshold Bounces Sub-Threshold Blows'
 description: >-
-  The stat block's damage threshold 10 is a BAKED FACT, and the builder's
-  generic threshold helper gates the damage apply: an amount BELOW the fact
-  records NOTHING (no effect, no fact change — the blow simply bounces off) and
-  returns the below-threshold diagnostic on the row, while the OFFER itself
-  stays legal (the apply-level gate, the dash idiom — the recorder is always
-  applicable; the table rule is the diagnostic). An amount AT or ABOVE the
-  threshold records the FULL amount.
+  Threshold model v2 (user-corrected 2026-10-26): sub-threshold damage is
+  LEGAL to attempt. The GM tells the player an amount and the player records
+  it — the app is what knows it was under the limit. The stat block's damage
+  threshold 10 is a BAKED FACT the shared recorder consults: the damage offer
+  carries a [Use Threshold | Ignore Threshold] segmented control (rendered
+  only while the threshold fact is positive — its enabled condition names the
+  fact, and the panel renderer hides a false-gated control), a Use-Threshold
+  blow BELOW the fact records NOTHING and commits a hidden keyed bounce
+  marker whose annotate pass surfaces the informational below-threshold
+  annotation on the damage panel — never a planErrors diagnostic, never an
+  illegality — and an Ignore-Threshold blow records the RAW amount in full
+  (the GM correction: "last round should have taken 1 more"). At or above the
+  threshold, Use mode records the FULL amount as ever.
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -16,29 +22,8 @@ steps:
         # The threshold is data on the board effect, not code in the module.
         facts:
           companion.tormentorDamageControl.damageThreshold: 10
-  # Sub-threshold: 9 < 10 records NOTHING and flags the row with the diagnostic.
-  - addOffer:
-      id: record-tormentor-damage
-      selections:
-        amount: 9
-      assert:
-        facts:
-          companion.tormentorDamageControl.hp.damageRecorded: 0
-          companion.tormentorDamageControl.hp.current: 60
-        planErrors:
-          - id: record-tormentor-damage
-            index: 0
-            errors:
-              - rule.tormentor.record-damage.below_threshold
-  - endTurn:
-      assert:
-        effects:
-          notExists:
-            - effect-tormentor-hp-damage
-        facts:
-          companion.tormentorDamageControl.hp.current: 60
-  # The recorder stays LEGAL (an apply-level gate, never a legalWhen): the
-  # player may plan it again — and at the threshold the blow lands in FULL.
+  # The damage offer carries the threshold-mode segmented control, gated on the
+  # baked fact (generic factory data — the player/steed scenarios pin theirs).
   - evaluate:
       assert:
         offers:
@@ -46,14 +31,90 @@ steps:
             - record-tormentor-damage
           legal:
             - record-tormentor-damage
+        offerUi:
+          - id: record-tormentor-damage
+            ui:
+              secondaryControl:
+                type: segmented
+                var: thresholdMode
+                prefix: planner.record.threshold.prefix
+                options:
+                  - value: 0
+                    label: planner.record.threshold.use
+                  - value: 1
+                    label: planner.record.threshold.ignore
+                enabled:
+                  condition:
+                    fact: companion.tormentorDamageControl.damageThreshold
+                    operator: greaterThan
+                    value: 0
+  # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
+  # records the RAW amount in full — no bounce marker, no annotation, no error.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 9
+        thresholdMode: 1
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 9
+          companion.tormentorDamageControl.hp.current: 51
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors: []
+        annotations:
+          notExists:
+            - rule.tormentor.record-damage.below_threshold
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-damage
+          notExists:
+            - effect-tormentor-hp-bounce
+  # Sub-threshold in USE mode (the default): records NOTHING and the feedback
+  # is the ANNOTATION on the damage panel — the row carries no error at all.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 9
+      assert:
+        facts:
+          companion.tormentorDamageControl.hp.damageRecorded: 9
+          companion.tormentorDamageControl.hp.current: 51
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors: []
+        annotations:
+          exists:
+            - rule.tormentor.record-damage.below_threshold
+          targets:
+            - key: rule.tormentor.record-damage.below_threshold
+              targets:
+                - damage.tormentor.companion
+  # The marker commits with the turn (untilLongRest) and the annotation stands
+  # on the damage panel while the bounced record does.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-bounce
+        facts:
+          companion.tormentorDamageControl.hp.current: 51
+        annotations:
+          exists:
+            - rule.tormentor.record-damage.below_threshold
+  # USE mode at the threshold: the blow lands in FULL (a floor, not a cap).
   - addOffer:
       id: record-tormentor-damage
       selections:
         amount: 10
       assert:
         facts:
-          companion.tormentorDamageControl.hp.damageRecorded: 10
-          companion.tormentorDamageControl.hp.current: 50
+          companion.tormentorDamageControl.hp.damageRecorded: 19
+          companion.tormentorDamageControl.hp.current: 41
         planErrors:
           - id: record-tormentor-damage
             index: 0
@@ -63,14 +124,26 @@ steps:
         effects:
           exists:
             - effect-tormentor-hp-damage
+            - effect-tormentor-hp-bounce
+  # A long rest clears the records AND the bounce marker with them.
+  - endTurn:
+      longRest: true
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-hp-damage
+            - effect-tormentor-hp-bounce
         facts:
-          companion.tormentorDamageControl.hp.current: 50
-  # Above the threshold records in full too (the threshold is a floor, not a cap).
+          companion.tormentorDamageControl.hp.current: 60
+        annotations:
+          notExists:
+            - rule.tormentor.record-damage.below_threshold
+  # Above the threshold records in full too.
   - addOffer:
       id: record-tormentor-damage
       selections:
         amount: 20
       assert:
         facts:
-          companion.tormentorDamageControl.hp.damageRecorded: 30
-          companion.tormentorDamageControl.hp.current: 30
+          companion.tormentorDamageControl.hp.damageRecorded: 20
+          companion.tormentorDamageControl.hp.current: 40

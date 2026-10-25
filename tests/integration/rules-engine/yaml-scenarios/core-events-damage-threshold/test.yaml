@@ -1,13 +1,15 @@
-name: 'Core Events - Seeded damage threshold gates record-damage'
+name: 'Core Events - Seeded damage threshold bounces record-damage'
 description: >-
-  The player's damage recorder consults the builder's generic threshold gate
-  on the player's natural fact name, hp.damageThreshold. No module derives it,
-  so today it is unset (reads 0, never gates — the zero-behavior-change
+  The player's damage recorder consults the shared factory's threshold gate on
+  the player's natural fact name, hp.damageThreshold. No module derives it, so
+  today it is unset (reads 0, never gates — the zero-behavior-change
   contract); this scenario seeds it as a committed effect exactly the way a
-  future stat-block bake would, and the recorder adapts on its own: a blow
-  BELOW the fact records NOTHING and flags the row with the core-events
-  below-threshold diagnostic (the offer stays legal — the apply-level gate, the
-  dash idiom), while a blow AT the threshold records in full.
+  future stat-block bake would, and the recorder adapts on its own (threshold
+  model v2: sub-threshold damage is LEGAL to attempt): a Use-Threshold blow
+  BELOW the fact records NOTHING and commits the hidden bounce marker whose
+  annotate pass surfaces the informational below-threshold annotation on the
+  damage panel — never a diagnostic — while an Ignore-Threshold blow records
+  the RAW amount in full, and a blow AT the threshold records in full.
 ruleGroups:
   - dnd-5e-2024/hp
   - dnd-5e-2024/ability-scores
@@ -30,29 +32,63 @@ steps:
         facts:
           hp.max: 12
           hp.current: 12
-  # Sub-threshold (4 < the seeded 5): the blow bounces — no record, no fact
-  # change, and the row (not the offer) carries the diagnostic.
+  # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
+  # records the RAW amount in full — no marker, no annotation, no error.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 4
+        thresholdMode: 1
+      assert:
+        facts:
+          hp.current: 8
+        planErrors:
+          - id: record-damage
+            index: 0
+            errors: []
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.core-events.record-damage.below_threshold
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-hp-damage
+          notExists:
+            - effect-hp-bounce
+  # Sub-threshold (4 < the seeded 5) in USE mode: the blow bounces — no
+  # record, no fact change, no planErrors — and the annotation carries the
+  # feedback on the damage panel.
   - addOffer:
       id: record-damage
       selections:
         amount: 4
       assert:
         facts:
-          hp.current: 12
+          hp.current: 8
         planErrors:
           - id: record-damage
             index: 0
-            errors:
-              - rule.dnd-5e-2024.core-events.record-damage.below_threshold
+            errors: []
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.core-events.record-damage.below_threshold
+          targets:
+            - key: rule.dnd-5e-2024.core-events.record-damage.below_threshold
+              targets:
+                - damage.any
+  # The marker commits with the turn and the annotation stands while it does.
   - endTurn:
       assert:
         effects:
-          notExists:
-            - effect-hp-damage
+          exists:
+            - effect-hp-bounce
         facts:
-          hp.current: 12
-  # The recorder stays LEGAL whatever the slider reads (an apply-level gate,
-  # never a legalWhen) — and at the threshold the blow lands in FULL.
+          hp.current: 8
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.core-events.record-damage.below_threshold
+  # USE mode at the threshold: the blow lands in FULL.
   - evaluate:
       assert:
         offers:
@@ -64,7 +100,7 @@ steps:
         amount: 5
       assert:
         facts:
-          hp.current: 7
+          hp.current: 3
         planErrors:
           - id: record-damage
             index: 0
@@ -75,4 +111,4 @@ steps:
           exists:
             - effect-hp-damage
         facts:
-          hp.current: 7
+          hp.current: 3

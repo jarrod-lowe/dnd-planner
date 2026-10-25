@@ -266,6 +266,73 @@ describe('PanelRenderer - secondary control', () => {
     });
   });
 
+  describe('enabled without button on a segmented control (the HP recorder threshold mode)', () => {
+    // The shared HP recorder's [Use Threshold | Ignore Threshold] control is
+    // authored ONCE as static offer data; its visibility follows the subject's
+    // threshold FACT at render time (offer ui cannot read facts). This pins
+    // the render gate: no threshold fact → exactly the pre-threshold look
+    // (no control at all), a positive fact → the control renders directly,
+    // no enable button in the way of a one-tap correction.
+    const createEntryWithSegmented = (): AvailableRuleEntry => ({
+      rule: {
+        id: 'record-damage',
+        description: 'Record Damage',
+        activities: [],
+        ui: {
+          name: 'planner.record.damage',
+          primaryControl: {
+            type: 'slider',
+            var: 'amount',
+            min: { number: 0 },
+            max: { fact: 'hp.max' },
+            unit: 'hp'
+          },
+          secondaryControl: {
+            type: 'segmented',
+            var: 'thresholdMode',
+            prefix: 'planner.record.threshold.prefix',
+            options: [
+              { value: 0, label: 'planner.record.threshold.use' },
+              { value: 1, label: 'planner.record.threshold.ignore' }
+            ],
+            enabled: {
+              condition: { fact: 'hp.damageThreshold', operator: 'greaterThan', value: 0 }
+            }
+          },
+          vars: {
+            amount: { default: { number: 0 } },
+            thresholdMode: { default: { number: 0 } }
+          }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics: []
+    });
+
+    it('renders NOTHING while the threshold fact is unset (0)', () => {
+      const { container } = render(PanelRenderer, {
+        props: { entry: createEntryWithSegmented(), editable: true, facts: {} }
+      });
+      expect(container.querySelector('.panel-renderer__control--secondary')).toBeNull();
+      expect(container.querySelector('.panel-renderer__enable-button')).toBeNull();
+    });
+
+    it('renders the segmented control directly once the fact is positive — no enable button', () => {
+      const { container } = render(PanelRenderer, {
+        props: {
+          entry: createEntryWithSegmented(),
+          editable: true,
+          facts: { 'hp.damageThreshold': 10 }
+        }
+      });
+      expect(container.querySelector('.panel-renderer__enable-button')).toBeNull();
+      const secondary = container.querySelector('.panel-renderer__control--secondary');
+      expect(secondary).toBeTruthy();
+      expect(secondary!.querySelector('.panel-renderer__segmented')).toBeTruthy();
+    });
+  });
+
   describe('label without button', () => {
     const createEntryWithLabel = (conditionMet = true): AvailableRuleEntry => {
       void conditionMet;

@@ -2342,6 +2342,11 @@
       "outcome": {
         "none": "—"
       },
+      "threshold": {
+        "prefix": "Threshold",
+        "use": "Use Threshold",
+        "ignore": "Ignore Threshold"
+      },
       "rest": {
         "short": "Short Rest",
         "long": "Long Rest"
