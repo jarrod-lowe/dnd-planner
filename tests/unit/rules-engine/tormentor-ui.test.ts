@@ -54,7 +54,11 @@ describe('tormentor registration', () => {
 describe('board offer ui', () => {
   it('is an ungated free-section PLAYER offer: no station subject, linking the detail', () => {
     const offers = module().offer!({ selections: {} });
-    expect(offers.map((o) => o.id)).toEqual(['board-tormentor', 'deboard-tormentor']);
+    expect(offers.map((o) => o.id)).toEqual([
+      'board-tormentor',
+      'set-tormentor-occupancy',
+      'deboard-tormentor'
+    ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
     // Boarding is a PLAYER action: the offer must NOT carry the station
@@ -116,6 +120,12 @@ describe('de-board offer', () => {
     expect(advertised[0]!.expiry).toEqual({ kind: 'permanent' });
     // Hidden bookkeeping: no display, or a chip would linger on the strip.
     expect(advertised[0]!.display).toBeUndefined();
+    // …and it EVICTS the occupancy record with the board effect (the steed
+    // dismiss/child-eviction pattern): a stateless same-key marker.
+    const evict = out.effects.find((e) => e.key === 'tormentor-occupancy');
+    expect(evict, 'de-board advertises the occupancy eviction').toBeDefined();
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
     // The baked facts are GONE (absent — unset facts read as 0 downstream, and
     // the panel gates key on presence, so the subject's chips all withdraw).
     expect(out.facts[`${F}.active`]).toBeUndefined();
@@ -141,8 +151,19 @@ describe('board effect', () => {
       [`${F}.con`]: 14,
       [`${F}.str.modifier`]: 3,
       [`${F}.dex.modifier`]: 2,
-      [`${F}.con.modifier`]: 2
+      [`${F}.con.modifier`]: 2,
+      // Creature Capacity 4 Medium creatures — the occupancy slider's max.
+      [`${F}.creatureCapacity.max`]: 4
     });
+  });
+
+  it('owns the occupancy record as a dependent (raw mount-chip removal cascades)', () => {
+    // Raw chip removal runs through playStore's removeEffect, which evicts the
+    // removed effect's declared dependents by key (the generic mechanism is
+    // pinned in playStore.test.ts). What THIS pins is the declaration: the
+    // occupancy effect's key, so removing the mount chip can never strand a
+    // recorded occupancy under a de-boarded vehicle.
+    expect(boardEffect().dependents).toEqual(['tormentor-occupancy']);
   });
 
   it('displays as a mount chip on its subject that FLIPS to the detail', () => {
@@ -158,6 +179,108 @@ describe('board effect', () => {
   });
 });
 
+describe('occupancy offer', () => {
+  it('is a station free-section slider offer while boarded (steed HP-modifier shape)', () => {
+    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'set-tormentor-occupancy');
+    expect(offer, 'the station +ADD carries the occupancy offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.occupancy.name`);
+    expect(ui.description).toBe(`${T}.occupancy.description`);
+    expect(ui.actionCost).toEqual([]);
+    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+    // The slider is bounded by the stat block's baked capacity (not a literal),
+    // so a later vehicle with a different stat block needs no module change.
+    expect(ui.primaryControl).toEqual({
+      type: 'slider',
+      var: 'occupancy',
+      min: { number: 0 },
+      max: { fact: `${F}.creatureCapacity.max` }
+    });
+    // Opens at the CURRENT occupancy: the derived used (1 unrecorded, the
+    // boarder; the recorded value once set).
+    expect(offer!.rule.vars).toEqual({
+      occupancy: { capture: true, default: { fact: `${F}.creatureCapacity.used` } }
+    });
+  });
+
+  it('is gated structurally on active (when) with no legality gates', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'set-tormentor-occupancy'
+    )!;
+    // `when`, like de-board: unboarded the station action does not exist at
+    // all. Over-capacity occupancy is illegal-but-possible (no legalWhen) —
+    // diagnostics are deferred with boarding's.
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toBeUndefined();
+  });
+
+  it('is absent while unboarded', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-occupancy')).toBe(false);
+  });
+
+  it('apply advertises ONE permanent keyed effect storing the selection, with a live-value chip', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [
+        { instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: 3 } }
+      ]
+    });
+    const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-occupancy'));
+    expect(advertised).toHaveLength(1);
+    expect(advertised[0]!.key).toBe('tormentor-occupancy');
+    expect(advertised[0]!.expiry).toEqual({ kind: 'permanent' });
+    // The keyed effect IS the stored value (the steed HP-modifier semantics):
+    // re-applying replaces, removing the chip clears the modification.
+    expect(advertised[0]!.state).toEqual({ [`${F}.creatureCapacity.occupancy`]: 3 });
+    // A vehicle-scoped strip chip showing the live derived used — the steed
+    // damage-chip displayFact pattern (no detailKey: this chip does not flip).
+    expect(advertised[0]!.display).toEqual({
+      name: `${T}.occupancy-effect.name`,
+      section: 'mount',
+      subject: SUBJECT,
+      displayFact: `${F}.creatureCapacity.used`
+    });
+  });
+});
+
+describe('creature capacity derive', () => {
+  /** Evaluate boarded, with an occupancy row planned at `n` (omitted: none). */
+  const usedAt = (n?: number): number | undefined =>
+    evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned:
+        n === undefined
+          ? []
+          : [{ instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: n } }]
+    }).facts[`${F}.creatureCapacity.used`];
+
+  it('defaults to 1 while boarded (the boarder counts)', () => {
+    expect(usedAt()).toBe(1);
+  });
+
+  it('reads the recorded occupancy', () => {
+    expect(usedAt(3)).toBe(3);
+    // 0 is a RECORD (the vehicle emptied), not the unset default.
+    expect(usedAt(0)).toBe(0);
+  });
+
+  it('clamps the stored value to 0..max (the slider bound is UI-only)', () => {
+    expect(usedAt(99)).toBe(4);
+    expect(usedAt(-2)).toBe(0);
+  });
+
+  it('reads 0 while unboarded (the board default is not a free occupant)', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+  });
+});
+
 // The boarded stat facts (every gate the declarations read).
 const BOARDED = {
   [`${F}.active`]: 1,
@@ -167,7 +290,9 @@ const BOARDED = {
   [`${F}.cargo`]: 500,
   [`${F}.str.modifier`]: 3,
   [`${F}.dex.modifier`]: 2,
-  [`${F}.con.modifier`]: 2
+  [`${F}.con.modifier`]: 2,
+  [`${F}.creatureCapacity.max`]: 4,
+  [`${F}.creatureCapacity.used`]: 1
 };
 
 describe('module-declared panel entries', () => {
@@ -212,9 +337,19 @@ describe('module-declared panel entries', () => {
     ]);
   });
 
-  it('no resource entries yet (creature capacity is the next pass)', () => {
+  it('resources: one usedMax creature-capacity row reading used/max, stamped with the subject', () => {
     expect(deriveResourceEntries(BOARDED, [module()]).filter((e) => e.subject === SUBJECT)).toEqual(
-      []
+      [
+        {
+          // usedMax renders "remaining/total" — for capacity that is USED/max
+          // ("3/4"): the row counts occupants, not open seats.
+          type: 'usedMax',
+          label: 'play.stats.tormentor-damage-control.creatureCapacity',
+          total: `${F}.creatureCapacity.max`,
+          remaining: `${F}.creatureCapacity.used`,
+          subject: SUBJECT
+        }
+      ]
     );
   });
 

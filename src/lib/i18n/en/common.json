@@ -461,8 +461,15 @@
         "name": "De-board the Tormentor",
         "description": "Leave the damage-control station"
       },
+      "occupancy": {
+        "name": "Set Occupancy",
+        "description": "Record how many creatures the Tormentor carries"
+      },
       "effect": {
         "name": "Tormentor (Damage Control)"
+      },
+      "occupancy-effect": {
+        "name": "Occupancy"
       }
     },
     "dnd-5e-2024": {
@@ -1694,7 +1701,8 @@
         "hp": "HP",
         "ac": "AC",
         "speed": "SPD",
-        "cargo": "Cargo"
+        "cargo": "Cargo",
+        "creatureCapacity": "Creature Capacity"
       },
       "sections": {
         "resources": "Resources",
@@ -2009,6 +2017,9 @@
           "healingTouch": "Heal",
           "feyStep": "Fey",
           "fellGlare": "Glare"
+        },
+        "tormentor-damage-control": {
+          "creatureCapacity": "Creatures"
         }
       }
     },
