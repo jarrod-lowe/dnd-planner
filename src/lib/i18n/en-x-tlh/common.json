@@ -449,6 +449,16 @@
         "name": "HubwI' Hurgh {{score}}"
       }
     },
+    "vehicle-tormentor-damage-control": {
+      "board": {
+        "name": "Duj Sep Irneh",
+        "keywords": "vehicle tormentor board mount ride crew damage control",
+        "description": "Duj Sep Sep Irneh yI'och"
+      },
+      "effect": {
+        "name": "Duj Sep (Sep Irneh)"
+      }
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "armor-training": {
@@ -1987,11 +1997,17 @@
           "healingTouch": "Heal",
           "feyStep": "Fey",
           "fellGlare": "Glare"
+        },
+        "tormentor-damage-control": {
+          "hp": "HP",
+          "ac": "AC",
+          "speed": "SPD"
         }
       }
     },
     "companion": {
-      "steed": "🐴 Sargh"
+      "steed": "🐴 Sargh",
+      "tormentor-damage-control": "Duj Sep (Sep Irneh)"
     },
     "topBar": {
       "hp": "HP",
@@ -2141,6 +2157,7 @@
       "title": "ADD ACTION",
       "label": "+ ADD",
       "steedSublabel": "Steed",
+      "tormentor-damage-controlSublabel": "Duj Sep (Sep Irneh)",
       "planGroup": "PLAN →",
       "recordGroup": "RECORD →",
       "buildGroup": "BUILD →",

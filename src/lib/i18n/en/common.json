@@ -449,6 +449,16 @@
         "name": "Aura of the Guardian {{score}}"
       }
     },
+    "vehicle-tormentor-damage-control": {
+      "board": {
+        "name": "Board the Tormentor",
+        "keywords": "vehicle tormentor board mount ride crew damage control",
+        "description": "Take the damage-control station on the Tormentor"
+      },
+      "effect": {
+        "name": "Tormentor (Damage Control)"
+      }
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "armor-training": {
@@ -1987,11 +1997,17 @@
           "healingTouch": "Heal",
           "feyStep": "Fey",
           "fellGlare": "Glare"
+        },
+        "tormentor-damage-control": {
+          "hp": "HP",
+          "ac": "AC",
+          "speed": "SPD"
         }
       }
     },
     "companion": {
-      "steed": "🐴 Steed"
+      "steed": "🐴 Steed",
+      "tormentor-damage-control": "Tormentor (Damage Control)"
     },
     "topBar": {
       "hp": "HP",
@@ -2141,6 +2157,7 @@
       "title": "Add Action",
       "label": "+ ADD",
       "steedSublabel": "Steed",
+      "tormentor-damage-controlSublabel": "Tormentor (Damage Control)",
       "planGroup": "plan →",
       "recordGroup": "record →",
       "buildGroup": "build →",

@@ -1,0 +1,56 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: vehicle-tormentor-damage-control
+    # Ungated: available to every character (boarding legality is not checked
+    # this pass — multiple boardings are illegal-but-possible).
+    translations:
+      en:
+        name: Tormentor (Damage Control)
+        description: Board the Tormentor war vehicle on damage-control duty.
+          Shows its AC, HP, Speed, cargo capacity, and STR/DEX/CON while you
+          ride.
+        keywords:
+          - vehicle
+          - tormentor
+          - board
+          - mount
+          - crew
+          - damage control
+      en-x-tlh:
+        name: Duj Sep (Sep Irneh)
+        description: Duj Sep Sep Irneh yI'och. Sep, wa', chal, Duj Sep Sep
+          'ej Sep wa' 'ej Sep.
+        keywords:
+          - vehicle
+          - tormentor
+          - board
+          - mount
+          - crew
+          - damage control
+    # The Tormentor is not SRD content: this detail is our own wording —
+    # numbers and short factual phrases only, never trait prose.
+    detail:
+      key: vehicle/tormentor-damage-control
+      source: custom
+      translations:
+        en:
+          meta: Huge Vehicle
+          fields:
+            - labelKey: rules.field.armorClass
+              value: '21'
+            - labelKey: rules.field.weight
+              value: 3,000 lb.
+          body: |
+            A huge war vehicle, 3,000 lb. This group is the damage-control
+            station: riding along on crew duty that is neither the helm nor a
+            weapon seat.
+
+            **Modeled here.** Armor Class 21; Hit Points 60 (a fixed stat —
+            damage tracking is not modeled yet); Speed 100 ft.; cargo capacity
+            500 lb.; STR 16 (+3), DEX 14 (+2), CON 14 (+2). The vehicle has no
+            Intelligence, Wisdom, or Charisma.
+
+            **Not modeled yet.** Creature capacity and occupancy, the Helm and
+            Harpoon Flinger stations, the driver's Juke reaction, the damage
+            threshold and immunities, and the lower AC while motionless arrive
+            in later updates.

@@ -1,0 +1,26 @@
+name: 'Tormentor (Damage Control) - Board Offer'
+description: >-
+  Loading the vehicle rule group surfaces an ungated free-section Board offer
+  in the subject's own +ADD picker: it carries the subject, the detail link to
+  the vehicle stat block, and no action cost. No legality checks this pass —
+  multiple boardings are illegal-but-possible (keyed replacement keeps the
+  facts single; diagnostics deferred).
+ruleGroups:
+  - vehicles/vehicle-tormentor-damage-control
+steps:
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 0
+        offers:
+          exists:
+            - board-tormentor
+          legal:
+            - board-tormentor
+        offerUi:
+          - id: board-tormentor
+            ui:
+              section: free
+              subject: tormentor-damage-control
+              detailKey: vehicle/tormentor-damage-control
+              actionCost: []

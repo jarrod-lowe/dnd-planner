@@ -247,6 +247,12 @@ const EXPECTED_RUNNABLE = [
   'steed-move-partial-distance',
   'steed-damage-accumulates',
   'steed-overheal-caps-at-damage',
+  // Tormentor (Damage Control) — the first vehicle subject: an ungated board
+  // offer bakes the display-only stat block as one permanent keyed effect;
+  // unboarding is mount-chip removal (no dismiss offer this pass)
+  'tormentor-board-offer',
+  'tormentor-board-stats',
+  'tormentor-unboard',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

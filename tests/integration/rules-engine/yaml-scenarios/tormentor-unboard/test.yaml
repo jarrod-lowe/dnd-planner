@@ -1,0 +1,44 @@
+name: 'Tormentor (Damage Control) - Unboard By Chip Removal'
+description: >-
+  Unboarding is removing the mount chip (there is no dismiss offer this
+  pass): taking the committed board effect out of the active-effects strip
+  clears every stat fact, so the subject's panels have nothing to read and
+  the subject itself disappears (its only surface was the effect). The Board
+  offer remains — re-boarding is always possible.
+ruleGroups:
+  - vehicles/vehicle-tormentor-damage-control
+steps:
+  - addOffer:
+      id: board-tormentor
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+        facts:
+          companion.tormentorDamageControl.active: 1
+  # Remove the mount chip: every baked fact goes with it.
+  - removeEffect:
+      id: effect-tormentor-damage-control
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-damage-control
+        facts:
+          companion.tormentorDamageControl.active: 0
+          companion.tormentorDamageControl.ac.value: 0
+          companion.tormentorDamageControl.hp.max: 0
+          companion.tormentorDamageControl.speed: 0
+          companion.tormentorDamageControl.cargo: 0
+          companion.tormentorDamageControl.str: 0
+          companion.tormentorDamageControl.str.modifier: 0
+        offers:
+          exists:
+            - board-tormentor
+  # Re-boarding after unboarding bakes the stats afresh.
+  - addOffer:
+      id: board-tormentor
+      assert:
+        facts:
+          companion.tormentorDamageControl.active: 1
+          companion.tormentorDamageControl.ac.value: 21
