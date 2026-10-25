@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import IntentTopBar from '$lib/components/play/IntentTopBar.svelte';
 import Ledger from '$lib/components/play/Ledger.svelte';
+import AddRowPicker from '$lib/components/play/AddRowPicker.svelte';
 import { ticker } from '$lib/components/play/ticker';
 import type { Character } from '$lib/character/types';
 import type { UiEntry } from '$lib/play/extractTopBar';
@@ -38,6 +39,7 @@ const ROOT = process.cwd();
 
 const TOP_BAR = 'src/lib/components/play/IntentTopBar.svelte';
 const LEDGER = 'src/lib/components/play/Ledger.svelte';
+const ADD_ROW = 'src/lib/components/play/AddRowPicker.svelte';
 const BASE_CSS = 'src/lib/styles/base.css';
 
 const REDUCED_MOTION = 'prefers-reduced-motion: reduce';
@@ -229,15 +231,26 @@ describe('ticker utility — the tape lives in base.css, gated on measurement', 
     }
   });
 
-  it('loops seamlessly: one copy plus one gap per translation', () => {
-    // Both copies travel exactly their own width plus the container gap, so
-    // the duplicate lands precisely where the original started — no jump at
-    // the wrap point. The gap must be the same variable the container uses
-    // between its copies.
-    expect(decl(BASE_CSS, '.ticker', 'gap')).toBe('var(--ticker-gap)');
+  it('loops seamlessly: one full copy per translation, copies flush', () => {
+    // Round 3 (tablet blink at the wrap): the loop used to space the copies
+    // with a flex gap and translate by copy + gap — arithmetically seamless at
+    // the wrap instant, but the gap itself was 12px of BLANK that swept
+    // through the viewport every cycle and sat on the leading edge for the
+    // last fraction of each loop, reading as "the label briefly goes blank
+    // when it restarts". The seam must be zero-width: no gap (and no margin)
+    // between the copies, and each copy travels exactly its own border-box
+    // width — padding included, gap terms banned — so copy N lands pixel-on
+    // copy 1's start with nothing empty in between.
+    expect(rule(BASE_CSS, '.ticker').decls, 'no gap between the copies').not.toMatch(
+      /(?:^|;)\s*(column-|row-)?gap:/
+    );
+    expect(rule(BASE_CSS, '.ticker__copy').decls, 'no margins on the copies').not.toMatch(
+      /(?:^|;)\s*margin/
+    );
     const keyframes = rule(BASE_CSS, '@keyframes ticker-scroll');
-    expect(keyframes.decls).toMatch(
-      /transform:\s*translateX\(calc\(-100% - var\(--ticker-gap\)\)\)/
+    expect(keyframes.decls).toMatch(/transform:\s*translateX\(-100%\)/);
+    expect(keyframes.decls, 'the distance is one copy exactly — no gap/padding term').not.toMatch(
+      /calc\(|var\(--ticker/
     );
   });
 
@@ -445,6 +458,14 @@ const translations: Record<string, string> = {
   // The long subject name PR 3 will render (emoji starter like "👤 You" /
   // "🐴 Steed").
   'play.companion.tormentor-damage-control': '🛞 Tormentor (Damage Control)',
+  // The +ADD stripe's subject identifier (the same text a plan row carries).
+  'play.addRow.tormentor-damage-controlSublabel': 'Tormentor (Damage Control)',
+  'play.addRow.title': 'Add action',
+  'play.addRow.label': '+ ADD',
+  'play.quickSearch.trigger': 'Search options',
+  'play.quickSearch.exit': 'Exit search',
+  'play.addRow.showIllegal': 'Show illegal options',
+  'play.addRow.hideIllegal': 'Hide illegal options',
   // A long stat label of the kind vehicles bring (label + value in one chip).
   'play.stats.tormentor.cargo': 'Cargo Capacity (500 lb.)',
   'play.stats.tormentor.capacity': 'Creature Capacity (4 Medium creatures)',
@@ -693,5 +714,56 @@ describe('label overflow — Ledger keeps the full name accessible', () => {
     const cells = container.querySelectorAll('.ledger__cell');
     expect(cells.length).toBe(2);
     expect(cells[1].querySelectorAll('.ticker').length).toBe(2);
+  });
+});
+
+describe('label overflow — the +ADD stripe sublabel wraps and centres', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    vi.clearAllMocks();
+  });
+
+  it('gives the subject identifier the plan-row treatment: centred, wrapping', () => {
+    // Round 3 (tablet feedback): the stripe's subject identifier is the same
+    // text a plan row carries under its verb ("Tormentor" / "(Damage
+    // Control)"), and the user asked for exactly that treatment — centred and
+    // line-broken after the name, an item in the column — NOT the clamp+tape
+    // every measurement-driven line gets. That means text-align: centre, wrap
+    // allowed (no nowrap), no clamp of its own, and a column whose horizontal
+    // padding matches the plan row's left column (spacing-xs, not spacing-sm)
+    // so "(Damage Control)" fits on the second line instead of folding to
+    // three ragged lines.
+    expect(decl(ADD_ROW, '.add-row-picker__stripe-sublabel', 'text-align')).toBe('center');
+    const sublabel = rule(ADD_ROW, '.add-row-picker__stripe-sublabel');
+    expect(sublabel.decls, 'wraps — no nowrap').not.toMatch(/(?:^|;)\s*white-space:/);
+    expect(sublabel.decls, 'no clamp of its own').not.toMatch(/(?:^|;)\s*max-width:/);
+    expect(decl(ADD_ROW, '.add-row-picker__stripe', 'padding')).toBe(
+      'var(--spacing-sm) var(--spacing-xs)'
+    );
+  });
+
+  it('renders the sublabel as plain wrapping text — no tape, no duplicate copy', () => {
+    mount(AddRowPicker, {
+      target: container,
+      props: {
+        entries: [],
+        onAddStep: vi.fn(),
+        sublabel: 'play.addRow.tormentor-damage-controlSublabel'
+      }
+    });
+    const stripe = container.querySelector('.add-row-picker__stripe');
+    expect(stripe).toBeTruthy();
+    const sublabel = stripe!.querySelector('.add-row-picker__stripe-sublabel');
+    expect(sublabel).toBeTruthy();
+    expect(sublabel!.textContent).toBe('Tormentor (Damage Control)');
+    // Not a clamp, so not a tape: no viewport, no aria-hidden duplicate. The
+    // full name is the visible text; the stripe label above carries the
+    // aria-hidden, so the sublabel doubles nothing.
+    expect(stripe!.querySelector('.ticker')).toBeNull();
+    expect(sublabel!.getAttribute('aria-hidden')).toBe('true');
+    expect(sublabel!.querySelectorAll('*').length).toBe(0);
   });
 });

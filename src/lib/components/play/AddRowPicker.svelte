@@ -199,6 +199,10 @@
     background: var(--md-sys-color-surface-container);
   }
 
+  /* Same column treatment as a plan row's left rail (plan-row__left): the
+     horizontal padding is spacing-xs, which is what lets a subject
+     identifier's second line — "(Damage Control)" — fit instead of folding
+     into three ragged lines. */
   .add-row-picker__stripe {
     display: flex;
     flex-direction: column;
@@ -206,7 +210,7 @@
     justify-content: flex-start;
     width: 6.875rem;
     flex-shrink: 0;
-    padding: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-xs);
     border-right: 1px dashed var(--md-sys-color-outline-variant);
     background: var(--md-sys-color-surface-container-low);
   }
@@ -220,11 +224,16 @@
     color: var(--md-sys-color-on-surface-variant);
   }
 
+  /* The subject identifier gets the plan row's subject-label treatment —
+     plain wrapping text, centred, breaking after the name ("Tormentor" /
+     "(Damage Control)") — not the clamp+tape the measured label lines use:
+     it is an item in this column, not a read-out being clamped. */
   .add-row-picker__stripe-sublabel {
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
     font-weight: 600;
     color: var(--md-sys-color-primary);
+    text-align: center;
     margin-top: 2px;
   }
 
