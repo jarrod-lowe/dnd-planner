@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, type FactReader, type RuleModule } from '$lib/rules-engine';
+import { evaluate, endTurn, type FactReader, type RuleModule } from '$lib/rules-engine';
 import { getModule, isRegistered } from '$lib/rules-engine/registry';
 import { lazyRuleGroupIds } from '$lib/rules-engine/lazy';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
@@ -1269,6 +1269,106 @@ describe('the ac-mode toggle annotation (the chip contract)', () => {
     const board = offers.find((o) => o.id === 'board-tormentor')!.ui as Record<string, unknown>;
     // Boarding is a PLAYER action with no vehicle to be moving yet.
     expect(board.annotationLabels).toBeUndefined();
+  });
+
+  it('disappears while unboarded even with a board effect COMMITTED (no chip with no vehicle)', () => {
+    // The de-board marker shares the board's key, so a committed board plus a
+    // planned de-board leaves the facts unboarded — the gate below (the board
+    // being committed) is necessary but never sufficient on its own.
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+    });
+    expect(out.annotations.some((a) => a.key === `${T}.ac-mode`)).toBe(false);
+  });
+});
+
+/**
+ * PR #478 review — the chip waits for a COMMITTED board. The board apply
+ * advertises the mode key's EVICTION beside the board effect (a re-board
+ * starts Moving), and the plan fold appends a row's advertised effects after
+ * the whole committed list — keyed effects dedupe newest-wins, so a board row
+ * sitting uncommitted in the plan outranks ANY seed the chip could commit
+ * meanwhile, and End Turn drops the tap silently (the chip never even flips).
+ * A chip that cannot record its own tap must not be offered: the toggle gates
+ * on no board/de-board row being pending (a board-keyed effect in force that
+ * is not in the annotate pass's persisted list is one this evaluation
+ * advertised), the deliberate divergence from the Frightened LoS precedent,
+ * whose recorder advertises no eviction of its seed key and is therefore safe
+ * to offer the moment the condition is live, planned or not.
+ */
+describe('the chip waits for a COMMITTED board (the pending-board tap trap)', () => {
+  it('pins the trap the gate closes: a seed committed under a PENDING board is outranked and dropped', () => {
+    // The engine mechanics are unchanged by the gate — this pins WHY the chip
+    // must wait: the fold orders committed before advertised, so the pending
+    // board's child eviction is "newer" than a seed the chip commits mid-plan.
+    const out = evaluate({
+      modules: [module()],
+      // The chip's tap, committed while the board row is still planned:
+      committed: [tormentorAcModeEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    });
+    expect(out.facts[`${F}.active`]).toBe(1);
+    // Newest-wins: the pending board's advertised eviction outranks the seed …
+    expect(out.facts[`${F}.acMotionless`]).toBeUndefined();
+    expect(out.facts[`${F}.ac.value`]).toBe(21);
+    // … and End Turn discards the tap entirely (the silent loss).
+    const aged = endTurn([tormentorAcModeEffect()], out.effects);
+    expect(aged.some((e) => e.key === 'tormentor-ac-mode' && e.state !== undefined)).toBe(false);
+  });
+
+  it('is ABSENT while the board is merely planned — no chip to tap, no silent loss', () => {
+    // The finding's exact flow: plan the board, add a station action (the row
+    // whose label the chip would ride), and there is no Moving chip to tap.
+    const out = evaluate({
+      modules: [module()],
+      planned: [
+        { instanceId: 'i0', ruleId: 'board-tormentor' },
+        { instanceId: 'i1', ruleId: 'set-tormentor-occupancy', selections: { occupancy: 2 } }
+      ]
+    });
+    // The station row renders — the board's facts are in the projection …
+    expect(out.facts[`${F}.active`]).toBe(1);
+    // … but the mode chip does not: a tap now would be overwritten by the
+    // pending board's advertised eviction and discarded at End Turn.
+    expect(out.annotations.some((a) => a.key === `${T}.ac-mode`)).toBe(false);
+  });
+
+  it('is ABSENT while a RE-BOARD is pending over a committed board (the same trap)', () => {
+    // A re-board resets the mode to Moving (its advertised eviction again), so
+    // the chip must wait for the re-board to commit too.
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), tormentorAcModeEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    });
+    expect(out.annotations.some((a) => a.key === `${T}.ac-mode`)).toBe(false);
+  });
+
+  it('stands the moment the board is COMMITTED — and the tap sticks from there', () => {
+    // End Turn commits the board (aged through the engine's own endTurn, the
+    // store's commit path) and empties the plan: the chip appears and a tap
+    // now survives, because no advertised eviction outranks the seed.
+    const boarding = evaluate({
+      modules: [module()],
+      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    });
+    const committed = endTurn([], boarding.effects);
+    const out = evaluate({ modules: [module()], committed });
+    expect(out.annotations.some((a) => a.key === `${T}.ac-mode`)).toBe(true);
+
+    // The chip's tap (the follow-up channel commits the seed beside the
+    // COMMITTED board): the mode flips and stays flipped.
+    const tapped = evaluate({
+      modules: [module()],
+      committed: [...committed, tormentorAcModeEffect()]
+    });
+    expect(tapped.facts[`${F}.acMotionless`]).toBe(1);
+    expect(tapped.facts[`${F}.ac.value`]).toBe(19);
+    expect(tapped.annotations.some((a) => a.key === `${T}.ac-mode`)).toBe(true);
+    const aged = endTurn([...committed, tormentorAcModeEffect()], []);
+    expect(aged.some((e) => e.key === 'tormentor-ac-mode' && e.state !== undefined)).toBe(true);
   });
 });
 

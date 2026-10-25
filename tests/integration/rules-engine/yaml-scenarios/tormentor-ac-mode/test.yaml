@@ -12,16 +12,23 @@ description: >-
   of the toggle's two keyed effects through the follow-up channel (the seed
   writing acMotionless 1, or its empty same-key eviction) — the tap path is
   unit-pinned; what the scenario pins is the chip's CONTRACT: the toggle
-  annotation stands while boarded, targets the station label, reads the mode
-  fact with onWhen 0 (Moving = pressed = the default), and governs no dice
-  purposes. The chip's flip path is exercised by the seeded motionless
-  scenario beside this one.
+  annotation stands only over a COMMITTED board, targets the station label,
+  reads the mode fact with onWhen 0 (Moving = pressed = the default), and
+  governs no dice purposes. The chip WAITS for the board to commit: the board
+  apply advertises the mode key's eviction beside the board effect, and the
+  plan fold orders a row's advertised effects after the whole committed list
+  (keyed dedupe newest-wins), so a tap under a merely PLANNED board would be
+  outranked by the pending eviction and silently dropped at End Turn. The
+  chip's flip path is exercised by the seeded motionless scenario beside this
+  one.
 ruleGroups:
   - vehicles/tormentor
 steps:
-  # Board: AC reads 21 at once (a DERIVE on the mode fact now — the board
-  # effect bakes no ac.value), the mode fact is unset (Moving), and the chip's
-  # annotation is live.
+  # Board (PLANNED): AC reads 21 at once (a DERIVE on the mode fact now — the
+  # board effect bakes no ac.value) and the mode fact is unset (Moving) — but
+  # NO chip yet: a tap now would be discarded by the pending board's
+  # advertised eviction (see the description), so the annotation holds back
+  # until the board is committed.
   - addOffer:
       id: board-tormentor
       assert:
@@ -29,6 +36,40 @@ steps:
           companion.tormentorDamageControl.active: 1
           companion.tormentorDamageControl.ac.value: 21
           companion.tormentorDamageControl.acMotionless: 0
+        annotations:
+          notExists:
+            - rule.tormentor.ac-mode
+        # Every station offer carries the label the annotation targets, so the
+        # chip rides whatever station row the crew plans once it stands.
+        offerUi:
+          - id: set-tormentor-occupancy
+            ui:
+              annotationLabels: [tormentor.ac-mode.companion]
+          - id: deboard-tormentor
+            ui:
+              annotationLabels: [tormentor.ac-mode.companion]
+  # End of turn commits the board: the mode default (Moving, AC 21) and the
+  # chip persist onto later turns — the state is sticky until switched, and
+  # the chip is safe to tap from here (no advertised eviction outranks it).
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-damage-control
+        facts:
+          companion.tormentorDamageControl.ac.value: 21
+          companion.tormentorDamageControl.acMotionless: 0
+        annotations:
+          exists:
+            - rule.tormentor.ac-mode
+  # The chip's contract over the COMMITTED board: it targets the station
+  # label, reads the mode fact with onWhen 0 (Moving = pressed = the default)
+  # and governs no dice purposes.
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 2
+      assert:
         annotations:
           exists:
             - rule.tormentor.ac-mode
@@ -41,25 +82,3 @@ steps:
                 fact: companion.tormentorDamageControl.acMotionless
                 onWhen: 0
                 appliesTo: []
-        # Every station offer carries the label the annotation targets, so the
-        # chip rides whatever station row the crew plans.
-        offerUi:
-          - id: set-tormentor-occupancy
-            ui:
-              annotationLabels: [tormentor.ac-mode.companion]
-          - id: deboard-tormentor
-            ui:
-              annotationLabels: [tormentor.ac-mode.companion]
-  # End of turn commits the board: the mode default (Moving, AC 21) and the
-  # chip persist onto later turns — the state is sticky until switched.
-  - endTurn:
-      assert:
-        effects:
-          exists:
-            - effect-tormentor-damage-control
-        facts:
-          companion.tormentorDamageControl.ac.value: 21
-          companion.tormentorDamageControl.acMotionless: 0
-        annotations:
-          exists:
-            - rule.tormentor.ac-mode

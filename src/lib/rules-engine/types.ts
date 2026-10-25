@@ -152,8 +152,23 @@ export interface RuleModule {
    * per LIVE effect (each carrying the effect's instance id as `Annotation.id`)
    * instead of re-deriving per-effect state from summed facts. Additive: a rule
    * that ignores it may declare just `(f)`.
+   *
+   * The third parameter is the persisted-effects list — the input committed
+   * effects ALONE, without this turn's advertised. Together the two lists tell
+   * a PLANNED transition (an effect in the second list only) from a committed
+   * one (in both): the fold orders a row's advertised effects after the whole
+   * committed list, so a keyed effect a pending row evicts outranks anything
+   * the follow-up channel could commit meanwhile — an annotation whose tap
+   * commits such an effect must wait for the row to commit (the Tormentor's
+   * AC-mode chip; see vehicle-tormentor). Additive in the same way: rules that
+   * ignore it keep declaring `(f)` or `(f, committed)` — the engine always
+   * supplies all three.
    */
-  annotate?: (f: FactReader, committed: EffectInstance[]) => Annotation[];
+  annotate?: (
+    f: FactReader,
+    committed: EffectInstance[],
+    persisted: EffectInstance[]
+  ) => Annotation[];
   /**
    * Passive reaction to a rest recorded THIS turn: return persistent effects to
    * emit. This is the ONLY way a non-planned module contributes effects — every

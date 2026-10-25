@@ -62,11 +62,14 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
   // The effects in force when annotate runs: committed plus this turn's
   // advertised, key-deduped newest-wins exactly as the sheet folds them — so a
   // rule can emit one annotation per LIVE effect (id'd by its instance id)
-  // rather than re-deriving per-effect state from summed facts.
+  // rather than re-deriving per-effect state from summed facts. The input
+  // committed list rides along beside it, so a rule can also tell a PLANNED
+  // transition (in the in-force list only) from a committed one (in both).
   const annotations = collectAnnotations(
     modules,
     plan.facts,
-    dedupeByKey([...committed, ...plan.advertised])
+    dedupeByKey([...committed, ...plan.advertised]),
+    committed
   );
   // Final checkpoint so a slow annotate cannot overrun the budget silently.
   checkDeadline(deadline, 'done', budgetMs);

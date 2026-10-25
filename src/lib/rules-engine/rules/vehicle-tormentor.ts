@@ -79,7 +79,11 @@ import {
  * keyed `tormentor-ac-mode` seed (motionless, AC 19) or its empty same-key
  * eviction (back to 21) through the follow-up channel; the seed displays as a
  * chip under the station view, and the mode key joins the board lifecycle
- * like every other record — a re-board or de-board resets to Moving.
+ * like every other record — a re-board or de-board resets to Moving. The
+ * chip is offered only over a COMMITTED board: a pending board/re-board row
+ * advertises the mode key's eviction, and the fold puts advertised effects
+ * after the committed list (newest-wins), so a tap under a pending row would
+ * be silently dropped at End Turn (see `acModeChipSafe`).
  *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
  * Harpoon Flinger stations and the Juke reaction, movement economy, damage
@@ -97,6 +101,14 @@ const T = `rule.${ID}`;
 const SUBJECT = 'tormentor-damage-control';
 /** Every fact this module bakes lives under one stem. */
 const F = 'companion.tormentorDamageControl';
+
+/**
+ * The board effect's replacement key — the one key the board effect and the
+ * de-board marker share. Beside its lifecycle role it is how the module tells a
+ * PENDING board/de-board row from a committed board at annotate time (see
+ * `boardRowPending`).
+ */
+const BOARD_KEY = 'tormentor-damage-control';
 
 /** The occupancy record's effect id and replacement key (ONE live record). */
 const OCCUPANCY_EFFECT_ID = 'effect-tormentor-occupancy';
@@ -190,7 +202,7 @@ const BOARD_STATE: Record<string, number> = {
 export function tormentorBoardEffect(): EffectInstance {
   return {
     id: 'effect-tormentor-damage-control',
-    key: 'tormentor-damage-control',
+    key: BOARD_KEY,
     state: { ...BOARD_STATE },
     dependents: [...CHILD_KEYS],
     display: {
@@ -214,7 +226,7 @@ export function tormentorBoardEffect(): EffectInstance {
 function tormentorDeboardEffect(): EffectInstance {
   return {
     id: 'effect-deboard-tormentor-damage-control',
-    key: 'tormentor-damage-control',
+    key: BOARD_KEY,
     expiry: { kind: 'permanent' }
   };
 }
@@ -348,6 +360,36 @@ function tormentorDestroyedEffect(): EffectInstance {
 
 /** The structural gate every STATION action shares: the board effect is live. */
 const boarded = (f: FactReader): boolean => f.num(`${F}.active`) > 0;
+
+/**
+ * Whether a board / de-board row is PENDING in the plan: the annotate pass's
+ * two lists are the one place a rule can tell a pending transition from a
+ * committed one, because a board-keyed effect that is in force but NOT in the
+ * persisted list is one this evaluation ADVERTISED (the engine's key-dedup
+ * re-orders references, it never clones, so identity is exact — and the fold
+ * kept it over any committed board precisely because advertised effects always
+ * follow committed ones).
+ */
+const boardRowPending = (inForce: EffectInstance[], persisted: EffectInstance[]): boolean =>
+  inForce.some((e) => e.key === BOARD_KEY && !persisted.includes(e));
+
+/**
+ * Whether the AC-mode chip is SAFE to offer: boarded, with no board / de-board
+ * row pending. A pending row advertises the mode key's EVICTION beside the
+ * board effect (a re-board starts Moving), and the fold orders a row's
+ * advertised effects after the whole committed list — so while such a row sits
+ * uncommitted it outranks ANY seed the chip's follow-up commit could land
+ * meanwhile (the chip would not even flip), and End Turn silently drops the tap
+ * (#478 review). A chip that cannot record its own tap must not be offered.
+ * This is the deliberate divergence from the Frightened LoS precedent (whose
+ * chip renders the moment the condition is live, planned or not): that
+ * recorder advertises no eviction of its seed key, so its tap is safe mid-plan.
+ */
+const acModeChipSafe = (
+  f: FactReader,
+  inForce: EffectInstance[],
+  persisted: EffectInstance[]
+): boolean => boarded(f) && !boardRowPending(inForce, persisted);
 
 /**
  * The subject's top-bar and resource entries, gated on `active` (present only
@@ -805,8 +847,12 @@ const vehicleTormentor: RuleModule = {
   // `acMotionless` 1 (AC 19) or its empty same-key eviction (back to 21).
   // `onWhen: 0` makes MOVING the pressed default (the unset fact is Moving,
   // so the seed only ever records the deviation), and the annotation gates on
-  // the board alone — unboarded there is no vehicle to be moving, and the
-  // rows that carry the label are structurally gone anyway.
+  // the board being COMMITTED — not merely planned (`acModeChipSafe`, the one
+  // divergence from Frightened's render-the-moment-it's-live): the board
+  // apply's advertised mode eviction outranks any seed committed while the
+  // board row is still pending, so a tap there would be silently lost at End
+  // Turn. Unboarded there is no vehicle to be moving anyway, and the rows
+  // that carry the label are structurally gone.
   //
   // The Prone Deficiency trait, surfaced as a NOTICE while the vehicle is
   // PRONE (the Life-Bond annotate pattern gated on the condition — PC-prone
@@ -825,9 +871,16 @@ const vehicleTormentor: RuleModule = {
   // the way out is people, not repairs), gated on the destroyed fact alone —
   // the wreck never outlives the board either. Distinct key from the prone
   // notice, so a prone wreck (somehow) carries both.
-  annotate: (f: FactReader): Annotation[] => {
+  annotate: (
+    f: FactReader,
+    inForce: EffectInstance[],
+    persisted: EffectInstance[]
+  ): Annotation[] => {
     const out: Annotation[] = [];
-    if (boarded(f))
+    // The chip waits for the board to be COMMITTED (`acModeChipSafe`): a
+    // pending board/re-board's advertised eviction outranks any seed the chip
+    // could commit, so a tap there would be silently lost at End Turn.
+    if (acModeChipSafe(f, inForce, persisted))
       out.push({
         key: `${T}.ac-mode`,
         targets: [AC_MODE_LABEL],

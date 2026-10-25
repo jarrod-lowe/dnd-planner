@@ -191,7 +191,12 @@ turn's advertised, key-deduped newest-wins, ids in the plan fold's namespaced
 effect, emit one annotation per effect and give each `id` the effect's
 instance id — several notices may then share a `key` (one Searing Smite burn
 notice per burning target) and stay distinct for keyed rendering. Rules that
-don't need the list declare just `(f)`. Two forms:
+don't need the list declare just `(f)`. A third parameter (`persisted`, the
+committed effects alone) exists for annotations whose tap commits a keyed
+effect a pending row evicts — the fold puts a row's advertised effects after
+the whole committed list, so the pending eviction would silently swallow the
+tap at End Turn; gate such a chip on the row being committed
+(`vehicle-tormentor`'s AC-mode chip is the worked example). Two forms:
 
 ```ts
 // A named offer — the same action wherever the reminder lands.

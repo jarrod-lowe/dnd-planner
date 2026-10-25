@@ -105,7 +105,11 @@ interface RuleModule {
   derive?: (ctx: SheetCtx) => Contribution[];
   offer?: (ctx: SheetCtx) => Offer[];
   effectContributions?: (effect: EffectInstance) => Contribution[];
-  annotate?: (f: FactReader, committed: EffectInstance[]) => Annotation[]; // related info; sees the effects in force
+  annotate?: (
+    f: FactReader,
+    committed: EffectInstance[],
+    persisted: EffectInstance[]
+  ) => Annotation[]; // related info; sees the effects in force AND the persisted subset
   onRest?: (kind: RestKind, facts: FactReader) => EffectInstance[];
 }
 ```
@@ -197,6 +201,19 @@ gives each the effect's instance id as `Annotation.id`, so several annotations
 may share a `key` (one Searing Smite burn notice per burning target) and keyed
 rendering can tell them apart. Rules that don't need the list declare just
 `(f)`.
+
+The third parameter is the persisted-effects list: the input committed effects
+**alone**, without this turn's advertised. The two together tell a PLANNED
+transition (an effect in force but not persisted) from a committed one (in
+both) — the one way a rule can tell them apart, because the facts and the
+in-force list are identical either way. Reach for it when an annotation's tap
+commits a keyed effect that a pending row evicts: the fold orders a row's
+advertised effects after the whole committed list, so the pending eviction
+outranks anything the follow-up channel commits meanwhile and End Turn drops
+the tap silently. The Tormentor's AC-mode chip is the worked example — it waits
+for the board to commit, diverging deliberately from Frightened's LoS chip
+(whose recorder advertises no eviction of its seed key, so its tap is safe the
+moment the condition is live, planned or not).
 
 ### `onRest` — passive rest recoveries
 
