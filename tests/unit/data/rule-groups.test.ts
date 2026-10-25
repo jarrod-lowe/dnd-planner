@@ -28,6 +28,11 @@ interface RuleGroup {
   requires?: string[];
   translations: Record<SupportedLocale, Translation>;
   rules?: Rule[];
+  detail?: {
+    key: string;
+    source: string;
+    translations: Record<string, { meta?: string; body: string }>;
+  };
 }
 
 interface RuleGroupsFile {
@@ -249,5 +254,62 @@ describe('rule group dependencies', () => {
   // via manual rule-group assignment, so fresh paladins never see it.
   it('pulls Thunderous Smite into the paladin L1 spell list', () => {
     expect(requiresById.get('paladin-spells-l1')).toContain('spell-thunderous-smite');
+  });
+});
+
+describe('tormentor detail body', () => {
+  // The board-flip detail is the VEHICLE's stat block, in our own words (the
+  // Tormentor is not SRD: numbers and short factual phrases only, never trait
+  // prose). It must read in-world: no app meta (what is or is not "modeled",
+  // which pass something arrives in) — a player flipping the chip wants the
+  // war machine, not release notes.
+  const body = (() => {
+    const sharedDefs = loadSharedDefinitions(path.resolve(process.cwd(), 'data/rule-groups'));
+    const data = loadYamlFile(
+      path.resolve(process.cwd(), 'data/rule-groups/vehicles/tormentor.yaml'),
+      sharedDefs
+    );
+    const detail = data.ruleGroups!.find((rg) => rg.id === 'tormentor')!.detail!;
+    return detail.translations.en!.body;
+  })();
+
+  it('carries no app-meta phrasing', () => {
+    const banned = [
+      'not modeled',
+      'modeled',
+      'modelled',
+      'later pass',
+      'later update',
+      'this pass',
+      'this app',
+      'the app',
+      'implemented',
+      'placeholder',
+      'seat',
+      'pseudo',
+      'update'
+    ];
+    const found = banned.filter((phrase) => body.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the tormentor detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the vehicle numbers a rider needs', () => {
+    for (const fact of [
+      '21',
+      '19',
+      '60',
+      '100',
+      '500',
+      '3,000',
+      '4 Medium',
+      '16',
+      '14',
+      '+7',
+      '120 ft.',
+      '2d8',
+      'Juke'
+    ]) {
+      expect(body, `the detail body states "${fact}"`).toContain(fact);
+    }
   });
 });

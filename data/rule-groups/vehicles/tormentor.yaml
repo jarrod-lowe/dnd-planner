@@ -31,7 +31,8 @@ ruleGroups:
           - crew
           - damage control
     # The Tormentor is not SRD content: this detail is our own wording —
-    # numbers and short factual phrases only, never trait prose.
+    # numbers and short factual phrases only, never trait prose. It reads
+    # in-world (the vehicle and its numbers); nothing about the app.
     detail:
       key: vehicle/tormentor-damage-control
       source: custom
@@ -44,16 +45,20 @@ ruleGroups:
             - labelKey: rules.field.weight
               value: 3,000 lb.
           body: |
-            A huge war vehicle, 3,000 lb. This station is damage control:
-            riding along on crew duty that is neither the helm nor a weapon
-            seat.
+            A huge infernal war vehicle, 3,000 lb., built for raiding and
+            scouting on bladed iron wheels. It carries 4 Medium creatures and
+            500 lb. of cargo. This posting is damage control: crew duty that
+            is neither the helm nor the harpoon.
 
-            **Modeled here.** Armor Class 21; Hit Points 60 (a fixed stat —
-            damage tracking is not modeled yet); Speed 100 ft.; cargo capacity
-            500 lb.; STR 16 (+3), DEX 14 (+2), CON 14 (+2). The vehicle has no
-            Intelligence, Wisdom, or Charisma.
+            Armor Class 21 (19 while motionless); 60 hit points; Speed
+            100 ft.; STR 16 (+3), DEX 14 (+2), CON 14 (+2). The vehicle has
+            no Intelligence, Wisdom, or Charisma, and shrugs off fire,
+            poison, and psychic damage.
 
-            **Not modeled yet.** Creature capacity and occupancy, the Helm and
-            Harpoon Flinger stations, the driver's Juke reaction, the damage
-            threshold and immunities, and the lower AC while motionless arrive
-            in later updates.
+            **Stations.** The Helm drives and steers the Tormentor. The
+            Harpoon Flinger fires its 10 harpoons at +7 to hit, range
+            120 ft., for 2d8+2 piercing damage.
+
+            **Juke.** The driver can spend their reaction, while the
+            Tormentor is able to move, to gain advantage on a Dexterity
+            saving throw.
