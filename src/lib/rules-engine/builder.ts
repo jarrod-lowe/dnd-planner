@@ -9,7 +9,9 @@ import type {
   LegalWhen,
   MappedLabelSource,
   Offer,
-  RuleModule
+  OfferUI,
+  RuleModule,
+  Section
 } from './types';
 import {
   GRIP_ONE_HANDED_SHORT,
@@ -199,6 +201,271 @@ export const damageThresholdGate = (
   thresholdFact: string,
   code: string
 ): Diagnostic | null => (amount < f.num(thresholdFact) ? { code, severity: 'error' } : null);
+
+// === HP recorders ===
+//
+// The damage/heal recorder pair every damageable subject offers. Three modules
+// hand-wrote this same offer (the player's core-events record-damage/record-heal,
+// the steed's, and the Tormentor's) and the audit that followed the vehicle pass
+// found them drifting copies — only the vehicle consulted the threshold gate.
+// The factory is the ONE code path now; what differs between subjects stays
+// per-module DATA (fact names, i18n keys, effect ids, the accumulation idiom,
+// the lethal consequence, the threshold fact + diagnostic code).
+
+/**
+ * How a recorder's records accumulate — the one structural choice the caller
+ * makes. Both idioms record the SAME amounts against the same derived pool
+ * (`${facts.max}` / `${facts.modifier.current}` via `currentHp`); they differ
+ * in what each advertised EFFECT carries:
+ *
+ * - `'keyless-stack'` (the player): every record its own KEYLESS effect holding
+ *   a delta on the current-HP modifier (damage −amount, heal +effective), so
+ *   each hit is an independently REMOVABLE chip carrying its own amount as a
+ *   display literal (`value`, never `displayFact` — a shared fact would show
+ *   the net on every chip). Keyless effects never dedupe, so records stack.
+ * - `'keyed-total'` (the steed, the Tormentor): ONE keyed effect per direction
+ *   holding the RUNNING total (`prior + amount` baked into `state`), so records
+ *   ADD UP (a same-key effect carrying only its own amount would evict the
+ *   prior record instead of adding to it) while the chip shows the live fact
+ *   (`displayFact`) and a single removal — or a same-key eviction from the
+ *   subject's lifecycle — clears the whole record.
+ */
+export type HpRecordAccumulation = 'keyless-stack' | 'keyed-total';
+
+/**
+ * The lethal consequence a damage record carries when it empties the pool
+ * (`currentHp(max, modifier − amount) <= 0` — the same formula the pool's
+ * derive floors with, evaluated at the amount being recorded). The recorder's
+ * own behavior never changes at 0 HP; only what BESIDE the record changes:
+ *
+ * - `keepRecord: false` (the steed): the effects REPLACE the record entirely —
+ *   the retire cascade's same-key child evictions would supersede a record
+ *   advertised beside them anyway, so it is not advertised at all.
+ * - `keepRecord: true` (the Tormentor): the record lands BESIDE the effects —
+ *   the blow happened, and the wreck is written under its own permanent key.
+ */
+export interface HpRecorderLethal {
+  /** The consequence's effects (a retire cascade, a destroyed wreck). */
+  effects: () => EffectInstance[];
+  /** Whether the damage record still lands beside them. */
+  keepRecord: boolean;
+}
+
+/** The optional ui payload only some recorders carry (plain passthroughs). */
+export interface HpRecorderOfferUi {
+  /** Offer description key (the vehicle's recorders carry one; player/steed don't). */
+  description?: string;
+  /** Rules-mode detail link (the vehicle's damage detail — threshold semantics). */
+  detailKey?: string;
+  /** Panels the post-hoc reminders ride (the player's `damage.any`/`healing.any`). */
+  annotationLabels?: string[];
+}
+
+/** One direction of the recorder pair: the offer row plus its record effect. */
+export interface HpRecorderDirection extends HpRecorderOfferUi {
+  /** i18n key for the offer row's name. */
+  name: string;
+  /** The record effect's id (and its replacement key in keyed-total mode when `effectKey` is omitted). */
+  effectId: string;
+  /** The keyed-total replacement key, when it differs from the effect id. */
+  effectKey?: string;
+  /** i18n key for the record chip's name. */
+  effectName: string;
+}
+
+/** The one spec every HP recorder is built from — data, not code. */
+export interface HpRecorderSpec {
+  /** Offer id stem: the damage offer is `<stem>-damage`, the heal `<stem>-heal`. */
+  idStem: string;
+  /**
+   * The subject's HP facts. `max` is the slider's ceiling; `modifierCurrent`
+   * carries the keyless deltas and the missing-HP heal cap;
+   * `damageRecorded`/`healRecorded` are the keyed running totals
+   * (keyed-total mode requires both); `damageThreshold` is the fact the damage
+   * apply gates on generically — the subject's NATURAL name, unset (reads 0)
+   * for the player and steed today, so their recorders never gate until
+   * something bakes one.
+   */
+  facts: {
+    max: string;
+    modifierCurrent: string;
+    damageRecorded?: string;
+    healRecorded?: string;
+    damageThreshold: string;
+  };
+  /** Structural gate (the subject exists); omit for the always-there player recorder. */
+  when?: (f: FactReader) => boolean;
+  /** Files the offers and keyed chips under a subject view; omit for the player's own. */
+  subject?: string;
+  /** The damage direction's offer row and record effect. */
+  damage: HpRecorderDirection;
+  /** The heal direction's offer row and record effect. */
+  heal: HpRecorderDirection;
+  /** The accumulation idiom — see {@link HpRecordAccumulation}. */
+  accumulation: HpRecordAccumulation;
+  /** The strip section the record chips file under ('health', or 'mount' for a subject view). */
+  chipSection: Section;
+  /**
+   * The damage apply's below-threshold diagnostic CODE (the caller's i18n
+   * namespace — `rule.<namespace>.record-damage.below_threshold` shape). The
+   * gate itself is the shared `damageThresholdGate`.
+   */
+  belowThresholdCode: string;
+  /** What a pool-emptying blow does; omit when the subject has no lethal rule (the player). */
+  lethal?: HpRecorderLethal;
+  /**
+   * Per-module extras advertised when a damage record LANDS (never on a bounced
+   * blow — no damage was taken). The player's concentration check trigger is
+   * the one user today; it stays in core-events, not here.
+   */
+  onDamageRecorded?: (f: FactReader, amount: number) => EffectInstance[];
+}
+
+/**
+ * The shared damage/heal recorder pair — the slider offer, its `amount` capture,
+ * the apply transitions, and the record effects, from one spec. What every
+ * recorder agrees on is here once:
+ *
+ * - the slider control (the plain `type: 'slider'` descriptor PanelRenderer
+ *   already renders: `var: 'amount'`, 0..`facts.max`, 'hp') and its
+ *   `{ amount: { capture: true, default: { number: 0 } } }` vars;
+ * - the damage apply's GENERIC threshold gate (the dash idiom — an apply-level
+ *   gate, never a `legalWhen`: a below-threshold blow records NOTHING and the
+ *   ROW carries the caller's diagnostic, while the offer stays legal and
+ *   applicable whatever the slider reads);
+ * - the missing-HP heal cap (`min(amount, max(0, -modifierCurrent))` — regained
+ *   HP cannot exceed the max, so surplus is lost rather than banked to
+ *   pre-cancel a later blow);
+ * - the record effects per accumulation idiom (see
+ *   {@link HpRecordAccumulation}), both `untilLongRest`.
+ *
+ * The RAW damage amount is always recorded, never one clamped to the HP held:
+ * a clamp would bake an order-dependent value into an independently removable
+ * record (the `currentHp` derive floors the display at 0 instead — overkill
+ * banking in the summed modifier is that known limitation, tracked separately).
+ */
+export function hpRecorders(spec: HpRecorderSpec): Offer[] {
+  const { facts, subject } = spec;
+  const keyed = spec.accumulation === 'keyed-total';
+  // A keyed-total recorder lives in its running-total facts; naming neither is
+  // a spec typo, not a runtime state — fail at module load, like defineRule.
+  const requireTotal = (fact: string | undefined, what: string): string => {
+    if (keyed && !fact)
+      throw new Error(
+        `hpRecorders: ${spec.idStem} (${what}): a keyed-total recorder must name its ${what} fact`
+      );
+    return fact ?? '';
+  };
+  const damageTotal = requireTotal(facts.damageRecorded, 'damageRecorded');
+  const healTotal = requireTotal(facts.healRecorded, 'healRecorded');
+
+  const slider = {
+    type: 'slider',
+    var: 'amount',
+    min: { number: 0 },
+    max: { fact: facts.max },
+    unit: 'hp'
+  };
+  const amountVar = { amount: { capture: true, default: { number: 0 } } };
+
+  const damageRecord = (f: FactReader, amount: number): EffectInstance =>
+    keyed
+      ? {
+          id: spec.damage.effectId,
+          key: spec.damage.effectKey ?? spec.damage.effectId,
+          state: { [damageTotal]: f.num(damageTotal) + amount },
+          display: {
+            name: spec.damage.effectName,
+            section: spec.chipSection,
+            ...(subject ? { subject } : {}),
+            displayFact: damageTotal
+          },
+          expiry: { kind: 'untilLongRest' }
+        }
+      : {
+          id: spec.damage.effectId,
+          state: { [facts.modifierCurrent]: -amount },
+          display: { name: spec.damage.effectName, section: spec.chipSection, value: amount },
+          expiry: { kind: 'untilLongRest' }
+        };
+
+  const healRecord = (f: FactReader, effective: number): EffectInstance =>
+    keyed
+      ? {
+          id: spec.heal.effectId,
+          key: spec.heal.effectKey ?? spec.heal.effectId,
+          state: { [healTotal]: f.num(healTotal) + effective },
+          display: {
+            name: spec.heal.effectName,
+            section: spec.chipSection,
+            ...(subject ? { subject } : {}),
+            displayFact: healTotal
+          },
+          expiry: { kind: 'untilLongRest' }
+        }
+      : {
+          id: spec.heal.effectId,
+          state: { [facts.modifierCurrent]: effective },
+          // The EFFECTIVE amount — the value the effect records (surplus lost).
+          display: { name: spec.heal.effectName, section: spec.chipSection, value: effective },
+          expiry: { kind: 'untilLongRest' }
+        };
+
+  const applyDamage = (f: FactReader, selections: Record<string, unknown>): ActionResult => {
+    const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+    // The gate first: a bounced blow records NOTHING — no lethal consequence,
+    // no per-module extras — the diagnostic is the row's whole result.
+    const bounced = damageThresholdGate(f, amount, facts.damageThreshold, spec.belowThresholdCode);
+    if (bounced) return { advertise: [], diagnostics: [bounced] };
+    // The lethal check (the steed's placement): currentHp floors at 0, so a
+    // pool-emptying blow — overkill included — takes the lethal branch.
+    if (spec.lethal && currentHp(f.num(facts.max), f.num(facts.modifierCurrent) - amount) <= 0) {
+      return spec.lethal.keepRecord
+        ? { advertise: [damageRecord(f, amount), ...spec.lethal.effects()] }
+        : { advertise: spec.lethal.effects() };
+    }
+    const advertise = [damageRecord(f, amount)];
+    if (spec.onDamageRecorded) advertise.push(...spec.onDamageRecorded(f, amount));
+    return { advertise };
+  };
+
+  const applyHeal = (f: FactReader, selections: Record<string, unknown>): ActionResult => {
+    const amount = typeof selections.amount === 'number' ? selections.amount : 0;
+    // The heal caps at the net missing HP (recorded damage AND any manual
+    // modifier fold into it) — the surplus is lost, never banked.
+    const missing = Math.max(0, -f.num(facts.modifierCurrent));
+    return { advertise: [healRecord(f, Math.min(amount, missing))] };
+  };
+
+  const ui = (d: HpRecorderDirection): OfferUI => ({
+    section: 'free',
+    ...(subject ? { subject } : {}),
+    name: d.name,
+    ...(d.description ? { description: d.description } : {}),
+    ...(d.detailKey ? { detailKey: d.detailKey } : {}),
+    ...(d.annotationLabels ? { annotationLabels: d.annotationLabels } : {}),
+    primaryControl: slider,
+    intents: { HEALTH: 'hp' },
+    actionCost: []
+  });
+
+  return [
+    {
+      id: `${spec.idStem}-damage`,
+      ...(spec.when ? { when: spec.when } : {}),
+      ui: ui(spec.damage),
+      vars: amountVar,
+      apply: applyDamage
+    },
+    {
+      id: `${spec.idStem}-heal`,
+      ...(spec.when ? { when: spec.when } : {}),
+      ui: ui(spec.heal),
+      vars: amountVar,
+      apply: applyHeal
+    }
+  ];
+}
 
 /**
  * The live prepared-count contribution paired with the `prepare` declaration on

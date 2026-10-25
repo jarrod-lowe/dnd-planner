@@ -112,6 +112,7 @@
       "steed-record-damage": {
         "name": "DIv DIch",
         "keywords": "hit points health damage",
+        "below_threshold": "qIp chuqHa' — Sargh qIpbe'",
         "effect": {
           "name": "Sargh DIv"
         }
@@ -544,6 +545,9 @@
         },
         "effect-hit-die-heal": {
           "name": "DIch 'och {{score}}"
+        },
+        "record-damage": {
+          "below_threshold": "qIp chuqHa' — qIp tu'lu'be'"
         },
         "record-short-rest-offer": {
           "die_already_spent": "vetlh DIch lo'lu'ta'",
