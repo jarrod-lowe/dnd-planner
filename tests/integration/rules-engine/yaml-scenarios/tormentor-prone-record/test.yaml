@@ -6,9 +6,10 @@ description: >-
   attack flags and notice), recorded from the station's +ADD by a free offer
   with no legality gates and cleared by Flip Upright's empty same-key eviction
   (the get-up idiom). The effect is permanent — no rest clears it, because a
-  rest does not right a vehicle. A standing NOTICE (the Life-Bond annotate
-  pattern, gated on active) carries the deficiency while boarded: it does not
-  track the prone state itself, so flipping upright leaves it standing.
+  rest does not right a vehicle. A NOTICE (the Life-Bond annotate pattern)
+  carries the deficiency gated on the prone fact itself — PC-prone parity: the
+  condition triggers its notice — so it stands ONLY while the vehicle is prone
+  and withdraws the moment it is flipped upright.
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -28,12 +29,11 @@ steps:
   - addOffer:
       id: board-tormentor
       assert:
+        # Boarded but upright: NO notice — the notice is the condition's, not
+        # the board's (the player's Prone notice stands only while prone).
         annotations:
-          exists:
+          notExists:
             - rule.tormentor.notice
-          targets:
-            - key: rule.tormentor.notice
-              targets: [notice]
         offers:
           exists:
             - knock-tormentor-prone
@@ -44,6 +44,9 @@ steps:
             ui:
               section: free
               subject: tormentor-damage-control
+              # A vehicle CONDITION files like the PC's (#467 taxonomy).
+              intents:
+                CONDITION: held
               actionCost: []
   - addOffer:
       id: knock-tormentor-prone
@@ -53,9 +56,20 @@ steps:
         offers:
           exists:
             - flip-tormentor-upright
+        offerUi:
+          - id: flip-tormentor-upright
+            ui:
+              section: free
+              subject: tormentor-damage-control
+              intents:
+                CONDITION: held
+              actionCost: []
         annotations:
           exists:
             - rule.tormentor.notice
+          targets:
+            - key: rule.tormentor.notice
+              targets: [notice]
   - endTurn:
       assert:
         effects:
@@ -72,8 +86,7 @@ steps:
         facts:
           companion.tormentorDamageControl.prone: 1
   # Flip Upright: the empty same-key eviction clears the fact and withdraws
-  # the station chip, while the NOTICE stays — the deficiency is standing, not
-  # the state.
+  # the station chip, and the NOTICE goes with the condition it carries.
   - addOffer:
       id: flip-tormentor-upright
       assert:
@@ -83,7 +96,7 @@ steps:
           notExists:
             - flip-tormentor-upright
         annotations:
-          exists:
+          notExists:
             - rule.tormentor.notice
   - endTurn:
       assert:

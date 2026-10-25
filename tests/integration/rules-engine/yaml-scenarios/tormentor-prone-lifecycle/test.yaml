@@ -3,9 +3,11 @@ description: >-
   The prone record never outlives the board that justifies it: a re-board
   (a keyed replacement of the board effect, which does not fire dependents)
   explicitly evicts it with an empty same-key marker, and de-board does the
-  same while clearing every baked fact. The notice follows the board, not the
-  prone state. The raw mount-chip removal path declares the same eviction via
-  the board effect's dependents (unit-pinned, not assertible here).
+  same while clearing every baked fact. The notice follows the prone record
+  (PC-prone parity: the condition triggers its notice), so the re-board's
+  eviction withdraws it too — a fresh board starts upright and un-noticed.
+  The raw mount-chip removal path declares the same eviction via the board
+  effect's dependents (unit-pinned, not assertible here).
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -22,7 +24,8 @@ steps:
           companion.tormentorDamageControl.prone: 1
   # Re-boarding REPLACES the board effect and evicts the prone record with it:
   # a fresh board starts upright (the occupancy re-board pattern — no rest
-  # clears the vehicle's prone, but a fresh board does).
+  # clears the vehicle's prone, but a fresh board does), so the notice — now
+  # the prone condition's — goes with the record.
   - addOffer:
       id: board-tormentor
       assert:
@@ -30,7 +33,7 @@ steps:
           companion.tormentorDamageControl.prone: 0
           companion.tormentorDamageControl.active: 1
         annotations:
-          exists:
+          notExists:
             - rule.tormentor.notice
   - endTurn:
       assert:
@@ -40,8 +43,8 @@ steps:
           notExists:
             - effect-tormentor-prone
   # Knock prone again, commit, then de-board: the keyed replacement clears
-  # every baked fact including the prone record, and the notice goes with the
-  # board.
+  # every baked fact including the prone record, and the notice — which stands
+  # only while prone — goes with it.
   - addOffer:
       id: knock-tormentor-prone
   - endTurn:

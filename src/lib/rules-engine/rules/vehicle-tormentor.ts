@@ -41,8 +41,11 @@ import {
  * would flip the PLAYER's attack flags, notice and movement legs). The
  * station's +ADD records it (free, no legality gates) and flips it upright
  * (empty same-key eviction); the effect is PERMANENT (a rest does not right a
- * vehicle), the board/de-board lifecycle evicts it, and a standing NOTICE
- * carries the deficiency while boarded.
+ * vehicle), the board/de-board lifecycle evicts it, and a NOTICE carries the
+ * deficiency while the vehicle is PRONE (PC-prone parity: the condition
+ * triggers its notice — boarded but upright, there is nothing to know). Both
+ * prone offers file under the CONDITION 'held' sub-bucket (#467 taxonomy), so
+ * a vehicle condition groups with PC conditions in the station +ADD.
  *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
  * Harpoon Flinger stations and the Juke reaction, movement economy, damage
@@ -363,7 +366,10 @@ const vehicleTormentor: RuleModule = {
         subject: SUBJECT,
         name: `${T}.knocked-prone.name`,
         description: `${T}.knocked-prone.description`,
-        intents: { HANDLE: 'gear' },
+        // A vehicle CONDITION files like the PC's: record-prone's CONDITION
+        // 'held' sub-bucket (#467 taxonomy — "Prone (both offers)"), not the
+        // HANDLE gear bucket the boarding offers use.
+        intents: { CONDITION: 'held' },
         actionCost: []
       },
       apply: (): ActionResult => ({ advertise: [tormentorProneEffect()] })
@@ -381,7 +387,11 @@ const vehicleTormentor: RuleModule = {
         subject: SUBJECT,
         name: `${T}.flip-upright.name`,
         description: `${T}.flip-upright.description`,
-        intents: { HANDLE: 'gear' },
+        // The condition-END offer files with its condition ('held', like the
+        // recorder) so both prone offers sit under the Conditions grouping in
+        // the station +ADD. The PLAYER's Get Up is a MOVE 'rise' offer because
+        // it spends movement; this free flip is not a movement action.
+        intents: { CONDITION: 'held' },
         actionCost: []
       },
       apply: (): ActionResult => ({ advertise: [evictProneEffect()] })
@@ -407,15 +417,19 @@ const vehicleTormentor: RuleModule = {
       })
     }
   ],
-  // The Prone Deficiency trait, surfaced as a standing NOTICE while boarded
-  // (the Life-Bond annotate pattern — gated on the board, not on any state).
-  // It is a condition the player must know BEFORE acting on the vehicle's
-  // behalf: the Tormentor cannot right itself, so a prone Tormentor stays
-  // prone and can do nothing until something flips it upright. Own wording
-  // (the Tormentor is not SRD); 'notice' == NOTICE_TARGET, a reserved label
-  // rule modules spell as a literal (see condition-prone / find-steed).
+  // The Prone Deficiency trait, surfaced as a NOTICE while the vehicle is
+  // PRONE (the Life-Bond annotate pattern gated on the condition — PC-prone
+  // parity: the condition triggers its notice, so boarded-but-upright carries
+  // nothing). It is a condition the player must know BEFORE acting on the
+  // vehicle's behalf: the Tormentor cannot right itself, so it stays prone
+  // and can do nothing until something flips it upright. The gate is the
+  // prone fact alone — the record never outlives the board (the effect's
+  // dependents plus the explicit board/de-board evictions), so no separate
+  // boarded check is needed. Own wording (the Tormentor is not SRD);
+  // 'notice' == NOTICE_TARGET, a reserved label rule modules spell as a
+  // literal (see condition-prone / find-steed).
   annotate: (f: FactReader): Annotation[] =>
-    boarded(f)
+    f.num(`${F}.prone`) > 0
       ? [
           {
             key: `${T}.notice`,

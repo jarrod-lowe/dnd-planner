@@ -387,7 +387,8 @@ describe('module-declared panel entries', () => {
  * `proneEffect()` would flip the PLAYER's attack flags, notice and movement
  * legs). Recorded from the station's +ADD with no legality gates, flipped
  * upright by an empty same-key eviction, evicted with the board, and carried
- * as a standing NOTICE while boarded (the Life-Bond annotate pattern).
+ * as a NOTICE while prone (the Life-Bond annotate pattern gated on the prone
+ * fact — PC-prone parity: the condition triggers its notice).
  */
 
 /** The prone record, through the real plan fold (boarded, then knocked). */
@@ -413,7 +414,10 @@ describe('knocked-prone offer', () => {
     expect(ui.name).toBe(`${T}.knocked-prone.name`);
     expect(ui.description).toBe(`${T}.knocked-prone.description`);
     expect(ui.actionCost).toEqual([]);
-    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+    // A vehicle CONDITION files like the PC's: record-prone's CONDITION
+    // 'held' sub-bucket (#467 taxonomy), not the HANDLE gear bucket the
+    // boarding offers use.
+    expect(ui.intents).toEqual({ CONDITION: 'held' });
   });
 
   it('is gated structurally on active (when) with no legality gates', () => {
@@ -495,7 +499,12 @@ describe('flip-upright offer', () => {
     expect(ui.name).toBe(`${T}.flip-upright.name`);
     expect(ui.description).toBe(`${T}.flip-upright.description`);
     expect(ui.actionCost).toEqual([]);
-    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+    // The vehicle's condition-END offer files with its condition (the 'held'
+    // bucket — "Prone (both offers)" in the #467 taxonomy), so both prone
+    // offers sit under the Conditions grouping in the station +ADD. (The
+    // PLAYER's Get Up is a MOVE 'rise' offer because it spends movement; the
+    // free vehicle flip is not a movement action.)
+    expect(ui.intents).toEqual({ CONDITION: 'held' });
   });
 
   it('apply advertises the EMPTY same-key eviction (the get-up idiom)', () => {
@@ -564,24 +573,39 @@ describe('prone eviction rides the board lifecycle', () => {
 });
 
 describe('prone-deficiency notice', () => {
-  it('stands while boarded with the vehicle as its source (Life-Bond pattern)', () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
-    const notice = out.annotations.find((a) => a.key === `${T}.notice`);
-    expect(notice, 'a notice stands while boarded').toBeDefined();
+  it('stands only while the vehicle is PRONE, with the vehicle as its source', () => {
+    // Boarded but upright: NO notice — the notice is the condition's, not the
+    // board's (PC-prone parity: the player's Prone notice stands only while
+    // prone, and a merely-boarded vehicle has nothing to warn about).
+    const upright = evaluate({ modules: [module()], committed: [boardEffect()] });
+    expect(
+      upright.annotations.some((a) => a.key === `${T}.notice`),
+      'no notice while boarded and upright'
+    ).toBe(false);
+    // Prone: the notice stands (the Life-Bond annotate pattern), sourced on
+    // the vehicle.
+    const prone = evaluate({
+      modules: [module()],
+      committed: [boardEffect(), proneEffect()]
+    });
+    const notice = prone.annotations.find((a) => a.key === `${T}.notice`);
+    expect(notice, 'a notice stands while the vehicle is prone').toBeDefined();
     expect(notice!.targets).toEqual(['notice']);
     expect(notice!.source).toBe(`${T}.effect.name`);
     expect(notice!.body).toBe(`${T}.notice.body`);
   });
 
-  it('is standing, not state-tracking: it ignores prone and follows the board', () => {
-    // Prone does not gate the notice (the deficiency holds BEFORE the vehicle
-    // ever falls)…
-    const prone = evaluate({
+  it('tracks the prone state: flipping upright or de-boarding withdraws it', () => {
+    // Flipped upright (the eviction merely PLANNED — newest-wins clears the
+    // fact now): the condition is gone, so its notice goes with it…
+    const flipped = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()]
+      committed: [boardEffect(), proneEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'flip-tormentor-upright' }]
     });
-    expect(prone.annotations.some((a) => a.key === `${T}.notice`)).toBe(true);
-    // …and de-boarding withdraws it with the vehicle.
+    expect(flipped.annotations.some((a) => a.key === `${T}.notice`)).toBe(false);
+    // …and the unboarded vehicle carries no notice at all (the prone record
+    // never outlives the board).
     const unboarded = evaluate({ modules: [module()] });
     expect(unboarded.annotations.some((a) => a.key === `${T}.notice`)).toBe(false);
   });

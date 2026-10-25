@@ -483,7 +483,7 @@
         "name": "Prone"
       },
       "notice": "Prone Deficiency",
-      "notice.body": "The Tormentor cannot right itself. If it falls prone, it stays prone and can do nothing until something flips it upright."
+      "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright."
     },
     "dnd-5e-2024": {
       "action-economy": {},

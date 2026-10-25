@@ -259,7 +259,7 @@ const EXPECTED_RUNNABLE = [
   'tormentor-occupancy-lifecycle',
   // …PR 5 — pass 2: vehicle prone + Prone Deficiency — a namespaced prone fact
   // (never condition.prone) recorded from the station +ADD, flipped upright by
-  // an empty same-key eviction, evicted with the board, noticed while boarded
+  // an empty same-key eviction, evicted with the board, noticed while prone
   'tormentor-prone-record',
   'tormentor-prone-lifecycle',
   'long-rest-resets-hit-dice',
