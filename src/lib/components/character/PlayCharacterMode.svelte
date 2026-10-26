@@ -61,6 +61,11 @@
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
 
+  // Per-row annotations, keyed by instanceId: each plan row renders its OWN
+  // list (judged at that row's END state), not the global list above — which
+  // stays the notices strip's source.
+  const annotationsByRow = $derived(playStore.state.engineOutput?.annotationsByRow ?? {});
+
   // The passive reminders for the notices strip: the same engine annotations,
   // filtered to the reserved notice target (everything no panel claims).
   const notices = $derived(getNotices(activeAnnotations));
@@ -189,6 +194,7 @@
         entries={availableRules}
         facts={playStore.state.facts}
         {activeAnnotations}
+        {annotationsByRow}
         onAddToPlan={handleChoiceTap}
         onRemoveFromPlan={handleRemove}
         onMovePlanItem={(id, dir) => playStore.movePlanItem(id, dir)}

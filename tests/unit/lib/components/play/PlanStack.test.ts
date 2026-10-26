@@ -560,4 +560,86 @@ describe('PlanStack', () => {
       expect(rollLog.isOpen).toBe(true);
     });
   });
+
+  describe('per-row annotations', () => {
+    /** An item whose panel matches one annotation label. */
+    function labeledItem(ruleId: string, label: string): PlannedItem {
+      // Resolve rows from the ITEM (not a leaked getPlannedEntry stub from an
+      // earlier test — clearAllMocks keeps implementations), so the row's own
+      // ui.annotationLabels drive the matching.
+      vi.mocked(playStore.getPlannedEntry).mockReturnValue(undefined);
+      const item = makeItem(ruleId, 'action-attack');
+      (item.rule.ui as Record<string, unknown>).annotationLabels = [label];
+      return item;
+    }
+
+    it('each row renders its OWN annotationsByRow list, not the global one', () => {
+      const first = labeledItem('attack-sword', 'row.first');
+      const second = labeledItem('attack-dagger', 'row.second');
+      // The old wiring: both rows received the same global list, so a global
+      // annotation matching `row.first` rendered on the first row no matter
+      // which row's state it was judged against.
+      const global: Annotation[] = [{ key: 'note.from-global', targets: ['row.first'] }];
+      const byRow: Record<string, Annotation[]> = {
+        [first.instanceId]: [{ key: 'note.from-first-row', targets: ['row.first'] }],
+        [second.instanceId]: [{ key: 'note.from-second-row', targets: ['row.second'] }]
+      };
+
+      mount(PlanStack, {
+        target: container,
+        props: {
+          items: [first, second],
+          entries: [],
+          facts: {} as Facts,
+          activeAnnotations: global,
+          annotationsByRow: byRow,
+          onAddToPlan: noop,
+          onRemoveFromPlan: noop,
+          onMovePlanItem: noop,
+          onSelectionChange: noop,
+          onSwapPlanItemRule: noop,
+          onEndTurn: noop
+        }
+      });
+
+      const text = container.textContent ?? '';
+      // Each row's own note (the panel note block prints the key).
+      expect(text).toContain('note.from-first-row');
+      expect(text).toContain('note.from-second-row');
+      // The global annotation must NOT reach the first row when the per-row map
+      // covers it — the row's own list is the whole truth there.
+      expect(text).not.toContain('note.from-global');
+    });
+
+    it('falls back to the global list for a row the map does not cover (mid-debounce add)', () => {
+      const first = labeledItem('attack-sword', 'row.first');
+      const second = labeledItem('attack-dagger', 'row.second');
+      // Only the FIRST row is covered: the second was just added inside the
+      // evaluation debounce, so no per-row list exists for it yet.
+      const global: Annotation[] = [{ key: 'note.from-global', targets: ['row.second'] }];
+      const byRow: Record<string, Annotation[]> = {
+        [first.instanceId]: []
+      };
+
+      mount(PlanStack, {
+        target: container,
+        props: {
+          items: [first, second],
+          entries: [],
+          facts: {} as Facts,
+          activeAnnotations: global,
+          annotationsByRow: byRow,
+          onAddToPlan: noop,
+          onRemoveFromPlan: noop,
+          onMovePlanItem: noop,
+          onSelectionChange: noop,
+          onSwapPlanItemRule: noop,
+          onEndTurn: noop
+        }
+      });
+
+      const text = container.textContent ?? '';
+      expect(text).toContain('note.from-global');
+    });
+  });
 });

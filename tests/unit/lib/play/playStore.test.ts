@@ -84,6 +84,7 @@ function rawOutput(overrides: Partial<EngineOutput> = {}): EngineOutput {
     planDiagnostics: {},
     plannedOffers: {},
     annotations: [],
+    annotationsByRow: {},
     effects: [],
     diagnostics: { errors: [], warnings: [], notices: [] },
     next: { modules: [] },
@@ -695,6 +696,80 @@ describe('playStore', () => {
       playStore.addToPlan(rule);
 
       expect(playStore.state.plannedItems[0].verb).toBe('ATTACK');
+    });
+  });
+
+  describe('ensurePlannedToggleSelections freezes from the row prefix', () => {
+    // A toggle annotation (Frightened's line-of-sight shape) that only the
+    // SECOND evaluation carries: the first row was added before it existed,
+    // so its per-row sight value must be frozen from the row's PREFIX facts —
+    // the state at the row's position — never the full-plan display cache,
+    // which already folds later rows' effects in.
+    const toggleAnnotation = {
+      key: 'test.los',
+      targets: ['dice.any'],
+      toggle: {
+        fact: 'test.toggle',
+        onWhen: 0,
+        onEffect: { id: 'on', expiry: { kind: 'permanent' as const } },
+        offEffect: { id: 'off', expiry: { kind: 'permanent' as const } },
+        labelOn: 'test.los.on',
+        labelOff: 'test.los.off',
+        appliesTo: ['check' as const]
+      }
+    };
+
+    function labeledRule(id: string): Rule {
+      return {
+        id,
+        activities: [],
+        ui: { annotationLabels: ['dice.any'] }
+      };
+    }
+
+    it('freezes the row-prefix value, not the full-plan fact a later row moved', async () => {
+      // The toggle (and the moved fact) exist only once the SECOND row is in
+      // the plan — the first row predates the annotation, exactly the case
+      // ensurePlannedToggleSelections exists for.
+      vi.mocked(evaluateCharacter).mockImplementation((_m, _c, refs) =>
+        refs.length >= 2
+          ? playOut({
+              raw: rawOutput({
+                facts: { 'test.toggle': 1 },
+                annotations: [toggleAnnotation]
+              })
+            })
+          : playOut()
+      );
+      // The first row's PREFIX: the later row's effect has not happened yet.
+      vi.mocked(factsBeforeRow).mockReturnValue({ 'test.toggle': 0 });
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan(labeledRule('attack-row')); // toggle not live yet: no capture
+      playStore.addToPlan({ id: 'later-row', activities: [] });
+      vi.advanceTimersByTime(300); // the evaluation that first carries the toggle
+
+      // The frozen value is the row's OWN prefix (0) — the full-plan facts
+      // read 1, and freezing THAT would make the row's chip disagree with the
+      // state the row actually executes in.
+      expect(playStore.state.plannedItems[0].rule.selections).toMatchObject({
+        'test.toggle': 0
+      });
+    });
+
+    it('still freezes nothing while no toggle is live anywhere', async () => {
+      vi.mocked(evaluateCharacter).mockReturnValue(playOut());
+      vi.mocked(factsBeforeRow).mockReturnValue({});
+
+      const { playStore } = await import('$lib/play/playStore.svelte');
+      playStore.reset();
+
+      playStore.addToPlan(labeledRule('attack-row'));
+      vi.advanceTimersByTime(300);
+
+      expect(playStore.state.plannedItems[0].rule.selections).toEqual({});
     });
   });
 

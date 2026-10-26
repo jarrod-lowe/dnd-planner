@@ -50,6 +50,7 @@ function rawOutput(): EngineOutput {
     planDiagnostics: {},
     plannedOffers: {},
     annotations: [],
+    annotationsByRow: {},
     effects: [],
     diagnostics: { errors: [], warnings: [], notices: [] },
     next: { modules: [] }

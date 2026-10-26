@@ -1,4 +1,10 @@
-import type { AvailableRuleEntry, Diagnostic, EngineInput, EngineOutput } from './types';
+import type {
+  Annotation,
+  AvailableRuleEntry,
+  Diagnostic,
+  EngineInput,
+  EngineOutput
+} from './types';
 import { evaluatePlan } from './plan';
 import { evaluateOffers } from './offers';
 import { collectAnnotations } from './annotate';
@@ -43,6 +49,12 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
 
   const planDiagnostics: Record<string, Diagnostic[]> = Object.fromEntries(plan.planDiagnostics);
 
+  // Per-row annotations as a plain record (the planDiagnostics shape): the
+  // rows' own lists, each judged at its row's end. The global `annotations`
+  // below is unchanged — the settled full-plan pass the notices strip and the
+  // toggle captures read.
+  const annotationsByRow: Record<string, Annotation[]> = Object.fromEntries(plan.annotationsByRow);
+
   // The offer each planned instance ran, as a view entry — so the plan row
   // resolves from the step-time offer even when its own apply closed the `when`
   // gate (dropping it from `availableRules`). Legality is the fold's verdict
@@ -81,6 +93,7 @@ export function evaluate(input: EngineInput, opts: EvaluateOptions = {}): Engine
     availableRules,
     planDiagnostics,
     plannedOffers,
+    annotationsByRow,
     annotations,
     effects: plan.advertised,
     diagnostics: { errors: [], warnings: [], notices: [] },

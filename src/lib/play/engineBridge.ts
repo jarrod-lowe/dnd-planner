@@ -176,6 +176,9 @@ export function adaptEngineOutput(output: EngineOutput): ViewOutput {
     availableRules: offers,
     // Annotations are structurally the view shape (costTags is a widened string[]).
     annotations: output.annotations as unknown as ViewOutput['annotations'],
+    // Per-row annotations ride along keyed by instanceId (plan rows render their
+    // own list; the global field above keeps the notices-strip semantics).
+    annotationsByRow: output.annotationsByRow as unknown as ViewOutput['annotationsByRow'],
     diagnostics: output.diagnostics,
     trace: {
       appliedRuleIds: [],
