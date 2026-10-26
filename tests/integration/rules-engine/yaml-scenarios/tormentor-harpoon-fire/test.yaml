@@ -1,0 +1,86 @@
+name: 'Tormentor - Fire The Harpoon Flinger'
+description: >-
+  The Harpoon Flinger's attack offer exists only while the harpoon seat is
+  held (the `when` gate is the acquire AND the station's seat fact — a
+  passenger, or nobody, at the flinger means no offer), and while it exists it
+  is a plan-row ACTION attack in the weaponOffers idiom: ATTACK 'weapons',
+  action cost, a dice-line reading the module derives (d20 + 7 to hit, 2d8 + 2
+  piercing) — 120 ft. and one target are offer copy and detail text, not
+  range machinery.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Acquired but unseated: no fire offer — the attack is the station's.
+  - addOffer:
+      id: acquire-tormentor
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - fire-tormentor-harpoon
+  # A passenger at another station does not man the flinger either.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - fire-tormentor-harpoon
+  # Seated at the flinger: the offer exists with the full attack shape.
+  - addOffer:
+      id: leave-tormentor-passenger-seat
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - fire-tormentor-harpoon
+        offerUi:
+          - id: fire-tormentor-harpoon
+            ui:
+              section: action-attack
+              subject: tormentor
+              name: rule.tormentor.fire-harpoon.name
+              description: rule.tormentor.fire-harpoon.description
+              detailKey: vehicle/tormentor-harpoon
+              actionCost:
+                - action
+              annotationLabels:
+                - dice.any.companion
+              intents:
+                ATTACK: weapons
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: hitBonus
+                    purpose: to-hit
+                  - sides: 8
+                    count: 2
+                    bonus:
+                      var: damageBonus
+                    purpose: damage
+                    damageType:
+                      string: piercing
+        offerVars:
+          - id: fire-tormentor-harpoon
+            vars:
+              hitBonus:
+                capture: true
+                default:
+                  fact: companion.tormentor.harpoon.hitBonus
+              damageDie:
+                default:
+                  number: 8
+              damageBonus:
+                capture: true
+                default:
+                  fact: companion.tormentor.harpoon.damageBonus
+  # The derives the dice-line reads: +7 to hit, +2 damage, while acquired.
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.harpoon.hitBonus: 7
+          companion.tormentor.harpoon.damageBonus: 2

@@ -167,3 +167,54 @@ ruleGroups:
             **Mishap Threshold 20.** A single source that deals twenty or more
             damage to the Tormentor triggers a mishap — consult the
             mishap table for what breaks loose.
+  # The HARPOON FLINGER's flip detail — linked from the fire offer. A
+  # catalog-only entry like the prone and damage details above: our own
+  # wording (the Tormentor is not SRD), in-world voice for the numbers, plus
+  # the one app-facing note the settled plan calls for (ammunition is
+  # display-only). 120 ft. and one target live here and in the offer copy,
+  # not in range machinery.
+  - id: tormentor-harpoon-detail
+    translations:
+      en:
+        name: Harpoon Flinger (Tormentor)
+        description: Detail text for firing the Tormentor's Harpoon Flinger
+        keywords:
+          - harpoon
+          - flinger
+          - tormentor
+          - vehicle
+          - attack
+          - piercing
+          - ranged
+      en-x-tlh:
+        name: Harpoon Flinger (Tormentor)
+        description: Detail text for firing the Tormentor's Harpoon Flinger
+        keywords:
+          - harpoon
+          - flinger
+          - tormentor
+          - vehicle
+          - attack
+          - piercing
+          - ranged
+    detail:
+      key: vehicle/tormentor-harpoon
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Weapon
+          fields:
+            - labelKey: rules.field.range
+              value: 120 ft.
+            - labelKey: rules.field.damage
+              value: 2d8+2 piercing
+          body: |
+            **Harpoon Flinger.** A ranged weapon attack: +7 to hit, range
+            120 ft., one target, 2d8+2 piercing damage on a hit. The attack
+            is made with an action while you hold the Harpoon Flinger seat.
+
+            **Magic Weapons.** The flinger's harpoons are magical.
+
+            **Ammunition.** The flinger's rack carries 10 harpoons. The app
+            does not track how many have been fired — spent harpoons and
+            reloads are the crew's bookkeeping.

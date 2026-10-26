@@ -111,7 +111,7 @@ describe('annotation targets', () => {
     for (const m of modules()) {
       for (const o of offersOf(m)) {
         if (!rollsDice(o.ui)) continue;
-        const wanted = o.ui?.subject === 'steed' ? 'dice.any.companion' : 'dice.any';
+        const wanted = typeof o.ui?.subject === 'string' ? 'dice.any.companion' : 'dice.any';
         if (!labelsOf(o).includes(wanted)) missing.push(`${m.id} → ${o.id} (wants ${wanted})`);
       }
     }

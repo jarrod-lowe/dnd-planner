@@ -1,4 +1,5 @@
 import {
+  attackActionSpend,
   currentHp,
   defineRule,
   hpRecorders,
@@ -161,10 +162,10 @@ const DESTROYED_KEY = 'tormentor-destroyed';
 
 /**
  * The vehicle's ACTION STATIONS with a seat a player can hold — the seat
- * infrastructure's ONE registry. Only the passenger station has offers and an
- * effect today (PR-A); later passes add theirs. EVERY seat condition and
- * count iterates this list, so a new station joins the exclusivity leg and
- * the capacity derive by EXTENDING it — no other edit.
+ * infrastructure's ONE registry. The passenger (PR-A) and harpoon (PR-B)
+ * stations are live; later passes add theirs. EVERY seat condition and count
+ * iterates this list, so a new station joins the exclusivity leg and the
+ * capacity derive by EXTENDING it — no other edit.
  */
 const SEAT_STATIONS = ['passenger', 'harpoon', 'helm', 'clinger'] as const;
 type SeatStation = (typeof SEAT_STATIONS)[number];
@@ -229,8 +230,10 @@ const CHILD_KEYS = [
   HP_DAMAGE_KEY,
   HP_HEAL_KEY,
   DESTROYED_KEY,
-  // The passenger seat (PR-A; later passes append their station's key here).
-  'tormentor-seat-passenger'
+  // The seats, station by station as they go live (PR-A passenger, PR-B
+  // harpoon; later passes append their station's key here).
+  'tormentor-seat-passenger',
+  'tormentor-seat-harpoon'
 ] as const;
 
 /** The stat block acquiring bakes. HP bakes its BASE (the pool derives from
@@ -488,6 +491,64 @@ const PASSENGER_SEAT: SeatSpec = {
   leave: { name: `${T}.leave-seat.name`, description: `${T}.leave-seat.description` },
   effectName: `${T}.seat-passenger-effect.name`
 };
+
+/**
+ * The HARPOON FLINGER station — PR-B's seat (the stat block's Harpoon Flinger,
+ * NOT "Harpoonist": station labels are stat-block names). Taking it is the
+ * same take/leave pair on the shared helper; what the station ADDS is its
+ * ACTION, the fire offer below — the seat is the `when` gate, the numbers are
+ * the derives the dice-line reads. The attack DETAIL (the 10 harpoons, the
+ * magical weapons) hangs off the fire offer; the seat chip stays plain like
+ * the passenger's.
+ */
+const HARPOON_SEAT: SeatSpec = {
+  station: 'harpoon',
+  take: { name: `${T}.take-harpoon-seat.name`, description: `${T}.take-harpoon-seat.description` },
+  leave: {
+    name: `${T}.leave-harpoon-seat.name`,
+    description: `${T}.leave-harpoon-seat.description`
+  },
+  effectName: `${T}.seat-harpoon-effect.name`
+};
+
+/**
+ * The fire offer's dice line: d20 + the derived hit bonus to hit, 2d8 + the
+ * derived damage bonus piercing (the HEAL_TOUCH count:2 precedent for a
+ * two-die damage entry). NO ranges machinery — 120 ft. and one target are
+ * offer copy and detail text, not bands; the slam control carries a melee
+ * band only because the slam is a reach attack.
+ */
+const HARPOON_CONTROL = {
+  type: 'dice-line',
+  dice: [
+    { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+    {
+      sides: 8,
+      count: 2,
+      bonus: { var: 'damageBonus' },
+      purpose: 'damage',
+      damageType: { string: 'piercing' }
+    }
+  ]
+} as const;
+
+/**
+ * The fire offer's vars, slam-spelled: both bonuses are CAPTURED reads of the
+ * module derives (a planned row freezes the numbers it rolled with), the
+ * damage die a plain constant — a vehicle weapon has no grip to follow.
+ */
+const HARPOON_VARS = {
+  hitBonus: { capture: true, default: { fact: `${F}.harpoon.hitBonus` } },
+  damageDie: { default: { number: 8 } },
+  damageBonus: { capture: true, default: { fact: `${F}.harpoon.damageBonus` } }
+} as const;
+
+/**
+ * The no-action diagnostic the fire offer shares with EVERY weapon attack
+ * (the builder's own key — deliberately not a tormentor one: same rule, same
+ * words, and the i18n coverage keeps one slot).
+ */
+const NO_ACTION = 'rule.dnd-5e-2024.attacks.activation.no_action';
 
 /**
  * The vehicle's Prone Deficiency, as STATE TRACKING ONLY. The Tormentor is not
@@ -780,6 +841,19 @@ const vehicleTormentor: RuleModule = {
     {
       fact: `${F}.ac.effective`,
       value: (f) => (acquired(f) ? (f.num(`${F}.acMotionless.current`) > 0 ? 19 : 21) : 0)
+    },
+    // The HARPOON FLINGER's numbers as facts the fire offer's vars read (the
+    // steed-slam pattern: per-attack derives beside the attack they belong
+    // to, constants from the stat block). Gated on the acquire like every
+    // other vehicle number: unacquired they settle to 0, and the dice line is
+    // unreachable anyway — the fire offer's gate being the seat.
+    {
+      fact: `${F}.harpoon.hitBonus`,
+      value: (f) => (acquired(f) ? 7 : 0)
+    },
+    {
+      fact: `${F}.harpoon.damageBonus`,
+      value: (f) => (acquired(f) ? 2 : 0)
     }
   ],
   offer: () => [
@@ -1014,8 +1088,61 @@ const vehicleTormentor: RuleModule = {
       }
     },
     // The VEHICLE's seat offers — the take/leave pair for every live station
-    // (see seatOffers/PASSENGER_SEAT above).
+    // (see seatOffers/PASSENGER_SEAT/HARPOON_SEAT above).
     ...seatOffers(PASSENGER_SEAT),
+    ...seatOffers(HARPOON_SEAT),
+    {
+      // The HARPOON FLINGER's attack — the station's whole point, and the one
+      // seat offer that is a plan-row ACTION: the weaponOffers use-action
+      // idiom on the vehicle subject. `when` is the acquire AND the station's
+      // seat (nobody at the flinger, no offer — the seat fact is the gate the
+      // leave offer's eviction closes); the ACTION POOL is `legalWhen`, never
+      // `when` (the engine's illegal-but-visible contract): with no action
+      // left the offer stays visible and applicable with the SAME no-action
+      // diagnostic every weapon attack carries, and a planned-anyway row
+      // still fires. Apply is the shared `attackActionSpend` and NOTHING else
+      // — the row spends the player's action (a free Extra Attack follow-up
+      // included, exactly like a weapon swing) and writes NO facts of its
+      // own: the seat stays taken, no harpoon is counted down (ammunition is
+      // detail text), and the vehicle's state is untouched. The dice line
+      // reads the module derives (+7 to hit, 2d8+2 piercing); 120 ft. and one
+      // target live in the copy and the detail, not in range machinery.
+      id: 'fire-tormentor-harpoon',
+      when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('harpoon')) > 0,
+      legalWhen: [
+        {
+          condition: (f: FactReader): boolean =>
+            f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
+          diagnostics: [{ code: NO_ACTION, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'action-attack',
+        subject: SUBJECT,
+        name: `${T}.fire-harpoon.name`,
+        description: `${T}.fire-harpoon.description`,
+        detailKey: 'vehicle/tormentor-harpoon',
+        intents: { ATTACK: 'weapons' },
+        actionCost: ['action'],
+        // The companion-suffixed roller label (the steed's COMPANION_DICE_LABEL
+        // precedent): the fire panel lives under the vehicle subject, and every
+        // subject panel scopes its labels so self-only riders cannot reach a
+        // companion's rolls (companion-annotation-labels pins this registry-
+        // wide) — the player spends the action, the VEHICLE fires.
+        annotationLabels: ['dice.any.companion'],
+        primaryControl: HARPOON_CONTROL
+      },
+      vars: HARPOON_VARS,
+      apply: (f: FactReader): ActionResult => {
+        // The shared spend re-derives the pool itself and reports the
+        // over-commit (the weapon-attack apply shape).
+        const { effect, overCommitted } = attackActionSpend(f);
+        return {
+          advertise: [effect],
+          diagnostics: overCommitted ? [{ code: NO_ACTION, severity: 'error' }] : []
+        };
+      }
+    },
     {
       // The VEHICLE-side way out: gated on the acquire (structurally —
       // unacquired, the action does not exist at all), sitting under the

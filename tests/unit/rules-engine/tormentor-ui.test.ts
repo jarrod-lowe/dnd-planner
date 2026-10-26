@@ -69,6 +69,9 @@ describe('acquire offer ui', () => {
       'flip-tormentor-upright',
       'take-tormentor-passenger-seat',
       'leave-tormentor-passenger-seat',
+      'take-tormentor-harpoon-seat',
+      'leave-tormentor-harpoon-seat',
+      'fire-tormentor-harpoon',
       'abandon-tormentor'
     ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
@@ -282,7 +285,8 @@ describe('acquire effect', () => {
       'tormentor-hp-damage',
       'tormentor-hp-heal',
       'tormentor-destroyed',
-      'tormentor-seat-passenger'
+      'tormentor-seat-passenger',
+      'tormentor-seat-harpoon'
     ]);
   });
 
@@ -874,6 +878,325 @@ describe('passenger seat i18n (tlh is the canary)', () => {
       'en-x-tlh not seated': tlh.rule.tormentor['leave-seat']?.not_seated,
       'en chip name': en.rule.tormentor['seat-passenger-effect']?.name,
       'en-x-tlh chip name': tlh.rule.tormentor['seat-passenger-effect']?.name
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+/**
+ * PR-B — the Harpoon Flinger station: the seat infrastructure's SECOND seat,
+ * plus the station's ACTION. The seat is another SeatSpec on the same helper
+ * (effect `effect-tormentor-seat-harpoon`, key `tormentor-seat-harpoon`, fact
+ * `companion.tormentor.seats.harpoon = 1`, chip like the passenger's); every
+ * seat condition and count iterates SEAT_STATIONS, so the exclusivity leg and
+ * the capacity derive picked the station up by extending the list — and the
+ * key joins CHILD_KEYS, so the acquire lifecycle evicts it like every record.
+ * The attack offer (`fire-tormentor-harpoon`) is the weaponOffers idiom on
+ * the vehicle subject: structurally gated on the acquire AND the harpoon seat
+ * (nobody at the flinger, no offer), legal while the player's action pool is
+ * open (the shared no-action diagnostic otherwise, committable), spending the
+ * action through `attackActionSpend` and writing NO facts of its own. The
+ * numbers (+7 to hit, 2d8+2 piercing) are module derives the dice-line vars
+ * read (the steed-slam pattern); 120 ft. and one target are copy + detail.
+ */
+
+/** The harpoon-seat effect, through the real plan fold (acquired, then taken). */
+function harpoonSeatEffect(): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-harpoon-seat' }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-seat-harpoon'));
+  expect(advertised, 'taking the seat applies exactly one named effect').toHaveLength(1);
+  return advertised[0]!;
+}
+
+/** A committed acquire with the harpoon seat held (stored state for later folds). */
+function seatedAtHarpoon(): EffectInstance[] {
+  return [acquireEffect(), harpoonSeatEffect()];
+}
+
+describe('take-tormentor-harpoon-seat offer', () => {
+  it('is a vehicle free-section EQUIP offer while acquired, with the station-specific keys', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'take-tormentor-harpoon-seat');
+    expect(offer, 'the vehicle +ADD carries the take-harpoon offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.take-harpoon-seat.name`);
+    expect(ui.description).toBe(`${T}.take-harpoon-seat.description`);
+    expect(ui.actionCost).toEqual([]);
+    // Seat offers file with the acquire/abandon EQUIP 'vehicle' family.
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
+    // Acquired and unseated at 0/4: legal, no diagnostics.
+    expect(offer!.legal).toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+
+  it('rides the shared seat helper: the same two legs with the station-generic diagnostics', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'take-tormentor-harpoon-seat'
+    );
+    expect(raw, 'the take-harpoon offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.legalWhen).toHaveLength(2);
+    // Leg (a) — one seat per player, GLOBALLY: the passenger seat held makes
+    // taking the harpoon seat illegal, and re-taking the harpoon seat you hold
+    // is the same path. NO new diagnostic keys: the station-generic pair.
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    // Leg (b) — the free-seat rule, shared key like the passenger's.
+    expect(raw!.legalWhen![1]!.condition(seatLegReader({}, 3, 4))).toBe(true);
+    expect(raw!.legalWhen![1]!.condition(seatLegReader({}, 4, 4))).toBe(false);
+    expect(raw!.legalWhen![1]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.full`, severity: 'error' }
+    ]);
+  });
+
+  it('apply advertises ONE permanent keyed effect writing exactly the station fact, with the chip', () => {
+    const e = harpoonSeatEffect();
+    expect(e.id).toContain('effect-tormentor-seat-harpoon');
+    expect(e.key).toBe('tormentor-seat-harpoon');
+    // EXACT equality: the state writes the namespaced seat fact and NOTHING
+    // else — the same contract the passenger seat carries.
+    expect(e.state).toEqual({ [`${F}.seats.harpoon`]: 1 });
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    // The at-a-glance "where am I seated" chip, passenger-shaped.
+    expect(e.display).toEqual({
+      name: `${T}.seat-harpoon-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('the derived capacity counts the held harpoon seat (the derive iterates every station)', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHarpoon() });
+    expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+  });
+});
+
+describe('leave-tormentor-harpoon-seat offer', () => {
+  it("is the passenger mirror: the not-seated leg reads THIS station's seat alone", () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'leave-tormentor-harpoon-seat'
+    );
+    expect(raw, 'the leave-harpoon offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.legalWhen).toHaveLength(1);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ harpoon: 1 }))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(false);
+    // Another station's seat does not satisfy the leg — each leave clears its own.
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.leave-seat.not_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('apply advertises the EMPTY same-key eviction — and the fire offer goes with the seat', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: seatedAtHarpoon(),
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-harpoon-seat' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-harpoon'));
+    expect(evict, 'leave advertises the seat eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-seat-harpoon');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    // The seat fact is GONE the moment the row is merely planned (newest-wins),
+    // the capacity falls with it — and with nobody at the flinger the attack
+    // offer no longer exists (the `when` gate).
+    expect(out.facts[`${F}.seats.harpoon`]).toBeUndefined();
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+    expect(out.availableRules.some((r) => r.rule.id === 'fire-tormentor-harpoon')).toBe(false);
+  });
+});
+
+describe('the harpoon seat rides the acquire lifecycle', () => {
+  it('a re-acquire and an abandon both advertise the empty same-key eviction', () => {
+    for (const ruleId of ['acquire-tormentor', 'abandon-tormentor'] as const) {
+      const out = evaluate({
+        modules: [module()],
+        committed: seatedAtHarpoon(),
+        planned: [{ instanceId: 'i0', ruleId }]
+      });
+      const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-harpoon'));
+      expect(evict, `${ruleId} advertises the harpoon-seat eviction`).toBeDefined();
+      expect(evict!.key).toBe('tormentor-seat-harpoon');
+      expect(evict!.state).toBeUndefined();
+      expect(out.facts[`${F}.seats.harpoon`]).toBeUndefined();
+    }
+  });
+});
+
+describe('fire-tormentor-harpoon offer', () => {
+  it('is a plan-row ATTACK offer on the vehicle subject, in the weaponOffers idiom', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHarpoon() });
+    const offer = out.availableRules.find((r) => r.rule.id === 'fire-tormentor-harpoon');
+    expect(offer, 'the vehicle +ADD carries the fire offer while seated').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('action-attack');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.fire-harpoon.name`);
+    expect(ui.description).toBe(`${T}.fire-harpoon.description`);
+    // The attack detail: +7 / 120 ft. / one target / 2d8+2, the 10 harpoons,
+    // the magical weapons note.
+    expect(ui.detailKey).toBe('vehicle/tormentor-harpoon');
+    expect(ui.intents).toEqual({ ATTACK: 'weapons' });
+    expect(ui.actionCost).toEqual(['action']);
+    // A dice-line roller carries a dice.any label so reroll riders can find
+    // the panel — and because the panel lives under the vehicle SUBJECT it is
+    // the companion-suffixed form (the steed's COMPANION_DICE_LABEL precedent;
+    // companion-annotation-labels pins the suffix registry-wide).
+    expect(ui.annotationLabels).toEqual(['dice.any.companion']);
+    // 120 ft. / one target are copy + detail — no ranges machinery, so the
+    // control is dice alone: d20 + hitBonus to hit, 2d8 + damageBonus
+    // piercing (the HEAL_TOUCH count:2 precedent for the damage pair).
+    expect(ui.primaryControl).toEqual({
+      type: 'dice-line',
+      dice: [
+        { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+        {
+          sides: 8,
+          count: 2,
+          bonus: { var: 'damageBonus' },
+          purpose: 'damage',
+          damageType: { string: 'piercing' }
+        }
+      ]
+    });
+    // The slam-spelled vars: both bonuses CAPTURED from the module derives,
+    // the damage die a plain constant (no grip machinery on a vehicle).
+    expect(offer!.rule.vars).toEqual({
+      hitBonus: { capture: true, default: { fact: `${F}.harpoon.hitBonus` } },
+      damageDie: { default: { number: 8 } },
+      damageBonus: { capture: true, default: { fact: `${F}.harpoon.damageBonus` } }
+    });
+  });
+
+  it('is gated structurally on the acquire AND the harpoon seat (when)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'fire-tormentor-harpoon');
+    expect(raw, 'the fire offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    // seatLegReader carries active=1: the harpoon seat alone satisfies the gate.
+    expect(raw!.when!(seatLegReader({ harpoon: 1 }))).toBe(true);
+    // A passenger does not man the flinger…
+    expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+    // …and neither does nobody.
+    expect(raw!.when!(seatLegReader({}))).toBe(false);
+    // Through the fold: acquired but unseated, the offer does not exist.
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(unseated.availableRules.some((r) => r.rule.id === 'fire-tormentor-harpoon')).toBe(false);
+  });
+
+  it('legality is the weaponOffers action-pool idiom: the SHARED no-action diagnostic', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'fire-tormentor-harpoon');
+    expect(raw, 'the fire offer exists').toBeDefined();
+    expect(raw!.legalWhen).toHaveLength(1);
+    const leg = raw!.legalWhen![0]!;
+    const poolReader = (actions: number, extra = 0): FactReader => ({
+      num: (n) =>
+        n === 'actions.remaining'
+          ? actions
+          : n === 'attackAction.extraRemaining'
+            ? extra
+            : n === `${F}.active`
+              ? 1
+              : 0,
+      has: (n) => n === `${F}.active`
+    });
+    expect(leg.condition(poolReader(1))).toBe(true);
+    // A free Extra Attack follow-up opens the pool like any weapon swing.
+    expect(leg.condition(poolReader(0, 1))).toBe(true);
+    expect(leg.condition(poolReader(0))).toBe(false);
+    // The diagnostic is the one every weapon attack carries — no new key.
+    expect(leg.diagnostics).toEqual([
+      { code: 'rule.dnd-5e-2024.attacks.activation.no_action', severity: 'error' }
+    ]);
+  });
+
+  it('apply spends the action through attackActionSpend and writes NO facts of its own', () => {
+    // The action-economy module joins the set so the player's action pool
+    // derives for real (the weapon attacks' own scenario shape).
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHarpoon(),
+      planned: [{ instanceId: 'i0', ruleId: 'fire-tormentor-harpoon' }]
+    });
+    // Exactly ONE advertised effect — the shared per-turn spend (endOfTurn,
+    // keyless), never a vehicle fact: no ammunition tracking, no station state.
+    expect(out.effects).toHaveLength(1);
+    expect(out.effects[0]!.key).toBeUndefined();
+    expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
+    expect(out.effects[0]!.state).toEqual({
+      'actions.spent': 1,
+      'attackAction.extraGranted': 0,
+      'attack.activation.count': 1
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // The vehicle state is untouched by firing.
+    expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+    expect(out.facts[`${F}.hp.current`]).toBe(60);
+  });
+
+  it('a no-action row still fires (the override path), flagged with the shared diagnostic', () => {
+    // The plan.ts contract: the illegal row EXECUTES — the second spend lands
+    // (the projection reads the over-commit) — while the row carries the
+    //no-action diagnostic, exactly like a second weapon swing.
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHarpoon(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'fire-tormentor-harpoon' },
+        { instanceId: 'i1', ruleId: 'fire-tormentor-harpoon' }
+      ]
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: 'rule.dnd-5e-2024.attacks.activation.no_action', severity: 'error' }
+    ]);
+  });
+});
+
+describe('harpoon derives (the numbers the dice-line reads)', () => {
+  it('hitBonus 7 and damageBonus 2 while acquired, 0 unacquired', () => {
+    const acquired = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(acquired.facts[`${F}.harpoon.hitBonus`]).toBe(7);
+    expect(acquired.facts[`${F}.harpoon.damageBonus`]).toBe(2);
+    const unacquired = evaluate({ modules: [module()] });
+    expect(unacquired.facts[`${F}.harpoon.hitBonus`]).toBe(0);
+    expect(unacquired.facts[`${F}.harpoon.damageBonus`]).toBe(0);
+  });
+});
+
+describe('harpoon seat + attack i18n (tlh is the canary)', () => {
+  it('the take/leave offer names, the chip name and the attack name/description exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en take name': en.rule.tormentor['take-harpoon-seat']?.name,
+      'en-x-tlh take name': tlh.rule.tormentor['take-harpoon-seat']?.name,
+      'en take description': en.rule.tormentor['take-harpoon-seat']?.description,
+      'en-x-tlh take description': tlh.rule.tormentor['take-harpoon-seat']?.description,
+      'en leave name': en.rule.tormentor['leave-harpoon-seat']?.name,
+      'en-x-tlh leave name': tlh.rule.tormentor['leave-harpoon-seat']?.name,
+      'en leave description': en.rule.tormentor['leave-harpoon-seat']?.description,
+      'en-x-tlh leave description': tlh.rule.tormentor['leave-harpoon-seat']?.description,
+      'en chip name': en.rule.tormentor['seat-harpoon-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['seat-harpoon-effect']?.name,
+      'en attack name': en.rule.tormentor['fire-harpoon']?.name,
+      'en-x-tlh attack name': tlh.rule.tormentor['fire-harpoon']?.name,
+      'en attack description': en.rule.tormentor['fire-harpoon']?.description,
+      'en-x-tlh attack description': tlh.rule.tormentor['fire-harpoon']?.description
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));
