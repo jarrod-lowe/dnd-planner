@@ -64,6 +64,8 @@ describe('acquire offer ui', () => {
       'record-tormentor-heal',
       'knock-tormentor-prone',
       'flip-tormentor-upright',
+      'take-tormentor-passenger-seat',
+      'leave-tormentor-passenger-seat',
       'abandon-tormentor'
     ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
@@ -276,7 +278,8 @@ describe('acquire effect', () => {
       'tormentor-prone',
       'tormentor-hp-damage',
       'tormentor-hp-heal',
-      'tormentor-destroyed'
+      'tormentor-destroyed',
+      'tormentor-seat-passenger'
     ]);
   });
 
@@ -380,20 +383,60 @@ describe('occupancy offer', () => {
   });
 });
 
-describe('creature capacity derive', () => {
-  /** Evaluate acquired, with an occupancy row planned at `n` (omitted: none). */
-  const usedAt = (n?: number): number | undefined =>
-    evaluate({
-      modules: [module()],
-      committed: [acquireEffect()],
-      planned:
-        n === undefined
-          ? []
-          : [{ instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: n } }]
-    }).facts[`${F}.creatureCapacity.used`];
+/**
+ * PR-A — the passenger seat: the seat infrastructure's first station. A seat
+ * is a PLAYER-side permanent keyed effect per station (state
+ * `companion.tormentor.seats.<station> = 1`, chip under the vehicle panel —
+ * the prone/ac-mode effect display pattern), taken and left by a TAKE/LEAVE
+ * offer pair in the vehicle's +ADD. Both offers are illegal-but-COMMITTABLE
+ * on their legs (the duplicate-acquire pattern): ONE seat per player
+ * GLOBALLY (the exclusivity leg reads EVERY station's seat fact, so a later
+ * station joins by extending the list) and the free-seat rule (used >= max),
+ * with the leave's not-seated leg the flip-upright idiom. The derived
+ * capacity counts held seats beside the recorded occupancy; the seat key
+ * rides the acquire lifecycle like every other record.
+ */
 
-  it('defaults to 1 while acquired (the acquirer counts)', () => {
-    expect(usedAt()).toBe(1);
+/** The passenger-seat effect, through the real plan fold (acquired, then taken). */
+function seatPlannedEffect(): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-passenger-seat' }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-seat-passenger'));
+  expect(advertised, 'taking the seat applies exactly one named effect').toHaveLength(1);
+  return advertised[0]!;
+}
+
+describe('creature capacity derive', () => {
+  /**
+   * Evaluate acquired with an occupancy row planned at `occupancy` (omitted:
+   * none) and, optionally, the passenger seat committed or planned. The seat
+   * pass changed the formula: used = recorded occupancy + every HELD SEAT,
+   * clamped to 0..max — the default-1 acquirer is RETIRED (a fresh vehicle
+   * reads 0/4 until someone takes a seat or records an occupancy).
+   */
+  const usedAt = (n?: number, seat?: { committed?: boolean }): number | undefined => {
+    const committed = [acquireEffect(), ...(seat?.committed ? [seatPlannedEffect()] : [])];
+    return evaluate({
+      modules: [module()],
+      committed,
+      planned: [
+        ...(n === undefined
+          ? []
+          : [
+              { instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: n } }
+            ]),
+        ...(seat && !seat.committed
+          ? [{ instanceId: 'i1', ruleId: 'take-tormentor-passenger-seat' }]
+          : [])
+      ]
+    }).facts[`${F}.creatureCapacity.used`];
+  };
+
+  it('reads 0 while acquired with no record and no seat (the default-1 acquirer is retired)', () => {
+    expect(usedAt()).toBe(0);
   });
 
   it('reads the recorded occupancy', () => {
@@ -402,14 +445,359 @@ describe('creature capacity derive', () => {
     expect(usedAt(0)).toBe(0);
   });
 
-  it('clamps the stored value to 0..max (the slider bound is UI-only)', () => {
+  it('counts a held seat beside the occupancy (committed and merely planned)', () => {
+    // The seat alone: 0 + 1.
+    expect(usedAt(undefined, { committed: true })).toBe(1);
+    expect(usedAt(undefined, {})).toBe(1);
+    // Occupancy 3 + the seated player = 4 of 4.
+    expect(usedAt(3, { committed: true })).toBe(4);
+    expect(usedAt(3, {})).toBe(4);
+  });
+
+  it('clamps the SUM to 0..max (the slider bound is UI-only)', () => {
     expect(usedAt(99)).toBe(4);
     expect(usedAt(-2)).toBe(0);
+    // Occupancy at the max PLUS a seat: the read clamps at the max, never 5.
+    expect(usedAt(4, { committed: true })).toBe(4);
   });
 
   it('reads 0 while unacquired (the acquire default is not a free occupant)', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+  });
+});
+
+/** A reader for the acquired vehicle at the given seat facts / capacity read. */
+function seatLegReader(seats: Record<string, number>, used = 0, max = 4): FactReader {
+  const prefix = `${F}.seats.`;
+  return {
+    num: (n) => {
+      if (n === `${F}.active`) return 1;
+      if (n === `${F}.creatureCapacity.used`) return used;
+      if (n === `${F}.creatureCapacity.max`) return max;
+      if (n.startsWith(prefix)) return seats[n.slice(prefix.length)] ?? 0;
+      return 0;
+    },
+    has: (n) =>
+      n.startsWith(prefix) ? (seats[n.slice(prefix.length)] ?? 0) > 0 : n === `${F}.active`
+  };
+}
+
+/** The occupancy record a row at `n` advertises, for committing as stored state. */
+function occupancyEffect(n: number): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: n } }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-occupancy'));
+  expect(advertised, `an occupancy row at ${n} advertises exactly one record`).toHaveLength(1);
+  return advertised[0]!;
+}
+
+describe('take-tormentor-passenger-seat offer', () => {
+  it('is a vehicle free-section EQUIP offer while acquired, beside abandon', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'take-tormentor-passenger-seat');
+    expect(offer, 'the vehicle +ADD carries the take-seat offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.take-seat.name`);
+    expect(ui.description).toBe(`${T}.take-seat.description`);
+    expect(ui.actionCost).toEqual([]);
+    // Seat offers file with the acquire/abandon EQUIP 'vehicle' family (the
+    // BUILD family's sub-bucket), not the HANDLE gear bucket the records use.
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
+    // Acquired and unseated at 0/4: legal, no diagnostics.
+    expect(offer!.legal).toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+
+  it('is gated structurally on acquired ONLY (when); the seat state is legality', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'take-tormentor-passenger-seat'
+    )!;
+    // `when` like every vehicle action: unacquired there is no vehicle to sit
+    // in, so the offer does not exist at all. The seat/capacity states are
+    // `legalWhen` legs, never structural gates (illegal-but-visible).
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toHaveLength(2);
+  });
+
+  it('is absent while unacquired', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.availableRules.some((r) => r.rule.id === 'take-tormentor-passenger-seat')).toBe(
+      false
+    );
+  });
+
+  it('leg (a): one seat per player GLOBALLY — the leg reads EVERY station, not just passenger', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'take-tormentor-passenger-seat'
+    )!;
+    const leg = raw.legalWhen![0]!;
+    // Legal with no seat held anywhere…
+    expect(leg.condition(seatLegReader({}))).toBe(true);
+    // …and illegal the moment ANY station's seat fact stands — re-taking the
+    // seat you hold is the same diagnostic path as holding another station's.
+    expect(leg.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    // A station with no offers yet still counts: the leg iterates the station
+    // list, so a later station joins exclusivity by extending it.
+    expect(leg.condition(seatLegReader({ helm: 1 }))).toBe(false);
+    expect(leg.condition(seatLegReader({ clinger: 1 }))).toBe(false);
+    expect(leg.diagnostics).toEqual([{ code: `${T}.take-seat.already_seated`, severity: 'error' }]);
+  });
+
+  it('leg (b): the free-seat rule — illegal at used >= max, legal below', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'take-tormentor-passenger-seat'
+    )!;
+    const leg = raw.legalWhen![1]!;
+    expect(leg.condition(seatLegReader({}, 0, 4))).toBe(true);
+    expect(leg.condition(seatLegReader({}, 3, 4))).toBe(true);
+    expect(leg.condition(seatLegReader({}, 4, 4))).toBe(false);
+    expect(leg.diagnostics).toEqual([{ code: `${T}.take-seat.full`, severity: 'error' }]);
+  });
+
+  it('apply advertises ONE permanent keyed effect writing exactly the seat fact, with the chip', () => {
+    const e = seatPlannedEffect();
+    expect(e.id).toContain('effect-tormentor-seat-passenger');
+    expect(e.key).toBe('tormentor-seat-passenger');
+    // EXACT equality: the state writes the namespaced seat fact and NOTHING
+    // else — boarding never touches occupancy or any other record.
+    expect(e.state).toEqual({ [`${F}.seats.passenger`]: 1 });
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    // The at-a-glance "where am I seated" chip under the vehicle panel — the
+    // prone/ac-mode effect display pattern (no detailKey: no passenger detail
+    // exists, there is nothing to say).
+    expect(e.display).toEqual({
+      name: `${T}.seat-passenger-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('stays VISIBLE but ILLEGAL while seated, with its diagnostic (never hidden)', () => {
+    // The engine's illegal-but-visible contract (plan.ts): one seat per
+    // player, so re-taking is illegal — leave is the legal way out.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()]
+    });
+    const take = out.availableRules.find((r) => r.rule.id === 'take-tormentor-passenger-seat');
+    expect(take, 'the take is still offered while seated').toBeDefined();
+    expect(take!.legal).toBe(false);
+    expect(take!.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    const leave = out.availableRules.find((r) => r.rule.id === 'leave-tormentor-passenger-seat');
+    expect(leave, 'the leave is offered while seated').toBeDefined();
+    expect(leave!.legal).toBe(true);
+  });
+
+  it('stays VISIBLE but ILLEGAL at capacity, with the full diagnostic', () => {
+    // Recorded occupancy 4 of 4, no seat held: the free-seat rule.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), occupancyEffect(4)]
+    });
+    const take = out.availableRules.find((r) => r.rule.id === 'take-tormentor-passenger-seat');
+    expect(take, 'the take is still offered at capacity').toBeDefined();
+    expect(take!.legal).toBe(false);
+    expect(take!.diagnostics).toEqual([{ code: `${T}.take-seat.full`, severity: 'error' }]);
+  });
+
+  it('a planned-anyway re-take while ILLEGAL still applies, carrying its diagnostic', () => {
+    // The plan.ts contract (the player-override path): an illegal planned row
+    // EXECUTES — the keyed replacement re-advertises the one seat (newest-wins,
+    // so the fact stays single) while the row carries the diagnostic.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-passenger-seat' }]
+    });
+    const keyed = out.effects.filter((e) => e.key === 'tormentor-seat-passenger');
+    expect(keyed, 'the illegal row still advertises exactly one seat').toHaveLength(1);
+    expect(out.facts[`${F}.seats.passenger`]).toBe(1);
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('a planned-anyway take at capacity still applies, carrying the full diagnostic', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), occupancyEffect(4)],
+      planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-passenger-seat' }]
+    });
+    // The seat fact lands; the derive clamps the read at the max (4, never 5).
+    expect(out.facts[`${F}.seats.passenger`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(4);
+    expect(out.planDiagnostics['i0']).toEqual([{ code: `${T}.take-seat.full`, severity: 'error' }]);
+  });
+});
+
+describe('leave-tormentor-passenger-seat offer', () => {
+  it('is a vehicle free-section EQUIP offer while acquired, mirroring the take', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()]
+    });
+    const offer = out.availableRules.find((r) => r.rule.id === 'leave-tormentor-passenger-seat');
+    expect(offer, 'the vehicle +ADD carries the leave-seat offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.leave-seat.name`);
+    expect(ui.description).toBe(`${T}.leave-seat.description`);
+    expect(ui.actionCost).toEqual([]);
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
+    // Seated: legal, no diagnostics.
+    expect(offer!.legal).toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+
+  it('is gated structurally on acquired ONLY (when); the held seat is the legality gate', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'leave-tormentor-passenger-seat'
+    )!;
+    expect(typeof raw.when).toBe('function');
+    expect(raw.legalWhen).toHaveLength(1);
+    // The leg is THIS station's seat (the flip-upright not-prone idiom): legal
+    // while the passenger seat is held…
+    expect(raw.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(true);
+    // …illegal without it — even when ANOTHER station's seat is held (each
+    // leave offer clears its own station's seat).
+    expect(raw.legalWhen![0]!.condition(seatLegReader({}))).toBe(false);
+    expect(raw.legalWhen![0]!.condition(seatLegReader({ helm: 1 }))).toBe(false);
+    expect(raw.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.leave-seat.not_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('is absent while unacquired', () => {
+    const out = evaluate({ modules: [module()] });
+    expect(out.availableRules.some((r) => r.rule.id === 'leave-tormentor-passenger-seat')).toBe(
+      false
+    );
+  });
+
+  it('is VISIBLE but ILLEGAL while not seated, with its diagnostic (never hidden)', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const leave = out.availableRules.find((r) => r.rule.id === 'leave-tormentor-passenger-seat');
+    expect(leave, 'the leave is offered while unseated').toBeDefined();
+    expect(leave!.legal).toBe(false);
+    expect(leave!.diagnostics).toEqual([{ code: `${T}.leave-seat.not_seated`, severity: 'error' }]);
+  });
+
+  it('apply advertises the EMPTY same-key eviction — the flip-upright idiom', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-passenger-seat' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-passenger'));
+    expect(evict, 'leave advertises the seat eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-seat-passenger');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    // The seat fact is GONE the moment the row is merely planned (newest-wins),
+    // and the capacity derive falls with it.
+    expect(out.facts[`${F}.seats.passenger`]).toBeUndefined();
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+  });
+
+  it('leaving never touches the occupancy or any other vehicle state', () => {
+    // Recorded occupancy 2 beside the held seat (used 3): leaving drops used
+    // to the recorded occupancy alone — the record, the acquire and the stats
+    // are untouched.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect(), occupancyEffect(2)],
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-passenger-seat' }]
+    });
+    expect(out.facts[`${F}.seats.passenger`]).toBeUndefined();
+    expect(out.facts[`${F}.creatureCapacity.occupancy`]).toBe(2);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(2);
+    expect(out.facts[`${F}.active`]).toBe(1);
+    expect(out.facts[`${F}.hp.max`]).toBe(60);
+  });
+
+  it('a planned-anyway leave while NOT seated still executes as a no-op eviction, with its diagnostic', () => {
+    // The get-up-while-standing precedent: the illegal row still runs, so the
+    // empty same-key eviction lands beside nothing to evict (a fact no-op) and
+    // the row carries the not-seated diagnostic.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-passenger-seat' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-passenger'));
+    expect(evict, 'the illegal row still advertises the eviction').toBeDefined();
+    expect(out.facts[`${F}.seats.passenger`]).toBeUndefined();
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.leave-seat.not_seated`, severity: 'error' }
+    ]);
+  });
+});
+
+describe('the seat rides the acquire lifecycle', () => {
+  it('a re-acquire advertises the empty same-key eviction beside the acquire effect', () => {
+    // A keyed replacement alone does not fire dependents, so the re-acquire
+    // clears the seat explicitly (the steed recast/child-eviction pattern): a
+    // fresh acquire starts with NO seat — used reads 0/4 until one is taken.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-passenger'));
+    expect(evict, 're-acquire advertises the seat eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-seat-passenger');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    expect(out.facts[`${F}.seats.passenger`]).toBeUndefined();
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+  });
+
+  it('abandon advertises the same eviction while clearing every baked fact', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-passenger'));
+    expect(evict, 'abandon advertises the seat eviction').toBeDefined();
+    expect(evict!.state).toBeUndefined();
+    expect(out.facts[`${F}.seats.passenger`]).toBeUndefined();
+    expect(out.facts[`${F}.active`]).toBeUndefined();
+  });
+});
+
+describe('passenger seat i18n (tlh is the canary)', () => {
+  it('the offer names/descriptions, chip name and diagnostics exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en take name': en.rule.tormentor['take-seat']?.name,
+      'en-x-tlh take name': tlh.rule.tormentor['take-seat']?.name,
+      'en take description': en.rule.tormentor['take-seat']?.description,
+      'en-x-tlh take description': tlh.rule.tormentor['take-seat']?.description,
+      'en already seated': en.rule.tormentor['take-seat']?.already_seated,
+      'en-x-tlh already seated': tlh.rule.tormentor['take-seat']?.already_seated,
+      'en full': en.rule.tormentor['take-seat']?.full,
+      'en-x-tlh full': tlh.rule.tormentor['take-seat']?.full,
+      'en leave name': en.rule.tormentor['leave-seat']?.name,
+      'en-x-tlh leave name': tlh.rule.tormentor['leave-seat']?.name,
+      'en leave description': en.rule.tormentor['leave-seat']?.description,
+      'en-x-tlh leave description': tlh.rule.tormentor['leave-seat']?.description,
+      'en not seated': en.rule.tormentor['leave-seat']?.not_seated,
+      'en-x-tlh not seated': tlh.rule.tormentor['leave-seat']?.not_seated,
+      'en chip name': en.rule.tormentor['seat-passenger-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['seat-passenger-effect']?.name
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
   });
 });
 

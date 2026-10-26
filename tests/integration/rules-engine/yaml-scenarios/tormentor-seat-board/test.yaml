@@ -1,0 +1,69 @@
+name: 'Tormentor - Take The Passenger Seat'
+description: >-
+  The passenger seat (the seat infrastructure's first station): a TAKE/LEAVE
+  offer pair in the vehicle's +ADD, both free and gated structurally on the
+  acquire, filed with the acquire/abandon EQUIP 'vehicle' family. Taking the
+  seat advertises ONE permanent KEYED effect writing
+  companion.tormentor.seats.passenger = 1 — a chip under the vehicle panel
+  (the prone/ac-mode effect display pattern) — and the derived creature
+  capacity counts it: used = recorded occupancy + active seats, so a freshly
+  acquired vehicle reads 0/4 (the default-1 acquirer is retired) and a seated
+  player reads 1/4.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Unacquired: the seat offers do not exist at all (structural gate on the
+  # acquire — there is no vehicle to sit in).
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - take-tormentor-passenger-seat
+            - leave-tormentor-passenger-seat
+  # Acquire: fresh vehicle reads 0/4 — nobody counts until a seat is taken or
+  # an occupancy recorded.
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.max: 4
+          companion.tormentor.creatureCapacity.used: 0
+          companion.tormentor.seats.passenger: 0
+  # The vehicle's +ADD carries the seat pair: free, under the vehicle subject.
+  # Take is legal at 0/4; leave is its illegal-but-visible mirror until the
+  # seat is held (pinned in the leave scenario).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-passenger-seat
+            - leave-tormentor-passenger-seat
+          legal:
+            - take-tormentor-passenger-seat
+        offerUi:
+          - id: take-tormentor-passenger-seat
+            ui:
+              section: free
+              subject: tormentor
+              actionCost: []
+  # Board: the seat fact lands and the capacity derive counts it (0 + 1).
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1
+        planErrors:
+          - id: take-tormentor-passenger-seat
+            index: 0
+            errors: []
+  # Commit: the seat effect persists beside the acquire (the chip on the strip).
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-passenger
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1

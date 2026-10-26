@@ -1,0 +1,57 @@
+name: 'Tormentor - No Free Seat'
+description: >-
+  The free-seat rule: boarding is ILLEGAL, never hidden, while the derived
+  creature capacity is full (used >= max) — the full legality leg, the same
+  duplicate-acquire illegal-but-COMMITTABLE pattern. A planned-anyway row
+  still executes (the seat fact lands; the derive clamps used at the max),
+  carrying its full diagnostic on the row.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # NPCs fill the vehicle: recorded occupancy 4 of 4 (the slider's manual
+  # base; no seats held).
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 4
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.used: 4
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-occupancy
+        facts:
+          companion.tormentor.creatureCapacity.used: 4
+  # Full: boarding is ILLEGAL with its diagnostic (no seat is free).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-passenger-seat
+          illegal:
+            - take-tormentor-passenger-seat
+  # The override path: the illegal row still executes — the seat fact lands
+  # beside the full occupancy and the derive clamps used at the max (4, never
+  # 5) — carrying the full diagnostic on the row.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 4
+        planErrors:
+          - id: take-tormentor-passenger-seat
+            index: 0
+            errors:
+              - rule.tormentor.take-seat.full
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-passenger
+        facts:
+          companion.tormentor.creatureCapacity.used: 4

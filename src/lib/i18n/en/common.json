@@ -494,6 +494,17 @@
         "description": "Right the Tormentor after it falls prone",
         "not_prone": "The Tormentor is not prone — there is nothing to flip upright"
       },
+      "take-seat": {
+        "name": "Take the Passenger seat",
+        "description": "Board the Tormentor as a passenger, taking a seat",
+        "already_seated": "You already hold a seat — leave it before taking another",
+        "full": "The Tormentor is at creature capacity — no seat is free"
+      },
+      "leave-seat": {
+        "name": "Leave the Passenger seat",
+        "description": "Step off the Tormentor, freeing the seat",
+        "not_seated": "You do not hold that seat"
+      },
       "effect": {
         "name": "Tormentor"
       },
@@ -514,6 +525,9 @@
       },
       "destroyed-effect": {
         "name": "Destroyed"
+      },
+      "seat-passenger-effect": {
+        "name": "Passenger Seat"
       },
       "notice": "Prone Deficiency",
       "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright.",

@@ -7,6 +7,7 @@ import {
   type Diagnostic,
   type EffectInstance,
   type FactReader,
+  type Offer,
   type RuleModule,
   type SubjectPanelDeclaration
 } from '../builder';
@@ -31,15 +32,32 @@ import {
  * declares its subject's top-bar and resource entries as data (`panels`), so
  * the vehicle surfaces without touching the play layer.
  *
- * Creature Capacity is the one live resource: acquiring bakes max 4 and the
- * acquirer counts (used defaults to 1), and the vehicle's +ADD carries an
- * occupancy slider (the steed HP-modifier pattern) whose ONE permanent keyed
- * effect is the stored occupancy — re-applying replaces, removing the chip
- * returns used to the acquire default, and the acquire/abandon lifecycle
- * (plus the acquire effect's `dependents`, for raw chip removal) evicts it
- * with the acquire. Over-capacity occupancy stays illegal-but-possible: the
- * derive clamps the READ to 0..max and diagnostics are deferred with
- * acquiring's.
+ * Creature Capacity is the one live resource: acquiring bakes max 4, and
+ * `used` DERIVES as the recorded occupancy (the slider's NPCs/manual base)
+ * plus every HELD SEAT — the passenger-seat pass retired the default-1
+ * acquirer, so a fresh vehicle reads 0/4 until someone sits. The vehicle's
+ * +ADD carries an occupancy slider (the steed HP-modifier pattern) whose ONE
+ * permanent keyed effect is the stored occupancy — re-applying replaces,
+ * removing the chip returns used to the unseated base, and the acquire/abandon
+ * lifecycle (plus the acquire effect's `dependents`, for raw chip removal)
+ * evicts it with the acquire. Over-capacity occupancy stays
+ * illegal-but-possible: the derive clamps the READ to 0..max and diagnostics
+ * are deferred with acquiring's.
+ *
+ * SEATS are PLAYER-side state (the seat infrastructure, PR-A: passenger is
+ * the one live station; harpoon/helm/clinger join in later passes by
+ * extending SEAT_STATIONS and instantiating their spec beside
+ * PASSENGER_SEAT). A seat is ONE permanent keyed effect writing
+ * `companion.tormentor.seats.<station> = 1` with a chip under the vehicle
+ * panel (the at-a-glance "where am I seated"), taken and left by a TAKE/LEAVE
+ * offer pair in the vehicle's +ADD — both illegal-but-COMMITTABLE (the
+ * duplicate-acquire pattern): re-boarding while holding ANY station's seat is
+ * illegal (one seat per player, GLOBALLY), boarding a full vehicle is illegal
+ * (the derived capacity), and leaving an unheld seat is illegal (the
+ * flip-upright idiom, its apply the empty same-key eviction — leaving never
+ * touches occupancy or any other vehicle state). The seat key joins
+ * CHILD_KEYS, so the acquire/abandon lifecycle evicts it: a re-acquired
+ * vehicle starts with no seat.
  *
  * The vehicle's Prone Deficiency is STATE TRACKING ONLY: a namespaced
  * `companion.tormentor.prone` fact under its own keyed effect —
@@ -142,6 +160,43 @@ const DESTROYED_EFFECT_ID = 'effect-tormentor-destroyed';
 const DESTROYED_KEY = 'tormentor-destroyed';
 
 /**
+ * The vehicle's ACTION STATIONS with a seat a player can hold — the seat
+ * infrastructure's ONE registry. Only the passenger station has offers and an
+ * effect today (PR-A); later passes add theirs. EVERY seat condition and
+ * count iterates this list, so a new station joins the exclusivity leg and
+ * the capacity derive by EXTENDING it — no other edit.
+ */
+const SEAT_STATIONS = ['passenger', 'harpoon', 'helm', 'clinger'] as const;
+type SeatStation = (typeof SEAT_STATIONS)[number];
+
+/** The seat fact a station's effect writes (`companion.tormentor.seats.<station>`). */
+const seatFact = (station: SeatStation): string => `${F}.seats.${station}`;
+
+/**
+ * True while the player holds ANY station's seat. One seat per player
+ * GLOBALLY (any station — and, future-proof, any vehicle): re-taking the seat
+ * you hold is the same illegal-but-committable path as holding another
+ * station's.
+ */
+const seatedAnywhere = (f: FactReader): boolean =>
+  SEAT_STATIONS.some((station) => f.num(seatFact(station)) > 0);
+
+/** How many seats the player holds — the capacity derive's seat term. */
+const activeSeatCount = (f: FactReader): number =>
+  SEAT_STATIONS.reduce((n, station) => n + f.num(seatFact(station)), 0);
+
+/**
+ * The take-seat offer's two legality legs (the duplicate-acquire
+ * illegal-but-COMMITTABLE pattern): (a) ONE seat per player, globally — any
+ * station's seat fact standing makes re-boarding illegal; (b) the free-seat
+ * rule — no boarding while the derived capacity reads full.
+ */
+const SEAT_TAKEN = `${T}.take-seat.already_seated`;
+const SEAT_FULL = `${T}.take-seat.full`;
+/** The leave-seat offer's single legality leg (the flip-upright not-prone idiom). */
+const NOT_SEATED = `${T}.leave-seat.not_seated`;
+
+/**
  * The damage recorder's below-threshold key — the INFORMATIONAL note a
  * Use-Threshold sub-threshold blow carries on its own planned row (threshold
  * model v2: the blow was legal to attempt; the app tells the player it
@@ -173,7 +228,9 @@ const CHILD_KEYS = [
   PRONE_KEY,
   HP_DAMAGE_KEY,
   HP_HEAL_KEY,
-  DESTROYED_KEY
+  DESTROYED_KEY,
+  // The passenger seat (PR-A; later passes append their station's key here).
+  'tormentor-seat-passenger'
 ] as const;
 
 /** The stat block acquiring bakes. HP bakes its BASE (the pool derives from
@@ -285,6 +342,152 @@ function evictChildEffects(): EffectInstance[] {
     (k): EffectInstance => ({ id: `evict-${k}`, key: k, expiry: { kind: 'permanent' } })
   );
 }
+
+/**
+ * One station's seat, as authored data. The per-station i18n keys arrive as
+ * LITERALS per station (module-i18n-coverage scans the source for
+ * `${PREFIX}.suffix` templates — a key the helper built from the station
+ * string would be invisible to it); the diagnostics above are shared by every
+ * station. A later station instantiates its own spec beside PASSENGER_SEAT.
+ */
+interface SeatSpec {
+  station: SeatStation;
+  take: { name: string; description: string };
+  leave: { name: string; description: string };
+  effectName: string;
+}
+
+/**
+ * The station's seat effect: ONE permanent KEYED record writing
+ * `companion.tormentor.seats.<station> = 1` — replaceable state, so a
+ * planned-anyway re-take replaces by key rather than stacking. `display`
+ * files the chip under the vehicle panel (the prone/ac-mode effect display
+ * pattern): the at-a-glance "where am I seated".
+ */
+function seatEffect(spec: SeatSpec): EffectInstance {
+  return {
+    id: `effect-tormentor-seat-${spec.station}`,
+    key: `tormentor-seat-${spec.station}`,
+    state: { [`${F}.seats.${spec.station}`]: 1 },
+    display: { name: spec.effectName, section: 'mount', subject: SUBJECT },
+    expiry: { kind: 'permanent' }
+  };
+}
+
+/**
+ * Eviction of the station's seat — the empty same-key idiom the flip-upright
+ * offer uses (newest-wins clears the record while merely planned). Advertised
+ * by the LEAVE offer (the clear) and by the acquire lifecycle through
+ * CHILD_KEYS (a fresh vehicle starts with no seat).
+ */
+function evictSeatEffect(station: SeatStation): EffectInstance {
+  return {
+    id: `evict-tormentor-seat-${station}`,
+    key: `tormentor-seat-${station}`,
+    expiry: { kind: 'permanent' }
+  };
+}
+
+/**
+ * ONE station's TAKE/LEAVE offer pair — the seat helper, module-LOCAL until a
+ * second vehicle needs it. Both are free vehicle actions in the vehicle's
+ * +ADD (`when: acquired` — unacquired there is no vehicle to sit in), filed
+ * with the acquire/abandon EQUIP 'vehicle' family, and both are
+ * illegal-but-COMMITTABLE on their legs (the duplicate-acquire pattern, the
+ * engine's illegal-but-visible contract: the offer stays visible and
+ * applicable with its diagnostic, and a planned-anyway row still executes —
+ * the take as the one keyed replacement, the leave as a no-op eviction beside
+ * nothing to evict):
+ *
+ * - TAKE: leg (a) no seat held at ANY station (one seat per player,
+ *   globally), leg (b) the free-seat rule (derived used < max). Apply
+ *   re-checks both legs (the dash idiom) so a planned-anyway row carries its
+ *   own diagnostics from the fold.
+ * - LEAVE: leg (a) THIS station's seat held. Its apply is the empty same-key
+ *   eviction alone — leaving a seat never touches occupancy or any other
+ *   vehicle state.
+ */
+function seatOffers(spec: SeatSpec): Offer[] {
+  return [
+    {
+      id: `take-tormentor-${spec.station}-seat`,
+      when: acquired,
+      legalWhen: [
+        {
+          // One seat per player, globally: any station's seat fact standing
+          // (this one included — re-taking the seat you hold is illegal).
+          condition: (f: FactReader): boolean => !seatedAnywhere(f),
+          diagnostics: [{ code: SEAT_TAKEN, severity: 'error' }]
+        },
+        {
+          // The free-seat rule: no boarding while the derived capacity reads
+          // full (used counts the recorded occupancy plus held seats).
+          condition: (f: FactReader): boolean =>
+            f.num(`${F}.creatureCapacity.used`) < f.num(`${F}.creatureCapacity.max`),
+          diagnostics: [{ code: SEAT_FULL, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: spec.take.name,
+        description: spec.take.description,
+        intents: { EQUIP: 'vehicle' },
+        actionCost: []
+      },
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostics from the fold — the row still executes as the
+        // one keyed replacement (the seat fact stays single; nothing stacks).
+        const diagnostics: Diagnostic[] = [];
+        if (seatedAnywhere(f)) diagnostics.push({ code: SEAT_TAKEN, severity: 'error' });
+        if (f.num(`${F}.creatureCapacity.used`) >= f.num(`${F}.creatureCapacity.max`))
+          diagnostics.push({ code: SEAT_FULL, severity: 'error' });
+        return { advertise: [seatEffect(spec)], diagnostics };
+      }
+    },
+    {
+      id: `leave-tormentor-${spec.station}-seat`,
+      when: acquired,
+      legalWhen: [
+        {
+          // Illegal while the seat is not held (nothing to leave) — the
+          // get-up shape: the offer stays visible, flagged illegal.
+          condition: (f: FactReader): boolean => f.num(seatFact(spec.station)) > 0,
+          diagnostics: [{ code: NOT_SEATED, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: spec.leave.name,
+        description: spec.leave.description,
+        intents: { EQUIP: 'vehicle' },
+        actionCost: []
+      },
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom): an illegal row still executes
+        // — the empty eviction beside nothing to evict, a fact no-op.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num(seatFact(spec.station)) === 0)
+          diagnostics.push({ code: NOT_SEATED, severity: 'error' });
+        return { advertise: [evictSeatEffect(spec.station)], diagnostics };
+      }
+    }
+  ];
+}
+
+/**
+ * The PASSENGER station — PR-A's one live seat (the stat block's Passenger
+ * seat: a place to ride, nothing more — no passenger detail exists, there is
+ * nothing to say). Later passes instantiate their station beside this one.
+ */
+const PASSENGER_SEAT: SeatSpec = {
+  station: 'passenger',
+  take: { name: `${T}.take-seat.name`, description: `${T}.take-seat.description` },
+  leave: { name: `${T}.leave-seat.name`, description: `${T}.leave-seat.description` },
+  effectName: `${T}.seat-passenger-effect.name`
+};
 
 /**
  * The vehicle's Prone Deficiency, as STATE TRACKING ONLY. The Tormentor is not
@@ -510,20 +713,22 @@ const vehicleTormentor: RuleModule = {
   panels: TORMENTOR_PANELS,
   derive: () => [
     {
-      // Occupancy used: the acquire default is 1 (the acquirer counts), the
-      // occupancy record overrides it, and the READ clamps to 0..max — the
-      // slider's own bound is UI-only, so a stale or foreign stored value can
-      // never read past the stat block. `has` (not num) is what lets a RECORDED
-      // 0 (the vehicle emptied) differ from no record at all. Unacquired, the
-      // contribution reads 0 (the acquire default is not a free occupant).
+      // Occupancy used: the RECORDED occupancy (the slider's NPCs/manual
+      // base) plus every HELD SEAT (each station's effect contributes 1 — the
+      // passenger-seat pass retired the default-1 acquirer, so a freshly
+      // acquired vehicle reads 0/4 until someone takes a seat or records an
+      // occupancy). The READ clamps the SUM to 0..max — the slider's own
+      // bound is UI-only, so a stale or foreign stored value can never read
+      // past the stat block, and a planned-anyway boarding at capacity reads
+      // max, never max+1. Unacquired, the contribution reads 0.
       fact: `${F}.creatureCapacity.used`,
       value: (f) => {
         if (f.num(`${F}.active`) === 0) return 0;
         const max = f.num(`${F}.creatureCapacity.max`);
-        const recorded = f.has(`${F}.creatureCapacity.occupancy`)
-          ? f.num(`${F}.creatureCapacity.occupancy`)
-          : 1;
-        return Math.min(Math.max(recorded, 0), max);
+        return Math.min(
+          Math.max(f.num(`${F}.creatureCapacity.occupancy`) + activeSeatCount(f), 0),
+          max
+        );
       }
     },
     // The HP POOL, in the steed's shape (a fixed stat block: max = base, no
@@ -799,6 +1004,9 @@ const vehicleTormentor: RuleModule = {
         return { advertise: [evictProneEffect()], diagnostics };
       }
     },
+    // The VEHICLE's seat offers — the take/leave pair for every live station
+    // (see seatOffers/PASSENGER_SEAT above).
+    ...seatOffers(PASSENGER_SEAT),
     {
       // The VEHICLE-side way out: gated on the acquire (structurally —
       // unacquired, the action does not exist at all), sitting under the

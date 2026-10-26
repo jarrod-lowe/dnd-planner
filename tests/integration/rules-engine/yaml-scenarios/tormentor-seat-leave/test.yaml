@@ -1,0 +1,86 @@
+name: 'Tormentor - Leave The Passenger Seat'
+description: >-
+  The leave offer is the take's mirror: gated structurally on the acquire,
+  with the seat-held state as its ONE legality leg (the flip-upright
+  not-prone idiom, illegal-but-COMMITTABLE) — while not seated it stays
+  visible and applicable with its not-seated diagnostic, and a planned-anyway
+  row executes as the EMPTY same-key eviction beside nothing to evict (a
+  no-op). Leaving while seated clears the seat fact (and used falls with it)
+  without touching the occupancy or any other vehicle state.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # Not seated: the leave offer EXISTS (nothing hides it) and is illegal with
+  # its diagnostic.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - leave-tormentor-passenger-seat
+          illegal:
+            - leave-tormentor-passenger-seat
+  # The override path while not seated: the row still executes as the empty
+  # same-key eviction beside nothing to evict, carrying the diagnostic.
+  - addOffer:
+      id: leave-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 0
+        planErrors:
+          - id: leave-tormentor-passenger-seat
+            index: 0
+            errors:
+              - rule.tormentor.leave-seat.not_seated
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-seat-passenger
+  # Board and commit, with recorded occupancy 2 beside the seat: used 3.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 3
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-passenger
+            - effect-tormentor-occupancy
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.occupancy: 2
+          companion.tormentor.creatureCapacity.used: 3
+  # Leaving: the empty same-key eviction (the flip-upright idiom) — the seat
+  # fact goes the moment the row is planned and used falls to the recorded
+  # occupancy alone. The occupancy record and the acquire are untouched.
+  - addOffer:
+      id: leave-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 0
+          companion.tormentor.creatureCapacity.used: 2
+          companion.tormentor.creatureCapacity.occupancy: 2
+        planErrors:
+          - id: leave-tormentor-passenger-seat
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+            - effect-tormentor-occupancy
+          notExists:
+            - effect-tormentor-seat-passenger
+        facts:
+          companion.tormentor.active: 1
+          companion.tormentor.creatureCapacity.used: 2

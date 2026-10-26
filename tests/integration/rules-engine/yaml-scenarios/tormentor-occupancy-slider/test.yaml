@@ -1,24 +1,25 @@
 name: 'Tormentor (Damage Control) - Creature Capacity Occupancy'
 description: >-
   Acquiring bakes the stat block's Creature Capacity (4 Medium creatures) as
-  creatureCapacity.max, with used defaulting to 1 — the acquirer counts. The
+  creatureCapacity.max, with used reading 0 until something counts — the
+  recorded occupancy plus every held seat (the passenger-seat pass). The
   vehicle's +ADD carries a free-section occupancy slider (0 to the baked max)
   whose apply advertises ONE permanent KEYED effect recording the occupancy:
   re-applying replaces rather than stacks, the derived used clamps to 0..max,
-  and removing the occupancy chip returns used to the acquire default of 1.
+  and removing the occupancy chip returns used to 0 (no record, no seat).
   No legality gates: over-capacity occupancy is illegal-but-possible this
   pass (diagnostics deferred with acquiring's).
 ruleGroups:
   - vehicles/tormentor
 steps:
-  # Acquire: the capacity lands with the rest of the stat block; the acquirer
-  # counts, so used reads 1 before anyone touches the slider.
+  # Acquire: the capacity lands with the rest of the stat block; nobody
+  # counts by default, so used reads 0 before anyone touches the slider.
   - addOffer:
       id: acquire-tormentor
       assert:
         facts:
           companion.tormentor.creatureCapacity.max: 4
-          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.used: 0
   # The vehicle's +ADD carries the occupancy slider: free, under the vehicle
   # subject, bounded 0..the baked capacity, opening at the current occupancy.
   - evaluate:
@@ -98,7 +99,7 @@ steps:
         facts:
           companion.tormentor.creatureCapacity.used: 0
   # Commit the clamped re-set, then remove the occupancy chip: the stored
-  # value goes with it and used falls back to the acquire default (1).
+  # value goes with it and used falls back to nothing (no record, no seat).
   - endTurn:
       assert:
         effects:
@@ -111,7 +112,7 @@ steps:
           notExists:
             - effect-tormentor-occupancy
         facts:
-          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.used: 0
           companion.tormentor.creatureCapacity.max: 4
           companion.tormentor.active: 1
         offers:
