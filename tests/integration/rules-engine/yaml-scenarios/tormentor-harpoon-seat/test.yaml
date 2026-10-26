@@ -1,0 +1,82 @@
+name: 'Tormentor - Take The Harpoon Flinger Seat'
+description: >-
+  The Harpoon Flinger station (the seat infrastructure's second seat): the same
+  TAKE/LEAVE offer pair in the vehicle's +ADD, free and gated structurally on
+  the acquire, filed with the acquire/abandon EQUIP 'vehicle' family. Taking
+  the seat advertises ONE permanent KEYED effect writing
+  companion.tormentor.seats.harpoon = 1 — a chip under the vehicle panel like
+  the passenger's — and the derived creature capacity counts it like any seat.
+  Leaving evicts by key and the fire offer goes with the seat.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Unacquired: the seat offers do not exist at all (structural gate on the
+  # acquire — there is no vehicle to sit in).
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - take-tormentor-harpoon-seat
+            - leave-tormentor-harpoon-seat
+            - fire-tormentor-harpoon
+  # Acquire: fresh vehicle reads 0/4, and without the seat the fire offer does
+  # not exist either (the attack is the station's, not the vehicle's).
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.used: 0
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-harpoon-seat
+          legal:
+            - take-tormentor-harpoon-seat
+          illegal:
+            - leave-tormentor-harpoon-seat
+          notExists:
+            - fire-tormentor-harpoon
+        offerUi:
+          - id: take-tormentor-harpoon-seat
+            ui:
+              section: free
+              subject: tormentor
+              actionCost: []
+  # Take the seat: the station fact lands, the capacity derive counts it
+  # (0 + 1), and the fire offer now exists.
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+      assert:
+        facts:
+          companion.tormentor.seats.harpoon: 1
+          companion.tormentor.creatureCapacity.used: 1
+        planErrors:
+          - id: take-tormentor-harpoon-seat
+            index: 0
+            errors: []
+        offers:
+          exists:
+            - fire-tormentor-harpoon
+  # Commit: the seat effect persists beside the acquire (the chip on the strip).
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-harpoon
+        facts:
+          companion.tormentor.seats.harpoon: 1
+          companion.tormentor.creatureCapacity.used: 1
+  # Leave the seat: the eviction clears the fact the moment the row is merely
+  # planned (newest-wins), the capacity falls with it, and the fire offer goes
+  # with the seat — there is nobody at the flinger.
+  - addOffer:
+      id: leave-tormentor-harpoon-seat
+      assert:
+        facts:
+          companion.tormentor.seats.harpoon: 0
+          companion.tormentor.creatureCapacity.used: 0
+        offers:
+          notExists:
+            - fire-tormentor-harpoon

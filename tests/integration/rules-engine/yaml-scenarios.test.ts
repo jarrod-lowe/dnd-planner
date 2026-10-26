@@ -291,6 +291,16 @@ const EXPECTED_RUNNABLE = [
   'tormentor-seat-full',
   'tormentor-seat-leave',
   'tormentor-seat-lifecycle',
+  // …PR 9 — PR-B: the Harpoon Flinger station — the second seat on the same
+  // infrastructure (take/leave pair, exclusivity against the passenger seat in
+  // both directions, the derived capacity counting it) plus the station's
+  // ACTION: a plan-row attack offer gated on the seat, spending the player's
+  // action the weaponOffers way, with a dice-line reading the module derives
+  // (d20 + 7 to hit, 2d8 + 2 piercing)
+  'tormentor-harpoon-seat',
+  'tormentor-harpoon-seat-exclusivity',
+  'tormentor-harpoon-fire',
+  'tormentor-harpoon-fire-action',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

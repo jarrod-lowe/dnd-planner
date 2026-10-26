@@ -1,0 +1,70 @@
+name: 'Tormentor - Harpoon Fire Action Legality'
+description: >-
+  Firing the harpoon consumes the player's full ACTION through the generic
+  action spend (the Dash/simple-actions idiom, NOT attackActionSpend): a
+  vehicle action is not a PC weapon attack, so Extra Attack neither applies
+  nor is granted. Legal with an action available, illegal-but-committable
+  once none remain — the fire offer's OWN no-action diagnostic, never hidden
+  — and applying the row spends the action (one endOfTurn spend effect,
+  nothing else), with the over-commit reading negative until the turn ends.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.harpoon: 1
+  # An action available: the fire is legal and spending it empties the pool.
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+        offers:
+          legal:
+            - fire-tormentor-harpoon
+  - addOffer:
+      id: fire-tormentor-harpoon
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.tormentor.seats.harpoon: 1
+        planErrors:
+          - id: fire-tormentor-harpoon
+            index: 0
+            errors: []
+  # No action left: the offer stays visible but ILLEGAL with the fire offer's
+  # own no-action diagnostic (the engine's illegal-but-visible contract).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - fire-tormentor-harpoon
+          illegal:
+            - fire-tormentor-harpoon
+  # The override path: the planned-anyway fire still executes — the spend
+  # lands (the over-commit reads negative, like every action spend) and the
+  # SECOND row carries its diagnostic (the first stays clean).
+  - addOffer:
+      id: fire-tormentor-harpoon
+      assert:
+        facts:
+          actions.remaining: -1
+        planErrors:
+          - id: fire-tormentor-harpoon
+            index: 1
+            errors:
+              - rule.tormentor.fire-harpoon.no_action
+  # The turn ends: the spend ages away and the next turn opens legal again.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.tormentor.seats.harpoon: 1
+        offers:
+          legal:
+            - fire-tormentor-harpoon

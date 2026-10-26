@@ -1,0 +1,61 @@
+name: 'Tormentor - One Seat Per Player, Both Stations'
+description: >-
+  One seat per player, globally — the already-seated legality leg reads EVERY
+  station's seat fact, so the passenger and harpoon stations exclude each
+  other in BOTH directions: taking the harpoon seat while holding the
+  passenger seat is ILLEGAL, never hidden (the offer stays applicable with its
+  diagnostic and a planned-anyway row still executes as the ONE keyed
+  replacement), and taking the passenger seat while holding the harpoon seat
+  is the same illegal path mirrored.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # Hold the passenger seat first.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1
+  # Passenger held: taking the HARPOON seat is illegal-but-committable with the
+  # shared already-seated diagnostic — one seat per player, any station.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-harpoon-seat
+          illegal:
+            - take-tormentor-harpoon-seat
+  # The override path: the planned-anyway take still applies, the seat fact
+  # lands beside the passenger's, and the row carries its diagnostic.
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.seats.harpoon: 1
+          companion.tormentor.creatureCapacity.used: 2
+        planErrors:
+          - id: take-tormentor-harpoon-seat
+            index: 0
+            errors:
+              - rule.tormentor.take-seat.already_seated
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-passenger
+            - effect-tormentor-seat-harpoon
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.seats.harpoon: 1
+  # Harpoon held: the mirror — taking the PASSENGER seat is the same illegal
+  # path with the same shared diagnostic.
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-tormentor-passenger-seat

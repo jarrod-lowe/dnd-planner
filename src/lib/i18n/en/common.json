@@ -505,6 +505,19 @@
         "description": "Step off the Tormentor, freeing the seat",
         "not_seated": "You do not hold that seat"
       },
+      "take-harpoon-seat": {
+        "name": "Take the Harpoon Flinger seat",
+        "description": "Man the Tormentor's Harpoon Flinger station"
+      },
+      "leave-harpoon-seat": {
+        "name": "Leave the Harpoon Flinger seat",
+        "description": "Step away from the Harpoon Flinger, freeing the seat"
+      },
+      "fire-harpoon": {
+        "name": "Fire Harpoon",
+        "description": "Ranged weapon attack: +7 to hit, range 120 ft., one target, 2d8+2 piercing damage. The harpoons are magical; the flinger carries 10.",
+        "no_action": "No action available"
+      },
       "effect": {
         "name": "Tormentor"
       },
@@ -528,6 +541,9 @@
       },
       "seat-passenger-effect": {
         "name": "Passenger Seat"
+      },
+      "seat-harpoon-effect": {
+        "name": "Harpoon Flinger Seat"
       },
       "notice": "Prone Deficiency",
       "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright.",

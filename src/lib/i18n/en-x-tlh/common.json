@@ -505,6 +505,19 @@
         "description": "Duj Sepvo' yImej 'ej Sep yIchImmoH",
         "not_seated": "Sep Daghojbe' — Sep chIm Daghu'"
       },
+      "take-harpoon-seat": {
+        "name": "ghoch nuH Sep yIchol",
+        "description": "Duj Sep ghoch nuH Sep yIlo'taHmeH Sep yIchol"
+      },
+      "leave-harpoon-seat": {
+        "name": "ghoch nuH Sepvo' yImej",
+        "description": "ghoch nuH Sepvo' yImej 'ej Sep yIchImmoH"
+      },
+      "fire-harpoon": {
+        "name": "ghoch nuH yIbaH",
+        "description": "chuS nuH HIj: HIch 7, chuq 120, wa' jav, 2d8+2 qIp. ghoch nuHmey maj; wa'maH ghoch nuH tu'lu'.",
+        "no_action": "DIvI' tu'lu'be'"
+      },
       "effect": {
         "name": "Duj Sep"
       },
@@ -528,6 +541,9 @@
       },
       "seat-passenger-effect": {
         "name": "ba'wI' Sep"
+      },
+      "seat-harpoon-effect": {
+        "name": "ghoch nuH Sep"
       },
       "notice": "pum qay'",
       "notice.body": "Pumpu' Duj Sep 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'.",
