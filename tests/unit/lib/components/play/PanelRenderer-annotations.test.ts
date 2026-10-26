@@ -163,4 +163,101 @@ describe('PanelRenderer - annotations', () => {
     expect(annotationSpan).toBeTruthy();
     expect(annotationSpan?.textContent).toContain('play.annotations.some-buff');
   });
+
+  describe('notice diagnostics (the per-row informational note)', () => {
+    // The HP recorder's below-threshold bounce rides the bounced row as a
+    // 'notice' diagnostic (planDiagnostics is per-instance): sub-threshold
+    // damage is legal to attempt, so the note is informational — never the
+    // illegal/error path — and renders in the same note block as
+    // informational annotations, expanded rows only.
+    const createEntryWithNotice = (
+      diagnostics: AvailableRuleEntry['diagnostics']
+    ): AvailableRuleEntry => ({
+      rule: {
+        id: 'record-tormentor-damage',
+        description: 'Record Vehicle Damage',
+        activities: [],
+        ui: {
+          name: 'rule.tormentor.record-damage.name',
+          primaryControl: {
+            type: 'slider',
+            var: 'amount',
+            min: { number: 0 },
+            max: { fact: 'hp.max' },
+            unit: 'hp'
+          }
+        }
+      } as Rule,
+      legal: true,
+      applicable: true,
+      diagnostics
+    });
+
+    it('renders a notice diagnostic as an informational note on the panel', () => {
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.record-damage.below_threshold', severity: 'notice' }
+      ]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {} }
+      });
+      const block = container.querySelector('.panel-renderer__annotations');
+      expect(block).toBeTruthy();
+      const note = block!.querySelector('.panel-renderer__annotation');
+      expect(note).toBeTruthy();
+      expect(note!.textContent).toContain('rule.tormentor.record-damage.below_threshold');
+    });
+
+    it('renders notice diagnostics beside informational annotations in one note block', () => {
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.record-damage.below_threshold', severity: 'notice' }
+      ]);
+      const annotations: Annotation[] = [
+        { key: 'play.annotations.some-buff', targets: ['attack.any'] }
+      ];
+      const { container } = render(PanelRenderer, {
+        props: {
+          entry: {
+            ...entry,
+            rule: { ...entry.rule, ui: { ...entry.rule.ui!, annotationLabels: ['attack.any'] } }
+          },
+          editable: true,
+          facts: {},
+          activeAnnotations: annotations
+        }
+      });
+      const notes = container.querySelectorAll('.panel-renderer__annotation');
+      expect(notes.length).toBe(2);
+    });
+
+    it('renders no note block for a legal row with no diagnostics', () => {
+      const { container } = render(PanelRenderer, {
+        props: { entry: createEntryWithNotice([]), editable: true, facts: {} }
+      });
+      expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+    });
+
+    it('renders no note block for error diagnostics alone — those ride the illegal warning path', () => {
+      // An error diagnostic flips the row illegal (plan fold), and its message
+      // renders through the warning indicator — the note block is for
+      // informational notices only.
+      const { container } = render(PanelRenderer, {
+        props: {
+          entry: createEntryWithNotice([{ code: 'some.error.code', severity: 'error' }]),
+          editable: true,
+          facts: {}
+        }
+      });
+      expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+    });
+
+    it('hides the note in summary mode (one line; expand to see the note)', () => {
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.record-damage.below_threshold', severity: 'notice' }
+      ]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+    });
+  });
 });

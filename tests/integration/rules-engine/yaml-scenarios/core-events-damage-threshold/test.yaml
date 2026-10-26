@@ -6,10 +6,10 @@ description: >-
   contract); this scenario seeds it as a committed effect exactly the way a
   future stat-block bake would, and the recorder adapts on its own (threshold
   model v2: sub-threshold damage is LEGAL to attempt): a Use-Threshold blow
-  BELOW the fact records NOTHING and commits the hidden bounce marker whose
-  annotate pass surfaces the informational below-threshold annotation on the
-  damage panel — never a diagnostic — while an Ignore-Threshold blow records
-  the RAW amount in full, and a blow AT the threshold records in full.
+  BELOW the fact records NOTHING and returns a 'notice' diagnostic that rides
+  THAT planned row alone (never an error, never an annotation), while an
+  Ignore-Threshold blow records the RAW amount in full, and a blow AT the
+  threshold records in full.
 ruleGroups:
   - dnd-5e-2024/hp
   - dnd-5e-2024/ability-scores
@@ -33,7 +33,7 @@ steps:
           hp.max: 12
           hp.current: 12
   # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
-  # records the RAW amount in full — no marker, no annotation, no error.
+  # records the RAW amount in full — no bounce note, no error.
   - addOffer:
       id: record-damage
       selections:
@@ -46,69 +46,51 @@ steps:
           - id: record-damage
             index: 0
             errors: []
-        annotations:
-          notExists:
-            - rule.dnd-5e-2024.core-events.record-damage.below_threshold
   - endTurn:
       assert:
         effects:
           exists:
             - effect-hp-damage
-          notExists:
-            - effect-hp-bounce
-  # Sub-threshold (4 < the seeded 5) in USE mode: the blow bounces — no
-  # record, no fact change, no planErrors — and the annotation carries the
-  # feedback on the damage panel.
+  # THE USER REPRO: TWO damage rows planned — one sub-threshold in Use mode,
+  # one landing at the threshold. The bounce note is a per-row 'notice'
+  # diagnostic: ONLY the bounced row carries it, the landing row never does,
+  # and the plan stays legal.
+  - addOffer:
+      id: record-damage
+      selections:
+        amount: 5
+      assert:
+        planErrors:
+          - id: record-damage
+            index: 0
+            errors: []
   - addOffer:
       id: record-damage
       selections:
         amount: 4
       assert:
         facts:
-          hp.current: 8
-        planErrors:
-          - id: record-damage
-            index: 0
-            errors: []
-        annotations:
-          exists:
-            - rule.dnd-5e-2024.core-events.record-damage.below_threshold
-          targets:
-            - key: rule.dnd-5e-2024.core-events.record-damage.below_threshold
-              targets:
-                - damage.any
-  # The marker commits with the turn and the annotation stands while it does.
-  - endTurn:
-      assert:
-        effects:
-          exists:
-            - effect-hp-bounce
-        facts:
-          hp.current: 8
-        annotations:
-          exists:
-            - rule.dnd-5e-2024.core-events.record-damage.below_threshold
-  # USE mode at the threshold: the blow lands in FULL.
-  - evaluate:
-      assert:
-        offers:
-          legal:
-            - record-damage
-  - addOffer:
-      id: record-damage
-      selections:
-        amount: 5
-      assert:
-        facts:
+          # 4 (committed ignore-mode) + 5 (the landing row): the bounced row
+          # adds nothing.
           hp.current: 3
         planErrors:
           - id: record-damage
             index: 0
             errors: []
+          - id: record-damage
+            index: 1
+            errors:
+              - rule.dnd-5e-2024.core-events.record-damage.below_threshold
+        status:
+          legal: true
+  # The bounced row commits NOTHING at end of turn — no marker effect, no
+  # record. The note lived on the planned row and leaves with it.
   - endTurn:
       assert:
         effects:
           exists:
             - effect-hp-damage
+          notExists:
+            - effect-hp-bounce
         facts:
           hp.current: 3

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, endTurn } from '$lib/rules-engine';
+import { evaluate } from '$lib/rules-engine';
 import type { EffectInstance, EngineInput, PlannedRef } from '$lib/rules-engine';
 import coreEvents from '$lib/rules-engine/rules/core-events';
 import hp from '$lib/rules-engine/rules/hp';
@@ -19,12 +19,14 @@ import tlh from '$lib/i18n/en-x-tlh/common.json';
  *   the damage offer, gated `enabled.condition` on the subject's threshold fact
  *   > 0 (PanelRenderer hides a false-gated control — no threshold fact, exactly
  *   the old look);
- * - Use mode (default) + sub-threshold: records NOTHING and commits ONE hidden
- *   keyed marker effect, which the recorder's annotate contribution reads out
- *   of the committed list to emit the caller-worded INFORMATIONAL annotation on
- *   the damage panel — never a planErrors diagnostic, never an illegality;
+ * - Use mode (default) + sub-threshold: records NOTHING and returns ONE
+ *   `'notice'` diagnostic, which the plan fold keys to THAT planned row alone
+ *   (`planDiagnostics` is per-instance) — never an error, never an
+ *   illegality, never a panel annotation (a per-commit bounce is not a
+ *   standing panel truth). With TWO damage rows planned the note rides the
+ *   bounced row only;
  * - Ignore mode + any amount: records the RAW amount in full (the GM
- *   correction, "last round should have taken 1 more") — no bounce, no marker;
+ *   correction, "last round should have taken 1 more") — no bounce, no note;
  * - Use mode + threshold amount: records in full as ever (a floor, not a cap).
  *
  * Every subject rides the one factory, so the player (threshold seeded as a
@@ -66,44 +68,45 @@ const plan = (
   selections
 });
 
-/** The one marker effect a sub-threshold Use-mode blow advertised, or undefined. */
-function markerOf(
-  out: { effects: EffectInstance[] },
-  effectId: string
-): EffectInstance | undefined {
-  return out.effects.find((e) => e.id.endsWith(`#${effectId}`));
-}
-
 describe('player record-damage adapts to a seeded hp.damageThreshold', () => {
   // hp.max 10 via the genuine input the hp group reads; threshold 5 seeded as a
   // committed effect exactly the way a future stat-block bake would.
   const input = { 'hp.base.max': 10, 'hp.damageThreshold': 5 };
 
-  it('a sub-threshold Use-mode blow records NOTHING — and the feedback is the panel ANNOTATION, never a diagnostic', () => {
+  it('a sub-threshold Use-mode blow records NOTHING and advertises NOTHING — the feedback is a per-row notice diagnostic', () => {
     const out = evaluate({
       modules: [coreEvents, hp],
       inputFacts: input,
       planned: [plan('d1', 'record-damage', { amount: 4 })]
     });
-    expect(out.effects.filter((e) => e.id.includes('effect-hp-damage'))).toHaveLength(0);
+    expect(out.effects).toHaveLength(0);
     expect(out.facts['hp.current']).toBe(10);
     expect(out.facts['hp.modifier.current'] ?? 0).toBe(0);
-    // Legal to attempt: the row carries NO diagnostic (the error model is gone).
+    // The note: ONE informational notice on THIS row — never an error, and the
+    // row (and the plan) stay legal.
+    expect(out.planDiagnostics['d1']).toEqual([{ code: PLAYER_BELOW, severity: 'notice' }]);
+    expect(out.plannedOffers['d1']!.legal).toBe(true);
+    expect(out.status.legal).toBe(true);
+    // No annotation exists — a per-commit bounce is not a standing panel truth.
+    expect(out.annotations.some((a) => a.key === PLAYER_BELOW)).toBe(false);
+  });
+
+  it('THE USER REPRO: with a landing row and a bounced row planned, the note rides the bounced row ONLY', () => {
+    const out = evaluate({
+      modules: [coreEvents, hp],
+      inputFacts: input,
+      planned: [
+        plan('d1', 'record-damage', { amount: 5 }),
+        plan('d2', 'record-damage', { amount: 4 })
+      ]
+    });
+    // The landing row records in full; the bounced row adds nothing.
+    expect(out.facts['hp.current']).toBe(5);
     expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
-    // …and the bounce commits the hidden keyed marker the annotate pass reads.
-    const marker = markerOf(out, 'effect-hp-bounce');
-    expect(marker).toBeDefined();
-    expect(marker!.key).toBe('effect-hp-bounce');
-    expect(marker!.expiry).toEqual({ kind: 'untilLongRest' });
-    // Hidden and stateless: the marker's whole meaning is the annotation.
-    expect(marker!.state).toBeUndefined();
-    expect(marker!.display).toBeUndefined();
-    // The ANNOTATION on the damage panel — informational (no rider, no action).
-    const annotation = out.annotations.find((a) => a.key === PLAYER_BELOW);
-    expect(annotation).toBeDefined();
-    expect(annotation!.targets).toEqual(['damage.any']);
-    expect(annotation!.rider).toBeUndefined();
-    expect(annotation!.addsToPlan).toBeUndefined();
+    expect(out.planDiagnostics['d2']).toEqual([{ code: PLAYER_BELOW, severity: 'notice' }]);
+    expect(out.plannedOffers['d1']!.legal).toBe(true);
+    expect(out.plannedOffers['d2']!.legal).toBe(true);
+    expect(out.status.legal).toBe(true);
   });
 
   it('Ignore Threshold records the RAW amount in full (the GM-correction mode)', () => {
@@ -113,9 +116,8 @@ describe('player record-damage adapts to a seeded hp.damageThreshold', () => {
       planned: [plan('d1', 'record-damage', { amount: 4, thresholdMode: 1 })]
     });
     expect(out.facts['hp.current']).toBe(6);
-    expect(markerOf(out, 'effect-hp-bounce')).toBeUndefined();
-    expect(out.annotations.some((a) => a.key === PLAYER_BELOW)).toBe(false);
     expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
+    expect(out.annotations.some((a) => a.key === PLAYER_BELOW)).toBe(false);
   });
 
   it('a threshold blow records in FULL in Use mode (the threshold is a floor, not a cap)', () => {
@@ -142,14 +144,14 @@ describe('player record-damage adapts to a seeded hp.damageThreshold', () => {
     expect(out.planDiagnostics['h1'] ?? []).toEqual([]);
   });
 
-  it('an UNSEEDED threshold never gates and never annotates (zero behavior change)', () => {
+  it('an UNSEEDED threshold never gates and never notes (zero behavior change)', () => {
     const out = evaluate({
       modules: [coreEvents, hp],
       inputFacts: { 'hp.base.max': 10 },
       planned: [plan('d1', 'record-damage', { amount: 4 })]
     });
     expect(out.facts['hp.current']).toBe(6);
-    expect(markerOf(out, 'effect-hp-bounce')).toBeUndefined();
+    expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
     expect(out.annotations.some((a) => a.key === PLAYER_BELOW)).toBe(false);
   });
 });
@@ -161,22 +163,34 @@ describe('steed record-damage adapts to a seeded companion.steed.damageThreshold
     flag('companion.steed.damageThreshold', 10)
   ];
 
-  it('a sub-threshold Use-mode blow records NOTHING and annotates the STEED damage panel', () => {
+  it('a sub-threshold Use-mode blow records NOTHING — the note is the steed-worded notice on the row', () => {
     const out = evaluate({
       modules: [findSteed],
       committed: committed(),
       planned: [plan('d1', 'steed-record-damage', { amount: 9 })]
     });
-    expect(out.effects.filter((e) => e.id.includes('effect-steed-hp-damage'))).toHaveLength(0);
+    expect(out.effects).toHaveLength(0);
     expect(out.facts['companion.steed.hp.current']).toBe(25);
     expect(out.facts['companion.steed.hp.damageRecorded'] ?? 0).toBe(0);
+    expect(out.planDiagnostics['d1']).toEqual([{ code: STEED_BELOW, severity: 'notice' }]);
+    expect(out.plannedOffers['d1']!.legal).toBe(true);
+    expect(out.status.legal).toBe(true);
+    expect(out.annotations.some((a) => a.key === STEED_BELOW)).toBe(false);
+  });
+
+  it('two rows: the note rides the bounced row only', () => {
+    const out = evaluate({
+      modules: [findSteed],
+      committed: committed(),
+      planned: [
+        plan('d1', 'steed-record-damage', { amount: 10 }),
+        plan('d2', 'steed-record-damage', { amount: 9 })
+      ]
+    });
+    expect(out.facts['companion.steed.hp.damageRecorded']).toBe(10);
     expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
-    expect(markerOf(out, 'effect-steed-hp-bounce')).toBeDefined();
-    // The steed-scoped label (the .companion convention), so the annotation can
-    // never leak onto another subject's damage panel.
-    const annotation = out.annotations.find((a) => a.key === STEED_BELOW);
-    expect(annotation).toBeDefined();
-    expect(annotation!.targets).toEqual(['damage.steed.companion']);
+    expect(out.planDiagnostics['d2']).toEqual([{ code: STEED_BELOW, severity: 'notice' }]);
+    expect(out.status.legal).toBe(true);
   });
 
   it('Ignore Threshold records the RAW amount in full', () => {
@@ -187,8 +201,7 @@ describe('steed record-damage adapts to a seeded companion.steed.damageThreshold
     });
     expect(out.facts['companion.steed.hp.damageRecorded']).toBe(9);
     expect(out.facts['companion.steed.hp.current']).toBe(16);
-    expect(markerOf(out, 'effect-steed-hp-bounce')).toBeUndefined();
-    expect(out.annotations.some((a) => a.key === STEED_BELOW)).toBe(false);
+    expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
   });
 
   it('a threshold blow records the running total like an ungated recorder', () => {
@@ -220,18 +233,17 @@ describe('the vehicle bounces on its baked threshold (the first real caller)', (
     committed: [tormentorBoardEffect()]
   });
 
-  it('sub-threshold Use-mode: no record, the marker, and the vehicle-worded annotation', () => {
+  it('sub-threshold Use-mode: no record, no effect — the vehicle-worded notice on the row', () => {
     const out = evaluate({
       ...boarded(),
       planned: [plan('d1', 'record-tormentor-damage', { amount: 9 })]
     });
-    expect(out.effects.filter((e) => e.id.includes('effect-tormentor-hp-damage'))).toHaveLength(0);
+    expect(out.effects).toHaveLength(0);
     expect(out.facts['companion.tormentorDamageControl.hp.current']).toBe(60);
-    expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
-    expect(markerOf(out, 'effect-tormentor-hp-bounce')).toBeDefined();
-    const annotation = out.annotations.find((a) => a.key === VEHICLE_BELOW);
-    expect(annotation).toBeDefined();
-    expect(annotation!.targets).toEqual(['damage.tormentor.companion']);
+    expect(out.planDiagnostics['d1']).toEqual([{ code: VEHICLE_BELOW, severity: 'notice' }]);
+    expect(out.plannedOffers['d1']!.legal).toBe(true);
+    expect(out.status.legal).toBe(true);
+    expect(out.annotations.some((a) => a.key === VEHICLE_BELOW)).toBe(false);
   });
 
   it('Ignore Threshold records the RAW amount in full', () => {
@@ -241,6 +253,7 @@ describe('the vehicle bounces on its baked threshold (the first real caller)', (
     });
     expect(out.facts['companion.tormentorDamageControl.hp.damageRecorded']).toBe(9);
     expect(out.facts['companion.tormentorDamageControl.hp.current']).toBe(51);
+    expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
     expect(out.annotations.some((a) => a.key === VEHICLE_BELOW)).toBe(false);
   });
 });
@@ -277,28 +290,11 @@ describe('the segmented control is generic factory data on every damage offer', 
     expect((damage.ui as Record<string, unknown>).secondaryControl).toEqual(
       THRESHOLD_CONTROL('companion.tormentorDamageControl.damageThreshold')
     );
-    // The damage panel also declares the label the bounce annotation targets.
-    expect((damage.ui as Record<string, unknown>).annotationLabels).toEqual([
-      'damage.tormentor.companion'
-    ]);
-  });
-});
-
-describe('the bounce marker clears like the records it stands beside', () => {
-  it('survives a plain end of turn and ages out on a long rest (untilLongRest)', () => {
-    const out = evaluate({
-      modules: [coreEvents, hp],
-      inputFacts: { 'hp.base.max': 10, 'hp.damageThreshold': 5 },
-      planned: [plan('d1', 'record-damage', { amount: 4 })]
-    });
-    const marker = markerOf(out, 'effect-hp-bounce')!;
-    expect(endTurn([], [marker], {})).toHaveLength(1);
-    expect(endTurn([], [marker], { longRest: true })).toHaveLength(0);
   });
 });
 
 describe('the threshold strings exist in BOTH locales (tlh is the canary)', () => {
-  it('the three below-threshold annotations resolve in en and en-x-tlh', () => {
+  it('the three below-threshold notes resolve in en and en-x-tlh', () => {
     const strings: Record<string, string | undefined> = {
       'en player below_threshold':
         en.rule['dnd-5e-2024']['core-events']['record-damage'].below_threshold,

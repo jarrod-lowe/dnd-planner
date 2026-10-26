@@ -235,13 +235,7 @@ export interface HpRecorderOfferUi {
   description?: string;
   /** Rules-mode detail link (the vehicle's damage detail — threshold semantics). */
   detailKey?: string;
-  /**
-   * Panels the post-hoc reminders ride (the player's `damage.any`/`healing.any`)
-   * — and, on the DAMAGE direction, the label the below-threshold bounce
-   * annotation targets. Subject recorders scope theirs per subject (the
-   * `.companion` convention) so one subject's bounce can never render on
-   * another subject's panel.
-   */
+  /** Panels the post-hoc reminders ride (the player's `damage.any`/`healing.any`). */
   annotationLabels?: string[];
 }
 
@@ -258,32 +252,22 @@ export interface HpRecorderDirection extends HpRecorderOfferUi {
 }
 
 /**
- * The below-threshold BOUNCE — what a Use-Threshold sub-threshold blow commits
- * instead of a record. Sub-threshold damage is LEGAL to attempt (settled
- * 2026-10-26): the GM tells the player an amount and the player records it,
- * and the APP is what knows it was under the limit — requiring prior knowledge
- * of the threshold would defeat the point of recording it here. So the bounce
- * is never an error and never an illegality:
- *
- * - the damage apply advertises ONE hidden keyed MARKER effect (no state, no
- *   display, `untilLongRest` like the records it stands beside) — hidden
- *   because there is nothing to inspect: the marker's whole meaning IS the
- *   annotation;
- * - the recorder's `annotate` contribution (the factory's second return value)
- *   reads the marker out of the committed-effects list and emits the
- *   caller-worded INFORMATIONAL annotation on the damage panel's labels — so
- *   the bounce shows exactly while the bounced record stands and clears with
- *   it: remove the row (or the marker chip's lifecycle) and it withdraws, age
- *   it out on a long rest and it goes, and the subject's own record-eviction
- *   cascade clears it like every other record.
+ * The below-threshold BOUNCE note — what a Use-Threshold sub-threshold blow
+ * tells the player instead of recording. Sub-threshold damage is LEGAL to
+ * attempt (settled 2026-10-26): the GM tells the player an amount and the
+ * player records it, and the APP is what knows it was under the limit —
+ * requiring prior knowledge of the threshold would defeat the point of
+ * recording it here. So the bounce is never an error and never an
+ * illegality: the damage apply returns ONE `'notice'` diagnostic keyed to
+ * this spec's i18n string, which the plan fold attaches to THAT planned row
+ * alone (`planDiagnostics` is per-instance) — the bounced row carries the
+ * note, every other row of the same offer never sees it, and the note lives
+ * exactly as long as the row does (remove the row and it withdraws; commit
+ * the turn and it leaves with the row, the records beside it unchanged).
  */
 export interface HpRecorderBounce {
-  /** The marker effect's id. */
-  effectId: string;
-  /** The marker's replacement key, when it differs from the effect id. */
-  effectKey?: string;
-  /** i18n key for the informational panel annotation — the caller's own wording. */
-  annotationKey: string;
+  /** i18n key for the informational note on the bounced row — the caller's own wording. */
+  noteKey: string;
 }
 
 /** The one spec every HP recorder is built from — data, not code. */
@@ -331,19 +315,6 @@ export interface HpRecorderSpec {
   onDamageRecorded?: (f: FactReader, amount: number) => EffectInstance[];
 }
 
-/** What {@link hpRecorders} yields: the offer pair plus the module's annotate share. */
-export interface HpRecorderPair {
-  /** The damage and heal offers, to spread into the module's `offer`. */
-  offers: Offer[];
-  /**
-   * The module's `annotate` contribution: the below-threshold bounce
-   * annotation, emitted while the marker stands. Spread it into (or declare it
-   * as) the owning module's `annotate` — every module mounting a recorder
-   * carries this share.
-   */
-  annotate: (f: FactReader, committed: EffectInstance[]) => Annotation[];
-}
-
 /**
  * The shared damage/heal recorder pair — the slider offer, its `amount` capture,
  * the apply transitions, and the record effects, from one spec. What every
@@ -358,11 +329,11 @@ export interface HpRecorderPair {
  *   RENDERER is what follows the fact — no threshold fact, exactly the old
  *   single-slider look; a positive fact, the control renders directly;
  * - the damage apply's GENERIC threshold gate (threshold model v2): Use mode +
- *   sub-threshold records NOTHING and commits the hidden bounce marker (the
- *   annotate share turns it into the panel annotation — never a
- *   `legalWhen`/diagnostic, the blow was legal to attempt); Ignore mode skips
- *   the gate and records the RAW amount (the GM correction); at/above the
- *   threshold Use mode records in full — the threshold is a floor, not a cap;
+ *   sub-threshold records NOTHING and returns the informational bounce note
+ *   as a `'notice'` diagnostic on that row alone (never a `legalWhen` error —
+ *   the blow was legal to attempt); Ignore mode skips the gate and records
+ *   the RAW amount (the GM correction); at/above the threshold Use mode
+ *   records in full — the threshold is a floor, not a cap;
  * - the missing-HP heal cap (`min(amount, max(0, -modifierCurrent))` — regained
  *   HP cannot exceed the max, so surplus is lost rather than banked to
  *   pre-cancel a later blow);
@@ -374,7 +345,7 @@ export interface HpRecorderPair {
  * record (the `currentHp` derive floors the display at 0 instead — overkill
  * banking in the summed modifier is that known limitation, tracked separately).
  */
-export function hpRecorders(spec: HpRecorderSpec): HpRecorderPair {
+export function hpRecorders(spec: HpRecorderSpec): Offer[] {
   const { facts, subject } = spec;
   const keyed = spec.accumulation === 'keyed-total';
   // A keyed-total recorder lives in its running-total facts; naming neither is
@@ -388,14 +359,6 @@ export function hpRecorders(spec: HpRecorderSpec): HpRecorderPair {
   };
   const damageTotal = requireTotal(facts.damageRecorded, 'damageRecorded');
   const healTotal = requireTotal(facts.healRecorded, 'healRecorded');
-  // The bounce annotation rides the DAMAGE panel's own labels — a recorder with
-  // no label would bounce silently (the orphaned-target failure this catches at
-  // load instead).
-  const damageLabels = spec.damage.annotationLabels ?? [];
-  if (damageLabels.length === 0)
-    throw new Error(
-      `hpRecorders: ${spec.idStem}: a recorder must name its damage direction's annotationLabels (the bounce annotation targets them)`
-    );
 
   const slider = {
     type: 'slider',
@@ -470,19 +433,13 @@ export function hpRecorders(spec: HpRecorderSpec): HpRecorderPair {
     // RAW amount records in full — a correction is not a blow off the armor.
     const ignoreThreshold = selections[THRESHOLD_MODE_VAR] === 1;
     // Use Threshold (the default): a blow below the fact BOUNCES — no record,
-    // no lethal consequence, no per-module extras — and the hidden marker
-    // commits so the annotate share can say so on the panel. An UNSET fact
-    // reads 0 and never gates, which is also why the control renders only
-    // while the fact is positive.
+    // no lethal consequence, no per-module extras — and the informational
+    // bounce note returns as a `'notice'` diagnostic, which the plan fold
+    // attaches to THIS row alone. An UNSET fact reads 0 and never gates, which
+    // is also why the control renders only while the fact is positive.
     if (!ignoreThreshold && amount < f.num(facts.damageThreshold)) {
       return {
-        advertise: [
-          {
-            id: spec.bounce.effectId,
-            key: spec.bounce.effectKey ?? spec.bounce.effectId,
-            expiry: { kind: 'untilLongRest' }
-          }
-        ]
+        diagnostics: [{ code: spec.bounce.noteKey, severity: 'notice' }]
       };
     }
     // The lethal check (the steed's placement): currentHp floors at 0, so a
@@ -514,38 +471,28 @@ export function hpRecorders(spec: HpRecorderSpec): HpRecorderPair {
     ...(d.annotationLabels ? { annotationLabels: d.annotationLabels } : {}),
     primaryControl: slider,
     // The threshold-mode control is the DAMAGE direction's alone: repairs have
-    // no threshold semantics, no marker, no annotation.
+    // no threshold semantics and never bounce.
     ...(withThresholdControl ? { secondaryControl: thresholdControl } : {}),
     intents: { HEALTH: 'hp' },
     actionCost: []
   });
 
-  return {
-    offers: [
-      {
-        id: `${spec.idStem}-damage`,
-        ...(spec.when ? { when: spec.when } : {}),
-        ui: ui(spec.damage, true),
-        vars: { ...amountVar, [THRESHOLD_MODE_VAR]: { capture: true, default: { number: 0 } } },
-        apply: applyDamage
-      },
-      {
-        id: `${spec.idStem}-heal`,
-        ...(spec.when ? { when: spec.when } : {}),
-        ui: ui(spec.heal, false),
-        vars: amountVar,
-        apply: applyHeal
-      }
-    ],
-    // The bounce annotation: one per live marker, on the damage panel's own
-    // labels. Marked by committed-id suffix (the Searing Smite per-burn
-    // precedent) — the marker only ever exists as a plan-fold-advertised
-    // effect, committed or in flight.
-    annotate: (_f: FactReader, committed: EffectInstance[]): Annotation[] =>
-      committed.some((e) => e.id.endsWith(`#${spec.bounce.effectId}`))
-        ? [{ key: spec.bounce.annotationKey, targets: damageLabels }]
-        : []
-  };
+  return [
+    {
+      id: `${spec.idStem}-damage`,
+      ...(spec.when ? { when: spec.when } : {}),
+      ui: ui(spec.damage, true),
+      vars: { ...amountVar, [THRESHOLD_MODE_VAR]: { capture: true, default: { number: 0 } } },
+      apply: applyDamage
+    },
+    {
+      id: `${spec.idStem}-heal`,
+      ...(spec.when ? { when: spec.when } : {}),
+      ui: ui(spec.heal, false),
+      vars: amountVar,
+      apply: applyHeal
+    }
+  ];
 }
 
 /**

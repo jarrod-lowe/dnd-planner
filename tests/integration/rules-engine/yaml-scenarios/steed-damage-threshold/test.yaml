@@ -4,13 +4,13 @@ description: >-
   the steed's natural fact name, companion.steed.damageThreshold. No module
   derives it, so today it is unset (reads 0, never gates — the recorder's
   existing behaviour is pinned by steed-damage-accumulates); this scenario
-  seeds it as a committed effect beside the summon, and the recorder adapts on
-  its own (threshold model v2: sub-threshold damage is LEGAL to attempt): a
-  Use-Threshold blow BELOW the fact records NOTHING and commits the hidden
-  bounce marker whose annotate pass surfaces the informational
-  below-threshold annotation on the STEED damage panel — never a diagnostic —
-  while an Ignore-Threshold blow records the RAW amount in full, and a blow AT
-  the threshold records the running total like an ungated recorder.
+  seeds it as a committed effect beside the summon, and the recorder adapts
+  on its own (threshold model v2: sub-threshold damage is LEGAL to attempt):
+  a Use-Threshold blow BELOW the fact records NOTHING and returns a 'notice'
+  diagnostic that rides THAT planned row alone (never an error, never an
+  annotation), while an Ignore-Threshold blow records the RAW amount in full,
+  and a blow AT the threshold records the running total like an ungated
+  recorder.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -44,7 +44,7 @@ steps:
         facts:
           companion.steed.hp.current: 25
   # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
-  # records the RAW amount in full — no marker, no annotation, no error.
+  # records the RAW amount in full — no bounce note, no error.
   - addOffer:
       id: steed-record-damage
       selections:
@@ -58,72 +58,52 @@ steps:
           - id: steed-record-damage
             index: 0
             errors: []
-        annotations:
-          notExists:
-            - rule.spell-find-steed.steed-record-damage.below_threshold
   - endTurn:
       assert:
         effects:
           exists:
             - effect-steed-hp-damage
-          notExists:
-            - effect-steed-hp-bounce
-  # Sub-threshold (9 < the seeded 10) in USE mode: the blow bounces — no
-  # record, no fact change, no planErrors — and the annotation carries the
-  # feedback on the steed's damage panel (the .companion-scoped label).
+  # THE USER REPRO: TWO damage rows planned — one sub-threshold in Use mode,
+  # one landing at the threshold. The bounce note is a per-row 'notice'
+  # diagnostic: ONLY the bounced row carries it, the landing row never does,
+  # and the plan stays legal.
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 10
+      assert:
+        planErrors:
+          - id: steed-record-damage
+            index: 0
+            errors: []
   - addOffer:
       id: steed-record-damage
       selections:
         amount: 9
       assert:
         facts:
-          companion.steed.hp.damageRecorded: 9
-          companion.steed.hp.current: 16
-        planErrors:
-          - id: steed-record-damage
-            index: 0
-            errors: []
-        annotations:
-          exists:
-            - rule.spell-find-steed.steed-record-damage.below_threshold
-          targets:
-            - key: rule.spell-find-steed.steed-record-damage.below_threshold
-              targets:
-                - damage.steed.companion
-  # The marker commits with the turn and the annotation stands while it does.
-  - endTurn:
-      assert:
-        effects:
-          exists:
-            - effect-steed-hp-bounce
-        facts:
-          companion.steed.hp.current: 16
-        annotations:
-          exists:
-            - rule.spell-find-steed.steed-record-damage.below_threshold
-  # USE mode at the threshold: the running-total record lands exactly as the
-  # ungated corpus pins it.
-  - evaluate:
-      assert:
-        offers:
-          legal:
-            - steed-record-damage
-  - addOffer:
-      id: steed-record-damage
-      selections:
-        amount: 10
-      assert:
-        facts:
+          # 9 (committed ignore-mode) + 10 (the landing row): the bounced row
+          # adds nothing.
           companion.steed.hp.damageRecorded: 19
           companion.steed.hp.current: 6
         planErrors:
           - id: steed-record-damage
             index: 0
             errors: []
+          - id: steed-record-damage
+            index: 1
+            errors:
+              - rule.spell-find-steed.steed-record-damage.below_threshold
+        status:
+          legal: true
+  # The bounced row commits NOTHING at end of turn — no marker effect, no
+  # record. The note lived on the planned row and leaves with it.
   - endTurn:
       assert:
         effects:
           exists:
             - effect-steed-hp-damage
+          notExists:
+            - effect-steed-hp-bounce
         facts:
           companion.steed.hp.current: 6

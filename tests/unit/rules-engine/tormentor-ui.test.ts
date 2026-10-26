@@ -190,7 +190,6 @@ describe('board effect', () => {
       'tormentor-prone',
       'tormentor-hp-damage',
       'tormentor-hp-heal',
-      'tormentor-hp-bounce',
       'tormentor-destroyed'
     ]);
   });
@@ -782,16 +781,15 @@ describe('prone-deficiency notice', () => {
  * FACT the shared factory consults (threshold model v2, user-corrected
  * 2026-10-26: sub-threshold damage is LEGAL to attempt — the GM tells the
  * player an amount and the player records it): a Use-Threshold blow below the
- * fact records NOTHING and commits a hidden keyed bounce marker whose annotate
- * pass surfaces the informational below-threshold annotation on the damage
- * panel (never a diagnostic, never an illegality); an Ignore-Threshold blow
- * records the RAW amount in full (the GM correction); at or above the
- * threshold the FULL amount lands (a floor, not a cap). Damage that brings
- * hp.current to 0 ALSO advertises a permanent keyed `tormentor-destroyed`
- * wreck (the steed lethal-check placement, but NO auto-unboard: the board
- * effect persists so the wreck stays inspectable) with a standing NOTICE
- * gated on the destroyed fact. Re-boarding/de-boarding evict the HP records,
- * the bounce marker and the wreck with everything else.
+ * fact records NOTHING and returns a 'notice' diagnostic that rides THAT
+ * planned row alone (never an error, never an illegality, never a panel
+ * annotation); an Ignore-Threshold blow records the RAW amount in full (the
+ * GM correction); at or above the threshold the FULL amount lands (a floor,
+ * not a cap). Damage that brings hp.current to 0 ALSO advertises a permanent
+ * keyed `tormentor-destroyed` wreck (the steed lethal-check placement, but NO
+ * auto-unboard: the board effect persists so the wreck stays inspectable)
+ * with a standing NOTICE gated on the destroyed fact. Re-boarding/de-boarding
+ * evict the HP records and the wreck with everything else.
  */
 
 /** The HP record effect ids/keys the station recorders advertise. */
@@ -882,10 +880,9 @@ describe('record-tormentor-damage offer', () => {
       max: { fact: `${F}.hp.max` },
       unit: 'hp'
     });
-    // The damage panel declares the label the below-threshold bounce annotation
-    // targets — subject-scoped (.companion), so the annotation can never land
-    // on another subject's damage panel.
-    expect(ui.annotationLabels).toEqual(['damage.tormentor.companion']);
+    // The damage panel declares no annotation labels: the below-threshold
+    // bounce is a per-row notice, not a panel annotation, so nothing targets it.
+    expect(ui.annotationLabels).toBeUndefined();
     // The [Use Threshold | Ignore Threshold] segmented SECONDARY control (the
     // generic factory emission): `enabled.condition` names the baked threshold
     // fact, and PanelRenderer hides a false-gated control — unboarded or
@@ -937,27 +934,40 @@ describe('record-tormentor-damage offer', () => {
     });
   });
 
-  it('sub-threshold damage records NOTHING — the bounce marker and its panel annotation are the feedback (threshold model v2)', () => {
+  it('sub-threshold damage records NOTHING — a per-row notice diagnostic is the feedback (threshold model v2)', () => {
     const out = planDamage(9);
     // No record effect, no fact change — the blow bounces off the armor plate.
-    expect(out.effects.filter((e) => e.id.endsWith(HP_DAMAGE_EFFECT))).toHaveLength(0);
+    expect(out.effects).toHaveLength(0);
     expect(out.facts[`${F}.hp.damageRecorded`]).toBeUndefined();
     expect(out.facts[`${F}.hp.current`]).toBe(60);
     // Sub-threshold damage is LEGAL to attempt (the GM tells the player the
-    // amount): the row carries NO diagnostic — the error model is deleted.
+    // amount): the feedback is ONE informational notice on THIS row — never an
+    // error, and the row and the plan stay legal.
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.record-damage.below_threshold`, severity: 'notice' }
+    ]);
+    expect(out.plannedOffers['i0']!.legal).toBe(true);
+    expect(out.status.legal).toBe(true);
+    // No annotation exists — a per-commit bounce is not a standing panel truth.
+    expect(out.annotations.some((a) => a.key === `${T}.record-damage.below_threshold`)).toBe(false);
+  });
+
+  it('two rows planned: the notice rides the bounced row ONLY (the user repro)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [boardEffect()],
+      planned: [
+        { instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount: 10 } },
+        { instanceId: 'i1', ruleId: 'record-tormentor-damage', selections: { amount: 9 } }
+      ]
+    });
+    expect(out.facts[`${F}.hp.damageRecorded`]).toBe(10);
     expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
-    // …the bounce commits ONE hidden keyed marker the annotate pass reads…
-    const marker = out.effects.find((e) => e.id.endsWith('effect-tormentor-hp-bounce'));
-    expect(marker).toBeDefined();
-    expect(marker!.key).toBe('tormentor-hp-bounce');
-    expect(marker!.expiry).toEqual({ kind: 'untilLongRest' });
-    expect(marker!.state).toBeUndefined();
-    expect(marker!.display).toBeUndefined();
-    // …which surfaces the informational annotation on the damage panel.
-    const annotation = out.annotations.find((a) => a.key === `${T}.record-damage.below_threshold`);
-    expect(annotation).toBeDefined();
-    expect(annotation!.targets).toEqual(['damage.tormentor.companion']);
-    expect(annotation!.rider).toBeUndefined();
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.record-damage.below_threshold`, severity: 'notice' }
+    ]);
+    expect(out.plannedOffers['i0']!.legal).toBe(true);
+    expect(out.plannedOffers['i1']!.legal).toBe(true);
   });
 
   it('Ignore Threshold records the RAW amount in full (the GM-correction mode)', () => {
@@ -974,7 +984,7 @@ describe('record-tormentor-damage offer', () => {
     });
     expect(out.facts[`${F}.hp.damageRecorded`]).toBe(9);
     expect(out.facts[`${F}.hp.current`]).toBe(51);
-    expect(out.effects.some((e) => e.id.endsWith('effect-tormentor-hp-bounce'))).toBe(false);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
     expect(out.annotations.some((a) => a.key === `${T}.record-damage.below_threshold`)).toBe(false);
   });
 
@@ -1005,7 +1015,7 @@ describe('record-tormentor-heal offer', () => {
       unit: 'hp'
     });
     // The threshold control is the DAMAGE direction's alone: repairs have no
-    // threshold semantics, no marker, no annotation.
+    // threshold semantics and never bounce.
     expect(ui.secondaryControl).toBeUndefined();
     expect(ui.annotationLabels).toBeUndefined();
     expect(offer!.rule.vars).toEqual({ amount: { capture: true, default: { number: 0 } } });
