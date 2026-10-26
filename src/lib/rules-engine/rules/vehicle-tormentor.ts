@@ -61,15 +61,22 @@ import {
  * usedMax pool). The station's +ADD carries damage and repair recorders (the
  * steed recorder idiom: ONE keyed `untilLongRest` effect holding the RUNNING
  * total, chip showing the live value; repairs cap at the net missing HP).
- * The threshold is an APPLY-level gate through the builder's GENERIC
- * `damageThresholdGate` (not vehicle-local): a blow below the fact records
- * NOTHING and flags the row — the offer itself stays legal (the dash idiom;
- * the explanation lives on the damage offer's DETAIL, not on standing
- * notices, because nothing else behaves differently). Damage that empties the
- * pool ALSO writes a permanent `destroyed` wreck (the steed lethal-check
- * placement, but NO auto-unboard — the board persists so the wreck stays
- * inspectable; the destroyed NOTICE says what that means). The HP records and
- * the wreck join the board lifecycle like every other record.
+ * The threshold rides the shared factory's GENERIC gate (threshold model v2,
+ * user-corrected 2026-10-26 — sub-threshold damage is LEGAL to attempt: the
+ * GM tells the crew an amount and they record it, and the app is what knows
+ * it was under the limit): the damage offer carries a [Use Threshold | Ignore
+ * Threshold] segmented control (rendered while the threshold fact is
+ * positive), a Use-Threshold blow below the fact records NOTHING and commits
+ * a hidden keyed bounce marker whose annotate pass surfaces the informational
+ * below-threshold annotation on the damage panel (never a diagnostic, never
+ * an illegality), an Ignore-Threshold blow records the RAW amount in full
+ * (the GM correction), and the explanation lives on the damage offer's DETAIL
+ * — not on standing notices, because nothing else behaves differently. Damage
+ * that empties the pool ALSO writes a permanent `destroyed` wreck (the steed
+ * lethal-check placement, but NO auto-unboard — the board persists so the
+ * wreck stays inspectable; the destroyed NOTICE says what that means). The HP
+ * records, the bounce marker and the wreck join the board lifecycle like
+ * every other record.
  *
  * The stat block's "AC 21 (19 while motionless)" is a MODE the player
  * records (v2 — v1's annotation state chip was abandoned; see the plan): the
@@ -126,11 +133,20 @@ const HP_DAMAGE_KEY = 'tormentor-hp-damage';
 const HP_HEAL_EFFECT_ID = 'effect-tormentor-hp-heal';
 const HP_HEAL_KEY = 'tormentor-hp-heal';
 
+/** The below-threshold bounce marker's effect id and replacement key. */
+const HP_BOUNCE_EFFECT_ID = 'effect-tormentor-hp-bounce';
+const HP_BOUNCE_KEY = 'tormentor-hp-bounce';
+
 /** The destroyed wreck's effect id and replacement key. */
 const DESTROYED_EFFECT_ID = 'effect-tormentor-destroyed';
 const DESTROYED_KEY = 'tormentor-destroyed';
 
-/** The damage recorder's below-threshold diagnostic (the apply-level gate). */
+/**
+ * The damage recorder's below-threshold key — the INFORMATIONAL annotation a
+ * Use-Threshold sub-threshold blow surfaces on the damage panel (threshold
+ * model v2: the blow was legal to attempt; the app tells the player it
+ * bounced). Same i18n slot the old error diagnostic lived in, new meaning.
+ */
 const BELOW_THRESHOLD = `${T}.record-damage.below_threshold`;
 
 /** Each prone offer's single legality leg (the get-up not_prone idiom). */
@@ -150,6 +166,7 @@ const CHILD_KEYS = [
   PRONE_KEY,
   HP_DAMAGE_KEY,
   HP_HEAL_KEY,
+  HP_BOUNCE_KEY,
   DESTROYED_KEY
 ] as const;
 
@@ -421,6 +438,67 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
   }
 ];
 
+/**
+ * The STATION's damage/repair recorders, on the shared factory (the player's
+ * and the steed's ride the same code path): free, boarded, an HP record (the
+ * HEALTH bucket, like the steed's and the player's — not a condition), keyed
+ * running totals the board/de-board lifecycle evicts by key. The stat block's
+ * damage threshold is a BAKED FACT the factory consults (threshold model v2 —
+ * sub-threshold damage is LEGAL to attempt: the GM tells the crew an amount
+ * and they record it): the damage offer carries the factory's [Use Threshold |
+ * Ignore Threshold] segmented control (rendered while the fact is positive),
+ * a Use-Threshold blow below the fact records NOTHING and commits the hidden
+ * bounce marker whose annotate share surfaces the informational
+ * below-threshold annotation on the damage panel, and an Ignore-Threshold
+ * blow records the RAW amount in full (the GM correction); at or above the
+ * threshold the FULL amount lands (a floor, not a cap). Damage that brings
+ * the pool to 0 ALSO writes the permanent destroyed wreck BESIDE the record
+ * (the record lands — the blow happened; the wreck is permanent, because a
+ * long rest must not un-burn a war machine). The damage offer carries the
+ * damage DETAIL — threshold, immunities and the mishap trigger live there,
+ * not on standing notices (nothing else behaves differently, so there is
+ * nothing to warn about before acting); the repair offer keeps the minimal
+ * surface (no detailKey, no threshold control — repairs never bounce).
+ */
+const HP_RECORDERS = hpRecorders({
+  idStem: 'record-tormentor',
+  when: boarded,
+  subject: SUBJECT,
+  facts: {
+    max: `${F}.hp.max`,
+    modifierCurrent: `${F}.hp.modifier.current`,
+    damageRecorded: `${F}.hp.damageRecorded`,
+    healRecorded: `${F}.hp.healRecorded`,
+    damageThreshold: `${F}.damageThreshold`
+  },
+  damage: {
+    name: `${T}.record-damage.name`,
+    description: `${T}.record-damage.description`,
+    detailKey: 'vehicle/tormentor-damage',
+    // Vehicle-scoped (the `.companion` convention): the bounce annotation
+    // lands on THIS vehicle's damage panel, never the player's or the steed's.
+    annotationLabels: ['damage.tormentor.companion'],
+    effectId: HP_DAMAGE_EFFECT_ID,
+    effectKey: HP_DAMAGE_KEY,
+    effectName: `${T}.hp-damage-effect.name`
+  },
+  heal: {
+    name: `${T}.record-heal.name`,
+    description: `${T}.record-heal.description`,
+    effectId: HP_HEAL_EFFECT_ID,
+    effectKey: HP_HEAL_KEY,
+    effectName: `${T}.hp-heal-effect.name`
+  },
+  accumulation: 'keyed-total',
+  chipSection: 'mount',
+  bounce: {
+    effectId: HP_BOUNCE_EFFECT_ID,
+    effectKey: HP_BOUNCE_KEY,
+    annotationKey: BELOW_THRESHOLD
+  },
+  lethal: { effects: () => [tormentorDestroyedEffect()], keepRecord: true }
+});
+
 const vehicleTormentor: RuleModule = {
   id: ID,
   meta: {
@@ -610,53 +688,8 @@ const vehicleTormentor: RuleModule = {
         ]
       })
     },
-    // The STATION's damage/repair recorders, on the shared factory (the
-    // player's and the steed's ride the same code path): free, boarded, an HP
-    // record (the HEALTH bucket, like the steed's and the player's — not a
-    // condition), keyed running totals the board/de-board lifecycle evicts by
-    // key. The stat block's damage threshold is a BAKED FACT the factory's
-    // generic gate consults (the dash idiom — the offer stays legal whatever
-    // the slider reads): a blow below it records NOTHING and flags the row
-    // with the below-threshold diagnostic; at or above it the FULL amount
-    // lands (the threshold is a floor, not a cap). Damage that brings the
-    // pool to 0 ALSO writes the permanent destroyed wreck BESIDE the record
-    // (the record lands — the blow happened; the wreck is permanent, because
-    // a long rest must not un-burn a war machine). The damage offer carries
-    // the damage DETAIL — threshold, immunities and the mishap trigger live
-    // there, not on standing notices (nothing else behaves differently, so
-    // there is nothing to warn about before acting); the repair offer keeps
-    // the minimal surface (no detailKey).
-    ...hpRecorders({
-      idStem: 'record-tormentor',
-      when: boarded,
-      subject: SUBJECT,
-      facts: {
-        max: `${F}.hp.max`,
-        modifierCurrent: `${F}.hp.modifier.current`,
-        damageRecorded: `${F}.hp.damageRecorded`,
-        healRecorded: `${F}.hp.healRecorded`,
-        damageThreshold: `${F}.damageThreshold`
-      },
-      damage: {
-        name: `${T}.record-damage.name`,
-        description: `${T}.record-damage.description`,
-        detailKey: 'vehicle/tormentor-damage',
-        effectId: HP_DAMAGE_EFFECT_ID,
-        effectKey: HP_DAMAGE_KEY,
-        effectName: `${T}.hp-damage-effect.name`
-      },
-      heal: {
-        name: `${T}.record-heal.name`,
-        description: `${T}.record-heal.description`,
-        effectId: HP_HEAL_EFFECT_ID,
-        effectKey: HP_HEAL_KEY,
-        effectName: `${T}.hp-heal-effect.name`
-      },
-      accumulation: 'keyed-total',
-      chipSection: 'mount',
-      belowThresholdCode: BELOW_THRESHOLD,
-      lethal: { effects: () => [tormentorDestroyedEffect()], keepRecord: true }
-    }),
+    // The STATION's damage/repair recorders (see HP_RECORDERS above).
+    ...HP_RECORDERS.offers,
     {
       // The STATION's prone RECORDER: models the vehicle BEING knocked prone
       // (imposed by the outside world), free. The BOARD is the one structural
@@ -780,8 +813,11 @@ const vehicleTormentor: RuleModule = {
   // the way out is people, not repairs), gated on the destroyed fact alone —
   // the wreck never outlives the board either. Distinct key from the prone
   // notice, so a prone wreck (somehow) carries both.
-  annotate: (f: FactReader): Annotation[] => {
-    const out: Annotation[] = [];
+  annotate: (f: FactReader, committed: EffectInstance[]): Annotation[] => {
+    // The recorders' share first: the below-threshold bounce annotation on
+    // the damage panel, standing exactly while the bounce marker does
+    // (threshold model v2 — informational feedback, never a diagnostic).
+    const out: Annotation[] = [...HP_RECORDERS.annotate(f, committed)];
     if (f.num(`${F}.prone`) > 0)
       out.push({
         key: `${T}.notice`,

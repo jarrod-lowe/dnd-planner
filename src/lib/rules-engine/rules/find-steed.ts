@@ -110,11 +110,14 @@ function steedStats(level: number, creatureType: number): Record<string, number>
 
 // The steed's child HP effects, evicted (by key) when the steed is dismissed or
 // its mount chip is removed. The mount effect declares them as `dependents`.
+// The below-threshold bounce marker rides the same lifecycle — the annotation
+// never outlives the steed whose bounce it reports.
 const STEED_CHILD_EFFECTS = [
   'effect-steed-hp-modifier-max',
   'effect-steed-hp-modifier-current',
   'effect-steed-hp-damage',
-  'effect-steed-hp-heal'
+  'effect-steed-hp-heal',
+  'effect-steed-hp-bounce'
 ] as const;
 
 /**
@@ -709,6 +712,52 @@ const STEED_PANELS: SubjectPanelDeclaration[] = [
  * economy, movement, saves and modifiers are then derived (so they reset each
  * turn) and its actions surface as offers gated on the steed being summoned.
  */
+/**
+ * HP: the damage/heal recorders, on the shared factory (the player's and the
+ * Tormentor's ride the same code path). Keyed running totals — records
+ * accumulate while the dismiss cascade still evicts by key and removing the
+ * single chip clears the whole record. A steed reduced to 0 HP dies (the
+ * retire cascade REPLACES the record: its same-key child evictions would
+ * supersede a record advertised beside them anyway). The threshold fact is the
+ * steed's natural `companion.steed.damageThreshold`: nothing derives it, so it
+ * reads 0, the recorder never gates and the threshold-mode control never
+ * renders today; a future stat-block bake adapts the recorder for free (bounce
+ * annotation in this namespace, on the `.companion`-scoped damage label).
+ */
+const STEED_HP_RECORDERS = hpRecorders({
+  idStem: 'steed-record',
+  when: summoned,
+  subject: 'steed',
+  facts: {
+    max: 'companion.steed.hp.max',
+    modifierCurrent: 'companion.steed.hp.modifier.current',
+    damageRecorded: 'companion.steed.hp.damageRecorded',
+    healRecorded: 'companion.steed.hp.healRecorded',
+    damageThreshold: 'companion.steed.damageThreshold'
+  },
+  damage: {
+    name: `${S}.steed-record-damage.name`,
+    // Steed-scoped (the `.companion` convention): the below-threshold bounce
+    // annotation lands on the STEED's damage panel, never the player's or
+    // another subject's.
+    annotationLabels: ['damage.steed.companion'],
+    effectId: 'effect-steed-hp-damage',
+    effectName: `${S}.steed-record-damage.effect.name`
+  },
+  heal: {
+    name: `${S}.steed-record-heal.name`,
+    effectId: 'effect-steed-hp-heal',
+    effectName: `${S}.steed-record-heal.effect.name`
+  },
+  accumulation: 'keyed-total',
+  chipSection: 'health',
+  bounce: {
+    effectId: 'effect-steed-hp-bounce',
+    annotationKey: `${S}.steed-record-damage.below_threshold`
+  },
+  lethal: { effects: retireSteedEffects, keepRecord: false }
+});
+
 const findSteed: RuleModule = {
   id: 'spell-find-steed',
   prepare: {
@@ -1109,41 +1158,8 @@ const findSteed: RuleModule = {
       -30,
       30
     ),
-    // HP: the damage/heal recorders, on the shared factory (the player's and
-    // the Tormentor's ride the same code path). Keyed running totals — records
-    // accumulate while the dismiss cascade still evicts by key and removing
-    // the single chip clears the whole record. A steed reduced to 0 HP dies
-    // (the retire cascade REPLACES the record: its same-key child evictions
-    // would supersede a record advertised beside them anyway). The threshold
-    // fact is the steed's natural `companion.steed.damageThreshold`: nothing
-    // derives it, so it reads 0 and never gates today; a future stat-block
-    // bake adapts the recorder for free (diagnostic in this namespace).
-    ...hpRecorders({
-      idStem: 'steed-record',
-      when: summoned,
-      subject: 'steed',
-      facts: {
-        max: 'companion.steed.hp.max',
-        modifierCurrent: 'companion.steed.hp.modifier.current',
-        damageRecorded: 'companion.steed.hp.damageRecorded',
-        healRecorded: 'companion.steed.hp.healRecorded',
-        damageThreshold: 'companion.steed.damageThreshold'
-      },
-      damage: {
-        name: `${S}.steed-record-damage.name`,
-        effectId: 'effect-steed-hp-damage',
-        effectName: `${S}.steed-record-damage.effect.name`
-      },
-      heal: {
-        name: `${S}.steed-record-heal.name`,
-        effectId: 'effect-steed-hp-heal',
-        effectName: `${S}.steed-record-heal.effect.name`
-      },
-      accumulation: 'keyed-total',
-      chipSection: 'health',
-      belowThresholdCode: `${S}.steed-record-damage.below_threshold`,
-      lethal: { effects: retireSteedEffects, keepRecord: false }
-    }),
+    // HP: the damage/heal recorders (see STEED_HP_RECORDERS above).
+    ...STEED_HP_RECORDERS.offers,
     // Dismiss — the steed vanishes (replaces the summon effect). Costs the
     // caster's action (as legacy did).
     {
@@ -1180,14 +1196,18 @@ const findSteed: RuleModule = {
     }
   ],
   // The Life Bond feature — surfaced as an informational annotation while the
-  // steed is summoned (damage the steed takes can be shared with the paladin).
-  annotate: (f) =>
+  // steed is summoned (damage the steed takes can be shared with the paladin) —
+  // beside the recorders' own annotate share: the below-threshold bounce
+  // annotation on the steed's damage panel, standing exactly while the bounce
+  // marker does (threshold model v2).
+  annotate: (f, committed) => [
+    ...STEED_HP_RECORDERS.annotate(f, committed),
     // Rides the Record Healing panel: spell healing within 5 ft also
     // heals the steed, so the reminder targets `healing.any`, not a steed label.
     // Both this gate and the steed heal recorder are `summoned`, so the
     // reminder can carry that offer: tapping it adds the steed's heal row
     // (amount starting at 0, as the steed's own +ADD picker does).
-    summoned(f)
+    ...(summoned(f)
       ? [
           {
             key: `${S}.annotate-life-bond.text`,
@@ -1213,7 +1233,8 @@ const findSteed: RuleModule = {
             }
           }
         ]
-      : []
+      : [])
+  ]
 };
 
 export default defineRule(findSteed);

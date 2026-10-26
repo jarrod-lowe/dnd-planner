@@ -334,9 +334,12 @@ and disadvantage cancel, both chips stay, each independently true.
 `preparedSpellCount` (the live prepared-count contribution every prepared spell
 spreads into its `derive`), the weapon-definition builder (attack/equip/stow/
 reaction offers from one `def`), `hpRecorders` (the damage/heal recorder pair
-every damageable subject offers — slider offer, amount capture, threshold gate,
-heal cap, and both accumulation idioms from one spec; the player/steed/vehicle
-recorders all ride it), and `statToModifier`. Reuse them — do not
+every damageable subject offers — slider offer, amount capture, the threshold
+gate with its [Use Threshold | Ignore Threshold] segmented control and
+below-threshold bounce annotation, heal cap, and both accumulation idioms from
+one spec, returning `{ offers, annotate }` to spread into the module's `offer`
+and `annotate`; the player/steed/vehicle recorders all ride it), and
+`statToModifier`. Reuse them — do not
 hand-roll a weapon or an HP recorder. Preparing spells is not an offer here at
 all: a spell module declares `prepare: PrepareDef` and the `prepared-spells`
 group's `set-prepared-spells` picker commits the whole set as one keyed effect.

@@ -158,9 +158,12 @@ ruleGroups:
             against it does not land the way it does against flesh.
 
             **Damage Threshold 10.** A blow that deals less than ten damage
-            leaves the Tormentor unmarked — record nothing at all. A blow of
-            ten or more lands in full: the threshold is a floor, not a cap,
-            and never subtracts from what gets through.
+            leaves the Tormentor unmarked — record the blow as it is called
+            and nothing is taken; the swing simply bounces off the armour
+            plate. A blow of ten or more lands in full: the threshold is a
+            floor, not a cap, and never subtracts from what gets through. To
+            land a correction beneath the threshold, ignore it for that one
+            record.
 
             **Immunities.** Fire, poison, and psychic damage cannot hurt the
             vehicle at all. Record none of it, however heavy the blow.

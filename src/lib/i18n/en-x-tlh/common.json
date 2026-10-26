@@ -2342,6 +2342,11 @@
       "outcome": {
         "none": "—"
       },
+      "threshold": {
+        "prefix": "qIp chuqHa'",
+        "use": "qIp chuqHa' yIlo'",
+        "ignore": "qIp chuqHa' yIbuSbe'"
+      },
       "rest": {
         "short": "DIvI' nIv",
         "long": "DIvI' tIQ"
