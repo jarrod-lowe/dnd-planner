@@ -28,7 +28,9 @@ sheet(committed effects)            — derive the character sheet
 → plan fold                         — apply planned actions in player order,
                                       re-deriving the sheet with effects-so-far
 → offers(final facts)               — the action catalog, judged post-plan
-→ annotate(final facts, live effects) — related-info chips (riders, notices)
+→ annotate(final facts, live effects) — related-info chips (riders, notices);
+                                      also run at each row's fold boundary for
+                                      the per-row annotationsByRow lists
 ```
 
 Three ideas carry the whole design:
@@ -201,6 +203,19 @@ may share a `key` (one Searing Smite burn notice per burning target) and keyed
 rendering can tell them apart. Rules that don't need the list declare just
 `(f)`.
 
+The pass runs TWICE over a plan, against two different states, and a rule
+never has to know which:
+
+- **Global** — once against the settled post-plan facts (`annotations`). This
+  is what the notices strip and the toggle captures read: the turn as a whole.
+- **Per row** — inline in the plan fold, at each boundary where a row's
+  prefix-inclusive end state is live (`annotationsByRow`, keyed by instanceId).
+  An annotation showing ON a plan row is judged against the state at the END of
+  that row — committed + rows 1..N inclusive, never a later row — so a
+  reminder a later row consumed (the smite cast after the attack) stays on the
+  earlier row that still had it, with its own numbers. The last row's list is
+  exactly the global list (same facts, same effects, same call).
+
 ### `onRest` — passive rest recoveries
 
 Runs after the plan settles when a rest was recorded this turn; returns
@@ -287,7 +302,9 @@ interface EngineOutput {
   facts: Facts; // projected post-plan facts
   availableRules: AvailableRuleEntry[]; // the offer catalog, judged post-plan
   planDiagnostics: Record<string, Diagnostic[]>; // per plan-instance legality
-  annotations: Annotation[];
+  annotations: Annotation[]; // full-plan list (notices strip, toggle captures)
+  annotationsByRow: Record<string, Annotation[]>; // per plan-instance, judged
+  // at each row's END state
   effects: EffectInstance[]; // this turn's advertised effects
   diagnostics: { errors; warnings; notices }; // engine-level problems
   next: EngineInput; // echo for replay (serializeInput → JSON-safe)
@@ -299,6 +316,10 @@ diagnostics }` — offers judged against the **post-plan** facts, so the
   catalog reflects what you could _still_ do.
 - `planDiagnostics` is keyed by plan `instanceId`; per-instance legality comes
   from the fold (each step judged against the state it actually executed in).
+- `annotationsByRow` is keyed the same way; each row's list is the annotate
+  pass run at that row's fold boundary (see `annotate`), which is what the
+  row's own panel surfaces render. A non-empty plan's last row's list is
+  exactly `annotations`.
 - Engine throws (dependency cycles, combine conflicts, input-fact overlap,
   watchdog timeout) are caught by the play store, which keeps the previous
   output and surfaces `play.error.engineCycle` / `play.error.evaluate` in the

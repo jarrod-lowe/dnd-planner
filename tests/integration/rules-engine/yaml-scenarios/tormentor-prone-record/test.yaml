@@ -71,7 +71,7 @@ steps:
         offers:
           # Prone (the record merely planned): the mirror — the flip is now
           # the legal one, and the knock stays VISIBLE and ILLEGAL with its
-          # already-prone diagnostic instead of withdrawing.
+          # already-prone diagnostic.
           exists:
             - knock-tormentor-prone
             - flip-tormentor-upright
@@ -118,7 +118,7 @@ steps:
   # The OVERRIDE path (the plan.ts contract): committing the knock while
   # ILLEGAL still applies — the keyed replacement re-advertises the one
   # record (newest-wins, so still a single prone fact) and the row carries
-  # its already-prone diagnostic rather than being withdrawn.
+  # its already-prone diagnostic.
   - addOffer:
       id: knock-tormentor-prone
       assert:

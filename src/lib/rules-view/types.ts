@@ -648,6 +648,13 @@ export interface EngineOutput {
   collections: Record<string, unknown>;
   availableRules: AvailableRuleEntry[];
   annotations: Annotation[];
+  /**
+   * Per-row annotations keyed by plan instanceId — each row's list judged at
+   * that row's END state (committed + rows 1..N inclusive), which plan rows
+   * render instead of the global {@link annotations} list. Optional because
+   * fixture outputs may predate it; the engine bridge always provides it.
+   */
+  annotationsByRow?: Record<string, Annotation[]>;
   diagnostics: Diagnostics;
   trace: Trace;
   /** Advertised effects that should persist across turns. UI commits these at end of turn. */
