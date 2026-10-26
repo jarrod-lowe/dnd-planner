@@ -73,8 +73,9 @@ steps:
           illegal:
             - dash-tormentor
   # …and the override path spends anyway, DOUBLING the movement pool (the
-  # steed's Dash semantics) while the row carries DASH's own diagnostic (the
-  # first row stays clean, like every action spend).
+  # steed's Dash semantics) while the row carries DASH's own diagnostic and,
+  # like every planned Dash row, the GM-risk note after it (the first row
+  # stays clean, like every action spend).
   - addOffer:
       id: dash-tormentor
       assert:
@@ -86,6 +87,7 @@ steps:
             index: 0
             errors:
               - rule.tormentor.dash.no_action
+              - rule.tormentor.dash.risk
   # The turn ends: the spends and the doubling age away and both open again —
   # Drive's own diagnostic is the mirror case.
   - endTurn:
@@ -103,7 +105,8 @@ steps:
         planErrors:
           - id: dash-tormentor
             index: 0
-            errors: []
+            errors:
+              - rule.tormentor.dash.risk
   - addOffer:
       id: drive-tormentor
       assert:

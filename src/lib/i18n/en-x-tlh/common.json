@@ -535,7 +535,8 @@
       "dash": {
         "name": "Duj Do'choH",
         "description": "Duj Sep Do yIcher 'ej Hujqu'choH. qab qaS — DIvI' yIwuqnIS",
-        "no_action": "DIvI' tu'lu'be'"
+        "no_action": "DIvI' tu'lu'be'",
+        "risk": "Duj Sep Do Hujqu'choH — qab qaS DIvI' wuqnIS"
       },
       "juke": {
         "name": "yIvegh",

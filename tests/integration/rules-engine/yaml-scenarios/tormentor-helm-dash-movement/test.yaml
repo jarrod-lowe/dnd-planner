@@ -24,7 +24,8 @@ steps:
           legal:
             - dash-tormentor
   # Dash: the action goes, the pool doubles (the steed's dashed flag — total
-  # and remaining rise together, nothing spent).
+  # and remaining rise together, nothing spent), and the row carries the
+  # GM-risk note (the per-row 'notice' — see tormentor-helm-dash-note).
   - addOffer:
       id: dash-tormentor
       assert:
@@ -35,7 +36,8 @@ steps:
         planErrors:
           - id: dash-tormentor
             index: 0
-            errors: []
+            errors:
+              - rule.tormentor.dash.risk
   # The doubled pool is Drive's to spend: the override path (no action left)
   # still records the move against it — 150 of the 200.
   - addOffer:

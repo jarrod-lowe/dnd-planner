@@ -535,7 +535,8 @@
       "dash": {
         "name": "Dash",
         "description": "Push the Tormentor to move fast this turn. Dashing presses the machine hard — the GM decides any consequence",
-        "no_action": "No action available"
+        "no_action": "No action available",
+        "risk": "Dashing presses the machine hard — the GM decides any consequence"
       },
       "juke": {
         "name": "Juke",

@@ -1734,7 +1734,9 @@ describe('dash-tormentor offer', () => {
     expect(out.effects[0]!.key).toBeUndefined();
     expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
     expect(out.effects[0]!.state).toEqual({ 'actions.spent': 1, [`${F}.dashed`]: 1 });
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice' }
+    ]);
     expect(out.facts['actions.remaining']).toBe(0);
     expect(out.facts[`${F}.movement.total`]).toBe(200);
     expect(out.facts[`${F}.movement.remaining`]).toBe(200);
@@ -1753,8 +1755,39 @@ describe('dash-tormentor offer', () => {
         { instanceId: 'i1', ruleId: 'dash-tormentor' }
       ]
     });
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
-    expect(out.planDiagnostics['i1']).toEqual([{ code: `${T}.dash.no_action`, severity: 'error' }]);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice' }
+    ]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.dash.no_action`, severity: 'error' },
+      { code: `${T}.dash.risk`, severity: 'notice' }
+    ]);
+  });
+
+  it('carries the GM-risk note as a per-row NOTICE on every planned Dash row (the bounce-note pattern)', () => {
+    // The user's tablet test: the dash risk copy lived only in the offer
+    // description and the Helm detail — invisible in play once the +ADD
+    // closes. The below-threshold bounce-note mechanism (the damage
+    // recorder's) surfaces it ON the row: the apply returns ONE 'notice'
+    // diagnostic beside its spend, which the plan fold attaches to THAT row
+    // alone — informational, so the row stays LEGAL, no other row ever sees
+    // it, and nothing commits or stands when the row leaves.
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'dash-tormentor' },
+        { instanceId: 'i1', ruleId: 'set-tormentor-ac-mode' }
+      ]
+    });
+    // The legal row: exactly the notice, never an error — Dash stays legal.
+    expect(out.planDiagnostics['i0']).toEqual([{ code: `${T}.dash.risk`, severity: 'notice' }]);
+    expect(out.planDiagnostics['i1'] ?? []).toEqual([]);
+    // The spend itself is unchanged (cfa92549): one endOfTurn effect carrying
+    // the action and the dashed flag, the doubling live.
+    expect(out.effects).toHaveLength(2);
+    expect(out.facts[`${F}.movement.total`]).toBe(200);
   });
 
   it('NO prone leg: a fallen vehicle leaves Dash legal (the GM adjudicates the rest)', () => {
@@ -1911,6 +1944,8 @@ describe('helm seat + station actions i18n (tlh is the canary)', () => {
       'en-x-tlh dash description': tlh.rule.tormentor.dash?.description,
       'en dash no action': en.rule.tormentor.dash?.no_action,
       'en-x-tlh dash no action': tlh.rule.tormentor.dash?.no_action,
+      'en dash risk': en.rule.tormentor.dash?.risk,
+      'en-x-tlh dash risk': tlh.rule.tormentor.dash?.risk,
       'en juke name': en.rule.tormentor.juke?.name,
       'en-x-tlh juke name': tlh.rule.tormentor.juke?.name,
       'en juke description': en.rule.tormentor.juke?.description,

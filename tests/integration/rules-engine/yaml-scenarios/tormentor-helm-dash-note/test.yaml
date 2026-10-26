@@ -1,0 +1,79 @@
+name: 'Tormentor - Helm Dash Carries the GM-Risk Note on the Planned Row'
+description: >-
+  The dash risk is unknown and GM-adjudicated, and until now its copy lived
+  only in the offer description and the Helm detail — invisible in play the
+  moment the +ADD closes (the user's tablet test). The bounce-note pattern
+  (the damage recorder's below-threshold note, threshold model v2) surfaces it
+  ON the row: a planned Dash apply returns ONE 'notice' diagnostic
+  (rule.tormentor.dash.risk) beside its spend, which the plan fold attaches to
+  THAT planned row alone (planDiagnostics is per-instance) — every planned
+  Dash row carries it, no other row ever does, the plan stays LEGAL (a notice
+  is informational, never the error path), and the note lives exactly as long
+  as the row does (nothing commits, nothing stands).
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - dash-tormentor
+  # A planned Dash: the action goes, the pool doubles, and the row carries the
+  # risk note — a 'notice' diagnostic, so the row and the plan stay legal.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 200
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+        status:
+          legal: true
+  # The note rides THIS row alone: a free record row planned beside it carries
+  # nothing (a per-commit note is not a panel truth), and the second Dash (the
+  # override path, the action already spent) carries its no-action error with
+  # the note after it — every planned Dash row carries the note.
+  - addOffer:
+      id: set-tormentor-ac-mode
+      assert:
+        planErrors:
+          - id: set-tormentor-ac-mode
+            index: 0
+            errors: []
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: -1
+        planErrors:
+          - id: dash-tormentor
+            index: 1
+            errors:
+              - rule.tormentor.dash.no_action
+              - rule.tormentor.dash.risk
+          - id: set-tormentor-ac-mode
+            index: 0
+            errors: []
+        status:
+          legal: false
+  # End of turn: the rows (and their notes) leave with the plan. The note
+  # commits NOTHING — only the spends and the doubling age away; the seat and
+  # the acquire are all that stand.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+          companion.tormentor.seats.helm: 1

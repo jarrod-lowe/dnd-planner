@@ -595,6 +595,20 @@ const DRIVE_OUT_OF_MOVEMENT = `${T}.drive.out_of_movement`;
 const DASH_NO_ACTION = `${T}.dash.no_action`;
 
 /**
+ * The dash RISK note — the informational diagnostic every planned Dash row
+ * carries (the bounce-note pattern, threshold model v2): running a war
+ * machine flat-out presses it hard, and any consequence is the GM's call at
+ * the table. The apply returns ONE 'notice' diagnostic beside its spend,
+ * which the plan fold attaches to THAT planned row alone (planDiagnostics is
+ * per-instance): the row shows the note in play, every other row never does,
+ * the plan stays LEGAL (a notice is informational, never the error path),
+ * and the note lives exactly as long as the row does — never a standing
+ * notice (a post-choice risk is not a standing condition), never a panel
+ * annotation.
+ */
+const DASH_RISK = `${T}.dash.risk`;
+
+/**
  * Drive's distance slider — the steed's STEED_MOVE_CONTROL/STEED_MOVE_VARS
  * shape exactly (find-steed): record the actual feet driven rather than a
  * fixed chunk, bounded by the (Dash-doubled) total, so a short roll of the
@@ -1327,12 +1341,16 @@ const vehicleTormentor: RuleModule = {
       // actions.spent, dashed }) — the total derive reads the dashed flag, so
       // the doubling resets with the turn and an unspent pool rises with it).
       // The dash RISK is unknown and GM-adjudicated (what running a war
-      // machine flat-out does to it), so it lives in the offer copy and the
-      // Helm detail in OUR OWN wording — never a standing notice (notice
-      // taxonomy: a post-choice risk is not a standing condition) and never
-      // invented mechanics. The PC Dash's halted leg has no analogue: nothing
-      // halts a vehicle's derived pool today (PR-D's speed.effective will
-      // carry that if fuel ever reads empty).
+      // machine flat-out does to it), so the wording lives in the offer copy
+      // and the Helm detail in OUR OWN — and, since the user's tablet test
+      // found that copy invisible in play once the +ADD closes, the apply
+      // also returns it as the per-row 'notice' diagnostic (DASH_RISK below,
+      // the bounce-note pattern): every planned Dash row carries the note,
+      // never a standing notice (notice taxonomy: a post-choice risk is not a
+      // standing condition) and never invented mechanics. The PC Dash's
+      // halted leg has no analogue: nothing halts a vehicle's derived pool
+      // today (PR-D's speed.effective will carry that if fuel ever reads
+      // empty).
       id: 'dash-tormentor',
       when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
       legalWhen: [
@@ -1350,19 +1368,29 @@ const vehicleTormentor: RuleModule = {
         intents: { MOVE: 'dash' },
         actionCost: ['action']
       },
-      apply: (f: FactReader): ActionResult => ({
-        // The steed's Dash idiom: the action spend and the doubled-this-turn
-        // flag in ONE keyless endOfTurn effect (never attack accounting).
-        advertise: [
-          {
-            id: 'cost',
-            state: { 'actions.spent': 1, [`${F}.dashed`]: 1 },
-            expiry: { kind: 'endOfTurn' }
-          }
-        ],
-        diagnostics:
-          f.num('actions.remaining') > 0 ? [] : [{ code: DASH_NO_ACTION, severity: 'error' }]
-      })
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own error from the fold — the row still executes — and BESIDE it
+        // the risk note on EVERY row (the bounce-note pattern: the note is the
+        // one thing a planned Dash must say in play, so it rides the row
+        // unconditionally; dedupe keeps the error first, note after).
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: DASH_NO_ACTION, severity: 'error' });
+        diagnostics.push({ code: DASH_RISK, severity: 'notice' });
+        return {
+          // The steed's Dash idiom: the action spend and the doubled-this-turn
+          // flag in ONE keyless endOfTurn effect (never attack accounting).
+          advertise: [
+            {
+              id: 'cost',
+              state: { 'actions.spent': 1, [`${F}.dashed`]: 1 },
+              expiry: { kind: 'endOfTurn' }
+            }
+          ],
+          diagnostics
+        };
+      }
     },
     {
       // The HELM's Juke — the driver's REACTION (the stat block's defensive

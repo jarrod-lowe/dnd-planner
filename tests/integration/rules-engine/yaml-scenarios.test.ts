@@ -315,6 +315,10 @@ const EXPECTED_RUNNABLE = [
   // doubling — the movement-economy pass
   'tormentor-helm-drive-movement',
   'tormentor-helm-dash-movement',
+  // …the follow-up to the user's tablet test: the GM-adjudicated dash risk,
+  // surfaced ON every planned Dash row as a per-row 'notice' diagnostic (the
+  // below-threshold bounce-note pattern)
+  'tormentor-helm-dash-note',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',
   'long-rest-resets-hit-dice',
