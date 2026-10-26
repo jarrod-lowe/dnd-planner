@@ -18,7 +18,9 @@ import {
  * (`tormentor`); later vehicles join this same group as their own subjects.
  *
  * Acquiring is a PLAYER action: the acquire offer sits in the player's +ADD
- * with NO vehicle subject, ungated and free, filed under the BUILD family's
+ * with NO vehicle subject, structurally ungated and free (acquiring while a
+ * Tormentor is already present is ILLEGAL, never hidden — one per character),
+ * filed under the BUILD family's
  * EQUIP verb ('vehicle' sub-bucket). Its apply advertises ONE permanent
  * keyed effect baking the display-only stat block into
  * `companion.tormentor.*` facts (the steed `steedEffect`
@@ -104,9 +106,10 @@ import {
  * immunities and the mishap threshold as MECHANICS (they are detail text
  * only — the recorder never refuses fire/poison/psychic and no mishap is
  * modelled), any prone attack/movement or incapacitated mechanics beyond the
- * record, and any legality check on acquiring (multiple acquisitions are
- * illegal-but-possible; the keyed effect keeps the facts single and
- * diagnostics are deferred).
+ * record, and MULTIPLE vehicles per character (acquiring while a Tormentor is
+ * already present is ILLEGAL — one vehicle per character, for now; a later
+ * pass lifts the already-have leg when a second vehicle can exist beside the
+ * first).
  */
 
 const ID = 'tormentor';
@@ -149,6 +152,13 @@ const BELOW_THRESHOLD = `${T}.record-damage.below_threshold`;
 /** Each prone offer's single legality leg (the get-up not_prone idiom). */
 const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
 const NOT_PRONE = `${T}.flip-upright.not_prone`;
+
+/**
+ * The acquire offer's single legality leg (the knocked-prone already-prone
+ * idiom): ONE vehicle per character, for now — acquiring while a Tormentor is
+ * already present is ILLEGAL, never hidden.
+ */
+const ALREADY_HAVE = `${T}.acquire.already_have`;
 
 /**
  * Every vehicle record that must die with the acquire. The acquire effect declares
@@ -575,11 +585,23 @@ const vehicleTormentor: RuleModule = {
       // cannot exist before the acquire effect does. Acquiring is EQUIPPING a
       // vehicle: the BUILD family's EQUIP verb in the new 'vehicle' sub-bucket
       // (labels in both locales), not the HANDLE gear bucket the records use.
-      // No `when`, no `legalWhen` (see the scope note above). The segmented
-      // secondary control picks the AC MODE the fresh acquire starts in (the
-      // steed creature-type precedent: the selection flows into the acquire
-      // effect's state).
+      // No `when` — but ONE legality leg: acquiring while a Tormentor is
+      // already present is ILLEGAL (one vehicle per character, for now), never
+      // hidden (the knocked-prone already-prone idiom — the engine's
+      // illegal-but-visible contract: the offer stays visible and applicable
+      // with its diagnostic, and a planned-anyway row still executes as the one
+      // keyed replacement). The segmented secondary control picks the AC MODE
+      // the fresh acquire starts in (the steed creature-type precedent: the
+      // selection flows into the acquire effect's state).
       id: 'acquire-tormentor',
+      legalWhen: [
+        {
+          // Illegal while the vehicle is already present (the presence fact
+          // the acquire effect bakes) — one per character, for now.
+          condition: (f: FactReader): boolean => f.num(`${F}.active`) === 0,
+          diagnostics: [{ code: ALREADY_HAVE, severity: 'error' }]
+        }
+      ],
       ui: {
         section: 'free',
         name: `${T}.acquire.name`,
@@ -595,9 +617,17 @@ const vehicleTormentor: RuleModule = {
       // (the acquirer counts), starts the vehicle upright AND whole — no damage
       // banked, no wreck — and resets the AC MODE to this row's selection,
       // explicitly (the steed recast/child-eviction pattern).
-      apply: (_f, selections): ActionResult => ({
-        advertise: [tormentorAcquireEffect(modeFrom(selections)), ...evictChildEffects()]
-      })
+      apply: (f: FactReader, selections): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostics from the fold — the re-acquire still executes as
+        // the one keyed replacement (the facts stay single; nothing stacks).
+        const diagnostics: Diagnostic[] = [];
+        if (f.num(`${F}.active`) > 0) diagnostics.push({ code: ALREADY_HAVE, severity: 'error' });
+        return {
+          advertise: [tormentorAcquireEffect(modeFrom(selections)), ...evictChildEffects()],
+          diagnostics
+        };
+      }
     },
     {
       // The VEHICLE's occupancy record: a vehicle action in the vehicle's +ADD

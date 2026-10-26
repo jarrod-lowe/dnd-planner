@@ -456,7 +456,8 @@
       "description": "Duj Sep SuvwI' Duj. wa' Duj Sep yISuq 'ej Duj Daj yIghaj",
       "acquire": {
         "name": "Duj Sep Suq",
-        "description": "Duj Sep yISuq 'ej DujlIj yIghaj"
+        "description": "Duj Sep yISuq 'ej DujlIj yIghaj",
+        "already_have": "Duj Sep DaghojtaH — wa' Duj Sep neH ghajlaH"
       },
       "abandon": {
         "name": "Duj Sep chagh",

@@ -456,7 +456,8 @@
       "description": "The Tormentor war vehicle, acquired and abandoned as one vehicle",
       "acquire": {
         "name": "Acquire Tormentor",
-        "description": "Acquire the Tormentor and carry it as your vehicle"
+        "description": "Acquire the Tormentor and carry it as your vehicle",
+        "already_have": "You already have a Tormentor"
       },
       "abandon": {
         "name": "Abandon Tormentor",

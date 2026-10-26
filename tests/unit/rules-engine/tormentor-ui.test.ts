@@ -79,10 +79,95 @@ describe('acquire offer ui', () => {
     // Acquiring is EQUIPPING a vehicle: the BUILD family's EQUIP verb, in the
     // 'vehicle' sub-bucket (not the HANDLE gear bucket the records use).
     expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
-    // Ungated: no structural `when`, no legality gates (multiple acquisitions
-    // are illegal-but-possible; diagnostics deferred).
+    // Structurally ungated — no `when`, the offer exists for every character —
+    // but ONE legality leg now: acquiring while a Tormentor is already present
+    // is ILLEGAL (one vehicle per character, for now), never hidden. The leg
+    // itself is pinned in the acquire-legality describe below.
     expect(offers[0]!.when).toBeUndefined();
-    expect(offers[0]!.legalWhen).toBeUndefined();
+    expect(offers[0]!.legalWhen).toHaveLength(1);
+  });
+});
+
+/**
+ * ONE vehicle per character, for now (a later pass lifts this for multiples):
+ * acquiring while a Tormentor is already present is ILLEGAL, never hidden —
+ * the already-have legality leg (the knocked-prone already-prone idiom, the
+ * engine's illegal-but-visible contract). The offer keeps NO structural `when`
+ * (it stays in the player's +ADD while present), the player may override, and
+ * the committed re-acquire is the ONE keyed replacement — the facts stay
+ * single, nothing stacks.
+ */
+
+/** A reader with the vehicle's presence fact (`active`) set or absent. */
+function presenceReader(active: number): FactReader {
+  return {
+    num: (n) => (n === `${F}.active` ? active : 0),
+    has: (n) => n === `${F}.active` && active > 0
+  };
+}
+
+describe('acquire legality (already have)', () => {
+  it('is the ONE legality leg on the otherwise structurally ungated offer', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'acquire-tormentor')!;
+    // `when` stays undefined: the offer exists for every character, present or
+    // not — the already-present state is `legalWhen`, never a structural gate
+    // (the engine's illegal-but-visible contract: the offer stays visible and
+    // applicable, flagged illegal, and the player may override).
+    expect(raw.when).toBeUndefined();
+    expect(raw.legalWhen).toHaveLength(1);
+    // …and the legality leg is the already-have one: legal with no vehicle,
+    // illegal the moment the presence fact the acquire effect bakes stands.
+    expect(raw.legalWhen![0]!.condition(presenceReader(0))).toBe(true);
+    expect(raw.legalWhen![0]!.condition(presenceReader(1))).toBe(false);
+    expect(raw.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.acquire.already_have`, severity: 'error' }
+    ]);
+  });
+
+  it('stays VISIBLE but ILLEGAL while a Tormentor is present, with its diagnostic (never hidden)', () => {
+    // The engine's illegal-but-visible contract (plan.ts): an illegal offer
+    // stays applicable with its diagnostic — the player overrides; the engine
+    // never makes an illegal action impossible. Abandon is the legal way out.
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const acquire = out.availableRules.find((r) => r.rule.id === 'acquire-tormentor');
+    expect(acquire, 'the acquire is still offered while present').toBeDefined();
+    expect(acquire!.legal).toBe(false);
+    expect(acquire!.diagnostics).toEqual([
+      { code: `${T}.acquire.already_have`, severity: 'error' }
+    ]);
+    const abandon = out.availableRules.find((r) => r.rule.id === 'abandon-tormentor');
+    expect(abandon, 'the abandon is offered while present').toBeDefined();
+    expect(abandon!.legal).toBe(true);
+    // The committed state is untouched by the gate.
+    expect(out.facts[`${F}.active`]).toBe(1);
+  });
+
+  it('a planned-anyway re-acquire while ILLEGAL still applies, carrying its diagnostic', () => {
+    // The plan.ts contract (the player-override path): an illegal planned row
+    // EXECUTES — the keyed replacement re-advertises the ONE acquire
+    // (newest-wins, so the facts stay single; nothing stacks) while the row
+    // carries the already-have diagnostic.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor' }]
+    });
+    const keyed = out.effects.filter((e) => e.key === 'tormentor-acquire');
+    expect(keyed, 'the illegal row still advertises exactly one acquire').toHaveLength(1);
+    expect(out.facts[`${F}.active`]).toBe(1);
+    expect(out.facts[`${F}.hp.base`]).toBe(60);
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.acquire.already_have`, severity: 'error' }
+    ]);
+  });
+
+  it('carries the already-have diagnostic message in BOTH locales (tlh is the canary)', () => {
+    const messages: Record<string, string | undefined> = {
+      en: en.rule.tormentor.acquire?.already_have,
+      'en-x-tlh': tlh.rule.tormentor.acquire?.already_have
+    };
+    for (const [where, value] of Object.entries(messages))
+      expect(value, where).toEqual(expect.any(String));
   });
 });
 

@@ -4,11 +4,15 @@ description: >-
   in the PLAYER's +ADD picker: acquiring is a player action, so the offer
   carries NO vehicle subject (the absence is pinned in the unit test — the
   runner can only assert keys an offer HAS), the detail link to the vehicle
-  stat block, and no action cost. No legality checks this pass — multiple
-  acquirings are illegal-but-possible (keyed replacement keeps the facts
-  single; diagnostics deferred). Nothing subjects itself to the vehicle yet,
-  so the vehicle's own +ADD panel has nothing to show: the abandon offer is
-  absent while unacquired.
+  stat block, and no action cost. ONE vehicle per character, for now (a later
+  pass lifts this for multiples): acquiring while a Tormentor is already
+  present is ILLEGAL, never hidden — the already-have legality leg (the
+  knocked-prone already-prone idiom, the engine's illegal-but-visible
+  contract), so the offer stays visible with its diagnostic and a player
+  override still applies as the ONE keyed replacement (the facts stay single;
+  nothing stacks). Nothing subjects itself to the vehicle yet, so the
+  vehicle's own +ADD panel has nothing to show: the abandon offer is absent
+  while unacquired.
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -29,3 +33,56 @@ steps:
               section: free
               detailKey: vehicle/tormentor
               actionCost: []
+  # Acquiring (merely planned) already flips the offer ILLEGAL: the plan fold
+  # sees the advertised presence fact, and one vehicle per character.
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        offers:
+          exists:
+            - acquire-tormentor
+          illegal:
+            - acquire-tormentor
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+  # Committed-acquired: the acquire offer REMAINS in the player's +ADD (no
+  # structural gate — `when` stays ungated) but reads ILLEGAL, with abandon
+  # the legal way out.
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.active: 1
+        offers:
+          exists:
+            - acquire-tormentor
+            - abandon-tormentor
+          illegal:
+            - acquire-tormentor
+          legal:
+            - abandon-tormentor
+  # The OVERRIDE path (the plan.ts contract): committing the acquire while
+  # ILLEGAL still applies — the keyed replacement re-advertises the one
+  # acquire (newest-wins: the facts stay single, nothing stacks) — and the
+  # planned row carries its already-have diagnostic.
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        facts:
+          companion.tormentor.active: 1
+          companion.tormentor.hp.base: 60
+        planErrors:
+          - id: acquire-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.acquire.already_have
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+        facts:
+          companion.tormentor.active: 1
+          companion.tormentor.hp.base: 60
