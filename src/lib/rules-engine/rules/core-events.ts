@@ -33,8 +33,9 @@ const CE = 'rule.dnd-5e-2024.core-events';
  *
  * The PLAYER-ONLY extra the shared HP recorder carries via `onDamageRecorded`
  * (a steed never concentrates, a vehicle has nobody concentrating): it fires
- * only when a damage record LANDS — a blow bounced by a (seeded) damage
- * threshold took no damage, so it owes no check.
+ * only when a damage record LANDS — a Use-Threshold blow bounced by a (seeded)
+ * damage threshold took no damage, so it owes no check, while an
+ * Ignore-Threshold correction is damage taken and owes one like any blow.
  */
 const concentrationDamageMarker = (f: FactReader, amount: number): EffectInstance[] =>
   amount > 0 && f.has('concentration.remaining') && f.num('concentration.remaining') <= 0
@@ -275,45 +276,54 @@ function shortRestOffer(): Offer {
  * `concentration.damage-taken` (the concentration group's check
  * trigger). Foundational, so no search meta.
  */
+/**
+ * The player's own damage/heal recorders, on the shared factory (the steed and
+ * the Tormentor ride the same code path). Keyless stacking records — each hit
+ * its own removable chip holding its own amount — with the player-ONLY
+ * concentration trigger riding `onDamageRecorded`. The threshold fact is the
+ * player's natural `hp.damageThreshold`: nothing derives it, so it reads 0,
+ * the recorder never gates and the threshold-mode control never renders today;
+ * a future subject that bakes one adapts the recorder for free (bounce
+ * annotation in this namespace).
+ */
+const HP_RECORDERS = hpRecorders({
+  idStem: 'record',
+  facts: {
+    max: 'hp.max',
+    modifierCurrent: 'hp.modifier.current',
+    damageThreshold: 'hp.damageThreshold'
+  },
+  damage: {
+    name: 'planner.record.damage',
+    // The recorder idiom (record-heal carries 'healing.any'): the panel the
+    // post-hoc damage reminders ride — concentration's
+    // save-to-keep-the-spell annotation (with the computed DC) while the slot
+    // is held, and the below-threshold bounce annotation while its marker
+    // stands.
+    annotationLabels: ['damage.any'],
+    // The ids are what the scenarios assert (effect-hp-damage / -heal).
+    effectId: 'effect-hp-damage',
+    effectName: `${CE}.effect-hp-damage.name`
+  },
+  heal: {
+    name: 'planner.record.heal',
+    annotationLabels: ['healing.any'],
+    effectId: 'effect-hp-heal',
+    effectName: `${CE}.effect-hp-heal.name`
+  },
+  accumulation: 'keyless-stack',
+  chipSection: 'health',
+  bounce: {
+    effectId: 'effect-hp-bounce',
+    annotationKey: `${CE}.record-damage.below_threshold`
+  },
+  onDamageRecorded: concentrationDamageMarker
+});
+
 const coreEvents: RuleModule = {
   id: 'core-events',
   offer: () => [
-    // The player's own damage/heal recorders, on the shared factory (the steed
-    // and the Tormentor ride the same code path). Keyless stacking records —
-    // each hit its own removable chip holding its own amount — with the
-    // player-ONLY concentration trigger riding `onDamageRecorded`. The
-    // threshold fact is the player's natural `hp.damageThreshold`: nothing
-    // derives it, so it reads 0 and never gates today; a future subject that
-    // bakes one adapts the recorder for free (diagnostic in this namespace).
-    ...hpRecorders({
-      idStem: 'record',
-      facts: {
-        max: 'hp.max',
-        modifierCurrent: 'hp.modifier.current',
-        damageThreshold: 'hp.damageThreshold'
-      },
-      damage: {
-        name: 'planner.record.damage',
-        // The recorder idiom (record-heal carries 'healing.any'): the panel
-        // the post-hoc damage reminders ride — concentration's
-        // save-to-keep-the-spell annotation (with the computed DC) while the
-        // slot is held.
-        annotationLabels: ['damage.any'],
-        // The ids are what the scenarios assert (effect-hp-damage / -heal).
-        effectId: 'effect-hp-damage',
-        effectName: `${CE}.effect-hp-damage.name`
-      },
-      heal: {
-        name: 'planner.record.heal',
-        annotationLabels: ['healing.any'],
-        effectId: 'effect-hp-heal',
-        effectName: `${CE}.effect-hp-heal.name`
-      },
-      accumulation: 'keyless-stack',
-      chipSection: 'health',
-      belowThresholdCode: `${CE}.record-damage.below_threshold`,
-      onDamageRecorded: concentrationDamageMarker
-    }),
+    ...HP_RECORDERS.offers,
     ...ABILITIES.map(saveOffer),
     {
       id: 'record-check',
@@ -348,7 +358,12 @@ const coreEvents: RuleModule = {
       },
       vars: { text: { capture: true, default: { string: '' } } }
     }
-  ]
+  ],
+  // The recorders' annotate share — the below-threshold bounce annotation on
+  // the damage panel (threshold model v2: the feedback is informational, and
+  // it stands only while the bounce marker does). The player has no other
+  // annotate output today.
+  annotate: HP_RECORDERS.annotate
 };
 
 export default defineRule(coreEvents);

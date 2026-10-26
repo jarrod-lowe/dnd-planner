@@ -1,13 +1,16 @@
-name: 'Steed Damage Threshold Gates the Recorder'
+name: 'Steed Damage Threshold Bounces the Recorder'
 description: >-
-  The steed's damage recorder consults the builder's generic threshold gate on
+  The steed's damage recorder consults the shared factory's threshold gate on
   the steed's natural fact name, companion.steed.damageThreshold. No module
   derives it, so today it is unset (reads 0, never gates — the recorder's
   existing behaviour is pinned by steed-damage-accumulates); this scenario
   seeds it as a committed effect beside the summon, and the recorder adapts on
-  its own: a blow BELOW the fact records NOTHING and flags the row with the
-  find-steed below-threshold diagnostic while the offer stays legal, and a blow
-  AT the threshold records the running total like an ungated recorder.
+  its own (threshold model v2: sub-threshold damage is LEGAL to attempt): a
+  Use-Threshold blow BELOW the fact records NOTHING and commits the hidden
+  bounce marker whose annotate pass surfaces the informational
+  below-threshold annotation on the STEED damage panel — never a diagnostic —
+  while an Ignore-Threshold blow records the RAW amount in full, and a blow AT
+  the threshold records the running total like an ungated recorder.
 ruleGroups:
   - dnd-5e-2024/prepared-spells
   - dnd-5e-2024/ability-scores
@@ -40,30 +43,66 @@ steps:
       assert:
         facts:
           companion.steed.hp.current: 25
-  # Sub-threshold (9 < the seeded 10): the blow bounces — no record, no fact
-  # change, the row carries the find-steed diagnostic.
+  # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
+  # records the RAW amount in full — no marker, no annotation, no error.
+  - addOffer:
+      id: steed-record-damage
+      selections:
+        amount: 9
+        thresholdMode: 1
+      assert:
+        facts:
+          companion.steed.hp.damageRecorded: 9
+          companion.steed.hp.current: 16
+        planErrors:
+          - id: steed-record-damage
+            index: 0
+            errors: []
+        annotations:
+          notExists:
+            - rule.spell-find-steed.steed-record-damage.below_threshold
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-steed-hp-damage
+          notExists:
+            - effect-steed-hp-bounce
+  # Sub-threshold (9 < the seeded 10) in USE mode: the blow bounces — no
+  # record, no fact change, no planErrors — and the annotation carries the
+  # feedback on the steed's damage panel (the .companion-scoped label).
   - addOffer:
       id: steed-record-damage
       selections:
         amount: 9
       assert:
         facts:
-          companion.steed.hp.current: 25
-          companion.steed.hp.damageRecorded: 0
+          companion.steed.hp.damageRecorded: 9
+          companion.steed.hp.current: 16
         planErrors:
           - id: steed-record-damage
             index: 0
-            errors:
-              - rule.spell-find-steed.steed-record-damage.below_threshold
+            errors: []
+        annotations:
+          exists:
+            - rule.spell-find-steed.steed-record-damage.below_threshold
+          targets:
+            - key: rule.spell-find-steed.steed-record-damage.below_threshold
+              targets:
+                - damage.steed.companion
+  # The marker commits with the turn and the annotation stands while it does.
   - endTurn:
       assert:
         effects:
-          notExists:
-            - effect-steed-hp-damage
+          exists:
+            - effect-steed-hp-bounce
         facts:
-          companion.steed.hp.current: 25
-  # The recorder stays LEGAL — and at the threshold the running-total record
-  # lands exactly as the ungated corpus pins it.
+          companion.steed.hp.current: 16
+        annotations:
+          exists:
+            - rule.spell-find-steed.steed-record-damage.below_threshold
+  # USE mode at the threshold: the running-total record lands exactly as the
+  # ungated corpus pins it.
   - evaluate:
       assert:
         offers:
@@ -75,8 +114,8 @@ steps:
         amount: 10
       assert:
         facts:
-          companion.steed.hp.damageRecorded: 10
-          companion.steed.hp.current: 15
+          companion.steed.hp.damageRecorded: 19
+          companion.steed.hp.current: 6
         planErrors:
           - id: steed-record-damage
             index: 0
@@ -87,4 +126,4 @@ steps:
           exists:
             - effect-steed-hp-damage
         facts:
-          companion.steed.hp.current: 15
+          companion.steed.hp.current: 6
