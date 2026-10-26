@@ -1,0 +1,56 @@
+name: 'Tormentor - One Seat Per Player'
+description: >-
+  One seat per player, globally (any station, future-proof): re-taking a seat
+  while holding one is ILLEGAL, never hidden — the already-seated legality leg
+  (the duplicate-acquire illegal-but-COMMITTABLE pattern, the engine's
+  illegal-but-visible contract). The offer stays visible and applicable with
+  its diagnostic, and a planned-anyway row still executes as the ONE keyed
+  replacement (newest-wins: the seat fact stays single, nothing stacks).
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-passenger-seat
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-passenger
+        facts:
+          companion.tormentor.seats.passenger: 1
+  # Seated: re-taking the seat you hold is ILLEGAL with its diagnostic (the
+  # exclusivity leg reads every station's seat fact), while LEAVE is the legal
+  # way out.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-passenger-seat
+          illegal:
+            - take-tormentor-passenger-seat
+          legal:
+            - leave-tormentor-passenger-seat
+  # The override path (the plan.ts contract): committing the take while
+  # ILLEGAL still applies — the keyed replacement re-advertises the one seat —
+  # and the planned row carries its already-seated diagnostic.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1
+        planErrors:
+          - id: take-tormentor-passenger-seat
+            index: 0
+            errors:
+              - rule.tormentor.take-seat.already_seated
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-passenger
+        facts:
+          companion.tormentor.seats.passenger: 1

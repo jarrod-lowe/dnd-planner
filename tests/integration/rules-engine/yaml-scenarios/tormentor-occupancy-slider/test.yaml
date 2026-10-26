@@ -1,24 +1,25 @@
 name: 'Tormentor (Damage Control) - Creature Capacity Occupancy'
 description: >-
   Acquiring bakes the stat block's Creature Capacity (4 Medium creatures) as
-  creatureCapacity.max, with used defaulting to 1 — the acquirer counts. The
+  creatureCapacity.max, with used reading 0 until something counts — the
+  recorded occupancy plus every held seat (the passenger-seat pass). The
   vehicle's +ADD carries a free-section occupancy slider (0 to the baked max)
   whose apply advertises ONE permanent KEYED effect recording the occupancy:
   re-applying replaces rather than stacks, the derived used clamps to 0..max,
-  and removing the occupancy chip returns used to the acquire default of 1.
+  and removing the occupancy chip returns used to 0 (no record, no seat).
   No legality gates: over-capacity occupancy is illegal-but-possible this
   pass (diagnostics deferred with acquiring's).
 ruleGroups:
   - vehicles/tormentor
 steps:
-  # Acquire: the capacity lands with the rest of the stat block; the acquirer
-  # counts, so used reads 1 before anyone touches the slider.
+  # Acquire: the capacity lands with the rest of the stat block; nobody
+  # counts by default, so used reads 0 before anyone touches the slider.
   - addOffer:
       id: acquire-tormentor
       assert:
         facts:
           companion.tormentor.creatureCapacity.max: 4
-          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.used: 0
   # The vehicle's +ADD carries the occupancy slider: free, under the vehicle
   # subject, bounded 0..the baked capacity, opening at the current occupancy.
   - evaluate:
@@ -46,8 +47,13 @@ steps:
             vars:
               occupancy:
                 capture: true
+                # The RECORDED BASE, never the derived `used`: used counts held
+                # seats beside the record, so a seat-inclusive default
+                # double-counts a seated player and inflates on every accepted
+                # re-record. Unrecorded, the fact resolves undefined and the
+                # slider falls back to its min (0) — the seat counts the player.
                 default:
-                  fact: companion.tormentor.creatureCapacity.used
+                  fact: companion.tormentor.creatureCapacity.occupancy
   # Set 3 of 4: the keyed effect IS the stored value (used reads it at once).
   - addOffer:
       id: set-tormentor-occupancy
@@ -98,7 +104,7 @@ steps:
         facts:
           companion.tormentor.creatureCapacity.used: 0
   # Commit the clamped re-set, then remove the occupancy chip: the stored
-  # value goes with it and used falls back to the acquire default (1).
+  # value goes with it and used falls back to nothing (no record, no seat).
   - endTurn:
       assert:
         effects:
@@ -111,9 +117,48 @@ steps:
           notExists:
             - effect-tormentor-occupancy
         facts:
-          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.used: 0
           companion.tormentor.creatureCapacity.max: 4
           companion.tormentor.active: 1
         offers:
           exists:
             - set-tormentor-occupancy
+  # The default beside a HELD SEAT (the double-count repro): the seat alone
+  # reads used 1 with the occupancy record still gone, so the slider's default
+  # (the recorded base, unrecorded → 0) stays clear of it.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.occupancy: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-passenger
+  # Recorded occupancy 2 beside the held seat: used reads the SUM (3), the
+  # recorded base stays 2 — the number the slider opens at.
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.occupancy: 2
+          companion.tormentor.creatureCapacity.used: 3
+  # Accepting that default re-writes the base it came from: occupancy stays 2,
+  # used stays 3 — never the seat-inclusive 3-and-then-4 inflation loop.
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.occupancy: 2
+          companion.tormentor.creatureCapacity.used: 3
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.used: 3

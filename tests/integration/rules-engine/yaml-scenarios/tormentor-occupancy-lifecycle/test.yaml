@@ -2,11 +2,12 @@ name: 'Tormentor (Damage Control) - Occupancy Lifecycle'
 description: >-
   The occupancy record never outlives the acquire that justifies it: a re-acquire
   (keyed replacement of the acquire effect) evicts the occupancy effect with an
-  empty same-key marker so used resets to the acquire default of 1, and abandon
-  does the same while clearing every baked fact. Unacquired, the vehicle's
-  occupancy offer is gone with the rest of the panel (structural gate on
-  active). The raw mount-chip removal path declares the same eviction via the
-  acquire effect's dependents (unit-pinned, not assertible here).
+  empty same-key marker so used resets to 0 (no record, no held seat — the
+  passenger-seat pass retired the default-1 acquirer), and abandon does the
+  same while clearing every baked fact. Unacquired, the vehicle's occupancy
+  offer is gone with the rest of the panel (structural gate on active). The
+  raw mount-chip removal path declares the same eviction via the acquire
+  effect's dependents (unit-pinned, not assertible here).
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -29,12 +30,12 @@ steps:
         facts:
           companion.tormentor.creatureCapacity.used: 4
   # Re-acquiring REPLACES the acquire effect and evicts the occupancy record with
-  # it: the acquirer counts again, so used reads the fresh default of 1.
+  # it: nothing counts on a fresh vehicle, so used reads 0.
   - addOffer:
       id: acquire-tormentor
       assert:
         facts:
-          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.used: 0
   - endTurn:
       assert:
         effects:
@@ -43,7 +44,7 @@ steps:
           notExists:
             - effect-tormentor-occupancy
         facts:
-          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.used: 0
   # Occupy again, commit, then abandon: the keyed replacement clears every
   # baked fact INCLUDING the occupancy record, and the vehicle offer's gate
   # closes with them.

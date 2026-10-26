@@ -280,6 +280,17 @@ const EXPECTED_RUNNABLE = [
   'tormentor-ac-mode-station',
   'tormentor-ac-mode-lifecycle',
   'tormentor-ac-mode-legacy',
+  // …PR 8 — pass PR-A: the passenger seat (the seat infrastructure's first
+  // station) — a take/leave offer pair in the vehicle +ADD, one seat per
+  // player (any station) and the free-seat rule as illegal-but-committable
+  // legality legs, the derived capacity counting held seats (used = recorded
+  // occupancy + seats; the default-1 acquirer is retired), and the seat
+  // riding the acquire/abandon lifecycle like every other record
+  'tormentor-seat-board',
+  'tormentor-seat-exclusivity',
+  'tormentor-seat-full',
+  'tormentor-seat-leave',
+  'tormentor-seat-lifecycle',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

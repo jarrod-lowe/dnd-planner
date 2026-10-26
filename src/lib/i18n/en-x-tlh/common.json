@@ -494,6 +494,17 @@
         "description": "pumbogh Duj Sep yIngheSqa'choHmoH",
         "not_prone": "Duj Sep pumbe' — Duj Sep IngheSqa'moH chIm"
       },
+      "take-seat": {
+        "name": "ba'wI' Sep yIchol",
+        "description": "Duj SepDaq bIba'meH Sep yIchol",
+        "already_seated": "Sep DaghojtaH — latlh Sep yIcholpa' Sep DachoHnIS",
+        "full": "Duj Sep tlhIch rIn — Sep chIm pagh"
+      },
+      "leave-seat": {
+        "name": "ba'wI' Sepvo' yImej",
+        "description": "Duj Sepvo' yImej 'ej Sep yIchImmoH",
+        "not_seated": "Sep Daghojbe' — Sep chIm Daghu'"
+      },
       "effect": {
         "name": "Duj Sep"
       },
@@ -514,6 +525,9 @@
       },
       "destroyed-effect": {
         "name": "Qaw'lu'pu'"
+      },
+      "seat-passenger-effect": {
+        "name": "ba'wI' Sep"
       },
       "notice": "pum qay'",
       "notice.body": "Pumpu' Duj Sep 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'.",
