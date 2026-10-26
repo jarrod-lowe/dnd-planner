@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, type FactReader, type RuleModule } from '$lib/rules-engine';
+import { evaluate, type FactReader, type PlannedRef, type RuleModule } from '$lib/rules-engine';
 import { getModule, isRegistered } from '$lib/rules-engine/registry';
 import { lazyRuleGroupIds } from '$lib/rules-engine/lazy';
+import { enumerateLoadouts } from '$lib/rules-engine/loadout';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
 import { resolveValueSource } from '$lib/components/play/panel-renderer/resolveValueSource';
 import type { SliderControl } from '$lib/components/play/panel-renderer/types';
@@ -892,13 +893,16 @@ describe('passenger seat i18n (tlh is the canary)', () => {
  * seat condition and count iterates SEAT_STATIONS, so the exclusivity leg and
  * the capacity derive picked the station up by extending the list — and the
  * key joins CHILD_KEYS, so the acquire lifecycle evicts it like every record.
- * The attack offer (`fire-tormentor-harpoon`) is the weaponOffers idiom on
- * the vehicle subject: structurally gated on the acquire AND the harpoon seat
- * (nobody at the flinger, no offer), legal while the player's action pool is
- * open (the shared no-action diagnostic otherwise, committable), spending the
- * action through `attackActionSpend` and writing NO facts of its own. The
- * numbers (+7 to hit, 2d8+2 piercing) are module derives the dice-line vars
- * read (the steed-slam pattern); 120 ft. and one target are copy + detail.
+ * The attack offer (`fire-tormentor-harpoon`) is FILED like a weapon attack
+ * on the vehicle subject but PRICED like a generic action: structurally gated
+ * on the acquire AND the harpoon seat (nobody at the flinger, no offer), legal
+ * while the player's ACTION pool alone is open (its own no-action diagnostic
+ * otherwise, committable), spending the action through the plain
+ * `actions.spent` spend (the Dash/simple-actions idiom — a vehicle action is
+ * not a PC weapon attack, so Extra Attack neither applies nor is granted) and
+ * writing NO facts of its own. The numbers (+7 to hit, 2d8+2 piercing) are
+ * module derives the dice-line vars read (the steed-slam pattern); 120 ft. and
+ * one target are copy + detail.
  */
 
 /** The harpoon-seat effect, through the real plan fold (acquired, then taken). */
@@ -1038,7 +1042,7 @@ describe('the harpoon seat rides the acquire lifecycle', () => {
 });
 
 describe('fire-tormentor-harpoon offer', () => {
-  it('is a plan-row ATTACK offer on the vehicle subject, in the weaponOffers idiom', () => {
+  it('is a plan-row ATTACK offer on the vehicle subject, filed like a weapon attack', () => {
     const out = evaluate({ modules: [module()], committed: seatedAtHarpoon() });
     const offer = out.availableRules.find((r) => r.rule.id === 'fire-tormentor-harpoon');
     expect(offer, 'the vehicle +ADD carries the fire offer while seated').toBeDefined();
@@ -1097,7 +1101,7 @@ describe('fire-tormentor-harpoon offer', () => {
     expect(unseated.availableRules.some((r) => r.rule.id === 'fire-tormentor-harpoon')).toBe(false);
   });
 
-  it('legality is the weaponOffers action-pool idiom: the SHARED no-action diagnostic', () => {
+  it('legality is the generic action-pool idiom (Dash/simple-actions): the action ALONE, own diagnostic', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'fire-tormentor-harpoon');
     expect(raw, 'the fire offer exists').toBeDefined();
     expect(raw!.legalWhen).toHaveLength(1);
@@ -1114,34 +1118,35 @@ describe('fire-tormentor-harpoon offer', () => {
       has: (n) => n === `${F}.active`
     });
     expect(leg.condition(poolReader(1))).toBe(true);
-    // A free Extra Attack follow-up opens the pool like any weapon swing.
-    expect(leg.condition(poolReader(0, 1))).toBe(true);
     expect(leg.condition(poolReader(0))).toBe(false);
-    // The diagnostic is the one every weapon attack carries — no new key.
-    expect(leg.diagnostics).toEqual([
-      { code: 'rule.dnd-5e-2024.attacks.activation.no_action', severity: 'error' }
-    ]);
+    // NO Extra Attack leg: a VEHICLE action is not a PC weapon attack, so a
+    // free follow-up charge must NOT open the pool (the user's tablet bug —
+    // the weapon idiom made weapon-attack-then-harpoon read legal).
+    expect(leg.condition(poolReader(0, 1))).toBe(false);
+    // The diagnostic is the offer's OWN no-action key — the per-offer key every
+    // generic action offer carries (Dash, the simple actions) — never the
+    // shared WEAPON-attack one.
+    expect(leg.diagnostics).toEqual([{ code: `${T}.fire-harpoon.no_action`, severity: 'error' }]);
   });
 
-  it('apply spends the action through attackActionSpend and writes NO facts of its own', () => {
+  it('apply is the generic action spend (the simple-actions actionOffer shape): ONE keyless endOfTurn effect writing exactly the action', () => {
     // The action-economy module joins the set so the player's action pool
-    // derives for real (the weapon attacks' own scenario shape).
+    // derives for real.
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
       committed: seatedAtHarpoon(),
       planned: [{ instanceId: 'i0', ruleId: 'fire-tormentor-harpoon' }]
     });
-    // Exactly ONE advertised effect — the shared per-turn spend (endOfTurn,
+    // Exactly ONE advertised effect — the generic per-turn spend (endOfTurn,
     // keyless), never a vehicle fact: no ammunition tracking, no station state.
     expect(out.effects).toHaveLength(1);
     expect(out.effects[0]!.key).toBeUndefined();
     expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
-    expect(out.effects[0]!.state).toEqual({
-      'actions.spent': 1,
-      'attackAction.extraGranted': 0,
-      'attack.activation.count': 1
-    });
+    // EXACT equality: the ACTION spend and NOTHING else — no extraGranted, no
+    // activation count, no attack-kind marker. A vehicle action never touches
+    // the PC's attack-pool accounting (Extra Attack is a weapon-attack feature).
+    expect(out.effects[0]!.state).toEqual({ 'actions.spent': 1 });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
     // The vehicle state is untouched by firing.
     expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
@@ -1149,10 +1154,10 @@ describe('fire-tormentor-harpoon offer', () => {
     expect(out.facts[`${F}.hp.current`]).toBe(60);
   });
 
-  it('a no-action row still fires (the override path), flagged with the shared diagnostic', () => {
+  it("a no-action row still fires (the override path), flagged with the fire offer's own diagnostic", () => {
     // The plan.ts contract: the illegal row EXECUTES — the second spend lands
     // (the projection reads the over-commit) — while the row carries the
-    //no-action diagnostic, exactly like a second weapon swing.
+    // no-action diagnostic, exactly like a second Dash.
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
@@ -1164,8 +1169,90 @@ describe('fire-tormentor-harpoon offer', () => {
     });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
     expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.fire-harpoon.no_action`, severity: 'error' }
+    ]);
+  });
+});
+
+/**
+ * The fire offer's ECONOMY, end to end against a real PC weapon: firing the
+ * Tormentor's harpoon consumes the player's full ACTION and NEVER the attack
+ * accounting (the user's tablet bug — the weapon idiom made each order read
+ * legal after the other). Seeded with a held dagger and the level-5 Extra
+ * Attack budget, BOTH orders must flag the second row illegal: the harpoon is
+ * a vehicle action, not an Attack action, so it neither grants nor rides the
+ * follow-up budget. (Like extra-attack.test.ts: no yaml scenario reaches
+ * Extra Attack, so the fold is driven directly.)
+ */
+describe('the fire offer never touches the PC attack accounting', () => {
+  /** The fold's module set: the vehicle, the economy, and a dagger-wielding level-5 PC. */
+  function seatedMods(): RuleModule[] {
+    return [
+      module(),
+      getModule('action-economy')!,
+      getModule('attacks')!,
+      getModule('hands')!,
+      getModule('loadout')!,
+      getModule('dagger')!,
+      getModule('class-paladin-level5')!
+    ];
+  }
+
+  /** Put the dagger in hand (the only equip path — the extra-attack test shape). */
+  function equipDagger(mods: RuleModule[]): PlannedRef {
+    const config = enumerateLoadouts(mods).find((c) => c.id === 'dagger');
+    if (!config) throw new Error('no dagger loadout configuration');
+    return { instanceId: 'i0', ruleId: 'set-loadout', selections: { loadout: config } };
+  }
+
+  it('fire the harpoon, then a PC weapon attack: the ATTACK is illegal (the action is gone)', () => {
+    const mods = seatedMods();
+    const out = evaluate({
+      modules: mods,
+      planned: [
+        equipDagger(mods),
+        { instanceId: 'i1', ruleId: 'acquire-tormentor' },
+        { instanceId: 'i2', ruleId: 'take-tormentor-harpoon-seat' },
+        { instanceId: 'i3', ruleId: 'fire-tormentor-harpoon' }
+      ]
+    });
+    // Firing spent the ACTION and granted NO follow-up budget: Extra Attack is
+    // the PC's weapon-attack feature, and a vehicle action is not one.
+    expect(out.facts['actions.remaining']).toBe(0);
+    expect(out.facts['attackAction.extraRemaining'] ?? 0).toBe(0);
+    // So the PC's weapon attack flags illegal with the weapon attacks' own
+    // shared diagnostic — the action spent on the vehicle's flinger is not
+    // ALSO an Attack action with a free swing on it (the weapon idiom read
+    // this legal: firing had granted the follow-up budget).
+    const swing = out.availableRules.find((r) => r.rule.id === 'dagger-use-action');
+    expect(swing, 'the dagger attack is still offered').toBeDefined();
+    expect(swing!.legal).toBe(false);
+    expect(swing!.diagnostics).toEqual([
       { code: 'rule.dnd-5e-2024.attacks.activation.no_action', severity: 'error' }
     ]);
+  });
+
+  it('a PC weapon attack, then the harpoon: the FIRE is illegal (a free Extra Attack charge is not an action)', () => {
+    const mods = seatedMods();
+    const out = evaluate({
+      modules: mods,
+      planned: [
+        equipDagger(mods),
+        { instanceId: 'i1', ruleId: 'acquire-tormentor' },
+        { instanceId: 'i2', ruleId: 'take-tormentor-harpoon-seat' },
+        { instanceId: 'i3', ruleId: 'dagger-use-action' }
+      ]
+    });
+    // The Attack action is spent; the free follow-up charge remains…
+    expect(out.facts['actions.remaining']).toBe(0);
+    expect(out.facts['attackAction.extraRemaining']).toBe(1);
+    // …but a vehicle action cannot ride it: the fire stays visible and ILLEGAL
+    // with its OWN no-action diagnostic (the weapon idiom read this legal via
+    // the extraRemaining leg).
+    const fire = out.availableRules.find((r) => r.rule.id === 'fire-tormentor-harpoon');
+    expect(fire, 'the fire offer is still offered').toBeDefined();
+    expect(fire!.legal).toBe(false);
+    expect(fire!.diagnostics).toEqual([{ code: `${T}.fire-harpoon.no_action`, severity: 'error' }]);
   });
 });
 
@@ -1196,7 +1283,9 @@ describe('harpoon seat + attack i18n (tlh is the canary)', () => {
       'en attack name': en.rule.tormentor['fire-harpoon']?.name,
       'en-x-tlh attack name': tlh.rule.tormentor['fire-harpoon']?.name,
       'en attack description': en.rule.tormentor['fire-harpoon']?.description,
-      'en-x-tlh attack description': tlh.rule.tormentor['fire-harpoon']?.description
+      'en-x-tlh attack description': tlh.rule.tormentor['fire-harpoon']?.description,
+      'en fire no action': en.rule.tormentor['fire-harpoon']?.no_action,
+      'en-x-tlh fire no action': tlh.rule.tormentor['fire-harpoon']?.no_action
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));

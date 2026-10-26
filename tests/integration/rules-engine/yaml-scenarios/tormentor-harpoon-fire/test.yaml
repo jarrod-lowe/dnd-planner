@@ -3,10 +3,11 @@ description: >-
   The Harpoon Flinger's attack offer exists only while the harpoon seat is
   held (the `when` gate is the acquire AND the station's seat fact — a
   passenger, or nobody, at the flinger means no offer), and while it exists it
-  is a plan-row ACTION attack in the weaponOffers idiom: ATTACK 'weapons',
-  action cost, a dice-line reading the module derives (d20 + 7 to hit, 2d8 + 2
-  piercing) — 120 ft. and one target are offer copy and detail text, not
-  range machinery.
+  is a plan-row ACTION attack filed like one: ATTACK 'weapons', action cost,
+  a dice-line reading the module derives (d20 + 7 to hit, 2d8 + 2 piercing) —
+  120 ft. and one target are offer copy and detail text, not range machinery.
+  The ECONOMY is the generic action spend (a vehicle action is not a PC
+  weapon attack — no Extra Attack); that lives in the fire-action scenario.
 ruleGroups:
   - vehicles/tormentor
 steps:

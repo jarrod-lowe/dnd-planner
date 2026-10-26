@@ -515,7 +515,8 @@
       },
       "fire-harpoon": {
         "name": "Fire Harpoon",
-        "description": "Ranged weapon attack: +7 to hit, range 120 ft., one target, 2d8+2 piercing damage. The harpoons are magical; the flinger carries 10."
+        "description": "Ranged weapon attack: +7 to hit, range 120 ft., one target, 2d8+2 piercing damage. The harpoons are magical; the flinger carries 10.",
+        "no_action": "No action available"
       },
       "effect": {
         "name": "Tormentor"

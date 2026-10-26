@@ -515,7 +515,8 @@
       },
       "fire-harpoon": {
         "name": "ghoch nuH yIbaH",
-        "description": "chuS nuH HIj: HIch 7, chuq 120, wa' jav, 2d8+2 qIp. ghoch nuHmey maj; wa'maH ghoch nuH tu'lu'."
+        "description": "chuS nuH HIj: HIch 7, chuq 120, wa' jav, 2d8+2 qIp. ghoch nuHmey maj; wa'maH ghoch nuH tu'lu'.",
+        "no_action": "DIvI' tu'lu'be'"
       },
       "effect": {
         "name": "Duj Sep"

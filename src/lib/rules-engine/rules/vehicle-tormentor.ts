@@ -1,5 +1,4 @@
 import {
-  attackActionSpend,
   currentHp,
   defineRule,
   hpRecorders,
@@ -544,11 +543,13 @@ const HARPOON_VARS = {
 } as const;
 
 /**
- * The no-action diagnostic the fire offer shares with EVERY weapon attack
- * (the builder's own key — deliberately not a tormentor one: same rule, same
- * words, and the i18n coverage keeps one slot).
+ * The fire offer's no-action diagnostic — its OWN key, the per-offer key every
+ * generic action offer carries (Dash, the simple actions). A VEHICLE action is
+ * not a PC weapon attack, so it deliberately does NOT share the weapon
+ * attacks' key: the shared one means "no Attack action or follow-up swing",
+ * and firing means neither.
  */
-const NO_ACTION = 'rule.dnd-5e-2024.attacks.activation.no_action';
+const NO_ACTION = `${T}.fire-harpoon.no_action`;
 
 /**
  * The vehicle's Prone Deficiency, as STATE TRACKING ONLY. The Tormentor is not
@@ -1093,26 +1094,30 @@ const vehicleTormentor: RuleModule = {
     ...seatOffers(HARPOON_SEAT),
     {
       // The HARPOON FLINGER's attack — the station's whole point, and the one
-      // seat offer that is a plan-row ACTION: the weaponOffers use-action
-      // idiom on the vehicle subject. `when` is the acquire AND the station's
-      // seat (nobody at the flinger, no offer — the seat fact is the gate the
-      // leave offer's eviction closes); the ACTION POOL is `legalWhen`, never
-      // `when` (the engine's illegal-but-visible contract): with no action
-      // left the offer stays visible and applicable with the SAME no-action
-      // diagnostic every weapon attack carries, and a planned-anyway row
-      // still fires. Apply is the shared `attackActionSpend` and NOTHING else
-      // — the row spends the player's action (a free Extra Attack follow-up
-      // included, exactly like a weapon swing) and writes NO facts of its
-      // own: the seat stays taken, no harpoon is counted down (ammunition is
-      // detail text), and the vehicle's state is untouched. The dice line
-      // reads the module derives (+7 to hit, 2d8+2 piercing); 120 ft. and one
-      // target live in the copy and the detail, not in range machinery.
+      // seat offer that is a plan-row ACTION. `when` is the acquire AND the
+      // station's seat (nobody at the flinger, no offer — the seat fact is the
+      // gate the leave offer's eviction closes); the ACTION POOL is
+      // `legalWhen`, never `when` (the engine's illegal-but-visible contract):
+      // with no action left the offer stays visible and applicable with its
+      // own no-action diagnostic, and a planned-anyway row still fires.
+      //
+      // The ECONOMY is the generic action spend (the Dash/simple-actions
+      // idiom), NOT the weapon attacks' `attackActionSpend`: a VEHICLE action
+      // is not a PC weapon attack, so Extra Attack neither applies nor is
+      // granted — firing consumes the player's full ACTION, never a follow-up
+      // charge, and never grants one (the user's tablet bug: the weapon idiom
+      // let harpoon-then-weapon-attack and weapon-attack-then-harpoon both
+      // read legal). Apply advertises the plain `actions.spent` spend and
+      // NOTHING else — no attack-pool facts, no facts of its own: the seat
+      // stays taken, no harpoon is counted down (ammunition is detail text),
+      // and the vehicle's state is untouched. The dice line reads the module
+      // derives (+7 to hit, 2d8+2 piercing); 120 ft. and one target live in
+      // the copy and the detail, not in range machinery.
       id: 'fire-tormentor-harpoon',
       when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('harpoon')) > 0,
       legalWhen: [
         {
-          condition: (f: FactReader): boolean =>
-            f.num('actions.remaining') > 0 || f.num('attackAction.extraRemaining') > 0,
+          condition: (f: FactReader): boolean => f.num('actions.remaining') > 0,
           diagnostics: [{ code: NO_ACTION, severity: 'error' }]
         }
       ],
@@ -1133,15 +1138,14 @@ const vehicleTormentor: RuleModule = {
         primaryControl: HARPOON_CONTROL
       },
       vars: HARPOON_VARS,
-      apply: (f: FactReader): ActionResult => {
-        // The shared spend re-derives the pool itself and reports the
-        // over-commit (the weapon-attack apply shape).
-        const { effect, overCommitted } = attackActionSpend(f);
-        return {
-          advertise: [effect],
-          diagnostics: overCommitted ? [{ code: NO_ACTION, severity: 'error' }] : []
-        };
-      }
+      apply: (f: FactReader): ActionResult => ({
+        // The generic action spend (the simple-actions actionOffer shape): ONE
+        // keyless endOfTurn effect writing the action and nothing else, with
+        // the legality re-checked so a planned-anyway row carries its own
+        // diagnostic from the fold (the row still fires).
+        advertise: [{ id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
+        diagnostics: f.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }]
+      })
     },
     {
       // The VEHICLE-side way out: gated on the acquire (structurally —
