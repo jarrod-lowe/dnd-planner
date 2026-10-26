@@ -513,10 +513,34 @@
         "name": "ghoch nuH Sepvo' yImej",
         "description": "ghoch nuH Sepvo' yImej 'ej Sep yIchImmoH"
       },
+      "take-helm-seat": {
+        "name": "SeHyaH Sep yIchol",
+        "description": "Duj Sep SeHyaH Sep yIchol 'ej SuvwI' Duj yISeH"
+      },
+      "leave-helm-seat": {
+        "name": "SeHyaH Sepvo' yImej",
+        "description": "SeHyaH Sepvo' yImej 'ej Sep yIchImmoH"
+      },
       "fire-harpoon": {
         "name": "ghoch nuH yIbaH",
         "description": "chuS nuH HIj: HIch 7, chuq 120, wa' jav, 2d8+2 qIp. ghoch nuHmey maj; wa'maH ghoch nuH tu'lu'.",
         "no_action": "DIvI' tu'lu'be'"
+      },
+      "drive": {
+        "name": "Duj yInab",
+        "description": "SeHyaH Sep yIvI' 'ej Duj Sep Dat DInab",
+        "no_action": "DIvI' tu'lu'be'"
+      },
+      "dash": {
+        "name": "Duj Do'choH",
+        "description": "Duj Sep Do yIcher 'ej Hujqu'choH. qab qaS — DIvI' yIwuqnIS",
+        "no_action": "DIvI' tu'lu'be'"
+      },
+      "juke": {
+        "name": "yIvegh",
+        "description": "Quv DIvI' yIlo' 'ej Duj Sep yIvegh — DIvI' ngeDqu'choH Sup qaS. Duj vIHlaHbe'chugh, vegh laHbe'",
+        "no_reaction": "DIvI' cha' tu'lu'be'",
+        "unable_to_move": "Duj Sep vIHlaHbe' — vegh laHbe'"
       },
       "effect": {
         "name": "Duj Sep"
@@ -544,6 +568,9 @@
       },
       "seat-harpoon-effect": {
         "name": "ghoch nuH Sep"
+      },
+      "seat-helm-effect": {
+        "name": "SeHyaH Sep"
       },
       "notice": "pum qay'",
       "notice.body": "Pumpu' Duj Sep 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'.",

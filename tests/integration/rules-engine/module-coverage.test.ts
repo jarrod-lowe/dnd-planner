@@ -53,7 +53,8 @@ const CATALOG_ONLY = new Set([
   'otherworldly-slam-detail',
   'tormentor-prone-detail',
   'tormentor-damage-detail',
-  'tormentor-harpoon-detail'
+  'tormentor-harpoon-detail',
+  'tormentor-helm-detail'
 ]);
 
 /** The deployed id is the bare rule-group id (the JSON key is `category/id`). */

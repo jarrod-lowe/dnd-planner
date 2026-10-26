@@ -218,3 +218,53 @@ ruleGroups:
             **Ammunition.** The flinger's rack carries 10 harpoons. The app
             does not track how many have been fired — spent harpoons and
             reloads are the crew's bookkeeping.
+  # The HELM's flip detail — linked from the Drive, Dash and Juke offers. A
+  # catalog-only entry like the harpoon's: our own wording (the Tormentor is
+  # not SRD), in-world voice for what the driver does, plus the dash risk —
+  # unknown and GM-adjudicated, said plainly rather than invented as
+  # mechanics. The stat block's three-quarters cover for the Helm crew stays
+  # out: cover is the table's business here.
+  - id: tormentor-helm-detail
+    translations:
+      en:
+        name: Helm (Tormentor)
+        description: Detail text for driving the Tormentor from the Helm
+        keywords:
+          - helm
+          - drive
+          - dash
+          - juke
+          - tormentor
+          - vehicle
+          - driver
+          - steer
+      en-x-tlh:
+        name: Helm (Tormentor)
+        description: Detail text for driving the Tormentor from the Helm
+        keywords:
+          - helm
+          - drive
+          - dash
+          - juke
+          - tormentor
+          - vehicle
+          - driver
+    detail:
+      key: vehicle/tormentor-helm
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Station
+          body: |
+            **Helm.** The Helm takes one crew member, and its driver holds the
+            war machine's handle: **Drive** spends the driver's action
+            steering the Tormentor through the turn.
+
+            **Dash.** The driver can spend an action pushing the Tormentor
+            flat out for the turn. Dashing presses a war machine hard — any
+            consequence of running it flat out is the GM's to decide.
+
+            **Juke.** The driver can spend their reaction to swerve the
+            Tormentor, gaining advantage on a Dexterity saving throw. The
+            swerve needs the machine rolling: the Tormentor can juke only
+            while it is able to move.

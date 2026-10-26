@@ -1,0 +1,107 @@
+name: 'Tormentor - Helm Drive and Dash Actions'
+description: >-
+  Drive and Dash are the Helm's plan-row actions, spending the player's ACTION
+  through the generic spend (the Dash/simple-actions idiom, never the weapon
+  attacks' pool): a vehicle action is not an Attack action, so Extra Attack
+  neither applies nor is granted. Vehicles have no movement economy — the rows
+  carry intent only, applying the plain actions.spent and writing no facts of
+  their own (the seat stays taken, the capacity with it). With no action left
+  each stays visible but ILLEGAL with its OWN no-action diagnostic
+  (illegal-but-committable), and a planned-anyway row still spends, the
+  over-commit reading negative until the turn ends.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+  # An action available: both of the Helm's actions are legal.
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+        offers:
+          legal:
+            - drive-tormentor
+            - dash-tormentor
+        offerUi:
+          - id: drive-tormentor
+            ui:
+              section: action-other
+              subject: tormentor
+              detailKey: vehicle/tormentor-helm
+              actionCost:
+                - action
+          - id: dash-tormentor
+            ui:
+              section: action-other
+              subject: tormentor
+              detailKey: vehicle/tormentor-helm
+              actionCost:
+                - action
+  # Drive spends the action and writes NOTHING of its own: the seat stays
+  # taken and the capacity counts it still.
+  - addOffer:
+      id: drive-tormentor
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.tormentor.seats.helm: 1
+          companion.tormentor.creatureCapacity.used: 1
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+  # No action left: Dash stays visible but ILLEGAL (the engine's
+  # illegal-but-visible contract)…
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - dash-tormentor
+          illegal:
+            - dash-tormentor
+  # …and the override path spends anyway, the row carrying DASH's own
+  # diagnostic (the first row stays clean, like every action spend).
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: -1
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.no_action
+  # The turn ends: the spends age away and both open again — Drive's own
+  # diagnostic is the mirror case.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.tormentor.seats.helm: 1
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: 0
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors: []
+  - addOffer:
+      id: drive-tormentor
+      assert:
+        facts:
+          actions.remaining: -1
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.drive.no_action

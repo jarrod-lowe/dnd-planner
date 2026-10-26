@@ -72,7 +72,12 @@ describe('acquire offer ui', () => {
       'leave-tormentor-passenger-seat',
       'take-tormentor-harpoon-seat',
       'leave-tormentor-harpoon-seat',
+      'take-tormentor-helm-seat',
+      'leave-tormentor-helm-seat',
       'fire-tormentor-harpoon',
+      'drive-tormentor',
+      'dash-tormentor',
+      'juke-tormentor',
       'abandon-tormentor'
     ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
@@ -287,7 +292,8 @@ describe('acquire effect', () => {
       'tormentor-hp-heal',
       'tormentor-destroyed',
       'tormentor-seat-passenger',
-      'tormentor-seat-harpoon'
+      'tormentor-seat-harpoon',
+      'tormentor-seat-helm'
     ]);
   });
 
@@ -1286,6 +1292,438 @@ describe('harpoon seat + attack i18n (tlh is the canary)', () => {
       'en-x-tlh attack description': tlh.rule.tormentor['fire-harpoon']?.description,
       'en fire no action': en.rule.tormentor['fire-harpoon']?.no_action,
       'en-x-tlh fire no action': tlh.rule.tormentor['fire-harpoon']?.no_action
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+/**
+ * PR-C — the HELM station: the seat infrastructure's third seat plus the
+ * station's OFFERS. The seat is another SeatSpec on the same helper (effect
+ * `effect-tormentor-seat-helm`, key `tormentor-seat-helm`, fact
+ * `companion.tormentor.seats.helm = 1`, chip like the passenger's); every
+ * seat condition and count iterates SEAT_STATIONS, so the exclusivity leg and
+ * the capacity derive picked the station up by extending the list — and the
+ * key joins CHILD_KEYS, so the acquire lifecycle evicts it like every record.
+ *
+ * The station's offers are the ECONOMY RULING in miniature: vehicle activities
+ * consume the PLAYER's matching economy slot through the GENERIC spend (never
+ * the weapon attacks' pool — Extra Attack neither applies nor is granted).
+ * Drive and Dash are ACTION offers (the Dash/simple-actions idiom) with NO
+ * mechanical effect: vehicles have no movement economy, so the plan row
+ * carries intent only and apply spends the action, writing no facts. Juke is
+ * the driver's REACTION (the opportunity-attack economy idiom), spending the
+ * reaction alone — the Dex-save advantage is applied at the table — with a
+ * second able-to-move leg reading the vehicle's prone record (PR-D refines
+ * that leg to speed.effective > 0 once fuel exists).
+ */
+
+/** The helm-seat effect, through the real plan fold (acquired, then taken). */
+function helmSeatEffect(): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-helm-seat' }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-seat-helm'));
+  expect(advertised, 'taking the seat applies exactly one named effect').toHaveLength(1);
+  return advertised[0]!;
+}
+
+/** A committed acquire with the helm seat held (stored state for later folds). */
+function seatedAtHelm(): EffectInstance[] {
+  return [acquireEffect(), helmSeatEffect()];
+}
+
+describe('take-tormentor-helm-seat offer', () => {
+  it('is a vehicle free-section EQUIP offer while acquired, with the station-specific keys', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'take-tormentor-helm-seat');
+    expect(offer, 'the vehicle +ADD carries the take-helm offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.take-helm-seat.name`);
+    expect(ui.description).toBe(`${T}.take-helm-seat.description`);
+    expect(ui.actionCost).toEqual([]);
+    // Seat offers file with the acquire/abandon EQUIP 'vehicle' family.
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
+    // Acquired and unseated at 0/4: legal, no diagnostics.
+    expect(offer!.legal).toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+
+  it('rides the shared seat helper: the same two legs with the station-generic diagnostics', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'take-tormentor-helm-seat'
+    );
+    expect(raw, 'the take-helm offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.legalWhen).toHaveLength(2);
+    // Leg (a) — one seat per player, GLOBALLY: any other station's seat held
+    // makes taking the Helm illegal, and re-taking the Helm you hold is the
+    // same path. NO new diagnostic keys: the station-generic pair.
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ helm: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    // Leg (b) — the free-seat rule, shared key like the passenger's.
+    expect(raw!.legalWhen![1]!.condition(seatLegReader({}, 3, 4))).toBe(true);
+    expect(raw!.legalWhen![1]!.condition(seatLegReader({}, 4, 4))).toBe(false);
+    expect(raw!.legalWhen![1]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.full`, severity: 'error' }
+    ]);
+  });
+
+  it('apply advertises ONE permanent keyed effect writing exactly the station fact, with the chip', () => {
+    const e = helmSeatEffect();
+    expect(e.id).toContain('effect-tormentor-seat-helm');
+    expect(e.key).toBe('tormentor-seat-helm');
+    expect(e.state).toEqual({ [`${F}.seats.helm`]: 1 });
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    expect(e.display).toEqual({
+      name: `${T}.seat-helm-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('the derived capacity counts the held helm seat (the derive iterates every station)', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    expect(out.facts[`${F}.seats.helm`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+  });
+});
+
+describe('leave-tormentor-helm-seat offer', () => {
+  it("is the passenger mirror: the not-seated leg reads THIS station's seat alone", () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'leave-tormentor-helm-seat'
+    );
+    expect(raw, 'the leave-helm offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.legalWhen).toHaveLength(1);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(false);
+    // Another station's seat does not satisfy the leg — each leave clears its own.
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.leave-seat.not_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('apply advertises the EMPTY same-key eviction — and the station offers go with the seat', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-helm-seat' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-helm'));
+    expect(evict, 'leave advertises the seat eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-seat-helm');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    // The seat fact is GONE the moment the row is merely planned (newest-wins),
+    // the capacity falls with it — and with nobody at the Helm the station's
+    // offers no longer exist (the `when` gate).
+    expect(out.facts[`${F}.seats.helm`]).toBeUndefined();
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+    for (const id of ['drive-tormentor', 'dash-tormentor', 'juke-tormentor'])
+      expect(
+        out.availableRules.some((r) => r.rule.id === id),
+        `${id} goes with the seat`
+      ).toBe(false);
+  });
+});
+
+describe('the helm seat rides the acquire lifecycle', () => {
+  it('a re-acquire and an abandon both advertise the empty same-key eviction', () => {
+    for (const ruleId of ['acquire-tormentor', 'abandon-tormentor'] as const) {
+      const out = evaluate({
+        modules: [module()],
+        committed: seatedAtHelm(),
+        planned: [{ instanceId: 'i0', ruleId }]
+      });
+      const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-helm'));
+      expect(evict, `${ruleId} advertises the helm-seat eviction`).toBeDefined();
+      expect(evict!.key).toBe('tormentor-seat-helm');
+      expect(evict!.state).toBeUndefined();
+      expect(out.facts[`${F}.seats.helm`]).toBeUndefined();
+    }
+  });
+});
+
+describe('drive-tormentor and dash-tormentor offers', () => {
+  it('are plan-row ACTION offers on the vehicle subject, filed like the generic actions', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    for (const [id, stem] of [
+      ['drive-tormentor', 'drive'],
+      ['dash-tormentor', 'dash']
+    ] as const) {
+      const offer = out.availableRules.find((r) => r.rule.id === id);
+      expect(offer, `the vehicle +ADD carries ${id} while seated`).toBeDefined();
+      const ui = offer!.rule.ui as Record<string, unknown>;
+      // NOT action-attack: Drive is not an attack. The generic-action
+      // convention (Dash, the simple actions) files intent-only rows under
+      // action-other, in the MOVE verb — travel for the machine's ordinary
+      // movement, the dash bucket the PC's Dash already owns.
+      expect(ui.section).toBe('action-other');
+      expect(ui.subject).toBe(SUBJECT);
+      expect(ui.name).toBe(`${T}.${stem}.name`);
+      expect(ui.description).toBe(`${T}.${stem}.description`);
+      expect(ui.detailKey).toBe('vehicle/tormentor-helm');
+      expect(ui.intents).toEqual({ MOVE: stem === 'drive' ? 'travel' : 'dash' });
+      expect(ui.actionCost).toEqual(['action']);
+      // No dice, no vars: a vehicle has no movement economy, so there is
+      // nothing to roll and nothing to capture — the row is intent only.
+      expect(ui.primaryControl).toBeUndefined();
+      expect(offer!.rule.vars).toBeUndefined();
+    }
+  });
+
+  it('are gated structurally on the acquire AND the helm seat (when)', () => {
+    for (const id of ['drive-tormentor', 'dash-tormentor'] as const) {
+      const raw = module().offer!({ selections: {} }).find((o) => o.id === id);
+      expect(raw, `${id} exists`).toBeDefined();
+      expect(typeof raw!.when).toBe('function');
+      expect(raw!.when!(seatLegReader({ helm: 1 }))).toBe(true);
+      expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+      expect(raw!.when!(seatLegReader({ harpoon: 1 }))).toBe(false);
+      expect(raw!.when!(seatLegReader({}))).toBe(false);
+      // Through the fold: acquired but unseated, the offer does not exist.
+      const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+      expect(unseated.availableRules.some((r) => r.rule.id === id)).toBe(false);
+    }
+  });
+
+  it('legality is the generic action-pool idiom: the action ALONE, each with its OWN diagnostic', () => {
+    for (const [id, stem] of [
+      ['drive-tormentor', 'drive'],
+      ['dash-tormentor', 'dash']
+    ] as const) {
+      const raw = module().offer!({ selections: {} }).find((o) => o.id === id);
+      expect(raw, `${id} exists`).toBeDefined();
+      expect(raw!.legalWhen).toHaveLength(1);
+      const leg = raw!.legalWhen![0]!;
+      const poolReader = (actions: number): FactReader => ({
+        num: (n) => (n === 'actions.remaining' ? actions : 0),
+        has: () => false
+      });
+      expect(leg.condition(poolReader(1))).toBe(true);
+      expect(leg.condition(poolReader(0))).toBe(false);
+      expect(leg.diagnostics).toEqual([{ code: `${T}.${stem}.no_action`, severity: 'error' }]);
+    }
+  });
+
+  it('apply is the generic action spend: ONE keyless endOfTurn effect writing exactly the action', () => {
+    const economy = getModule('action-economy')!;
+    for (const id of ['drive-tormentor', 'dash-tormentor'] as const) {
+      const out = evaluate({
+        modules: [module(), economy],
+        committed: seatedAtHelm(),
+        planned: [{ instanceId: 'i0', ruleId: id }]
+      });
+      // Exactly ONE advertised effect — the generic per-turn spend (endOfTurn,
+      // keyless), never a vehicle fact: no movement machinery (vehicles have
+      // none), the seat stays taken and the capacity counts it still.
+      expect(out.effects).toHaveLength(1);
+      expect(out.effects[0]!.key).toBeUndefined();
+      expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
+      expect(out.effects[0]!.state).toEqual({ 'actions.spent': 1 });
+      expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+      expect(out.facts['actions.remaining']).toBe(0);
+      expect(out.facts[`${F}.seats.helm`]).toBe(1);
+      expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+    }
+  });
+
+  it('a no-action row still executes (the override path), flagged with its OWN diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    for (const [id, stem] of [
+      ['drive-tormentor', 'drive'],
+      ['dash-tormentor', 'dash']
+    ] as const) {
+      const out = evaluate({
+        modules: [module(), economy],
+        committed: seatedAtHelm(),
+        planned: [
+          { instanceId: 'i0', ruleId: id },
+          { instanceId: 'i1', ruleId: id }
+        ]
+      });
+      expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+      expect(out.planDiagnostics['i1']).toEqual([
+        { code: `${T}.${stem}.no_action`, severity: 'error' }
+      ]);
+    }
+  });
+
+  it('NO prone leg: a fallen vehicle leaves both actions legal (the GM adjudicates the rest)', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+    });
+    expect(out.facts[`${F}.prone`]).toBe(1);
+    for (const id of ['drive-tormentor', 'dash-tormentor'] as const) {
+      const offer = out.availableRules.find((r) => r.rule.id === id);
+      expect(offer, `${id} stays offered while prone`).toBeDefined();
+      expect(offer!.legal, `${id} is legal while prone`).toBe(true);
+      expect(offer!.diagnostics).toEqual([]);
+    }
+  });
+});
+
+describe('juke-tormentor offer', () => {
+  it('is the Helm REACTION on the vehicle subject, filed like an opportunity attack', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    const offer = out.availableRules.find((r) => r.rule.id === 'juke-tormentor');
+    expect(offer, 'the vehicle +ADD carries Juke while seated').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('reaction');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.juke.name`);
+    expect(ui.description).toBe(`${T}.juke.description`);
+    expect(ui.detailKey).toBe('vehicle/tormentor-helm');
+    expect(ui.intents).toEqual({ REACT: 'ward' });
+    expect(ui.actionCost).toEqual(['reaction']);
+    // No dice, no vars: the Dex-save advantage is applied at the table — the
+    // row records the intent, nothing is wired to roll.
+    expect(ui.primaryControl).toBeUndefined();
+    expect(offer!.rule.vars).toBeUndefined();
+  });
+
+  it('is gated structurally on the acquire AND the helm seat (when)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'juke-tormentor');
+    expect(raw, 'the juke offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.when!(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({}))).toBe(false);
+    // Through the fold: acquired but unseated, the offer does not exist.
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(unseated.availableRules.some((r) => r.rule.id === 'juke-tormentor')).toBe(false);
+  });
+
+  it('legality is the reaction-pool idiom PLUS the able-to-move leg, both with OWN diagnostics', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'juke-tormentor');
+    expect(raw, 'the juke offer exists').toBeDefined();
+    expect(raw!.legalWhen).toHaveLength(2);
+    const poolReader = (reactions: number, prone: number): FactReader => ({
+      num: (n) => (n === 'reactions.remaining' ? reactions : n === `${F}.prone` ? prone : 0),
+      has: () => false
+    });
+    // Leg (a) — the reaction pool (the unarmed opportunity-attack spelling).
+    const legA = raw!.legalWhen![0]!;
+    expect(legA.condition(poolReader(1, 0))).toBe(true);
+    expect(legA.condition(poolReader(0, 0))).toBe(false);
+    expect(legA.diagnostics).toEqual([{ code: `${T}.juke.no_reaction`, severity: 'error' }]);
+    // Leg (b) — the vehicle able to move: PR-C's approximation is the prone
+    // record (PR-D refines to speed.effective > 0 once fuel exists).
+    const legB = raw!.legalWhen![1]!;
+    expect(legB.condition(poolReader(1, 0))).toBe(true);
+    expect(legB.condition(poolReader(1, 1))).toBe(false);
+    expect(legB.diagnostics).toEqual([{ code: `${T}.juke.unable_to_move`, severity: 'error' }]);
+  });
+
+  it('apply is the reaction spend ALONE: ONE keyless endOfTurn effect, no facts of its own', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'juke-tormentor' }]
+    });
+    // Exactly ONE advertised effect — the generic per-turn REACTION spend,
+    // never a vehicle fact: the Dex-save advantage is applied at the table,
+    // the plan row records the intent.
+    expect(out.effects).toHaveLength(1);
+    expect(out.effects[0]!.key).toBeUndefined();
+    expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
+    expect(out.effects[0]!.state).toEqual({ 'reactions.spent': 1 });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // The REACTION pool alone: the action stays open.
+    expect(out.facts['reactions.remaining']).toBe(0);
+    expect(out.facts['actions.remaining']).toBe(1);
+    expect(out.facts[`${F}.seats.helm`]).toBe(1);
+  });
+
+  it('a no-reaction row still executes (the override path), flagged with its OWN diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'juke-tormentor' },
+        { instanceId: 'i1', ruleId: 'juke-tormentor' }
+      ]
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.juke.no_reaction`, severity: 'error' }
+    ]);
+  });
+
+  it('a prone-vehicle row is illegal-but-committable: the spend lands with the unable-to-move diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'knock-tormentor-prone' },
+        { instanceId: 'i1', ruleId: 'juke-tormentor' }
+      ]
+    });
+    expect(out.facts[`${F}.prone`]).toBe(1);
+    // A reaction IS available — the ONLY failing leg is able-to-move, so the
+    // row carries exactly that diagnostic.
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.juke.unable_to_move`, severity: 'error' }
+    ]);
+    // The override row still spends the reaction (the over-commit projection).
+    expect(out.facts['reactions.remaining']).toBe(0);
+  });
+});
+
+describe('helm seat + station actions i18n (tlh is the canary)', () => {
+  it('the take/leave names, chip name, action names/descriptions and diagnostics exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en take name': en.rule.tormentor['take-helm-seat']?.name,
+      'en-x-tlh take name': tlh.rule.tormentor['take-helm-seat']?.name,
+      'en take description': en.rule.tormentor['take-helm-seat']?.description,
+      'en-x-tlh take description': tlh.rule.tormentor['take-helm-seat']?.description,
+      'en leave name': en.rule.tormentor['leave-helm-seat']?.name,
+      'en-x-tlh leave name': tlh.rule.tormentor['leave-helm-seat']?.name,
+      'en leave description': en.rule.tormentor['leave-helm-seat']?.description,
+      'en-x-tlh leave description': tlh.rule.tormentor['leave-helm-seat']?.description,
+      'en chip name': en.rule.tormentor['seat-helm-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['seat-helm-effect']?.name,
+      'en drive name': en.rule.tormentor.drive?.name,
+      'en-x-tlh drive name': tlh.rule.tormentor.drive?.name,
+      'en drive description': en.rule.tormentor.drive?.description,
+      'en-x-tlh drive description': tlh.rule.tormentor.drive?.description,
+      'en drive no action': en.rule.tormentor.drive?.no_action,
+      'en-x-tlh drive no action': tlh.rule.tormentor.drive?.no_action,
+      'en dash name': en.rule.tormentor.dash?.name,
+      'en-x-tlh dash name': tlh.rule.tormentor.dash?.name,
+      'en dash description': en.rule.tormentor.dash?.description,
+      'en-x-tlh dash description': tlh.rule.tormentor.dash?.description,
+      'en dash no action': en.rule.tormentor.dash?.no_action,
+      'en-x-tlh dash no action': tlh.rule.tormentor.dash?.no_action,
+      'en juke name': en.rule.tormentor.juke?.name,
+      'en-x-tlh juke name': tlh.rule.tormentor.juke?.name,
+      'en juke description': en.rule.tormentor.juke?.description,
+      'en-x-tlh juke description': tlh.rule.tormentor.juke?.description,
+      'en juke no reaction': en.rule.tormentor.juke?.no_reaction,
+      'en-x-tlh juke no reaction': tlh.rule.tormentor.juke?.no_reaction,
+      'en juke unable to move': en.rule.tormentor.juke?.unable_to_move,
+      'en-x-tlh juke unable to move': tlh.rule.tormentor.juke?.unable_to_move
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));

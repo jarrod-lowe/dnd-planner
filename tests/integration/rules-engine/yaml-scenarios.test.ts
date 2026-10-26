@@ -301,6 +301,18 @@ const EXPECTED_RUNNABLE = [
   'tormentor-harpoon-seat-exclusivity',
   'tormentor-harpoon-fire',
   'tormentor-harpoon-fire-action',
+  // …PR 10 — PR-C: the Helm station — the third seat on the same
+  // infrastructure (take/leave pair, exclusivity against the passenger and
+  // harpoon seats in every direction, the derived capacity counting it) plus
+  // the station's actions: Drive and Dash as generic action spends (plan-row
+  // intent only — vehicles have no movement economy) and Juke as the driver's
+  // REACTION, illegal-but-committable while the vehicle is prone (its
+  // able-to-move leg)
+  'tormentor-helm-seat',
+  'tormentor-helm-seat-exclusivity',
+  'tormentor-helm-drive-dash',
+  'tormentor-helm-juke',
+  'tormentor-helm-juke-prone',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:
