@@ -2,26 +2,26 @@ name: 'Tormentor (Damage Control) - Destroyed At Zero HP'
 description: >-
   When recorded damage brings hp.current to exactly 0, the damage apply ALSO
   advertises a permanent keyed effect writing destroyed = 1 (the steed
-  lethal-check placement, but NO auto-unboard: the board effect persists so the
-  wreck stays inspectable and the crew can de-board). A NOTICE gated on the
+  lethal-check placement, but NO auto-abandon: the acquire effect persists so the
+  wreck stays inspectable and the crew can abandon). A NOTICE gated on the
   destroyed fact carries the state. A long rest ages out the untilLongRest HP
   records (the pool reads full again) but the destroyed wreck is PERMANENT —
-  only re-boarding clears it.
+  only re-acquiring clears it.
 ruleGroups:
   - vehicles/tormentor
 steps:
   - addOffer:
-      id: board-tormentor
-  # Exactly 0: destroyed lands beside the damage record, the board persists.
+      id: acquire-tormentor
+  # Exactly 0: destroyed lands beside the damage record, the acquire persists.
   - addOffer:
       id: record-tormentor-damage
       selections:
         amount: 60
       assert:
         facts:
-          companion.tormentorDamageControl.hp.current: 0
-          companion.tormentorDamageControl.destroyed: 1
-          companion.tormentorDamageControl.active: 1
+          companion.tormentor.hp.current: 0
+          companion.tormentor.destroyed: 1
+          companion.tormentor.active: 1
         annotations:
           exists:
             - rule.tormentor.destroyed-notice
@@ -32,11 +32,11 @@ steps:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-hp-damage
             - effect-tormentor-destroyed
         facts:
-          companion.tormentorDamageControl.destroyed: 1
+          companion.tormentor.destroyed: 1
   # Long rest: the HP records age out (the pool reads full again) but the
   # destroyed wreck is permanent, notice standing — a rest does not un-burn a
   # war machine.
@@ -45,13 +45,13 @@ steps:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-destroyed
           notExists:
             - effect-tormentor-hp-damage
         facts:
-          companion.tormentorDamageControl.hp.current: 60
-          companion.tormentorDamageControl.destroyed: 1
+          companion.tormentor.hp.current: 60
+          companion.tormentor.destroyed: 1
         annotations:
           exists:
             - rule.tormentor.destroyed-notice

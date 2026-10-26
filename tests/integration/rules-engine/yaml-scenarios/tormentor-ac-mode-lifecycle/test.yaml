@@ -1,61 +1,61 @@
 name: 'Tormentor (Damage Control) - AC Mode Rides the Board Lifecycle'
 description: >-
-  The AC-mode record never outlives the board that justifies it: a re-board
-  (a keyed replacement of the board effect, which does not fire dependents)
+  The AC-mode record never outlives the acquire that justifies it: a re-acquire
+  (a keyed replacement of the acquire effect, which does not fire dependents)
   explicitly evicts the record with an empty same-key marker, so the mode
-  resets to the fresh board SELECTION, and de-board clears it with everything
-  else. The record OVERRIDES the board bake in both directions — a Motionless
-  board with a recorded Moving reads 21 — which is why the record is a distinct
+  resets to the fresh acquire SELECTION, and abandon clears it with everything
+  else. The record OVERRIDES the acquire bake in both directions — a Motionless
+  acquire with a recorded Moving reads 21 — which is why the record is a distinct
   fact the derive prefers: the engine sum-combines two live effects writing one
   fact, so a record writing acMotionless itself could never flip a Motionless
-  board back to Moving.
+  acquire back to Moving.
 ruleGroups:
   - vehicles/tormentor
 steps:
-  # Board MOTIONLESS via the board selection, then record MOVING from the
-  # station: the record wins — 21, not the board bake's 19.
+  # Acquire MOTIONLESS via the acquire selection, then record MOVING from the
+  # vehicle: the record wins — 21, not the acquire bake's 19.
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       selections:
         mode: 1
       assert:
         facts:
-          companion.tormentorDamageControl.ac.effective: 19
+          companion.tormentor.ac.effective: 19
   - addOffer:
       id: set-tormentor-ac-mode
       selections:
         mode: 0
       assert:
         facts:
-          companion.tormentorDamageControl.ac.effective: 21
+          companion.tormentor.ac.effective: 21
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 21
-  # Re-board with the DEFAULT selection: the eviction resets the mode to Moving
-  # — a fresh board, not a persisted one.
+          companion.tormentor.ac.effective: 21
+  # Re-acquire with the DEFAULT selection: the eviction resets the mode to Moving
+  # — a fresh acquire, not a persisted one.
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.acMotionless: 0
-          companion.tormentorDamageControl.acMotionless.recorded: 0
-          companion.tormentorDamageControl.ac.effective: 21
+          companion.tormentor.acMotionless: 0
+          companion.tormentor.acMotionless.recorded: 0
+          companion.tormentor.ac.effective: 21
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
           notExists:
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 21
-  # Record Motionless again, commit, then re-board SELECTING Motionless: the
-  # fresh board selection stands (the record goes with the old board).
+          companion.tormentor.ac.effective: 21
+  # Record Motionless again, commit, then re-acquire SELECTING Motionless: the
+  # fresh acquire selection stands (the record goes with the old acquire).
   - addOffer:
       id: set-tormentor-ac-mode
       selections:
@@ -66,37 +66,37 @@ steps:
           exists:
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 19
+          companion.tormentor.ac.effective: 19
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       selections:
         mode: 1
       assert:
         facts:
-          companion.tormentorDamageControl.acMotionless: 1
-          companion.tormentorDamageControl.acMotionless.recorded: 0
-          companion.tormentorDamageControl.ac.effective: 19
+          companion.tormentor.acMotionless: 1
+          companion.tormentor.acMotionless.recorded: 0
+          companion.tormentor.ac.effective: 19
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
           notExists:
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 19
-  # De-board: the record and the board go together; the derived AC reads 0.
+          companion.tormentor.ac.effective: 19
+  # Abandon: the record and the acquire go together; the derived AC reads 0.
   - addOffer:
-      id: deboard-tormentor
+      id: abandon-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.ac.effective: 0
-          companion.tormentorDamageControl.acMotionless: 0
+          companion.tormentor.ac.effective: 0
+          companion.tormentor.acMotionless: 0
   - endTurn:
       assert:
         effects:
           notExists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 0
+          companion.tormentor.ac.effective: 0

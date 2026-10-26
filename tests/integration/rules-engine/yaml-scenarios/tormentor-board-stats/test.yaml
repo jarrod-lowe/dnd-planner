@@ -1,78 +1,78 @@
 name: 'Tormentor (Damage Control) - Board Bakes The Stat Block'
 description: >-
-  Boarding the Tormentor advertises ONE permanent keyed effect baking the
+  Acquiring the Tormentor advertises ONE permanent keyed effect baking the
   display-only stat block into facts: active, the AC MODE (Moving by default —
   the derived ac.effective reads 21; the flat ac.value bake is retired), HP 60,
   Speed 100 ft., Cargo 500 lb., STR/DEX/CON 16/14/14 with +3/+2/+2 modifiers.
-  The keyed effect replaces on re-board (facts never double), and end of turn
-  commits it so the stats persist on later turns. Boarding also makes the
-  STATION's +ADD panel available: the de-board offer appears under the
-  station's subject, in the free section, gated on the board.
+  The keyed effect replaces on re-acquire (facts never double), and end of turn
+  commits it so the stats persist on later turns. Acquiring also makes the
+  VEHICLE's +ADD panel available: the abandon offer appears under the
+  vehicle's subject, in the free section, gated on the acquire.
 ruleGroups:
   - vehicles/tormentor
 steps:
-  # Board: the advertised effect's state is visible in the projection at once.
+  # Acquire: the advertised effect's state is visible in the projection at once.
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.active: 1
-          companion.tormentorDamageControl.ac.effective: 21
-          companion.tormentorDamageControl.hp.max: 60
-          companion.tormentorDamageControl.speed: 100
-          companion.tormentorDamageControl.cargo: 500
-          companion.tormentorDamageControl.str: 16
-          companion.tormentorDamageControl.dex: 14
-          companion.tormentorDamageControl.con: 14
-          companion.tormentorDamageControl.str.modifier: 3
-          companion.tormentorDamageControl.dex.modifier: 2
-          companion.tormentorDamageControl.con.modifier: 2
+          companion.tormentor.active: 1
+          companion.tormentor.ac.effective: 21
+          companion.tormentor.hp.max: 60
+          companion.tormentor.speed: 100
+          companion.tormentor.cargo: 500
+          companion.tormentor.str: 16
+          companion.tormentor.dex: 14
+          companion.tormentor.con: 14
+          companion.tormentor.str.modifier: 3
+          companion.tormentor.dex.modifier: 2
+          companion.tormentor.con.modifier: 2
         planErrors:
-          - id: board-tormentor
+          - id: acquire-tormentor
             index: 0
             errors: []
-  # Boarded: the station's +ADD panel now carries the de-board offer.
+  # Acquireed: the vehicle's +ADD panel now carries the abandon offer.
   - evaluate:
       assert:
         offers:
           exists:
-            - deboard-tormentor
+            - abandon-tormentor
           legal:
-            - deboard-tormentor
+            - abandon-tormentor
         offerUi:
-          - id: deboard-tormentor
+          - id: abandon-tormentor
             ui:
               section: free
-              subject: tormentor-damage-control
+              subject: tormentor
               actionCost: []
-  # A second boarding is illegal-but-possible this pass; the keyed effect
+  # A second acquiring is illegal-but-possible this pass; the keyed effect
   # REPLACES, so every fact stays single (no stacking, active stays 1).
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.active: 1
-          companion.tormentorDamageControl.str: 16
-          companion.tormentorDamageControl.hp.max: 60
-  # End of turn commits the board effect; the stats persist.
+          companion.tormentor.active: 1
+          companion.tormentor.str: 16
+          companion.tormentor.hp.max: 60
+  # End of turn commits the acquire effect; the stats persist.
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
         facts:
-          companion.tormentorDamageControl.active: 1
-          companion.tormentorDamageControl.ac.effective: 21
-          companion.tormentorDamageControl.hp.max: 60
-          companion.tormentorDamageControl.speed: 100
-          companion.tormentorDamageControl.cargo: 500
+          companion.tormentor.active: 1
+          companion.tormentor.ac.effective: 21
+          companion.tormentor.hp.max: 60
+          companion.tormentor.speed: 100
+          companion.tormentor.cargo: 500
   # A later turn still reads the committed stat block.
   - evaluate:
       assert:
         facts:
-          companion.tormentorDamageControl.active: 1
-          companion.tormentorDamageControl.str.modifier: 3
+          companion.tormentor.active: 1
+          companion.tormentor.str.modifier: 3
         offers:
           exists:
-            - board-tormentor
-            - deboard-tormentor
+            - acquire-tormentor
+            - abandon-tormentor

@@ -285,12 +285,12 @@ function tormentorDetailBody(detailKey: string): string | undefined {
 }
 
 describe('tormentor detail body', () => {
-  // The board-flip detail is the VEHICLE's stat block, in our own words (the
+  // The acquire-flip detail is the VEHICLE's stat block, in our own words (the
   // Tormentor is not SRD: numbers and short factual phrases only, never trait
   // prose). It must read in-world: no app meta (what is or is not "modeled",
   // which pass something arrives in) — a player flipping the chip wants the
   // war machine, not release notes.
-  const body = tormentorDetailBody('vehicle/tormentor-damage-control');
+  const body = tormentorDetailBody('vehicle/tormentor');
 
   it('carries no app-meta phrasing', () => {
     const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));

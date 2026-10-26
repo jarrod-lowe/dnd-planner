@@ -71,29 +71,29 @@ const flag = (fact: string, value = 1): EffectInstance => ({
 });
 
 /**
- * A persisted LEGACY Tormentor board — the shape `tormentorBoardEffect()`
+ * A persisted LEGACY Tormentor acquire — the shape `tormentorAcquireEffect()`
  * produced before the AC-mode pass: the flat `ac.value` 21 baked, no
- * `acMotionless` mode fact (the board offer's segmented control did not exist
- * yet). Today's module must evaluate it without error and derive the Moving
- * defaults; the stale `ac.value` is inert because nothing derives it.
+ * `acMotionless` mode fact (the acquire offer's segmented control did not
+ * exist yet). Today's module must evaluate it without error and derive the
+ * Moving defaults; the stale `ac.value` is inert because nothing derives it.
  */
 const legacyTormentorBoard = (): EffectInstance => ({
-  id: 'effect-tormentor-damage-control',
-  key: 'tormentor-damage-control',
+  id: 'effect-tormentor-acquire',
+  key: 'tormentor-acquire',
   state: {
-    'companion.tormentorDamageControl.active': 1,
-    'companion.tormentorDamageControl.ac.value': 21,
-    'companion.tormentorDamageControl.hp.base': 60,
-    'companion.tormentorDamageControl.damageThreshold': 10,
-    'companion.tormentorDamageControl.speed': 100,
-    'companion.tormentorDamageControl.cargo': 500,
-    'companion.tormentorDamageControl.str': 16,
-    'companion.tormentorDamageControl.dex': 14,
-    'companion.tormentorDamageControl.con': 14,
-    'companion.tormentorDamageControl.str.modifier': 3,
-    'companion.tormentorDamageControl.dex.modifier': 2,
-    'companion.tormentorDamageControl.con.modifier': 2,
-    'companion.tormentorDamageControl.creatureCapacity.max': 4
+    'companion.tormentor.active': 1,
+    'companion.tormentor.ac.value': 21,
+    'companion.tormentor.hp.base': 60,
+    'companion.tormentor.damageThreshold': 10,
+    'companion.tormentor.speed': 100,
+    'companion.tormentor.cargo': 500,
+    'companion.tormentor.str': 16,
+    'companion.tormentor.dex': 14,
+    'companion.tormentor.con': 14,
+    'companion.tormentor.str.modifier': 3,
+    'companion.tormentor.dex.modifier': 2,
+    'companion.tormentor.con.modifier': 2,
+    'companion.tormentor.creatureCapacity.max': 4
   },
   expiry: permanent
 });
