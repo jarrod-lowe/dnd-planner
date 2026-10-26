@@ -1,4 +1,5 @@
 import type {
+  Annotation,
   Diagnostic,
   EffectInstance,
   Facts,
@@ -9,6 +10,8 @@ import type {
 } from './types';
 import { evaluateSheet } from './sheet';
 import { collectOffersWithModule } from './offers';
+import { collectAnnotations } from './annotate';
+import { dedupeByKey } from './effects';
 import { plainReader } from './reader';
 import { checkDeadline, DEFAULT_BUDGET_MS } from './watchdog';
 
@@ -43,6 +46,18 @@ export interface PlanResult {
    * executed are recorded.
    */
   plannedOffers: Map<string, Offer>;
+  /**
+   * Annotations keyed to the row they show on, each evaluated against the state
+   * at the END of that row: committed + planned rows 1..N INCLUSIVE, never a
+   * later row. The fold already re-derives that exact sheet at the top of the
+   * NEXT iteration, so each boundary records the previous row's list inline —
+   * no state snapshots are retained, only the resulting Annotation[]s. The last
+   * row's list is recorded after the plan settles and equals the engine's
+   * full-plan `annotations` (same facts, same effects, same call). Every
+   * planned ref gets an entry — a skipped row (its `when` closed) advertised
+   * nothing, so its end state is simply the previous row's.
+   */
+  annotationsByRow: Map<string, Annotation[]>;
 }
 
 function dedupeDiagnostics(diagnostics: Diagnostic[]): Diagnostic[] {
@@ -107,6 +122,7 @@ export function evaluatePlan(
   const planDiagnostics = new Map<string, Diagnostic[]>();
   const planIllegal = new Set<string>();
   const plannedOffers = new Map<string, Offer>();
+  const annotationsByRow = new Map<string, Annotation[]>();
   const advertised: EffectInstance[] = [];
   // How much of `advertised` existed at the moment a rest flag first read true —
   // i.e. everything up to and including the rest row's own apply. The rest hook
@@ -120,10 +136,31 @@ export function evaluatePlan(
   // LATER rest's hooks ran at the EARLIER rest's position — the worst of both.
   let restKindAtBoundary: RestKind | null = null;
 
+  // The ref whose prefix-inclusive end state the NEXT iteration's top-of-loop
+  // re-derive holds — the row whose annotations are live at that boundary. Set
+  // after each iteration (skipped rows included: they advertised nothing, so
+  // their end state is the previous row's and the boundary records it as-is).
+  let previousRef: PlannedRef | null = null;
+
   for (const ref of planned) {
     checkDeadline(deadline, 'plan fold', budgetMs);
     // Re-derive the working state reflecting all spends so far this turn.
     const facts = evaluateSheet(modules, inputFacts, [...committed, ...advertised]);
+
+    // PER-ROW ANNOTATIONS, recorded inline at the boundary where they are live.
+    // `facts` here is exactly the end state of `previousRef`'s row (committed +
+    // every row through its own apply, nothing later), so the annotate pass run
+    // against it — with the effects in force at that same moment, key-deduped
+    // newest-wins exactly as the sheet folded them — is the row's own list. A
+    // LATER row's spend cannot leak into it: `advertised` still stops here.
+    if (previousRef) {
+      annotationsByRow.set(
+        previousRef.instanceId,
+        collectAnnotations(modules, facts, dedupeByKey([...committed, ...advertised]))
+      );
+    }
+    previousRef = ref;
+
     const reader = plainReader(facts);
 
     const offer = offerById.get(ref.ruleId);
@@ -284,5 +321,18 @@ export function evaluatePlan(
   const facts = restKind
     ? evaluateSheet(modules, inputFacts, [...committed, ...advertised])
     : settled;
-  return { facts, planDiagnostics, planIllegal, advertised, plannedOffers };
+
+  // The LAST row's list is recorded here, against the settled facts: its end
+  // state is the whole plan's, so its list is the engine's global `annotations`
+  // by construction — same modules, same facts, same deduped effects (the very
+  // call `engine.ts` makes for the global field). This also covers the empty
+  // plan's absence: no rows, no entries, and the global list still evaluates.
+  if (previousRef) {
+    annotationsByRow.set(
+      previousRef.instanceId,
+      collectAnnotations(modules, facts, dedupeByKey([...committed, ...advertised]))
+    );
+  }
+
+  return { facts, planDiagnostics, planIllegal, advertised, plannedOffers, annotationsByRow };
 }

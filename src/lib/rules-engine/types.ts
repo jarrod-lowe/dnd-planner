@@ -620,6 +620,16 @@ export interface EngineOutput {
    * no entry here (its row correctly falls back to inapplicable).
    */
   plannedOffers: Record<string, AvailableRuleEntry>;
+  /**
+   * Per-row annotations, keyed by plan instanceId: each row's list is the
+   * annotate pass run against the state at the END of that row (committed +
+   * rows 1..N inclusive, never later rows) — the list a plan row's own panel
+   * surfaces read. The full-plan {@link annotations} field keeps the settled
+   * semantics for the notices strip, the toggle captures, and any consumer
+   * that speaks about the turn as a whole; a non-empty plan's last row's list
+   * is exactly that global list.
+   */
+  annotationsByRow: Record<string, Annotation[]>;
   annotations: Annotation[];
   /** Effects advertised this turn (the UI commits these at end of turn). */
   effects: EffectInstance[];

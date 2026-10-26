@@ -23,7 +23,21 @@
     items: PlannedItem[];
     entries: AvailableRuleEntry[];
     facts: Facts;
+    /**
+     * The full-plan annotation list — the FALLBACK each row's own list takes
+     * the place of (see {@link annotationsByRow}). Still the source for
+     * consumers that speak about the turn as a whole (the notices strip reads
+     * it upstream in PlayCharacterMode).
+     */
     activeAnnotations: Annotation[];
+    /**
+     * Per-row annotations keyed by instanceId: each row renders ITS OWN list —
+     * judged at that row's END state (committed + rows 1..N inclusive), never
+     * later rows. A row the map does not cover (e.g. added inside the
+     * evaluation debounce) falls back to {@link activeAnnotations}, the
+     * previous behavior, rather than rendering nothing.
+     */
+    annotationsByRow?: Record<string, Annotation[]>;
     onAddToPlan: (entry: AvailableRuleEntry) => void;
     onRemoveFromPlan: (instanceId: string) => void;
     onMovePlanItem: (instanceId: string, direction: 'up' | 'down') => void;
@@ -44,6 +58,7 @@
     entries,
     facts,
     activeAnnotations,
+    annotationsByRow,
     onAddToPlan,
     onRemoveFromPlan,
     onMovePlanItem,
@@ -93,6 +108,13 @@
   // here means the button can never outlive the offer behind it — a weapon
   // stowed by a later row takes its own "attack again" button with it.
   const addableOfferIds = $derived(new Set(entries.map((e) => e.rule.id)));
+
+  // A row's own annotations: the per-row map's entry when the last evaluation
+  // covers the row, else the global list (the pre-per-row behavior — never a
+  // blank row panel just because the debounce has not caught up).
+  function rowAnnotations(instanceId: string): Annotation[] {
+    return annotationsByRow?.[instanceId] ?? activeAnnotations;
+  }
 
   // Group entries by verb for computing alternatives
   const verbGroups = $derived(groupChoicesByVerb(entries));
@@ -164,7 +186,7 @@
           {entry}
           {facts}
           modules={playStore.state.modules}
-          {activeAnnotations}
+          activeAnnotations={rowAnnotations(item.instanceId)}
           alternatives={preChoiceAlternatives(
             item,
             item.verb,

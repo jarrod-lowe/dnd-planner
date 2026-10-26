@@ -1,5 +1,5 @@
 import { apiGet, apiPost, apiDelete } from '$lib/api/client';
-import type { Rule, AvailableRuleEntry, AnnotationSeedSource } from '$lib/rules-view';
+import type { Rule, AvailableRuleEntry, AnnotationSeedSource, Facts } from '$lib/rules-view';
 import {
   loadModules,
   endTurn as ageCommittedEffects,
@@ -253,28 +253,46 @@ function performEvaluation(): void {
  * annotation did not exist), and without this pass its chip would fall back
  * to the live seed FOREVER — a later row's tap would move the earlier row,
  * breaking the per-row guarantee. The first evaluation on which a toggle
- * reaches a row initializes its selection from the current seed; later
- * evaluations no-op (the value is set). The seed fallback then only serves
- * the picker, which is its intended audience.
+ * reaches a row initializes its selection; later evaluations no-op (the value
+ * is set). The seed fallback then only serves the picker, which is its
+ * intended audience.
+ *
+ * The VALUE frozen is read from the ROW's prefix facts (`factsBeforeRow` at
+ * the row's index — committed + earlier rows), never the full-plan
+ * `state.facts` display cache: the toggle's presence still comes from the
+ * global list (a toggle alive anywhere in the plan reaches the row), but the
+ * number must be the state at the row's own position, which is what its chip
+ * asserts about. A prefix-evaluation throw skips that row's freeze (the
+ * captureSelections precedent — the add is never blocked by a bad prefix).
  */
 function ensurePlannedToggleSelections(): void {
   const annotations = state.engineOutput?.annotations ?? [];
   const toggles = annotations.filter((a) => a.toggle !== undefined);
   if (toggles.length === 0) return;
 
+  const refs = buildPlannedRefs();
   let changed = false;
-  const items = state.plannedItems.map((item) => {
+  const items = state.plannedItems.map((item, index) => {
     const labels = getAnnotationLabels(item.rule.ui);
     if (labels.length === 0) return item;
-    const captures = captureToggleSelections(labels, state.facts, toggles);
+    let prefixFacts: Facts;
+    try {
+      prefixFacts = factsBeforeRow(state.modules, state.committed, refs, index);
+    } catch {
+      return item;
+    }
+    const captures = captureToggleSelections(labels, prefixFacts, toggles);
     if (Object.keys(captures).length === 0) return item;
     const selections = { ...(item.rule.selections ?? {}) };
+    let itemChanged = false;
     for (const [fact, value] of Object.entries(captures)) {
       if (selections[fact] !== undefined) continue; // already frozen
       selections[fact] = value;
-      changed = true;
+      itemChanged = true;
     }
-    return changed ? { ...item, rule: { ...item.rule, selections } } : item;
+    if (!itemChanged) return item;
+    changed = true;
+    return { ...item, rule: { ...item.rule, selections } };
   });
   if (changed) {
     state = { ...state, plannedItems: items };

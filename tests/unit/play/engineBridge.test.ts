@@ -157,6 +157,7 @@ const makeOutput = (overrides: Partial<EngineOutput> = {}): EngineOutput => ({
   planDiagnostics: {},
   plannedOffers: {},
   annotations: [],
+  annotationsByRow: {},
   effects: [
     {
       id: 'effect-bless',

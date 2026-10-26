@@ -25,6 +25,7 @@ const baseOutput = (overrides: Partial<EngineOutput> = {}): EngineOutput => ({
   planDiagnostics: {},
   plannedOffers: {},
   annotations: [],
+  annotationsByRow: {},
   effects: [],
   diagnostics: { errors: [], warnings: [], notices: [] },
   next: { modules: [] },
