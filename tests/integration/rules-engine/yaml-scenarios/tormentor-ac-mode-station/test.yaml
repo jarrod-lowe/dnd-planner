@@ -1,24 +1,24 @@
 name: 'Tormentor (Damage Control) - Station AC Mode Record'
 description: >-
-  While boarded, the station's +ADD carries an always-present "AC Mode" record
+  While acquireed, the vehicle's +ADD carries an always-present "AC Mode" record
   offer (free section, the occupancy intent class) with the same segmented
   control pre-showing the CURRENT mode. Apply is immediate (record-class): ONE
   permanent keyed effect storing the mode as the distinct acMotionless.recorded
   fact — re-applying replaces rather than stacks, so the top-bar AC flips
-  21 <-> 19 at once, and de-board clears the record with the rest of the panel.
-  Unboarded, the offer does not exist (structural gate on the board).
+  21 <-> 19 at once, and abandon clears the record with the rest of the panel.
+  Unacquired, the offer does not exist (structural gate on the acquire).
 ruleGroups:
   - vehicles/tormentor
 steps:
-  # Unboarded: the station record does not exist at all.
+  # Unacquired: the vehicle record does not exist at all.
   - evaluate:
       assert:
         offers:
           notExists:
             - set-tormentor-ac-mode
   - addOffer:
-      id: board-tormentor
-  # Boarded (default Moving): the offer exists and is legal, the segmented
+      id: acquire-tormentor
+  # Acquireed (default Moving): the offer exists and is legal, the segmented
   # control pinned, opening at the CURRENT mode.
   - evaluate:
       assert:
@@ -31,7 +31,7 @@ steps:
           - id: set-tormentor-ac-mode
             ui:
               section: free
-              subject: tormentor-damage-control
+              subject: tormentor
               actionCost: []
               intents:
                 HANDLE: gear
@@ -50,7 +50,7 @@ steps:
               mode:
                 capture: true
                 default:
-                  fact: companion.tormentorDamageControl.acMotionless.current
+                  fact: companion.tormentor.acMotionless.current
   # Record Motionless: the derived AC reads 19 IMMEDIATELY (the projection
   # folds the advertised keyed effect).
   - addOffer:
@@ -59,9 +59,9 @@ steps:
         mode: 1
       assert:
         facts:
-          companion.tormentorDamageControl.acMotionless.recorded: 1
-          companion.tormentorDamageControl.acMotionless.current: 1
-          companion.tormentorDamageControl.ac.effective: 19
+          companion.tormentor.acMotionless.recorded: 1
+          companion.tormentor.acMotionless.current: 1
+          companion.tormentor.ac.effective: 19
         planErrors:
           - id: set-tormentor-ac-mode
             index: 0
@@ -70,10 +70,10 @@ steps:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 19
+          companion.tormentor.ac.effective: 19
   # Re-apply Moving: the keyed effect REPLACES — AC 21, never a stacked record.
   - addOffer:
       id: set-tormentor-ac-mode
@@ -81,23 +81,23 @@ steps:
         mode: 0
       assert:
         facts:
-          companion.tormentorDamageControl.acMotionless.recorded: 0
-          companion.tormentorDamageControl.acMotionless.current: 0
-          companion.tormentorDamageControl.ac.effective: 21
+          companion.tormentor.acMotionless.recorded: 0
+          companion.tormentor.acMotionless.current: 0
+          companion.tormentor.ac.effective: 21
   - endTurn:
       assert:
         effects:
           exists:
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 21
-  # De-board clears the record with the panel; the derived AC reads 0.
+          companion.tormentor.ac.effective: 21
+  # Abandon clears the record with the panel; the derived AC reads 0.
   - addOffer:
-      id: deboard-tormentor
+      id: abandon-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.ac.effective: 0
-          companion.tormentorDamageControl.acMotionless.recorded: 0
+          companion.tormentor.ac.effective: 0
+          companion.tormentor.acMotionless.recorded: 0
         offers:
           notExists:
             - set-tormentor-ac-mode
@@ -105,7 +105,7 @@ steps:
       assert:
         effects:
           notExists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-ac-mode
         facts:
-          companion.tormentorDamageControl.ac.effective: 0
+          companion.tormentor.ac.effective: 0

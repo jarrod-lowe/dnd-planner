@@ -12,53 +12,56 @@ import {
 } from '../builder';
 
 /**
- * Tormentor — the rule group owning the whole VEHICLE and every seat it has so
- * far. Seats (action stations) change during play, so they are not separate
- * groups; each seat is its own SUBJECT (`tormentor-damage-control` is the
- * pseudo-seat for a character riding along on generic non-station duty; Helm
- * and Harpoon Flinger come later and will join this same group).
+ * Tormentor — the rule group owning the whole VEHICLE. Bringing the vehicle in
+ * is ACQUIRING it: equipping a war machine, not manning a station (the
+ * Damage-Control seat fiction is retired). The vehicle is one SUBJECT
+ * (`tormentor`); later vehicles join this same group as their own subjects.
  *
- * Boarding is a PLAYER action: the board offer sits in the player's +ADD with
- * NO station subject, ungated and free. Its apply advertises ONE permanent
+ * Acquiring is a PLAYER action: the acquire offer sits in the player's +ADD
+ * with NO vehicle subject, structurally ungated and free (acquiring while a
+ * Tormentor is already present is ILLEGAL, never hidden — one per character),
+ * filed under the BUILD family's
+ * EQUIP verb ('vehicle' sub-bucket). Its apply advertises ONE permanent
  * keyed effect baking the display-only stat block into
- * `companion.tormentorDamageControl.*` facts (the steed `steedEffect`
- * pattern), and that effect is what makes the STATION's +ADD panel available —
- * the de-board offer carries the station subject, is gated on `active`, and
- * replaces the board effect by key (the steed dismiss/`retireSteedEffects`
+ * `companion.tormentor.*` facts (the steed `steedEffect`
+ * pattern), and that effect is what makes the VEHICLE's +ADD panel available —
+ * the abandon offer carries the vehicle subject, is gated on `active`, and
+ * replaces the acquire effect by key (the steed dismiss/`retireSteedEffects`
  * pattern). Raw mount-chip removal stays as the override path. The module
  * declares its subject's top-bar and resource entries as data (`panels`), so
  * the vehicle surfaces without touching the play layer.
  *
- * Creature Capacity is the one live resource: boarding bakes max 4 and the
- * boarder counts (used defaults to 1), and the station's +ADD carries an
+ * Creature Capacity is the one live resource: acquiring bakes max 4 and the
+ * acquirer counts (used defaults to 1), and the vehicle's +ADD carries an
  * occupancy slider (the steed HP-modifier pattern) whose ONE permanent keyed
  * effect is the stored occupancy — re-applying replaces, removing the chip
- * returns used to the board default, and the board/de-board lifecycle (plus
- * the board effect's `dependents`, for raw chip removal) evicts it with the
- * board. Over-capacity occupancy stays illegal-but-possible: the derive clamps
- * the READ to 0..max and diagnostics are deferred with boarding's.
+ * returns used to the acquire default, and the acquire/abandon lifecycle
+ * (plus the acquire effect's `dependents`, for raw chip removal) evicts it
+ * with the acquire. Over-capacity occupancy stays illegal-but-possible: the
+ * derive clamps the READ to 0..max and diagnostics are deferred with
+ * acquiring's.
  *
  * The vehicle's Prone Deficiency is STATE TRACKING ONLY: a namespaced
- * `companion.tormentorDamageControl.prone` fact under its own keyed effect —
+ * `companion.tormentor.prone` fact under its own keyed effect —
  * NEVER the player-global `condition.prone` (the builder's `proneEffect()`
  * would flip the PLAYER's attack flags, notice and movement legs). The
- * station's +ADD records it and flips it upright (empty same-key eviction);
- * the BOARD is each offer's one structural `when`, while the prone state
- * itself is a LEGALITY gate on both (the engine's illegal-but-visible
+ * vehicle's +ADD records it and flips it upright (empty same-key eviction);
+ * the ACQUIRED state is each offer's one structural `when`, while the prone
+ * state itself is a LEGALITY gate on both (the engine's illegal-but-visible
  * contract — plan.ts keeps illegal offers applicable with diagnostics and a
  * planned-anyway row still executes; no Speed leg, because a vehicle has no
  * movement economy). The effect is PERMANENT (a rest does not right a
- * vehicle), the board/de-board lifecycle evicts it, and a NOTICE carries the
+ * vehicle), the acquire/abandon lifecycle evicts it, and a NOTICE carries the
  * deficiency while the vehicle is PRONE (PC-prone parity: the condition
- * triggers its notice — boarded but upright, there is nothing to know). Both
+ * triggers its notice — acquired but upright, there is nothing to know). Both
  * prone offers file under the CONDITION 'held' sub-bucket (#467 taxonomy), so
- * a vehicle condition groups with PC conditions in the station +ADD.
+ * a vehicle condition groups with PC conditions in the vehicle +ADD.
  *
- * The vehicle is DAMAGEABLE (the steed HP pool, adapted): boarding bakes
+ * The vehicle is DAMAGEABLE (the steed HP pool, adapted): acquiring bakes
  * `hp.base` 60 and `damageThreshold` 10 as DATA, and the module derives
  * max/current/modifier (`currentHp` from the builder — a fixed stat block, so
  * no max-modifier and no manual setters; the top-bar HP chip becomes a
- * usedMax pool). The station's +ADD carries damage and repair recorders (the
+ * usedMax pool). The vehicle's +ADD carries damage and repair recorders (the
  * steed recorder idiom: ONE keyed `untilLongRest` effect holding the RUNNING
  * total, chip showing the live value; repairs cap at the net missing HP).
  * The threshold rides the shared factory's GENERIC gate (threshold model v2,
@@ -73,47 +76,48 @@ import {
  * (the GM correction), and the explanation lives on the damage offer's DETAIL
  * — not on standing notices, because nothing else behaves differently. Damage
  * that empties the pool ALSO writes a permanent `destroyed` wreck (the steed
- * lethal-check placement, but NO auto-unboard — the board persists so the
+ * lethal-check placement, but NO auto-abandon — the acquire persists so the
  * wreck stays inspectable; the destroyed NOTICE says what that means). The HP
- * records and the wreck join the board lifecycle like
+ * records and the wreck join the acquire lifecycle like
  * every other record.
  *
  * The stat block's "AC 21 (19 while motionless)" is a MODE the player
  * records (v2 — v1's annotation state chip was abandoned; see the plan): the
- * BOARD offer carries a [Moving | Motionless] segmented secondary control
- * (the steed creature-type precedent) whose selection the board effect bakes
- * as the 0/1 `acMotionless` fact — NO flat `ac.value` bake any more. AC is
- * DERIVED as `ac.effective` (19 motionless, else 21, gated on active), a
- * deliberately NEW name: legacy persisted boards bake flat ac.value, and
+ * ACQUIRE offer carries a [Moving | Motionless] segmented secondary control
+ * (the steed creature-type precedent) whose selection the acquire effect
+ * bakes as the 0/1 `acMotionless` fact — NO flat `ac.value` bake any more. AC
+ * is DERIVED as `ac.effective` (19 motionless, else 21, gated on active), a
+ * deliberately NEW name: legacy persisted acquires bake flat ac.value, and
  * nothing may derive that name or every evaluation of such a character would
  * two-writer-conflict (the pass-3 hp.max lesson) — the stale legacy bake is
- * simply inert, the legacy board derives 21, and there is NO load-seam
- * migration. The station's +ADD carries an always-present (while boarded)
+ * simply inert, the legacy acquire derives 21, and there is NO load-seam
+ * migration. The vehicle's +ADD carries an always-present (while acquired)
  * "AC Mode" record offer (the occupancy intent class, applied immediately)
  * with the same control pre-showing the CURRENT mode; its ONE permanent keyed
  * effect stores the mode as the DISTINCT `acMotionless.recorded` fact, which
  * the resolved-mode derive prefers when present — the engine sum-combines two
  * live effects writing one fact, so a record writing `acMotionless` itself
- * could never flip a Motionless board back to Moving (1 + 0 still reads 1).
- * The mode key joins the board lifecycle like every other record: a re-board
- * resets to the fresh board SELECTION.
+ * could never flip a Motionless acquire back to Moving (1 + 0 still reads 1).
+ * The mode key joins the acquire lifecycle like every other record: a
+ * re-acquire resets to the fresh acquire SELECTION.
  *
  * Deliberately out of scope this pass (later passes on the plan): the Helm /
- * Harpoon Flinger stations and the Juke reaction, movement economy, damage
+ * Harpoon Flinger vehicles and the Juke reaction, movement economy, damage
  * immunities and the mishap threshold as MECHANICS (they are detail text
  * only — the recorder never refuses fire/poison/psychic and no mishap is
  * modelled), any prone attack/movement or incapacitated mechanics beyond the
- * record, and any legality check on boarding (multiple boardings are
- * illegal-but-possible; the keyed effect keeps the facts single and
- * diagnostics are deferred).
+ * record, and MULTIPLE vehicles per character (acquiring while a Tormentor is
+ * already present is ILLEGAL — one vehicle per character, for now; a later
+ * pass lifts the already-have leg when a second vehicle can exist beside the
+ * first).
  */
 
 const ID = 'tormentor';
 const T = `rule.${ID}`;
-/** The seat's subject id: the seg-button view, the +ADD stripe, the effect chip. */
-const SUBJECT = 'tormentor-damage-control';
+/** The vehicle's subject id: the seg-button view, the +ADD stripe, the effect chip. */
+const SUBJECT = 'tormentor';
 /** Every fact this module bakes lives under one stem. */
-const F = 'companion.tormentorDamageControl';
+const F = 'companion.tormentor';
 
 /** The occupancy record's effect id and replacement key (ONE live record). */
 const OCCUPANCY_EFFECT_ID = 'effect-tormentor-occupancy';
@@ -150,9 +154,16 @@ const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
 const NOT_PRONE = `${T}.flip-upright.not_prone`;
 
 /**
- * Every station record that must die with the board. The board effect declares
+ * The acquire offer's single legality leg (the knocked-prone already-prone
+ * idiom): ONE vehicle per character, for now — acquiring while a Tormentor is
+ * already present is ILLEGAL, never hidden.
+ */
+const ALREADY_HAVE = `${T}.acquire.already_have`;
+
+/**
+ * Every vehicle record that must die with the acquire. The acquire effect declares
  * them as `dependents` (so a RAW mount-chip removal cascades), and the
- * board/de-board applies advertise empty same-key evictions beside their
+ * acquire/abandon applies advertise empty same-key evictions beside their
  * replacement — a keyed replacement alone does not fire `dependents` (the
  * steed cast/dismiss child-eviction pattern).
  */
@@ -165,12 +176,12 @@ const CHILD_KEYS = [
   DESTROYED_KEY
 ] as const;
 
-/** The stat block boarding bakes. HP bakes its BASE (the pool derives from
+/** The stat block acquiring bakes. HP bakes its BASE (the pool derives from
  * it — the steed shape) plus the damage threshold as DATA the recorder gates
- * on; everything else is display-only. AC bakes NO value at all — the board
+ * on; everything else is display-only. AC bakes NO value at all — the acquire
  * selection's MODE fact is the bake, and `ac.effective` derives the number
  * (see the derive below for why the flat `ac.value` name is retired). */
-const BOARD_STATE: Record<string, number> = {
+const ACQUIRE_STATE: Record<string, number> = {
   [`${F}.active`]: 1,
   [`${F}.hp.base`]: 60,
   [`${F}.damageThreshold`]: 10,
@@ -207,65 +218,65 @@ const modeFrom = (selections: Record<string, unknown>): number =>
   typeof selections.mode === 'number' ? selections.mode : 0;
 
 /**
- * The board effect (permanent, keyed so a re-board or de-board REPLACES rather
- * than stacks). Exported so tests and later passes can seed an already-boarded
+ * The acquire effect (permanent, keyed so a re-acquire or abandon REPLACES rather
+ * than stacks). Exported so tests and later passes can seed an already-acquired
  * vehicle without driving the offer. `display` opts it onto the strip as a
  * MOUNT chip under its subject, and the `detailKey` is what the strip's flip
  * path reads — the first mount chip that flips to a stat-block detail (the
- * steed's never carried one). Every station record (occupancy, the AC mode,
+ * steed's never carried one). Every vehicle record (occupancy, the AC mode,
  * prone, the HP totals, the destroyed wreck) is a DEPENDENT, so raw mount-chip
- * removal (playStore's `removeEffect`) evicts them with the board instead of
- * stranding a record under a de-boarded vehicle (the steed
+ * removal (playStore's `removeEffect`) evicts them with the acquire instead of
+ * stranding a record under an abandoned vehicle (the steed
  * mount/STEED_CHILD_EFFECTS pattern).
  *
- * `acMotionless` is the MODE the board-offer segmented control selected (0
+ * `acMotionless` is the MODE the acquire-offer segmented control selected (0
  * Moving — the default — 1 Motionless): the selection flows into the effect
  * state exactly the way the creature-type choice flows into the steed effect.
- * A LEGACY persisted board (pre-AC-mode) baked flat `ac.value` and no mode
+ * A LEGACY persisted acquire (pre-AC-mode) baked flat `ac.value` and no mode
  * fact; that shape still evaluates (the mode reads as Moving) and its stale
  * `ac.value` is inert — nothing derives that name any more.
  */
-export function tormentorBoardEffect(acMotionless = 0): EffectInstance {
+export function tormentorAcquireEffect(acMotionless = 0): EffectInstance {
   return {
-    id: 'effect-tormentor-damage-control',
-    key: 'tormentor-damage-control',
-    state: { ...BOARD_STATE, [`${F}.acMotionless`]: acMotionless },
+    id: 'effect-tormentor-acquire',
+    key: 'tormentor-acquire',
+    state: { ...ACQUIRE_STATE, [`${F}.acMotionless`]: acMotionless },
     dependents: [...CHILD_KEYS],
     display: {
       name: `${T}.effect.name`,
       section: 'mount',
       subject: SUBJECT,
-      detailKey: 'vehicle/tormentor-damage-control'
+      detailKey: 'vehicle/tormentor'
     },
     expiry: { kind: 'permanent' }
   };
 }
 
 /**
- * The de-board marker: same key as the board effect, no state, no display —
- * purely a replacement that evicts the board effect (and every fact it baked)
+ * The abandon marker: same key as the acquire effect, no state, no display —
+ * purely a replacement that evicts the acquire effect (and every fact it baked)
  * the moment it is newest. Hidden and permanent so nothing revives the stat
- * block until a fresh board replaces the marker in turn. The id deliberately
- * does not extend the board effect's id: effect-id matching treats
+ * block until a fresh acquire replaces the marker in turn. The id deliberately
+ * does not extend the acquire effect's id: effect-id matching treats
  * `effect-x-…` as the base `effect-x`, which would blur the two.
  */
-function tormentorDeboardEffect(): EffectInstance {
+function tormentorAbandonEffect(): EffectInstance {
   return {
-    id: 'effect-deboard-tormentor-damage-control',
-    key: 'tormentor-damage-control',
+    id: 'effect-abandon-tormentor',
+    key: 'tormentor-acquire',
     expiry: { kind: 'permanent' }
   };
 }
 
 /**
- * Eviction of EVERY station record (an empty same-key effect each — newest
- * wins, so the stored occupancy vanishes and `used` falls back to the board
- * default, the AC-mode record clears and the mode falls back to the board
+ * Eviction of EVERY vehicle record (an empty same-key effect each — newest
+ * wins, so the stored occupancy vanishes and `used` falls back to the acquire
+ * default, the AC-mode record clears and the mode falls back to the acquire
  * bake, the prone record clears, the HP running totals and the destroyed
- * wreck go). Advertised beside BOTH the board effect (a re-board starts
- * FRESH: the boarder counts, upright, whole, in the mode THIS row selected —
- * a new vehicle, not a persisted one) and the de-board marker (no record
- * outlives the board that justifies it) — the steed cast/dismiss
+ * wreck go). Advertised beside BOTH the acquire effect (a re-acquire starts
+ * FRESH: the acquirer counts, upright, whole, in the mode THIS row selected —
+ * a new vehicle, not a persisted one) and the abandon marker (no record
+ * outlives the acquire that justifies it) — the steed cast/dismiss
  * child-eviction pattern: a keyed replacement alone does not fire
  * `dependents`.
  */
@@ -280,13 +291,13 @@ function evictChildEffects(): EffectInstance[] {
  * immune to Prone (its condition-immunity list omits it), and — unlike a
  * creature — it cannot right itself: flipped on its side it stays there and
  * can do nothing until something flips it upright. The fact is NAMESPACED
- * (`companion.tormentorDamageControl.prone`) under its own key, NEVER the
+ * (`companion.tormentor.prone`) under its own key, NEVER the
  * player-global `condition.prone`: conditions are player-global today, and
  * the builder's `proneEffect()` would flip the PLAYER's attack disadvantage
  * flags, notice and movement legs — a prone vehicle is not a prone rider.
  * PERMANENT, unlike the player's `untilShortRest` prone: no rest clears it,
- * because a rest does not right a vehicle — only Flip Upright (or the board
- * lifecycle) does. `display` files the chip under the station view like the
+ * because a rest does not right a vehicle — only Flip Upright (or the acquire
+ * lifecycle) does. `display` files the chip under the vehicle view like the
  * occupancy record's.
  */
 function tormentorProneEffect(): EffectInstance {
@@ -299,7 +310,7 @@ function tormentorProneEffect(): EffectInstance {
       section: 'mount',
       subject: SUBJECT,
       // The chip flips to the vehicle's own prone detail — the same path the
-      // board chip uses (the player's condition/prone text would promise a
+      // acquire chip uses (the player's condition/prone text would promise a
       // creature's crawling and self-righting).
       detailKey: 'vehicle/tormentor-prone'
     },
@@ -310,8 +321,8 @@ function tormentorProneEffect(): EffectInstance {
 /**
  * Eviction of the prone record — the same empty same-key idiom the player's
  * Get Up uses, advertised three ways: beside the flip-upright offer (the
- * clear), the board effect (a re-board starts upright) and the de-board
- * marker (the record never outlives the board).
+ * clear), the acquire effect (a re-acquire starts upright) and the abandon
+ * marker (the record never outlives the acquire).
  */
 function evictProneEffect(): EffectInstance {
   return { id: `evict-${PRONE_KEY}`, key: PRONE_KEY, expiry: { kind: 'permanent' } };
@@ -321,12 +332,12 @@ function evictProneEffect(): EffectInstance {
  * The destroyed wreck, written by the damage recorder the moment recorded
  * damage brings the pool to 0 (the steed's lethal-check placement — but a
  * steed RETIRES at 0 HP while a vehicle becomes a burning wreck it can still
- * inspect: no auto-unboard, the board effect stays live beside this). Its own
+ * inspect: no auto-abandon, the acquire effect stays live beside this). Its own
  * permanent key, so the untilLongRest HP records age out on a rest without
  * touching it — a rest restores the pool, it never un-burns a war machine —
- * and the board lifecycle (dependents + the explicit evictions) is the only
- * thing that clears it: re-boarding is a fresh vehicle. `display` files the
- * chip under the station view like every other record.
+ * and the acquire lifecycle (dependents + the explicit evictions) is the only
+ * thing that clears it: re-acquiring is a fresh vehicle. `display` files the
+ * chip under the vehicle view like every other record.
  */
 function tormentorDestroyedEffect(): EffectInstance {
   return {
@@ -342,12 +353,12 @@ function tormentorDestroyedEffect(): EffectInstance {
   };
 }
 
-/** The structural gate every STATION action shares: the board effect is live. */
-const boarded = (f: FactReader): boolean => f.num(`${F}.active`) > 0;
+/** The structural gate every VEHICLE action shares: the acquire effect is live. */
+const acquired = (f: FactReader): boolean => f.num(`${F}.active`) > 0;
 
 /**
  * The subject's top-bar and resource entries, gated on `active` (present only
- * while the board effect lives — removing the mount chip takes every fact with
+ * while the acquire effect lives — removing the mount chip takes every fact with
  * it).
  */
 const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
@@ -355,27 +366,27 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     // HP is a POOL now (the damageable pass): the steed's chip shape —
     // usedMax renders "remaining/total", so it reads "45/60" and drops with
     // recorded damage. The gate stays `active` (a baked fact, absent when the
-    // board goes), not the derived hp.max (which settles to 0, never absent).
+    // acquire goes), not the derived hp.max (which settles to 0, never absent).
     subject: SUBJECT,
     panel: 'topBar',
     gate: `${F}.active`,
     entry: {
       type: 'usedMax',
-      label: 'play.stats.tormentor-damage-control.hp',
+      label: 'play.stats.tormentor.hp',
       total: `${F}.hp.max`,
       remaining: `${F}.hp.current`
     }
   },
   {
     // The DERIVED AC (the mode resolve above): 21 moving, 19 motionless — the
-    // flat ac.value read is retired with the bake (a legacy board's stale
+    // flat ac.value read is retired with the bake (a legacy acquire's stale
     // ac.value must never reach the chip).
     subject: SUBJECT,
     panel: 'topBar',
     gate: `${F}.active`,
     entry: {
       type: 'value',
-      label: 'play.stats.tormentor-damage-control.ac',
+      label: 'play.stats.tormentor.ac',
       fact: `${F}.ac.effective`
     }
   },
@@ -385,7 +396,7 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     gate: `${F}.active`,
     entry: {
       type: 'value',
-      label: 'play.stats.tormentor-damage-control.speed',
+      label: 'play.stats.tormentor.speed',
       fact: `${F}.speed`
     }
   },
@@ -396,7 +407,7 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     gate: `${F}.active`,
     entry: {
       type: 'value',
-      label: 'play.stats.tormentor-damage-control.cargo',
+      label: 'play.stats.tormentor.cargo',
       fact: `${F}.cargo`
     }
   },
@@ -415,7 +426,7 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
       }))
     }
   },
-  // ── Resources (the ledger's station view) ──
+  // ── Resources (the ledger's vehicle view) ──
   {
     // The one live resource: Creature Capacity. `usedMax` renders
     // "remaining/total"; for capacity the meaningful number is OCCUPANTS, so
@@ -426,7 +437,7 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     gate: `${F}.active`,
     entry: {
       type: 'usedMax',
-      label: 'play.stats.tormentor-damage-control.creatureCapacity',
+      label: 'play.stats.tormentor.creatureCapacity',
       total: `${F}.creatureCapacity.max`,
       remaining: `${F}.creatureCapacity.used`
     }
@@ -434,10 +445,10 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
 ];
 
 /**
- * The STATION's damage/repair recorders, on the shared factory (the player's
- * and the steed's ride the same code path): free, boarded, an HP record (the
+ * The VEHICLE's damage/repair recorders, on the shared factory (the player's
+ * and the steed's ride the same code path): free, acquired, an HP record (the
  * HEALTH bucket, like the steed's and the player's — not a condition), keyed
- * running totals the board/de-board lifecycle evicts by key. The stat block's
+ * running totals the acquire/abandon lifecycle evicts by key. The stat block's
  * damage threshold is a BAKED FACT the factory consults (threshold model v2 —
  * sub-threshold damage is LEGAL to attempt: the GM tells the crew an amount
  * and they record it): the damage offer carries the factory's [Use Threshold |
@@ -457,7 +468,7 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
  */
 const HP_RECORDERS = hpRecorders({
   idStem: 'record-tormentor',
-  when: boarded,
+  when: acquired,
   subject: SUBJECT,
   facts: {
     max: `${F}.hp.max`,
@@ -499,12 +510,12 @@ const vehicleTormentor: RuleModule = {
   panels: TORMENTOR_PANELS,
   derive: () => [
     {
-      // Occupancy used: the board default is 1 (the boarder counts), the
+      // Occupancy used: the acquire default is 1 (the acquirer counts), the
       // occupancy record overrides it, and the READ clamps to 0..max — the
       // slider's own bound is UI-only, so a stale or foreign stored value can
       // never read past the stat block. `has` (not num) is what lets a RECORDED
-      // 0 (the vehicle emptied) differ from no record at all. Unboarded, the
-      // contribution reads 0 (the board default is not a free occupant).
+      // 0 (the vehicle emptied) differ from no record at all. Unacquired, the
+      // contribution reads 0 (the acquire default is not a free occupant).
       fact: `${F}.creatureCapacity.used`,
       value: (f) => {
         if (f.num(`${F}.active`) === 0) return 0;
@@ -521,16 +532,16 @@ const vehicleTormentor: RuleModule = {
     // net modifier down (floored at 0, never over the max — `currentHp` is the
     // player's own formula, shared so the two can never disagree), and the
     // modifier reads heals recorded − damage recorded. All gated on `active`:
-    // unboarded the pool settles to 0 rather than vanishing (the contributions
+    // unacquired the pool settles to 0 rather than vanishing (the contributions
     // stay registered), which is why the panel gates key on `active`.
     {
       fact: `${F}.hp.max`,
-      value: (f) => (boarded(f) ? f.num(`${F}.hp.base`) : 0)
+      value: (f) => (acquired(f) ? f.num(`${F}.hp.base`) : 0)
     },
     {
       fact: `${F}.hp.current`,
       value: (f) =>
-        boarded(f) ? currentHp(f.num(`${F}.hp.max`), f.num(`${F}.hp.modifier.current`)) : 0
+        acquired(f) ? currentHp(f.num(`${F}.hp.max`), f.num(`${F}.hp.modifier.current`)) : 0
     },
     {
       // `sum` like the steed's, so later writers (a repair-kit-style grant, a
@@ -539,11 +550,11 @@ const vehicleTormentor: RuleModule = {
       combine: 'sum',
       value: (f) => f.num(`${F}.hp.healRecorded`) - f.num(`${F}.hp.damageRecorded`)
     },
-    // The RESOLVED AC mode: the station record when one stands, else the board
+    // The RESOLVED AC mode: the vehicle record when one stands, else the acquire
     // bake — the occupancy has-preference idiom, and deliberately a DISTINCT
     // recorded fact: the engine sum-combines two live effects writing one
     // fact, so a mode record writing `acMotionless` itself could never flip a
-    // Motionless board back to Moving (1 + 0 still reads 1). A LEGACY board
+    // Motionless acquire back to Moving (1 + 0 still reads 1). A LEGACY acquire
     // (no acMotionless baked) resolves to Moving here.
     {
       fact: `${F}.acMotionless.current`,
@@ -555,56 +566,79 @@ const vehicleTormentor: RuleModule = {
           : 0
     },
     // The stat block's "AC 21 (19 while motionless)" as a DERIVED fact under a
-    // deliberately NEW name: legacy persisted boards bake flat `ac.value`, and
+    // deliberately NEW name: legacy persisted acquires bake flat `ac.value`, and
     // a derive on the same name would two-writer-conflict on every evaluation
     // of such a character (the pass-3 hp.max lesson). The stale legacy bake is
     // inert — nothing derives or reads `ac.value` any more. Gated on `active`
-    // like the pool, so an unboarded vehicle reads 0 and the panel gate holds
+    // like the pool, so an unacquired vehicle reads 0 and the panel gate holds
     // the chip back.
     {
       fact: `${F}.ac.effective`,
-      value: (f) => (boarded(f) ? (f.num(`${F}.acMotionless.current`) > 0 ? 19 : 21) : 0)
+      value: (f) => (acquired(f) ? (f.num(`${F}.acMotionless.current`) > 0 ? 19 : 21) : 0)
     }
   ],
   offer: () => [
     {
-      // The PLAYER-side board action: ungated (the offer exists whenever the
-      // group is loaded, for every character) and carrying NO station subject,
-      // so it files under the player's +ADD rather than a station panel that
-      // cannot exist before the board effect does. No `when`, no `legalWhen`
-      // (see the scope note above). The segmented secondary control picks the
-      // AC MODE the fresh board starts in (the steed creature-type precedent:
-      // the selection flows into the board effect's state).
-      id: 'board-tormentor',
+      // The PLAYER-side acquire action: ungated (the offer exists whenever the
+      // group is loaded, for every character) and carrying NO vehicle subject,
+      // so it files under the player's +ADD rather than a vehicle panel that
+      // cannot exist before the acquire effect does. Acquiring is EQUIPPING a
+      // vehicle: the BUILD family's EQUIP verb in the new 'vehicle' sub-bucket
+      // (labels in both locales), not the HANDLE gear bucket the records use.
+      // No `when` — but ONE legality leg: acquiring while a Tormentor is
+      // already present is ILLEGAL (one vehicle per character, for now), never
+      // hidden (the knocked-prone already-prone idiom — the engine's
+      // illegal-but-visible contract: the offer stays visible and applicable
+      // with its diagnostic, and a planned-anyway row still executes as the one
+      // keyed replacement). The segmented secondary control picks the AC MODE
+      // the fresh acquire starts in (the steed creature-type precedent: the
+      // selection flows into the acquire effect's state).
+      id: 'acquire-tormentor',
+      legalWhen: [
+        {
+          // Illegal while the vehicle is already present (the presence fact
+          // the acquire effect bakes) — one per character, for now.
+          condition: (f: FactReader): boolean => f.num(`${F}.active`) === 0,
+          diagnostics: [{ code: ALREADY_HAVE, severity: 'error' }]
+        }
+      ],
       ui: {
         section: 'free',
-        name: `${T}.board.name`,
-        description: `${T}.board.description`,
-        detailKey: 'vehicle/tormentor-damage-control',
+        name: `${T}.acquire.name`,
+        description: `${T}.acquire.description`,
+        detailKey: 'vehicle/tormentor',
         secondaryControl: AC_MODE_CONTROL,
-        intents: { HANDLE: 'gear' },
+        intents: { EQUIP: 'vehicle' },
         actionCost: []
       },
       vars: { mode: { capture: true, default: { number: 0 } } },
       // The evicts beside the replacement: a keyed replacement alone does not
-      // fire dependents, so a re-board resets occupancy to the board default
-      // (the boarder counts), starts the vehicle upright AND whole — no damage
+      // fire dependents, so a re-acquire resets occupancy to the acquire default
+      // (the acquirer counts), starts the vehicle upright AND whole — no damage
       // banked, no wreck — and resets the AC MODE to this row's selection,
       // explicitly (the steed recast/child-eviction pattern).
-      apply: (_f, selections): ActionResult => ({
-        advertise: [tormentorBoardEffect(modeFrom(selections)), ...evictChildEffects()]
-      })
+      apply: (f: FactReader, selections): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostics from the fold — the re-acquire still executes as
+        // the one keyed replacement (the facts stay single; nothing stacks).
+        const diagnostics: Diagnostic[] = [];
+        if (f.num(`${F}.active`) > 0) diagnostics.push({ code: ALREADY_HAVE, severity: 'error' });
+        return {
+          advertise: [tormentorAcquireEffect(modeFrom(selections)), ...evictChildEffects()],
+          diagnostics
+        };
+      }
     },
     {
-      // The STATION's occupancy record: a station action in the station's +ADD
-      // (free, gated on the board) whose slider (0..the baked capacity, opening
+      // The VEHICLE's occupancy record: a vehicle action in the vehicle's +ADD
+      // (free, gated on the acquire) whose slider (0..the baked capacity, opening
       // at the current used) writes ONE permanent KEYED effect — the steed
       // HP-modifier semantics: the keyed effect IS the stored value, re-apply
       // replaces, removing the chip clears the modification. No legality gates:
       // occupancy past the capacity is illegal-but-possible (the derive clamps
-      // the read; diagnostics are deferred with boarding's).
+      // the read; diagnostics are deferred with acquiring's).
       id: 'set-tormentor-occupancy',
-      when: boarded,
+      when: acquired,
       ui: {
         section: 'free',
         subject: SUBJECT,
@@ -641,17 +675,17 @@ const vehicleTormentor: RuleModule = {
       })
     },
     {
-      // The STATION's AC-mode record: always present while boarded (a mode is
+      // The VEHICLE's AC-mode record: always present while acquired (a mode is
       // a fact, not a resource — no legality gates), free, in the occupancy
       // intent class, with the same [Moving | Motionless] segmented control the
-      // board offer carries — pre-showing the CURRENT mode, so the row opens on
+      // acquire offer carries — pre-showing the CURRENT mode, so the row opens on
       // the mode in force. Apply is IMMEDIATE (record-class): ONE permanent
       // KEYED effect storing the mode as the DISTINCT `acMotionless.recorded`
       // fact the resolved-mode derive prefers — re-applying replaces by key
-      // (never stacks), and the board lifecycle evicts it (a fresh board resets
-      // to the board selection).
+      // (never stacks), and the acquire lifecycle evicts it (a fresh acquire resets
+      // to the acquire selection).
       id: 'set-tormentor-ac-mode',
-      when: boarded,
+      when: acquired,
       ui: {
         section: 'free',
         subject: SUBJECT,
@@ -678,12 +712,12 @@ const vehicleTormentor: RuleModule = {
         ]
       })
     },
-    // The STATION's damage/repair recorders (see HP_RECORDERS above).
+    // The VEHICLE's damage/repair recorders (see HP_RECORDERS above).
     ...HP_RECORDERS,
     {
-      // The STATION's prone RECORDER: models the vehicle BEING knocked prone
+      // The VEHICLE's prone RECORDER: models the vehicle BEING knocked prone
       // (imposed by the outside world), free. The BOARD is the one structural
-      // gate (unboarded there is no vehicle to knock); the already-prone state
+      // gate (unacquired there is no vehicle to knock); the already-prone state
       // is a LEGALITY gate, never a `when` (the engine's illegal-but-visible
       // contract — plan.ts keeps illegal offers applicable with diagnostics
       // and a planned-anyway row still executes): while prone the offer stays
@@ -693,7 +727,7 @@ const vehicleTormentor: RuleModule = {
       // vehicle has no movement economy. State tracking only: no attack flags,
       // no movement legs, no incapacitated modelling this pass.
       id: 'knock-tormentor-prone',
-      when: boarded,
+      when: acquired,
       legalWhen: [
         {
           // Illegal while already prone (the state the record would write).
@@ -711,7 +745,7 @@ const vehicleTormentor: RuleModule = {
         detailKey: 'vehicle/tormentor-prone',
         // A vehicle CONDITION files like the PC's: record-prone's CONDITION
         // 'held' sub-bucket (#467 taxonomy — "Prone (both offers)"), not the
-        // HANDLE gear bucket the boarding offers use.
+        // HANDLE gear bucket the acquiring offers use.
         intents: { CONDITION: 'held' },
         actionCost: []
       },
@@ -725,7 +759,7 @@ const vehicleTormentor: RuleModule = {
     },
     {
       // The way a prone vehicle rights itself: it cannot — something else
-      // has to flip it upright. The board is again the one structural gate;
+      // has to flip it upright. The acquire is again the one structural gate;
       // NOT-prone is a legality gate (the get-up shape, the engine's
       // illegal-but-visible contract): while upright the offer stays visible
       // and applicable, flagged illegal with its not-prone diagnostic, and a
@@ -736,7 +770,7 @@ const vehicleTormentor: RuleModule = {
       // legality legs, prone-only is this gate; Speed-0 and half-Speed
       // affordability do not translate — a vehicle has no movement economy.
       id: 'flip-tormentor-upright',
-      when: boarded,
+      when: acquired,
       legalWhen: [
         {
           // Illegal while upright (nothing to flip).
@@ -752,7 +786,7 @@ const vehicleTormentor: RuleModule = {
         detailKey: 'vehicle/tormentor-prone',
         // The condition-END offer files with its condition ('held', like the
         // recorder) so both prone offers sit under the Conditions grouping in
-        // the station +ADD. The PLAYER's Get Up is a MOVE 'rise' offer because
+        // the vehicle +ADD. The PLAYER's Get Up is a MOVE 'rise' offer because
         // it spends movement; this free flip is not a movement action.
         intents: { CONDITION: 'held' },
         actionCost: []
@@ -766,42 +800,43 @@ const vehicleTormentor: RuleModule = {
       }
     },
     {
-      // The STATION-side way out: gated on the board (structurally — unboarded,
-      // the action does not exist at all), sitting under the station's +ADD
-      // panel so it appears exactly once boarding has made that panel
-      // available. Replaces the board effect by key (evicting every station
-      // record with it); no cost, no legality gates.
-      id: 'deboard-tormentor',
-      when: boarded,
+      // The VEHICLE-side way out: gated on the acquire (structurally —
+      // unacquired, the action does not exist at all), sitting under the
+      // vehicle's +ADD panel so it appears exactly once acquiring has made that
+      // panel available. Replaces the acquire effect by key (evicting every
+      // vehicle record with it); no cost, no legality gates. Files beside the
+      // acquire offer: EQUIP 'vehicle', the BUILD family.
+      id: 'abandon-tormentor',
+      when: acquired,
       ui: {
         section: 'free',
         subject: SUBJECT,
-        name: `${T}.deboard.name`,
-        description: `${T}.deboard.description`,
-        intents: { HANDLE: 'gear' },
+        name: `${T}.abandon.name`,
+        description: `${T}.abandon.description`,
+        intents: { EQUIP: 'vehicle' },
         actionCost: []
       },
       apply: (): ActionResult => ({
-        advertise: [tormentorDeboardEffect(), ...evictChildEffects()]
+        advertise: [tormentorAbandonEffect(), ...evictChildEffects()]
       })
     }
   ],
   // The Prone Deficiency trait, surfaced as a NOTICE while the vehicle is
   // PRONE (the Life-Bond annotate pattern gated on the condition — PC-prone
-  // parity: the condition triggers its notice, so boarded-but-upright carries
+  // parity: the condition triggers its notice, so acquired-but-upright carries
   // nothing). It is a condition the player must know BEFORE acting on the
   // vehicle's behalf: the Tormentor cannot right itself, so it stays prone
   // and can do nothing until something flips it upright. The gate is the
-  // prone fact alone — the record never outlives the board (the effect's
-  // dependents plus the explicit board/de-board evictions), so no separate
-  // boarded check is needed. Own wording (the Tormentor is not SRD);
+  // prone fact alone — the record never outlives the acquire (the effect's
+  // dependents plus the explicit acquire/abandon evictions), so no separate
+  // acquired check is needed. Own wording (the Tormentor is not SRD);
   // 'notice' == NOTICE_TARGET, a reserved label rule modules spell as a
   // literal (see condition-prone / find-steed).
   //
   // The DESTROYED wreck carries its own notice the same way: a state the crew
   // must know before acting on the vehicle's behalf (it can no longer act;
   // the way out is people, not repairs), gated on the destroyed fact alone —
-  // the wreck never outlives the board either. Distinct key from the prone
+  // the wreck never outlives the acquire either. Distinct key from the prone
   // notice, so a prone wreck (somehow) carries both.
   annotate: (f: FactReader): Annotation[] => {
     // No recorders' share: the below-threshold bounce is a per-row notice

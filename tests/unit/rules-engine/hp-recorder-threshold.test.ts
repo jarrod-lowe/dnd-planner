@@ -4,7 +4,7 @@ import type { EffectInstance, EngineInput, PlannedRef } from '$lib/rules-engine'
 import coreEvents from '$lib/rules-engine/rules/core-events';
 import hp from '$lib/rules-engine/rules/hp';
 import findSteed, { steedEffect } from '$lib/rules-engine/rules/find-steed';
-import tormentor, { tormentorBoardEffect } from '$lib/rules-engine/rules/vehicle-tormentor';
+import tormentor, { tormentorAcquireEffect } from '$lib/rules-engine/rules/vehicle-tormentor';
 import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
 
@@ -230,7 +230,7 @@ describe('steed record-damage adapts to a seeded companion.steed.damageThreshold
 describe('the vehicle bounces on its baked threshold (the first real caller)', () => {
   const boarded = (): EngineInput => ({
     modules: [tormentor],
-    committed: [tormentorBoardEffect()]
+    committed: [tormentorAcquireEffect()]
   });
 
   it('sub-threshold Use-mode: no record, no effect — the vehicle-worded notice on the row', () => {
@@ -239,7 +239,7 @@ describe('the vehicle bounces on its baked threshold (the first real caller)', (
       planned: [plan('d1', 'record-tormentor-damage', { amount: 9 })]
     });
     expect(out.effects).toHaveLength(0);
-    expect(out.facts['companion.tormentorDamageControl.hp.current']).toBe(60);
+    expect(out.facts['companion.tormentor.hp.current']).toBe(60);
     expect(out.planDiagnostics['d1']).toEqual([{ code: VEHICLE_BELOW, severity: 'notice' }]);
     expect(out.plannedOffers['d1']!.legal).toBe(true);
     expect(out.status.legal).toBe(true);
@@ -251,8 +251,8 @@ describe('the vehicle bounces on its baked threshold (the first real caller)', (
       ...boarded(),
       planned: [plan('d1', 'record-tormentor-damage', { amount: 9, thresholdMode: 1 })]
     });
-    expect(out.facts['companion.tormentorDamageControl.hp.damageRecorded']).toBe(9);
-    expect(out.facts['companion.tormentorDamageControl.hp.current']).toBe(51);
+    expect(out.facts['companion.tormentor.hp.damageRecorded']).toBe(9);
+    expect(out.facts['companion.tormentor.hp.current']).toBe(51);
     expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
     expect(out.annotations.some((a) => a.key === VEHICLE_BELOW)).toBe(false);
   });
@@ -288,7 +288,7 @@ describe('the segmented control is generic factory data on every damage offer', 
       (o) => o.id === 'record-tormentor-damage'
     )!;
     expect((damage.ui as Record<string, unknown>).secondaryControl).toEqual(
-      THRESHOLD_CONTROL('companion.tormentorDamageControl.damageThreshold')
+      THRESHOLD_CONTROL('companion.tormentor.damageThreshold')
     );
   });
 });

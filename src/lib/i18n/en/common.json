@@ -452,15 +452,16 @@
     },
     "tormentor": {
       "name": "Tormentor",
-      "keywords": "vehicle tormentor war machine crew station board mount ride",
-      "description": "The Tormentor war vehicle and its crew stations",
-      "board": {
-        "name": "Board the Tormentor",
-        "description": "Take the damage-control station on the Tormentor"
+      "keywords": "vehicle tormentor war machine acquire abandon mount ride",
+      "description": "The Tormentor war vehicle, acquired and abandoned as one vehicle",
+      "acquire": {
+        "name": "Acquire Tormentor",
+        "description": "Acquire the Tormentor and carry it as your vehicle",
+        "already_have": "You already have a Tormentor"
       },
-      "deboard": {
-        "name": "De-board the Tormentor",
-        "description": "Leave the damage-control station"
+      "abandon": {
+        "name": "Abandon Tormentor",
+        "description": "Abandon the vehicle and clear its records"
       },
       "occupancy": {
         "name": "Set Occupancy",
@@ -494,7 +495,7 @@
         "not_prone": "The Tormentor is not prone — there is nothing to flip upright"
       },
       "effect": {
-        "name": "Tormentor (Damage Control)"
+        "name": "Tormentor"
       },
       "occupancy-effect": {
         "name": "Occupancy {{score}}"
@@ -517,7 +518,7 @@
       "notice": "Prone Deficiency",
       "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright.",
       "destroyed-notice": "Tormentor Destroyed",
-      "destroyed-notice.body": "The Tormentor is destroyed — a burning wreck. It can no longer act; de-board when the crew scrambles."
+      "destroyed-notice.body": "The Tormentor is destroyed — a burning wreck. It can no longer act; abandon it when the crew scrambles."
     },
     "dnd-5e-2024": {
       "action-economy": {},
@@ -1747,7 +1748,7 @@
         "fellGlare": "Fell Glare",
         "movement": "Move"
       },
-      "tormentor-damage-control": {
+      "tormentor": {
         "hp": "HP",
         "ac": "AC",
         "speed": "SPD",
@@ -2071,14 +2072,14 @@
           "feyStep": "Fey",
           "fellGlare": "Glare"
         },
-        "tormentor-damage-control": {
+        "tormentor": {
           "creatureCapacity": "Creatures"
         }
       }
     },
     "companion": {
       "steed": "🐴 Steed",
-      "tormentor-damage-control": "🛞 Tormentor (Damage Control)"
+      "tormentor": "🛞 Tormentor"
     },
     "topBar": {
       "hp": "HP",
@@ -2221,14 +2222,15 @@
       "EQUIP": {
         "weapons": "Weapons",
         "armor": "Armor",
-        "loadout": "Loadout"
+        "loadout": "Loadout",
+        "vehicle": "Vehicles"
       }
     },
     "addRow": {
       "title": "Add Action",
       "label": "+ ADD",
       "steedSublabel": "Steed",
-      "tormentor-damage-controlSublabel": "Tormentor (Damage Control)",
+      "tormentorSublabel": "Tormentor",
       "planGroup": "plan →",
       "recordGroup": "record →",
       "buildGroup": "build →",

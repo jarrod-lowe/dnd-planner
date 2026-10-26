@@ -17,11 +17,11 @@ ruleGroups:
   - vehicles/tormentor
 steps:
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       assert:
-        # The threshold is data on the board effect, not code in the module.
+        # The threshold is data on the acquire effect, not code in the module.
         facts:
-          companion.tormentorDamageControl.damageThreshold: 10
+          companion.tormentor.damageThreshold: 10
   # The damage offer carries the threshold-mode segmented control, gated on the
   # baked fact (generic factory data — the player/steed scenarios pin theirs).
   - evaluate:
@@ -45,7 +45,7 @@ steps:
                     label: planner.record.threshold.ignore
                 enabled:
                   condition:
-                    fact: companion.tormentorDamageControl.damageThreshold
+                    fact: companion.tormentor.damageThreshold
                     operator: greaterThan
                     value: 0
   # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
@@ -57,8 +57,8 @@ steps:
         thresholdMode: 1
       assert:
         facts:
-          companion.tormentorDamageControl.hp.damageRecorded: 9
-          companion.tormentorDamageControl.hp.current: 51
+          companion.tormentor.hp.damageRecorded: 9
+          companion.tormentor.hp.current: 51
         planErrors:
           - id: record-tormentor-damage
             index: 0
@@ -90,8 +90,8 @@ steps:
         facts:
           # 9 (committed ignore-mode) + 10 (the landing row): the bounced row
           # adds nothing.
-          companion.tormentorDamageControl.hp.damageRecorded: 19
-          companion.tormentorDamageControl.hp.current: 41
+          companion.tormentor.hp.damageRecorded: 19
+          companion.tormentor.hp.current: 41
         planErrors:
           - id: record-tormentor-damage
             index: 0
@@ -112,7 +112,7 @@ steps:
           notExists:
             - effect-tormentor-hp-bounce
         facts:
-          companion.tormentorDamageControl.hp.current: 41
+          companion.tormentor.hp.current: 41
   # A long rest clears the records.
   - endTurn:
       longRest: true
@@ -121,7 +121,7 @@ steps:
           notExists:
             - effect-tormentor-hp-damage
         facts:
-          companion.tormentorDamageControl.hp.current: 60
+          companion.tormentor.hp.current: 60
   # Above the threshold records in full too.
   - addOffer:
       id: record-tormentor-damage
@@ -129,5 +129,5 @@ steps:
         amount: 20
       assert:
         facts:
-          companion.tormentorDamageControl.hp.damageRecorded: 20
-          companion.tormentorDamageControl.hp.current: 40
+          companion.tormentor.hp.damageRecorded: 20
+          companion.tormentor.hp.current: 40

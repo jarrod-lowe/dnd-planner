@@ -1,75 +1,75 @@
 name: 'Tormentor (Damage Control) - Unboard'
 description: >-
-  De-boarding is a station-panel offer gated on the board: apply advertises a
-  keyed replacement (the steed dismiss pattern) that evicts the board effect,
-  so every baked fact clears at once and the station loses its surface once
-  the turn commits. Re-boarding bakes the stats afresh. Raw mount-chip
+  Abandoning is a vehicle-panel offer gated on the acquire: apply advertises a
+  keyed replacement (the steed dismiss pattern) that evicts the acquire effect,
+  so every baked fact clears at once and the vehicle loses its surface once
+  the turn commits. Re-acquiring bakes the stats afresh. Raw mount-chip
   removal stays as the override path — the same facts clear without the
   offer.
 ruleGroups:
   - vehicles/tormentor
 steps:
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
         facts:
-          companion.tormentorDamageControl.active: 1
-  # De-board: the keyed replacement evicts the board effect in the projection,
+          companion.tormentor.active: 1
+  # Abandon: the keyed replacement evicts the acquire effect in the projection,
   # so every baked fact reads 0 before the turn even commits.
   - addOffer:
-      id: deboard-tormentor
+      id: abandon-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.active: 0
-          companion.tormentorDamageControl.ac.effective: 0
-          companion.tormentorDamageControl.hp.max: 0
-          companion.tormentorDamageControl.speed: 0
-          companion.tormentorDamageControl.cargo: 0
-          companion.tormentorDamageControl.str: 0
-          companion.tormentorDamageControl.str.modifier: 0
+          companion.tormentor.active: 0
+          companion.tormentor.ac.effective: 0
+          companion.tormentor.hp.max: 0
+          companion.tormentor.speed: 0
+          companion.tormentor.cargo: 0
+          companion.tormentor.str: 0
+          companion.tormentor.str.modifier: 0
         planErrors:
-          - id: deboard-tormentor
+          - id: abandon-tormentor
             index: 0
             errors: []
-  # Commit: the board effect is gone for good, and the de-board gate closed.
+  # Commit: the acquire effect is gone for good, and the abandon gate closed.
   - endTurn:
       assert:
         effects:
           notExists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
         facts:
-          companion.tormentorDamageControl.active: 0
+          companion.tormentor.active: 0
         offers:
           exists:
-            - board-tormentor
+            - acquire-tormentor
           notExists:
-            - deboard-tormentor
-  # Re-boarding after de-boarding bakes the stats afresh.
+            - abandon-tormentor
+  # Re-acquiring after abandoning bakes the stats afresh.
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.active: 1
-          companion.tormentorDamageControl.ac.effective: 21
+          companion.tormentor.active: 1
+          companion.tormentor.ac.effective: 21
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
   # Override path: raw mount-chip removal still clears every fact.
   - removeEffect:
-      id: effect-tormentor-damage-control
+      id: effect-tormentor-acquire
       assert:
         effects:
           notExists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
         facts:
-          companion.tormentorDamageControl.active: 0
-          companion.tormentorDamageControl.ac.effective: 0
+          companion.tormentor.active: 0
+          companion.tormentor.ac.effective: 0
         offers:
           exists:
-            - board-tormentor
+            - acquire-tormentor

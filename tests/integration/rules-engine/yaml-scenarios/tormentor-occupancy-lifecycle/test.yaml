@@ -1,17 +1,17 @@
 name: 'Tormentor (Damage Control) - Occupancy Lifecycle'
 description: >-
-  The occupancy record never outlives the board that justifies it: a re-board
-  (keyed replacement of the board effect) evicts the occupancy effect with an
-  empty same-key marker so used resets to the board default of 1, and de-board
-  does the same while clearing every baked fact. Unboarded, the station's
+  The occupancy record never outlives the acquire that justifies it: a re-acquire
+  (keyed replacement of the acquire effect) evicts the occupancy effect with an
+  empty same-key marker so used resets to the acquire default of 1, and abandon
+  does the same while clearing every baked fact. Unacquired, the vehicle's
   occupancy offer is gone with the rest of the panel (structural gate on
   active). The raw mount-chip removal path declares the same eviction via the
-  board effect's dependents (unit-pinned, not assertible here).
+  acquire effect's dependents (unit-pinned, not assertible here).
 ruleGroups:
   - vehicles/tormentor
 steps:
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
   # Record a full vehicle: 4 of 4.
   - addOffer:
       id: set-tormentor-occupancy
@@ -19,33 +19,33 @@ steps:
         occupancy: 4
       assert:
         facts:
-          companion.tormentorDamageControl.creatureCapacity.used: 4
+          companion.tormentor.creatureCapacity.used: 4
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-occupancy
         facts:
-          companion.tormentorDamageControl.creatureCapacity.used: 4
-  # Re-boarding REPLACES the board effect and evicts the occupancy record with
-  # it: the boarder counts again, so used reads the fresh default of 1.
+          companion.tormentor.creatureCapacity.used: 4
+  # Re-acquiring REPLACES the acquire effect and evicts the occupancy record with
+  # it: the acquirer counts again, so used reads the fresh default of 1.
   - addOffer:
-      id: board-tormentor
+      id: acquire-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.used: 1
   - endTurn:
       assert:
         effects:
           exists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
           notExists:
             - effect-tormentor-occupancy
         facts:
-          companion.tormentorDamageControl.creatureCapacity.used: 1
-  # Occupy again, commit, then de-board: the keyed replacement clears every
-  # baked fact INCLUDING the occupancy record, and the station offer's gate
+          companion.tormentor.creatureCapacity.used: 1
+  # Occupy again, commit, then abandon: the keyed replacement clears every
+  # baked fact INCLUDING the occupancy record, and the vehicle offer's gate
   # closes with them.
   - addOffer:
       id: set-tormentor-occupancy
@@ -57,13 +57,13 @@ steps:
           exists:
             - effect-tormentor-occupancy
   - addOffer:
-      id: deboard-tormentor
+      id: abandon-tormentor
       assert:
         facts:
-          companion.tormentorDamageControl.active: 0
-          companion.tormentorDamageControl.creatureCapacity.max: 0
-          companion.tormentorDamageControl.creatureCapacity.used: 0
-          companion.tormentorDamageControl.creatureCapacity.occupancy: 0
+          companion.tormentor.active: 0
+          companion.tormentor.creatureCapacity.max: 0
+          companion.tormentor.creatureCapacity.used: 0
+          companion.tormentor.creatureCapacity.occupancy: 0
         offers:
           notExists:
             - set-tormentor-occupancy
@@ -71,12 +71,12 @@ steps:
       assert:
         effects:
           notExists:
-            - effect-tormentor-damage-control
+            - effect-tormentor-acquire
             - effect-tormentor-occupancy
         facts:
-          companion.tormentorDamageControl.creatureCapacity.used: 0
+          companion.tormentor.creatureCapacity.used: 0
         offers:
           exists:
-            - board-tormentor
+            - acquire-tormentor
           notExists:
             - set-tormentor-occupancy

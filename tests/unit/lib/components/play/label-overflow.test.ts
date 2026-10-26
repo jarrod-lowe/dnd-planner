@@ -412,7 +412,7 @@ describe('ticker action — measurement, timing, teardown', () => {
   });
 
   it('engages the tape only when the label overflows its clamp', () => {
-    const overflowing = tickerHost('Tormentor (Damage Control)');
+    const overflowing = tickerHost('Cargo Capacity (500 lb.)');
     stubMetrics(overflowing, 240, 96);
     ticker(overflowing);
     expect(overflowing.hasAttribute('data-ticker')).toBe(true);
@@ -434,14 +434,14 @@ describe('ticker action — measurement, timing, teardown', () => {
     ticker(short);
     expect(durationOf(short)).toBeCloseTo(8, 1);
 
-    const long = tickerHost('Tormentor (Damage Control) — pseudo-seat for generic actions');
+    const long = tickerHost('Cargo Capacity (500 lb.) — a stat-block line that runs long');
     stubMetrics(long, 480, 96);
     ticker(long);
     expect(durationOf(long)).toBeCloseTo(16, 1);
   });
 
   it('re-measures when the content resizes, and stands down when it now fits', () => {
-    const host = tickerHost('Tormentor (Damage Control)');
+    const host = tickerHost('Cargo Capacity (500 lb.)');
     stubMetrics(host, 240, 96);
     ticker(host);
     expect(host.hasAttribute('data-ticker')).toBe(true);
@@ -455,7 +455,7 @@ describe('ticker action — measurement, timing, teardown', () => {
   });
 
   it('disconnects its observer on destroy', () => {
-    const host = tickerHost('Tormentor (Damage Control)');
+    const host = tickerHost('Cargo Capacity (500 lb.)');
     stubMetrics(host, 240, 96);
     const action = ticker(host);
     action?.destroy?.();
@@ -473,9 +473,9 @@ const translations: Record<string, string> = {
   'play.companion.steed': 'Steed',
   // The long subject name PR 3 will render (emoji starter like "👤 You" /
   // "🐴 Steed").
-  'play.companion.tormentor-damage-control': '🛞 Tormentor (Damage Control)',
+  'play.companion.tormentor': '🛞 Tormentor',
   // The +ADD stripe's subject identifier (the same text a plan row carries).
-  'play.addRow.tormentor-damage-controlSublabel': 'Tormentor (Damage Control)',
+  'play.addRow.tormentorSublabel': 'Tormentor',
   'play.addRow.title': 'Add action',
   'play.addRow.label': '+ ADD',
   'play.quickSearch.trigger': 'Search options',
@@ -597,7 +597,7 @@ describe('label overflow — IntentTopBar keeps the full name accessible', () =>
         facts: {} as Facts,
         email: 'test@example.com',
         onLogout: vi.fn(),
-        availableSubjects: ['steed', 'tormentor-damage-control'],
+        availableSubjects: ['steed', 'tormentor'],
         onSwitchSubject: vi.fn()
       }
     });
@@ -606,9 +606,9 @@ describe('label overflow — IntentTopBar keeps the full name accessible', () =>
     const long = buttons[2];
     const line = long.querySelector('.ticker');
     expect(line).toBeTruthy();
-    assertSingleAnnounceableCopy(line as HTMLElement, '🛞 Tormentor (Damage Control)');
+    assertSingleAnnounceableCopy(line as HTMLElement, '🛞 Tormentor');
     // Hover still reveals the name without waiting for the tape.
-    expect(long.getAttribute('title')).toBe('🛞 Tormentor (Damage Control)');
+    expect(long.getAttribute('title')).toBe('🛞 Tormentor');
   });
 
   it('leaves the abilities chip without a tape — its width is structural', () => {
@@ -682,16 +682,16 @@ describe('label overflow — Ledger keeps the full name accessible', () => {
       props: {
         resourceEntries: [],
         facts: {} as Facts,
-        viewLabel: 'play.companion.tormentor-damage-control',
-        activeSubject: 'tormentor-damage-control'
+        viewLabel: 'play.companion.tormentor',
+        activeSubject: 'tormentor'
       }
     });
     const line = container.querySelector<HTMLElement>('.ledger__view-label');
     expect(line).toBeTruthy();
     expect(line?.classList.contains('ticker')).toBe(true);
-    assertSingleAnnounceableCopy(line!, '🛞 Tormentor (Damage Control)');
+    assertSingleAnnounceableCopy(line!, '🛞 Tormentor');
     // Hover still reveals the name without waiting for the tape.
-    expect(line?.getAttribute('title')).toBe('🛞 Tormentor (Damage Control)');
+    expect(line?.getAttribute('title')).toBe('🛞 Tormentor');
   });
 
   it('tickers the tray cells’ label line without making the cell scroll', () => {
@@ -744,14 +744,13 @@ describe('label overflow — the +ADD stripe sublabel wraps and centres', () => 
 
   it('gives the subject identifier the plan-row treatment: centred, wrapping', () => {
     // Round 3 (tablet feedback): the stripe's subject identifier is the same
-    // text a plan row carries under its verb ("Tormentor" / "(Damage
-    // Control)"), and the user asked for exactly that treatment — centred and
-    // line-broken after the name, an item in the column — NOT the clamp+tape
-    // every measurement-driven line gets. That means text-align: centre, wrap
-    // allowed (no nowrap), no clamp of its own, and a column whose horizontal
-    // padding matches the plan row's left column (spacing-xs, not spacing-sm)
-    // so "(Damage Control)" fits on the second line instead of folding to
-    // three ragged lines.
+    // text a plan row carries under its verb ("Tormentor"), and the user asked
+    // for exactly that treatment — centred and line-broken after the name, an
+    // item in the column — NOT the clamp+tape every measurement-driven line
+    // gets. That means text-align: centre, wrap allowed (no nowrap), no clamp
+    // of its own, and a column whose horizontal padding matches the plan row's
+    // left column (spacing-xs, not spacing-sm) so a second line fits instead
+    // of folding to three ragged lines.
     expect(decl(ADD_ROW, '.add-row-picker__stripe-sublabel', 'text-align')).toBe('center');
     const sublabel = rule(ADD_ROW, '.add-row-picker__stripe-sublabel');
     expect(sublabel.decls, 'wraps — no nowrap').not.toMatch(/(?:^|;)\s*white-space:/);
@@ -767,14 +766,14 @@ describe('label overflow — the +ADD stripe sublabel wraps and centres', () => 
       props: {
         entries: [],
         onAddStep: vi.fn(),
-        sublabel: 'play.addRow.tormentor-damage-controlSublabel'
+        sublabel: 'play.addRow.tormentorSublabel'
       }
     });
     const stripe = container.querySelector('.add-row-picker__stripe');
     expect(stripe).toBeTruthy();
     const sublabel = stripe!.querySelector('.add-row-picker__stripe-sublabel');
     expect(sublabel).toBeTruthy();
-    expect(sublabel!.textContent).toBe('Tormentor (Damage Control)');
+    expect(sublabel!.textContent).toBe('Tormentor');
     // Not a clamp, so not a tape: no viewport, no aria-hidden duplicate. The
     // full name is the visible text; the stripe label above carries the
     // aria-hidden, so the sublabel doubles nothing.

@@ -8,25 +8,25 @@ import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
 
 /**
- * Tormentor — the rule group owning the whole VEHICLE and every seat it has so
- * far (seats change during play, so they are not separate groups). Only the
- * Damage Control pseudo-seat exists yet, as its own SUBJECT
- * (`tormentor-damage-control`): boarding is a PLAYER action (an ungated
- * free-section offer with NO station subject) whose apply advertises one
+ * Tormentor — the rule group owning the whole VEHICLE (the one subject it has
+ * so far; later stations join this same group as their own subjects). Bringing
+ * the vehicle in is ACQUIRING it — equipping a vehicle, not manning a station
+ * (the seat fiction is retired): acquiring is a PLAYER action (an ungated
+ * free-section offer with NO vehicle subject) whose apply advertises one
  * permanent KEYED effect baking the display-only stat block into
- * `companion.tormentorDamageControl.*` facts. Having boarded makes the
- * STATION's +ADD panel available: the de-board offer carries the station
- * subject and replaces the board effect by key (the steed dismiss pattern).
- * The effect display carries `section: 'mount'` plus a `detailKey` — the first
- * mount chip that FLIPS to a stat-block detail — and the module declares its
- * subject's top-bar entries as data (`panels`), so the vehicle surfaces
- * without any play-layer change.
+ * `companion.tormentor.*` facts. Acquiring makes the VEHICLE's +ADD panel
+ * available: the abandon offer carries the vehicle subject and replaces the
+ * acquire effect by key (the steed dismiss pattern). The effect display
+ * carries `section: 'mount'` plus a `detailKey` — the first mount chip that
+ * FLIPS to a stat-block detail — and the module declares its subject's
+ * top-bar entries as data (`panels`), so the vehicle surfaces without any
+ * play-layer change.
  */
 
 const ID = 'tormentor';
 const T = 'rule.tormentor';
-const SUBJECT = 'tormentor-damage-control';
-const F = 'companion.tormentorDamageControl';
+const SUBJECT = 'tormentor';
+const F = 'companion.tormentor';
 
 /** The module under test, via the registry (fails loud + clear before GREEN). */
 function module(): RuleModule {
@@ -35,14 +35,14 @@ function module(): RuleModule {
   return m;
 }
 
-/** The board effect, through the real plan fold (apply → advertise). */
-function boardEffect(): EffectInstance {
+/** The acquire effect, through the real plan fold (apply → advertise). */
+function acquireEffect(): EffectInstance {
   const out = evaluate({
     modules: [module()],
-    planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+    planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor' }]
   });
-  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-damage-control'));
-  expect(advertised, 'board applies exactly one named effect').toHaveLength(1);
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-acquire'));
+  expect(advertised, 'acquiring applies exactly one named effect').toHaveLength(1);
   return advertised[0]!;
 }
 
@@ -53,84 +53,170 @@ describe('tormentor registration', () => {
   });
 });
 
-describe('board offer ui', () => {
-  it('is an ungated free-section PLAYER offer: no station subject, linking the detail', () => {
+describe('acquire offer ui', () => {
+  it('is an ungated free-section PLAYER offer: no vehicle subject, linking the detail', () => {
     const offers = module().offer!({ selections: {} });
     expect(offers.map((o) => o.id)).toEqual([
-      'board-tormentor',
+      'acquire-tormentor',
       'set-tormentor-occupancy',
       'set-tormentor-ac-mode',
       'record-tormentor-damage',
       'record-tormentor-heal',
       'knock-tormentor-prone',
       'flip-tormentor-upright',
-      'deboard-tormentor'
+      'abandon-tormentor'
     ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
-    // Boarding is a PLAYER action: the offer must NOT carry the station
-    // subject, or it would file under the station's +ADD panel instead of the
-    // player's — a panel that does not exist until the board effect does.
+    // Acquiring is a PLAYER action: the offer must NOT carry the vehicle
+    // subject, or it would file under the vehicle's +ADD panel instead of the
+    // player's — a panel that does not exist until the acquire effect does.
     expect(ui.subject).toBeUndefined();
-    expect(ui.name).toBe(`${T}.board.name`);
-    expect(ui.description).toBe(`${T}.board.description`);
-    expect(ui.detailKey).toBe('vehicle/tormentor-damage-control');
+    expect(ui.name).toBe(`${T}.acquire.name`);
+    expect(ui.description).toBe(`${T}.acquire.description`);
+    expect(ui.detailKey).toBe('vehicle/tormentor');
     expect(ui.actionCost).toEqual([]);
-    expect(ui.intents).toEqual({ HANDLE: 'gear' });
-    // Ungated: no structural `when`, no legality gates (multiple boardings are
-    // illegal-but-possible this pass; diagnostics deferred).
+    // Acquiring is EQUIPPING a vehicle: the BUILD family's EQUIP verb, in the
+    // 'vehicle' sub-bucket (not the HANDLE gear bucket the records use).
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
+    // Structurally ungated — no `when`, the offer exists for every character —
+    // but ONE legality leg now: acquiring while a Tormentor is already present
+    // is ILLEGAL (one vehicle per character, for now), never hidden. The leg
+    // itself is pinned in the acquire-legality describe below.
     expect(offers[0]!.when).toBeUndefined();
-    expect(offers[0]!.legalWhen).toBeUndefined();
+    expect(offers[0]!.legalWhen).toHaveLength(1);
   });
 });
 
-describe('de-board offer', () => {
-  it('sits in the STATION panel under the subject, free section, while boarded', () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
-    const deboard = out.availableRules.find((r) => r.rule.id === 'deboard-tormentor');
-    expect(deboard, 'the station +ADD carries the de-board offer').toBeDefined();
-    const ui = deboard!.rule.ui as Record<string, unknown>;
+/**
+ * ONE vehicle per character, for now (a later pass lifts this for multiples):
+ * acquiring while a Tormentor is already present is ILLEGAL, never hidden —
+ * the already-have legality leg (the knocked-prone already-prone idiom, the
+ * engine's illegal-but-visible contract). The offer keeps NO structural `when`
+ * (it stays in the player's +ADD while present), the player may override, and
+ * the committed re-acquire is the ONE keyed replacement — the facts stay
+ * single, nothing stacks.
+ */
+
+/** A reader with the vehicle's presence fact (`active`) set or absent. */
+function presenceReader(active: number): FactReader {
+  return {
+    num: (n) => (n === `${F}.active` ? active : 0),
+    has: (n) => n === `${F}.active` && active > 0
+  };
+}
+
+describe('acquire legality (already have)', () => {
+  it('is the ONE legality leg on the otherwise structurally ungated offer', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'acquire-tormentor')!;
+    // `when` stays undefined: the offer exists for every character, present or
+    // not — the already-present state is `legalWhen`, never a structural gate
+    // (the engine's illegal-but-visible contract: the offer stays visible and
+    // applicable, flagged illegal, and the player may override).
+    expect(raw.when).toBeUndefined();
+    expect(raw.legalWhen).toHaveLength(1);
+    // …and the legality leg is the already-have one: legal with no vehicle,
+    // illegal the moment the presence fact the acquire effect bakes stands.
+    expect(raw.legalWhen![0]!.condition(presenceReader(0))).toBe(true);
+    expect(raw.legalWhen![0]!.condition(presenceReader(1))).toBe(false);
+    expect(raw.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.acquire.already_have`, severity: 'error' }
+    ]);
+  });
+
+  it('stays VISIBLE but ILLEGAL while a Tormentor is present, with its diagnostic (never hidden)', () => {
+    // The engine's illegal-but-visible contract (plan.ts): an illegal offer
+    // stays applicable with its diagnostic — the player overrides; the engine
+    // never makes an illegal action impossible. Abandon is the legal way out.
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const acquire = out.availableRules.find((r) => r.rule.id === 'acquire-tormentor');
+    expect(acquire, 'the acquire is still offered while present').toBeDefined();
+    expect(acquire!.legal).toBe(false);
+    expect(acquire!.diagnostics).toEqual([
+      { code: `${T}.acquire.already_have`, severity: 'error' }
+    ]);
+    const abandon = out.availableRules.find((r) => r.rule.id === 'abandon-tormentor');
+    expect(abandon, 'the abandon is offered while present').toBeDefined();
+    expect(abandon!.legal).toBe(true);
+    // The committed state is untouched by the gate.
+    expect(out.facts[`${F}.active`]).toBe(1);
+  });
+
+  it('a planned-anyway re-acquire while ILLEGAL still applies, carrying its diagnostic', () => {
+    // The plan.ts contract (the player-override path): an illegal planned row
+    // EXECUTES — the keyed replacement re-advertises the ONE acquire
+    // (newest-wins, so the facts stay single; nothing stacks) while the row
+    // carries the already-have diagnostic.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor' }]
+    });
+    const keyed = out.effects.filter((e) => e.key === 'tormentor-acquire');
+    expect(keyed, 'the illegal row still advertises exactly one acquire').toHaveLength(1);
+    expect(out.facts[`${F}.active`]).toBe(1);
+    expect(out.facts[`${F}.hp.base`]).toBe(60);
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.acquire.already_have`, severity: 'error' }
+    ]);
+  });
+
+  it('carries the already-have diagnostic message in BOTH locales (tlh is the canary)', () => {
+    const messages: Record<string, string | undefined> = {
+      en: en.rule.tormentor.acquire?.already_have,
+      'en-x-tlh': tlh.rule.tormentor.acquire?.already_have
+    };
+    for (const [where, value] of Object.entries(messages))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+describe('abandon offer', () => {
+  it('sits in the VEHICLE panel under the subject, free section, while acquired', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const abandon = out.availableRules.find((r) => r.rule.id === 'abandon-tormentor');
+    expect(abandon, 'the vehicle +ADD carries the abandon offer').toBeDefined();
+    const ui = abandon!.rule.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
     expect(ui.subject).toBe(SUBJECT);
-    expect(ui.name).toBe(`${T}.deboard.name`);
-    expect(ui.description).toBe(`${T}.deboard.description`);
+    expect(ui.name).toBe(`${T}.abandon.name`);
+    expect(ui.description).toBe(`${T}.abandon.description`);
     expect(ui.actionCost).toEqual([]);
-    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+    // Abandoning files beside acquiring: EQUIP 'vehicle', the BUILD family.
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
   });
 
   it('is gated structurally on active (when) with no legality gates', () => {
-    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'deboard-tormentor')!;
-    // `when` (not `legalWhen`): unboarded, the de-board action does not exist
-    // at all — there is nothing to show as illegal.
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'abandon-tormentor')!;
+    // `when` (not `legalWhen`): with no vehicle acquired, the abandon action
+    // does not exist at all — there is nothing to show as illegal.
     expect(typeof raw.when).toBe('function');
     expect(raw.legalWhen).toBeUndefined();
   });
 
-  it('is absent while unboarded (structural gate on active)', () => {
+  it('is absent while no vehicle is acquired (structural gate on active)', () => {
     const out = evaluate({ modules: [module()] });
-    expect(out.availableRules.some((r) => r.rule.id === 'deboard-tormentor')).toBe(false);
+    expect(out.availableRules.some((r) => r.rule.id === 'abandon-tormentor')).toBe(false);
   });
 
-  it('apply replaces the board effect by key, clearing every baked fact', () => {
+  it('apply replaces the acquire effect by key, clearing every baked fact', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
-      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
     });
-    // One advertised marker sharing the board key — the steed dismiss pattern:
+    // One advertised marker sharing the acquire key — the steed dismiss pattern:
     // newest same-key effect evicts the older, so the facts go with it.
-    const advertised = out.effects.filter((e) =>
-      e.id.endsWith('effect-deboard-tormentor-damage-control')
-    );
+    const advertised = out.effects.filter((e) => e.id.endsWith('effect-abandon-tormentor'));
     expect(advertised).toHaveLength(1);
-    expect(advertised[0]!.key).toBe('tormentor-damage-control');
+    expect(advertised[0]!.key).toBe('tormentor-acquire');
     expect(advertised[0]!.expiry).toEqual({ kind: 'permanent' });
     // Hidden bookkeeping: no display, or a chip would linger on the strip.
     expect(advertised[0]!.display).toBeUndefined();
-    // …and it EVICTS the occupancy record with the board effect (the steed
+    // …and it EVICTS the occupancy record with the acquire effect (the steed
     // dismiss/child-eviction pattern): a stateless same-key marker.
     const evict = out.effects.find((e) => e.key === 'tormentor-occupancy');
-    expect(evict, 'de-board advertises the occupancy eviction').toBeDefined();
+    expect(evict, 'abandon advertises the occupancy eviction').toBeDefined();
     expect(evict!.state).toBeUndefined();
     expect(evict!.expiry).toEqual({ kind: 'permanent' });
     // The baked facts are GONE (absent — unset facts read as 0 downstream, and
@@ -140,24 +226,24 @@ describe('de-board offer', () => {
     expect(out.facts[`${F}.hp.base`]).toBeUndefined();
     expect(out.facts[`${F}.damageThreshold`]).toBeUndefined();
     // hp.max/hp.current are DERIVED now (the steed shape): the contributions
-    // stay registered, so unboarded they settle to 0 rather than vanishing —
+    // stay registered, so unacquired they settle to 0 rather than vanishing —
     // the top-bar gate keys on `active`, which IS gone, so the chip withdraws.
     expect(out.facts[`${F}.hp.max`]).toBe(0);
     expect(out.facts[`${F}.hp.current`]).toBe(0);
   });
 });
 
-describe('board effect', () => {
+describe('acquire effect', () => {
   it('bakes the display-only stat block as one permanent keyed effect', () => {
-    const e = boardEffect();
-    expect(e.id).toBe('i0#0#effect-tormentor-damage-control');
-    expect(e.key).toBe('tormentor-damage-control');
+    const e = acquireEffect();
+    expect(e.id).toBe('i0#0#effect-tormentor-acquire');
+    expect(e.key).toBe('tormentor-acquire');
     expect(e.expiry).toEqual({ kind: 'permanent' });
     expect(e.state).toEqual({
       [`${F}.active`]: 1,
-      // AC mode (pass 4): the board selection is baked as the 0/1 MODE fact —
+      // AC mode (pass 4): the acquire selection is baked as the 0/1 MODE fact —
       // the flat ac.value bake is GONE (AC is derived as ac.effective below, so
-      // a legacy persisted board's stale ac.value is inert, never a conflict).
+      // a legacy persisted acquire's stale ac.value is inert, never a conflict).
       [`${F}.acMotionless`]: 0,
       // HP bakes its BASE (the pool derives max/current from it — the steed
       // shape) plus the stat block's damage threshold as DATA, so the recorder
@@ -177,14 +263,14 @@ describe('board effect', () => {
     });
   });
 
-  it('owns every station record as a dependent (raw mount-chip removal cascades)', () => {
+  it('owns every vehicle record as a dependent (raw mount-chip removal cascades)', () => {
     // Raw chip removal runs through playStore's removeEffect, which evicts the
     // removed effect's declared dependents by key (the generic mechanism is
     // pinned in playStore.test.ts). What THIS pins is the declaration: every
     // record effect key, so removing the mount chip can never strand a recorded
     // occupancy, a prone record, an HP record or a destroyed wreck under a
-    // de-boarded vehicle.
-    expect(boardEffect().dependents).toEqual([
+    // abandoned vehicle.
+    expect(acquireEffect().dependents).toEqual([
       'tormentor-occupancy',
       'tormentor-ac-mode',
       'tormentor-prone',
@@ -198,20 +284,20 @@ describe('board effect', () => {
     // The steed's mount chip never carried a detailKey; this is the first.
     // The bridge copies display.detailKey onto the effect chip's ui, which is
     // what ActiveStateStrip's flip path reads.
-    expect(boardEffect().display).toEqual({
+    expect(acquireEffect().display).toEqual({
       name: `${T}.effect.name`,
       section: 'mount',
       subject: SUBJECT,
-      detailKey: 'vehicle/tormentor-damage-control'
+      detailKey: 'vehicle/tormentor'
     });
   });
 });
 
 describe('occupancy offer', () => {
-  it('is a station free-section slider offer while boarded (steed HP-modifier shape)', () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+  it('is a vehicle free-section slider offer while acquired (steed HP-modifier shape)', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
     const offer = out.availableRules.find((r) => r.rule.id === 'set-tormentor-occupancy');
-    expect(offer, 'the station +ADD carries the occupancy offer').toBeDefined();
+    expect(offer, 'the vehicle +ADD carries the occupancy offer').toBeDefined();
     const ui = offer!.rule.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
     expect(ui.subject).toBe(SUBJECT);
@@ -228,7 +314,7 @@ describe('occupancy offer', () => {
       max: { fact: `${F}.creatureCapacity.max` }
     });
     // Opens at the CURRENT occupancy: the derived used (1 unrecorded, the
-    // boarder; the recorded value once set).
+    // acquirer; the recorded value once set).
     expect(offer!.rule.vars).toEqual({
       occupancy: { capture: true, default: { fact: `${F}.creatureCapacity.used` } }
     });
@@ -238,14 +324,14 @@ describe('occupancy offer', () => {
     const raw = module().offer!({ selections: {} }).find(
       (o) => o.id === 'set-tormentor-occupancy'
     )!;
-    // `when`, like de-board: unboarded the station action does not exist at
+    // `when`, like abandon: unacquired the vehicle action does not exist at
     // all. Over-capacity occupancy is illegal-but-possible (no legalWhen) —
-    // diagnostics are deferred with boarding's.
+    // diagnostics are deferred with acquiring's.
     expect(typeof raw.when).toBe('function');
     expect(raw.legalWhen).toBeUndefined();
   });
 
-  it('is absent while unboarded', () => {
+  it('is absent while unacquired', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-occupancy')).toBe(false);
   });
@@ -253,7 +339,7 @@ describe('occupancy offer', () => {
   it('apply advertises ONE permanent keyed effect storing the selection, with a live-value chip', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned: [
         { instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: 3 } }
       ]
@@ -295,18 +381,18 @@ describe('occupancy offer', () => {
 });
 
 describe('creature capacity derive', () => {
-  /** Evaluate boarded, with an occupancy row planned at `n` (omitted: none). */
+  /** Evaluate acquired, with an occupancy row planned at `n` (omitted: none). */
   const usedAt = (n?: number): number | undefined =>
     evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned:
         n === undefined
           ? []
           : [{ instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: n } }]
     }).facts[`${F}.creatureCapacity.used`];
 
-  it('defaults to 1 while boarded (the boarder counts)', () => {
+  it('defaults to 1 while acquired (the acquirer counts)', () => {
     expect(usedAt()).toBe(1);
   });
 
@@ -321,13 +407,13 @@ describe('creature capacity derive', () => {
     expect(usedAt(-2)).toBe(0);
   });
 
-  it('reads 0 while unboarded (the board default is not a free occupant)', () => {
+  it('reads 0 while unacquired (the acquire default is not a free occupant)', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
   });
 });
 
-// The boarded stat facts (every gate the declarations read, plus the pool the
+// The acquired stat facts (every gate the declarations read, plus the pool the
 // HP chip renders).
 const BOARDED = {
   [`${F}.active`]: 1,
@@ -350,27 +436,27 @@ describe('module-declared panel entries', () => {
         // The HP chip becomes a POOL with the damageable pass: usedMax renders
         // "remaining/total", so it reads "45/60" — the steed's HP chip shape.
         type: 'usedMax',
-        label: 'play.stats.tormentor-damage-control.hp',
+        label: 'play.stats.tormentor.hp',
         total: `${F}.hp.max`,
         remaining: `${F}.hp.current`,
         subject: SUBJECT
       },
       {
         type: 'value',
-        label: 'play.stats.tormentor-damage-control.ac',
+        label: 'play.stats.tormentor.ac',
         fact: `${F}.ac.effective`,
         subject: SUBJECT
       },
       {
         type: 'value',
-        label: 'play.stats.tormentor-damage-control.speed',
+        label: 'play.stats.tormentor.speed',
         fact: `${F}.speed`,
         subject: SUBJECT
       },
       {
         // Cargo capacity: display-only like the rest of the stat block.
         type: 'value',
-        label: 'play.stats.tormentor-damage-control.cargo',
+        label: 'play.stats.tormentor.cargo',
         fact: `${F}.cargo`,
         subject: SUBJECT
       },
@@ -395,7 +481,7 @@ describe('module-declared panel entries', () => {
           // usedMax renders "remaining/total" — for capacity that is USED/max
           // ("3/4"): the row counts occupants, not open seats.
           type: 'usedMax',
-          label: 'play.stats.tormentor-damage-control.creatureCapacity',
+          label: 'play.stats.tormentor.creatureCapacity',
           total: `${F}.creatureCapacity.max`,
           remaining: `${F}.creatureCapacity.used`,
           subject: SUBJECT
@@ -404,27 +490,27 @@ describe('module-declared panel entries', () => {
     );
   });
 
-  it('holds every entry back while unboarded (the gate fact is absent)', () => {
+  it('holds every entry back while unacquired (the gate fact is absent)', () => {
     expect(deriveTopBarEntries({}, [module()]).some((e) => e.subject === SUBJECT)).toBe(false);
   });
 });
 
 /**
  * Pass 2 — vehicle prone + Prone Deficiency: STATE TRACKING ONLY. The fact is
- * namespaced (`companion.tormentorDamageControl.prone`) under its own keyed
+ * namespaced (`companion.tormentor.prone`) under its own keyed
  * effect, never the player-global `condition.prone` (the builder's
  * `proneEffect()` would flip the PLAYER's attack flags, notice and movement
- * legs). Recorded from the station's +ADD and flipped upright by an empty
+ * legs). Recorded from the vehicle's +ADD and flipped upright by an empty
  * same-key eviction; the BOARD is each offer's one structural gate (`when`),
  * while the prone state itself is a LEGALITY gate (illegal-but-visible, the
  * plan.ts contract — illegal rows stay applicable with diagnostics and still
  * execute; no Speed leg, the vehicle has no movement economy), evicted with
- * the board, and carried as a NOTICE while prone (the Life-Bond annotate
+ * the acquire, and carried as a NOTICE while prone (the Life-Bond annotate
  * pattern gated on the prone fact — PC-prone parity: the condition triggers
  * its notice).
  */
 
-/** A reader for the boarded vehicle at the given prone state (gate pins). */
+/** A reader for the acquired vehicle at the given prone state (gate pins). */
 function readerAt(prone: number): FactReader {
   return {
     num: (n) => (n === `${F}.prone` ? prone : n === `${F}.active` ? 1 : 0),
@@ -432,11 +518,11 @@ function readerAt(prone: number): FactReader {
   };
 }
 
-/** The prone record, through the real plan fold (boarded, then knocked). */
+/** The prone record, through the real plan fold (acquired, then knocked). */
 function proneEffect(): EffectInstance {
   const out = evaluate({
     modules: [module()],
-    committed: [boardEffect()],
+    committed: [acquireEffect()],
     planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
   });
   const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-prone'));
@@ -445,10 +531,10 @@ function proneEffect(): EffectInstance {
 }
 
 describe('knocked-prone offer', () => {
-  it('is a station free-section offer while boarded, LEGAL while upright', () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+  it('is a vehicle free-section offer while acquired, LEGAL while upright', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
     const offer = out.availableRules.find((r) => r.rule.id === 'knock-tormentor-prone');
-    expect(offer, 'the station +ADD carries the knocked-prone offer').toBeDefined();
+    expect(offer, 'the vehicle +ADD carries the knocked-prone offer').toBeDefined();
     const ui = offer!.rule.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
     expect(ui.subject).toBe(SUBJECT);
@@ -461,23 +547,23 @@ describe('knocked-prone offer', () => {
     expect(ui.actionCost).toEqual([]);
     // A vehicle CONDITION files like the PC's: record-prone's CONDITION
     // 'held' sub-bucket (#467 taxonomy), not the HANDLE gear bucket the
-    // boarding offers use.
+    // vehicle's record offers use.
     expect(ui.intents).toEqual({ CONDITION: 'held' });
-    // Boarded and upright: legal, no diagnostics.
+    // Acquired and upright: legal, no diagnostics.
     expect(offer!.legal).toBe(true);
     expect(offer!.diagnostics).toEqual([]);
   });
 
-  it('is gated structurally on boarded ONLY (when); the prone state is a legality gate', () => {
+  it('is gated structurally on acquired ONLY (when); the prone state is a legality gate', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'knock-tormentor-prone')!;
-    // `when` like the other station actions: unboarded, recording a prone for
+    // `when` like the other vehicle actions: unacquired, recording a prone for
     // a vehicle nobody rides does not exist at all. The ALREADY-PRONE state is
     // `legalWhen`, never `when` (the engine's illegal-but-visible contract):
     // while prone the offer stays visible and applicable, flagged illegal with
     // its diagnostic, and a planned-anyway row still executes.
     expect(typeof raw.when).toBe('function');
     expect(raw.legalWhen).toHaveLength(1);
-    // The structural gate is the board alone: it holds while prone.
+    // The structural gate is the acquire alone: it holds while prone.
     expect(raw.when!(readerAt(1))).toBe(true);
     // …and the legality leg is the already-prone one.
     expect(raw.legalWhen![0]!.condition(readerAt(0))).toBe(true);
@@ -487,7 +573,7 @@ describe('knocked-prone offer', () => {
     ]);
   });
 
-  it('is absent while unboarded', () => {
+  it('is absent while unacquired', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.availableRules.some((r) => r.rule.id === 'knock-tormentor-prone')).toBe(false);
   });
@@ -499,7 +585,7 @@ describe('knocked-prone offer', () => {
     // the LEGAL offer now.
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()]
+      committed: [acquireEffect(), proneEffect()]
     });
     const knock = out.availableRules.find((r) => r.rule.id === 'knock-tormentor-prone');
     expect(knock, 'the knock is still offered while prone').toBeDefined();
@@ -521,12 +607,12 @@ describe('knocked-prone offer', () => {
     // no player-global legs ride along (pinned again, behaviourally, below).
     expect(e.state).toEqual({ [`${F}.prone`]: 1 });
     // Permanent, not the player's untilShortRest: a rest does not right a
-    // vehicle — only Flip Upright (or the board lifecycle) clears it.
+    // vehicle — only Flip Upright (or the acquire lifecycle) clears it.
     expect(e.expiry).toEqual({ kind: 'permanent' });
   });
 
-  it('the effect displays as a station chip under the subject that FLIPS to the prone detail', () => {
-    // Same flip path as the board chip: the bridge copies display.detailKey
+  it('the effect displays as a vehicle chip under the subject that FLIPS to the prone detail', () => {
+    // Same flip path as the acquire chip: the bridge copies display.detailKey
     // onto the chip's ui, so tapping the Prone chip opens the vehicle's own
     // condition text (not the player's condition/prone detail).
     expect(proneEffect().display).toEqual({
@@ -544,7 +630,7 @@ describe('knocked-prone offer', () => {
     // already-prone diagnostic.
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()],
+      committed: [acquireEffect(), proneEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
     const keyed = out.effects.filter((e) => e.key === 'tormentor-prone');
@@ -566,9 +652,9 @@ describe('knocked-prone offer', () => {
 });
 
 describe('flip-upright offer', () => {
-  it('is gated structurally on boarded ONLY (when); prone is a legality gate, both states visible', () => {
+  it('is gated structurally on acquired ONLY (when); prone is a legality gate, both states visible', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'flip-tormentor-upright')!;
-    // `when` is the board alone (like the knock): while UPRIGHT the offer
+    // `when` is the acquire alone (like the knock): while UPRIGHT the offer
     // stays visible and applicable but is flagged ILLEGAL with its not-prone
     // diagnostic (the engine's illegal-but-visible contract, the get-up shape).
     expect(typeof raw.when).toBe('function');
@@ -583,18 +669,18 @@ describe('flip-upright offer', () => {
   });
 
   it('is offered in BOTH prone states: legal while prone, illegal-but-visible while upright', () => {
-    // Boarded and upright: the flip EXISTS (nothing hides it) and is illegal.
-    const upright = evaluate({ modules: [module()], committed: [boardEffect()] });
+    // Acquired and upright: the flip EXISTS (nothing hides it) and is illegal.
+    const upright = evaluate({ modules: [module()], committed: [acquireEffect()] });
     const uprightFlip = upright.availableRules.find((r) => r.rule.id === 'flip-tormentor-upright');
     expect(uprightFlip, 'the flip is offered while upright').toBeDefined();
     expect(uprightFlip!.legal).toBe(false);
     expect(uprightFlip!.diagnostics).toEqual([
       { code: `${T}.flip-upright.not_prone`, severity: 'error' }
     ]);
-    // Boarded and prone (the record planned this very turn): flippable now.
+    // Acquired and prone (the record planned this very turn): flippable now.
     const prone = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
     const proneFlip = prone.availableRules.find((r) => r.rule.id === 'flip-tormentor-upright');
@@ -603,10 +689,10 @@ describe('flip-upright offer', () => {
     expect(proneFlip!.diagnostics).toEqual([]);
   });
 
-  it('sits in the station panel, free section, while prone', () => {
+  it('sits in the vehicle panel, free section, while prone', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
     const offer = out.availableRules.find((r) => r.rule.id === 'flip-tormentor-upright');
@@ -622,7 +708,7 @@ describe('flip-upright offer', () => {
     expect(ui.actionCost).toEqual([]);
     // The vehicle's condition-END offer files with its condition (the 'held'
     // bucket — "Prone (both offers)" in the #467 taxonomy), so both prone
-    // offers sit under the Conditions grouping in the station +ADD. (The
+    // offers sit under the Conditions grouping in the vehicle +ADD. (The
     // PLAYER's Get Up is a MOVE 'rise' offer because it spends movement; the
     // free vehicle flip is not a movement action.)
     expect(ui.intents).toEqual({ CONDITION: 'held' });
@@ -631,7 +717,7 @@ describe('flip-upright offer', () => {
   it('apply advertises the EMPTY same-key eviction (the get-up idiom)', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()],
+      committed: [acquireEffect(), proneEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'flip-tormentor-upright' }]
     });
     const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
@@ -651,7 +737,7 @@ describe('flip-upright offer', () => {
     // silently swallows the plan.
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'flip-tormentor-upright' }]
     });
     const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
@@ -676,7 +762,7 @@ describe('prone never touches the player-global condition', () => {
   it('condition.prone and its attack flags stay unset by this module', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
     // The player-global prone chassis (condition.prone + the STR/DEX attack
@@ -690,30 +776,30 @@ describe('prone never touches the player-global condition', () => {
   });
 });
 
-describe('prone eviction rides the board lifecycle', () => {
-  it('a re-board advertises the empty same-key eviction beside the board effect', () => {
-    // A keyed replacement alone does not fire dependents, so the re-board
-    // resets prone explicitly (the occupancy re-board pattern): a fresh board
+describe('prone eviction rides the acquire lifecycle', () => {
+  it('a re-acquire advertises the empty same-key eviction beside the acquire effect', () => {
+    // A keyed replacement alone does not fire dependents, so the re-acquire
+    // resets prone explicitly (the occupancy re-acquire pattern): a fresh acquire
     // starts upright.
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()],
-      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+      committed: [acquireEffect(), proneEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor' }]
     });
     const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
-    expect(evict, 're-board advertises the prone eviction').toBeDefined();
+    expect(evict, 're-acquire advertises the prone eviction').toBeDefined();
     expect(evict!.state).toBeUndefined();
     expect(out.facts[`${F}.prone`]).toBeUndefined();
   });
 
-  it('de-board advertises the same eviction while clearing every baked fact', () => {
+  it('abandon advertises the same eviction while clearing every baked fact', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()],
-      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+      committed: [acquireEffect(), proneEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
     });
     const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-prone'));
-    expect(evict, 'de-board advertises the prone eviction').toBeDefined();
+    expect(evict, 'abandon advertises the prone eviction').toBeDefined();
     expect(evict!.state).toBeUndefined();
     expect(out.facts[`${F}.prone`]).toBeUndefined();
     expect(out.facts[`${F}.active`]).toBeUndefined();
@@ -722,19 +808,19 @@ describe('prone eviction rides the board lifecycle', () => {
 
 describe('prone-deficiency notice', () => {
   it('stands only while the vehicle is PRONE, with the vehicle as its source', () => {
-    // Boarded but upright: NO notice — the notice is the condition's, not the
-    // board's (PC-prone parity: the player's Prone notice stands only while
-    // prone, and a merely-boarded vehicle has nothing to warn about).
-    const upright = evaluate({ modules: [module()], committed: [boardEffect()] });
+    // Acquired but upright: NO notice — the notice is the condition's, not the
+    // acquire's (PC-prone parity: the player's Prone notice stands only while
+    // prone, and a merely-acquired vehicle has nothing to warn about).
+    const upright = evaluate({ modules: [module()], committed: [acquireEffect()] });
     expect(
       upright.annotations.some((a) => a.key === `${T}.notice`),
-      'no notice while boarded and upright'
+      'no notice while acquired and upright'
     ).toBe(false);
     // Prone: the notice stands (the Life-Bond annotate pattern), sourced on
     // the vehicle.
     const prone = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()]
+      committed: [acquireEffect(), proneEffect()]
     });
     const notice = prone.annotations.find((a) => a.key === `${T}.notice`);
     expect(notice, 'a notice stands while the vehicle is prone').toBeDefined();
@@ -743,19 +829,19 @@ describe('prone-deficiency notice', () => {
     expect(notice!.body).toBe(`${T}.notice.body`);
   });
 
-  it('tracks the prone state: flipping upright or de-boarding withdraws it', () => {
+  it('tracks the prone state: flipping upright or abandoning withdraws it', () => {
     // Flipped upright (the eviction merely PLANNED — newest-wins clears the
     // fact now): the condition is gone, so its notice goes with it…
     const flipped = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect()],
+      committed: [acquireEffect(), proneEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'flip-tormentor-upright' }]
     });
     expect(flipped.annotations.some((a) => a.key === `${T}.notice`)).toBe(false);
-    // …and the unboarded vehicle carries no notice at all (the prone record
-    // never outlives the board).
-    const unboarded = evaluate({ modules: [module()] });
-    expect(unboarded.annotations.some((a) => a.key === `${T}.notice`)).toBe(false);
+    // …and the unacquired vehicle carries no notice at all (the prone record
+    // never outlives the acquire).
+    const unacquired = evaluate({ modules: [module()] });
+    expect(unacquired.annotations.some((a) => a.key === `${T}.notice`)).toBe(false);
   });
 
   it('carries the notice label, body and chip name in BOTH locales (tlh is the canary)', () => {
@@ -774,7 +860,7 @@ describe('prone-deficiency notice', () => {
 
 /**
  * Pass 3 — damageable HP: the flat display-only `hp.max` baked fact gives way
- * to the steed-shaped pool (base baked on the board effect; max/current/
+ * to the steed-shaped pool (base baked on the acquire effect; max/current/
  * modifier derived), recorded from the STATION's +ADD by damage and heal
  * recorders whose ONE keyed untilLongRest effect carries the running total
  * (the steed recorder idiom). The stat block's damage threshold is a BAKED
@@ -787,21 +873,21 @@ describe('prone-deficiency notice', () => {
  * GM correction); at or above the threshold the FULL amount lands (a floor,
  * not a cap). Damage that brings hp.current to 0 ALSO advertises a permanent
  * keyed `tormentor-destroyed` wreck (the steed lethal-check placement, but NO
- * auto-unboard: the board effect persists so the wreck stays inspectable)
- * with a standing NOTICE gated on the destroyed fact. Re-boarding/de-boarding
+ * auto-abandon: the acquire effect persists so the wreck stays inspectable)
+ * with a standing NOTICE gated on the destroyed fact. Re-acquiring/abandoning
  * evict the HP records and the wreck with everything else.
  */
 
-/** The HP record effect ids/keys the station recorders advertise. */
+/** The HP record effect ids/keys the vehicle recorders advertise. */
 const HP_DAMAGE_EFFECT = 'effect-tormentor-hp-damage';
 const HP_HEAL_EFFECT = 'effect-tormentor-hp-heal';
 const DESTROYED_EFFECT = 'effect-tormentor-destroyed';
 
-/** Plan ONE damage row at `amount` on a committed board (the real plan fold). */
+/** Plan ONE damage row at `amount` on a committed acquire (the real plan fold). */
 function planDamage(amount: number) {
   return evaluate({
     modules: [module()],
-    committed: [boardEffect()],
+    committed: [acquireEffect()],
     planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount } }]
   });
 }
@@ -818,7 +904,7 @@ function damageRecordEffect(amount: number): EffectInstance {
 function destroyedEffect(): EffectInstance {
   const out = evaluate({
     modules: [module()],
-    committed: [boardEffect()],
+    committed: [acquireEffect()],
     planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount: 60 } }]
   });
   const advertised = out.effects.filter((e) => e.id.endsWith(DESTROYED_EFFECT));
@@ -827,8 +913,8 @@ function destroyedEffect(): EffectInstance {
 }
 
 describe('vehicle HP pool derives', () => {
-  it('derives the steed-shaped pool from the baked base while boarded', () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+  it('derives the steed-shaped pool from the baked base while acquired', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
     expect(out.facts[`${F}.hp.max`]).toBe(60);
     expect(out.facts[`${F}.hp.current`]).toBe(60);
     expect(out.facts[`${F}.hp.modifier.current`]).toBe(0);
@@ -843,14 +929,14 @@ describe('vehicle HP pool derives', () => {
     // damage record plus a planned heal nets out.
     const healed = evaluate({
       modules: [module()],
-      committed: [boardEffect(), damageRecordEffect(30)],
+      committed: [acquireEffect(), damageRecordEffect(30)],
       planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-heal', selections: { amount: 10 } }]
     });
     expect(healed.facts[`${F}.hp.modifier.current`]).toBe(-20);
     expect(healed.facts[`${F}.hp.current`]).toBe(40);
   });
 
-  it('reads 0 while unboarded (contributions stay registered, gated on active)', () => {
+  it('reads 0 while unacquired (contributions stay registered, gated on active)', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.facts[`${F}.hp.max`]).toBe(0);
     expect(out.facts[`${F}.hp.current`]).toBe(0);
@@ -858,10 +944,10 @@ describe('vehicle HP pool derives', () => {
 });
 
 describe('record-tormentor-damage offer', () => {
-  it('is a station free-section HEALTH slider while boarded, gated on the board ONLY', () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+  it('is a vehicle free-section HEALTH slider while acquired, gated on the acquire ONLY', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
     const offer = out.availableRules.find((r) => r.rule.id === 'record-tormentor-damage');
-    expect(offer, 'the station +ADD carries the damage recorder').toBeDefined();
+    expect(offer, 'the vehicle +ADD carries the damage recorder').toBeDefined();
     const ui = offer!.rule.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
     expect(ui.subject).toBe(SUBJECT);
@@ -885,7 +971,7 @@ describe('record-tormentor-damage offer', () => {
     expect(ui.annotationLabels).toBeUndefined();
     // The [Use Threshold | Ignore Threshold] segmented SECONDARY control (the
     // generic factory emission): `enabled.condition` names the baked threshold
-    // fact, and PanelRenderer hides a false-gated control — unboarded or
+    // fact, and PanelRenderer hides a false-gated control — unacquired or
     // threshold-less subjects see exactly the old single-slider look.
     expect(ui.secondaryControl).toEqual({
       type: 'segmented',
@@ -914,7 +1000,7 @@ describe('record-tormentor-damage offer', () => {
     expect(raw.legalWhen).toBeUndefined();
   });
 
-  it('is absent while unboarded', () => {
+  it('is absent while unacquired', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.availableRules.some((r) => r.rule.id === 'record-tormentor-damage')).toBe(false);
   });
@@ -955,7 +1041,7 @@ describe('record-tormentor-damage offer', () => {
   it('two rows planned: the notice rides the bounced row ONLY (the user repro)', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned: [
         { instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount: 10 } },
         { instanceId: 'i1', ruleId: 'record-tormentor-damage', selections: { amount: 9 } }
@@ -973,7 +1059,7 @@ describe('record-tormentor-damage offer', () => {
   it('Ignore Threshold records the RAW amount in full (the GM-correction mode)', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect()],
+      committed: [acquireEffect()],
       planned: [
         {
           instanceId: 'i0',
@@ -995,10 +1081,10 @@ describe('record-tormentor-damage offer', () => {
 });
 
 describe('record-tormentor-heal offer', () => {
-  it("is the damage recorder's mirror: station free-section HEALTH slider, no detailKey", () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+  it("is the damage recorder's mirror: vehicle free-section HEALTH slider, no detailKey", () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
     const offer = out.availableRules.find((r) => r.rule.id === 'record-tormentor-heal');
-    expect(offer, 'the station +ADD carries the heal recorder').toBeDefined();
+    expect(offer, 'the vehicle +ADD carries the heal recorder').toBeDefined();
     const ui = offer!.rule.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
     expect(ui.subject).toBe(SUBJECT);
@@ -1024,7 +1110,7 @@ describe('record-tormentor-heal offer', () => {
   it('records the running heal CAPPED at the net missing HP (the steed idiom)', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), damageRecordEffect(30)],
+      committed: [acquireEffect(), damageRecordEffect(30)],
       planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-heal', selections: { amount: 40 } }]
     });
     const advertised = out.effects.filter((e) => e.id.endsWith(HP_HEAL_EFFECT));
@@ -1062,9 +1148,9 @@ describe('destroyed at zero HP', () => {
     });
     // The damage record still lands (the blow happened)…
     expect(out.effects.some((x) => x.id.endsWith(HP_DAMAGE_EFFECT))).toBe(true);
-    // …and the BOARD persists (NO auto-unboard — the steed lethal-check
+    // …and the BOARD persists (NO auto-abandon — the steed lethal-check
     // placement deliberately stops short of retiring the vehicle): the wreck
-    // stays inspectable and the crew can de-board.
+    // stays inspectable and the crew can abandon.
     expect(out.facts[`${F}.active`]).toBe(1);
   });
 
@@ -1081,7 +1167,7 @@ describe('destroyed at zero HP', () => {
   it('more damage on a committed wreck keeps the single keyed wreck (idempotent)', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), damageRecordEffect(60), destroyedEffect()],
+      committed: [acquireEffect(), damageRecordEffect(60), destroyedEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-damage', selections: { amount: 10 } }]
     });
     expect(out.facts[`${F}.destroyed`]).toBe(1);
@@ -1091,14 +1177,14 @@ describe('destroyed at zero HP', () => {
 
 describe('destroyed notice', () => {
   it('stands only while the vehicle is destroyed, with the vehicle as its source', () => {
-    const whole = evaluate({ modules: [module()], committed: [boardEffect()] });
+    const whole = evaluate({ modules: [module()], committed: [acquireEffect()] });
     expect(
       whole.annotations.some((a) => a.key === `${T}.destroyed-notice`),
       'no destroyed notice on a whole vehicle'
     ).toBe(false);
     const wrecked = evaluate({
       modules: [module()],
-      committed: [boardEffect(), destroyedEffect()]
+      committed: [acquireEffect(), destroyedEffect()]
     });
     const notice = wrecked.annotations.find((a) => a.key === `${T}.destroyed-notice`);
     expect(notice, 'a notice stands while the vehicle is destroyed').toBeDefined();
@@ -1110,44 +1196,44 @@ describe('destroyed notice', () => {
   it('stands beside the prone notice when both states hold (distinct keys)', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), proneEffect(), destroyedEffect()]
+      committed: [acquireEffect(), proneEffect(), destroyedEffect()]
     });
     const keys = out.annotations.filter((a) => a.targets.includes('notice')).map((a) => a.key);
     expect(keys).toEqual(expect.arrayContaining([`${T}.notice`, `${T}.destroyed-notice`]));
   });
 });
 
-describe('HP records and the wreck ride the board lifecycle', () => {
-  it('a re-board advertises the empty same-key evictions beside the board effect', () => {
+describe('HP records and the wreck ride the acquire lifecycle', () => {
+  it('a re-acquire advertises the empty same-key evictions beside the acquire effect', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), damageRecordEffect(20), destroyedEffect()],
-      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+      committed: [acquireEffect(), damageRecordEffect(20), destroyedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor' }]
     });
     for (const key of ['tormentor-hp-damage', 'tormentor-hp-heal', 'tormentor-destroyed']) {
       const evict = out.effects.find((e) => e.id.endsWith(`evict-${key}`));
-      expect(evict, `re-board advertises the ${key} eviction`).toBeDefined();
+      expect(evict, `re-acquire advertises the ${key} eviction`).toBeDefined();
       expect(evict!.key).toBe(key);
       expect(evict!.state).toBeUndefined();
       expect(evict!.expiry).toEqual({ kind: 'permanent' });
     }
-    // A fresh board starts whole: no damage banked, no wreck, no notice.
+    // A fresh acquire starts whole: no damage banked, no wreck, no notice.
     expect(out.facts[`${F}.hp.damageRecorded`]).toBeUndefined();
     expect(out.facts[`${F}.destroyed`]).toBeUndefined();
     expect(out.facts[`${F}.hp.current`]).toBe(60);
     expect(out.annotations.some((a) => a.key === `${T}.destroyed-notice`)).toBe(false);
   });
 
-  it('de-board advertises the same evictions while clearing every baked fact', () => {
+  it('abandon advertises the same evictions while clearing every baked fact', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), damageRecordEffect(20), destroyedEffect()],
-      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+      committed: [acquireEffect(), damageRecordEffect(20), destroyedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
     });
     for (const key of ['tormentor-hp-damage', 'tormentor-hp-heal', 'tormentor-destroyed']) {
       expect(
         out.effects.find((e) => e.id.endsWith(`evict-${key}`)),
-        `de-board advertises the ${key} eviction`
+        `abandon advertises the ${key} eviction`
       ).toBeDefined();
     }
     expect(out.facts[`${F}.active`]).toBeUndefined();
@@ -1196,30 +1282,30 @@ describe('pass 3 i18n (tlh is the canary)', () => {
  *
  * - The BOARD offer carries a [Moving | Motionless] segmented SECONDARY control
  *   (the find-steed creature-type precedent — a segmented control can only be a
- *   secondaryControl in PanelRenderer) defaulting to Moving, and the board
- *   effect bakes the selection as the 0/1 `acMotionless` mode fact. The board
+ *   secondaryControl in PanelRenderer) defaulting to Moving, and the acquire
+ *   effect bakes the selection as the 0/1 `acMotionless` mode fact. The acquire
  *   effect NO LONGER bakes a flat `ac.value`.
  * - AC is DERIVED as `ac.effective` (19 motionless, else 21, gated on active) —
- *   a deliberately NEW fact name: legacy persisted boards bake flat ac.value,
+ *   a deliberately NEW fact name: legacy persisted acquires bake flat ac.value,
  *   and nothing may derive ac.value or the sheet's input/contribution overlap
  *   would throw on every evaluation (the pass-3 hp.max lesson). The stale
- *   legacy ac.value is simply inert, and a legacy board derives 21 (Moving)
- *   with the station record working on top of it — no load-seam migration.
- * - The station's +ADD carries an always-present (while boarded) "AC Mode"
+ *   legacy ac.value is simply inert, and a legacy acquire derives 21 (Moving)
+ *   with the vehicle record working on top of it — no load-seam migration.
+ * - The vehicle's +ADD carries an always-present (while acquired) "AC Mode"
  *   record offer — the occupancy intent class, applied IMMEDIATELY — with the
  *   same segmented control pre-showing the CURRENT mode. Its ONE permanent
  *   keyed effect (`tormentor-ac-mode`) stores the mode as the DISTINCT
  *   `acMotionless.recorded` fact: the engine sum-combines two live effects
  *   writing one fact, so a record writing `acMotionless` itself could never
- *   flip a Motionless board back to Moving (1 + 0 still reads 1). The derive
+ *   flip a Motionless acquire back to Moving (1 + 0 still reads 1). The derive
  *   prefers the record when present (the occupancy has-preference idiom), so
- *   the record overrides the board bake in BOTH directions.
- * - The mode key joins CHILD_KEYS: re-board/de-board evict the record, and a
- *   fresh board resets to the board SELECTION.
+ *   the record overrides the acquire bake in BOTH directions.
+ * - The mode key joins CHILD_KEYS: re-acquire/abandon evict the record, and a
+ *   fresh acquire resets to the acquire SELECTION.
  */
-describe('board offer AC-mode control', () => {
+describe('acquire offer AC-mode control', () => {
   it('carries a [Moving | Motionless] segmented SECONDARY control defaulting to Moving (creatureType precedent)', () => {
-    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'board-tormentor')!;
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'acquire-tormentor')!;
     // Segmented controls are secondaryControl-only in PanelRenderer — find-steed
     // is the precedent for a cast offer's secondary picker.
     expect(raw.ui!.secondaryControl).toEqual({
@@ -1236,38 +1322,38 @@ describe('board offer AC-mode control', () => {
 
   it('bakes the SELECTED mode (no ac.value bake — AC is derived from here on)', () => {
     // Default (no selection): Moving.
-    const moving = boardEffect();
+    const moving = acquireEffect();
     expect(moving.state?.[`${F}.acMotionless`]).toBe(0);
     expect(moving.state?.[`${F}.ac.value`]).toBeUndefined();
     // Motionless selected: the selection flows into the effect state exactly
     // the way creatureType flows into the steed effect.
     const out = evaluate({
       modules: [module()],
-      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor', selections: { mode: 1 } }]
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor', selections: { mode: 1 } }]
     });
-    const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-damage-control'));
+    const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-acquire'));
     expect(advertised).toHaveLength(1);
     expect(advertised[0]!.state?.[`${F}.acMotionless`]).toBe(1);
     expect(advertised[0]!.state?.[`${F}.ac.value`]).toBeUndefined();
   });
 });
 
-/** A committed board effect at the given board-time mode (the real plan fold). */
-function boardEffectAt(mode: number): EffectInstance {
+/** A committed acquire effect at the given acquire-time mode (the real plan fold). */
+function acquireEffectAt(mode: number): EffectInstance {
   const out = evaluate({
     modules: [module()],
-    planned: [{ instanceId: 'i0', ruleId: 'board-tormentor', selections: { mode } }]
+    planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor', selections: { mode } }]
   });
-  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-damage-control'));
-  expect(advertised, 'boarding at a mode advertises exactly one board effect').toHaveLength(1);
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-acquire'));
+  expect(advertised, 'acquiring at a mode advertises exactly one acquire effect').toHaveLength(1);
   return advertised[0]!;
 }
 
-/** The AC-mode record a station row at `mode` advertises (exactly one). */
+/** The AC-mode record a vehicle row at `mode` advertises (exactly one). */
 function acModeEffect(mode: number): EffectInstance {
   const out = evaluate({
     modules: [module()],
-    committed: [boardEffect()],
+    committed: [acquireEffect()],
     planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-ac-mode', selections: { mode } }]
   });
   const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-ac-mode'));
@@ -1276,24 +1362,24 @@ function acModeEffect(mode: number): EffectInstance {
 }
 
 describe('ac.effective derive', () => {
-  it('reads 21 boarded-and-moving, 19 boarded-and-motionless, 0 unboarded', () => {
-    const moving = evaluate({ modules: [module()], committed: [boardEffect()] });
+  it('reads 21 acquired-and-moving, 19 acquired-and-motionless, 0 unacquired', () => {
+    const moving = evaluate({ modules: [module()], committed: [acquireEffect()] });
     expect(moving.facts[`${F}.ac.effective`]).toBe(21);
     expect(moving.facts[`${F}.acMotionless.current`]).toBe(0);
-    const motionless = evaluate({ modules: [module()], committed: [boardEffectAt(1)] });
+    const motionless = evaluate({ modules: [module()], committed: [acquireEffectAt(1)] });
     expect(motionless.facts[`${F}.ac.effective`]).toBe(19);
     expect(motionless.facts[`${F}.acMotionless.current`]).toBe(1);
-    const unboarded = evaluate({ modules: [module()] });
-    expect(unboarded.facts[`${F}.ac.effective`]).toBe(0);
+    const unacquired = evaluate({ modules: [module()] });
+    expect(unacquired.facts[`${F}.ac.effective`]).toBe(0);
   });
 
-  it('the station record overrides the board bake in BOTH directions (never summed)', () => {
-    // The edge a same-fact write could never survive: a MOTIONLESS board plus a
+  it('the vehicle record overrides the acquire bake in BOTH directions (never summed)', () => {
+    // The edge a same-fact write could never survive: a MOTIONLESS acquire plus a
     // recorded MOVING must read 21 — sum-combining 1 + 0 would still read 1,
     // which is why the record is a distinct fact the derive prefers.
     const backToMoving = evaluate({
       modules: [module()],
-      committed: [boardEffectAt(1), acModeEffect(0)]
+      committed: [acquireEffectAt(1), acModeEffect(0)]
     });
     expect(backToMoving.facts[`${F}.acMotionless`]).toBe(1);
     expect(backToMoving.facts[`${F}.acMotionless.recorded`]).toBe(0);
@@ -1301,20 +1387,20 @@ describe('ac.effective derive', () => {
     expect(backToMoving.facts[`${F}.ac.effective`]).toBe(21);
     const toMotionless = evaluate({
       modules: [module()],
-      committed: [boardEffectAt(0), acModeEffect(1)]
+      committed: [acquireEffectAt(0), acModeEffect(1)]
     });
     expect(toMotionless.facts[`${F}.acMotionless.current`]).toBe(1);
     expect(toMotionless.facts[`${F}.ac.effective`]).toBe(19);
   });
 
-  it('a LEGACY persisted board (flat ac.value, no acMotionless) evaluates and derives 21', () => {
-    // The pre-pass-4 board shape, as persisted on a test character: the flat
+  it('a LEGACY persisted acquire (flat ac.value, no acMotionless) evaluates and derives 21', () => {
+    // The pre-pass-4 acquire shape, as persisted on a test character: the flat
     // ac.value bake is an INPUT no module derives or reads any more, so it is
     // inert rather than a two-writer conflict, and the missing mode fact reads
     // as the Moving default.
     const legacy: EffectInstance = {
-      id: 'effect-tormentor-damage-control',
-      key: 'tormentor-damage-control',
+      id: 'effect-tormentor-acquire',
+      key: 'tormentor-acquire',
       state: {
         [`${F}.active`]: 1,
         [`${F}.ac.value`]: 21,
@@ -1336,17 +1422,17 @@ describe('ac.effective derive', () => {
     expect(out.facts[`${F}.ac.value`]).toBe(21);
     expect(out.facts[`${F}.ac.effective`]).toBe(21);
     expect(out.facts[`${F}.acMotionless.current`]).toBe(0);
-    // The station record works on a legacy board (dismiss + re-add is the
+    // The vehicle record works on a legacy acquire (dismiss + re-add is the
     // accepted migration; the record needs no mode fact to exist).
     expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-ac-mode')).toBe(true);
   });
 });
 
 describe('set-tormentor-ac-mode offer', () => {
-  it('is a station free-section record offer while boarded, segmented pre-showing the CURRENT mode', () => {
-    const out = evaluate({ modules: [module()], committed: [boardEffect()] });
+  it('is a vehicle free-section record offer while acquired, segmented pre-showing the CURRENT mode', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
     const offer = out.availableRules.find((r) => r.rule.id === 'set-tormentor-ac-mode');
-    expect(offer, 'the station +ADD carries the AC-mode offer').toBeDefined();
+    expect(offer, 'the vehicle +ADD carries the AC-mode offer').toBeDefined();
     const ui = offer!.rule.ui as Record<string, unknown>;
     expect(ui.section).toBe('free');
     expect(ui.subject).toBe(SUBJECT);
@@ -1364,11 +1450,11 @@ describe('set-tormentor-ac-mode offer', () => {
         { value: 1, label: `${T}.mode.motionless` }
       ]
     });
-    // Opens at the CURRENT mode (recorded value once set, board bake otherwise).
+    // Opens at the CURRENT mode (recorded value once set, acquire bake otherwise).
     expect(offer!.rule.vars).toEqual({
       mode: { capture: true, default: { fact: `${F}.acMotionless.current` } }
     });
-    // Always applicable while boarded: no legality gates (the mode is a fact,
+    // Always applicable while acquired: no legality gates (the mode is a fact,
     // not a resource).
     expect(offer!.legal).toBe(true);
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-ac-mode')!;
@@ -1376,7 +1462,7 @@ describe('set-tormentor-ac-mode offer', () => {
     expect(raw.legalWhen).toBeUndefined();
   });
 
-  it('is absent while unboarded (structural gate on the board)', () => {
+  it('is absent while unacquired (structural gate on the acquire)', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-ac-mode')).toBe(false);
   });
@@ -1385,7 +1471,7 @@ describe('set-tormentor-ac-mode offer', () => {
     const e = acModeEffect(1);
     expect(e.id).toContain('effect-tormentor-ac-mode');
     expect(e.key).toBe('tormentor-ac-mode');
-    // The RECORDED fact, not the board-baked acMotionless: the engine
+    // The RECORDED fact, not the acquire-baked acMotionless: the engine
     // sum-combines two live effects writing one fact, so the record must be its
     // own fact for the derive to prefer it in both directions.
     expect(e.state).toEqual({ [`${F}.acMotionless.recorded`]: 1 });
@@ -1402,7 +1488,7 @@ describe('set-tormentor-ac-mode offer', () => {
     // newest keyed effect at once — 21, and only ONE record effect by key.
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), acModeEffect(1)],
+      committed: [acquireEffect(), acModeEffect(1)],
       planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-ac-mode', selections: { mode: 0 } }]
     });
     expect(out.facts[`${F}.acMotionless.recorded`]).toBe(0);
@@ -1410,46 +1496,46 @@ describe('set-tormentor-ac-mode offer', () => {
     // …and the reverse on a Moving record: 19 the moment the row is planned.
     const reverse = evaluate({
       modules: [module()],
-      committed: [boardEffect(), acModeEffect(0)],
+      committed: [acquireEffect(), acModeEffect(0)],
       planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-ac-mode', selections: { mode: 1 } }]
     });
     expect(reverse.facts[`${F}.ac.effective`]).toBe(19);
   });
 });
 
-describe('the AC-mode record rides the board lifecycle', () => {
-  it('a re-board evicts the record and resets the mode to the board SELECTION', () => {
+describe('the AC-mode record rides the acquire lifecycle', () => {
+  it('a re-acquire evicts the record and resets the mode to the acquire SELECTION', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffectAt(1), acModeEffect(0)],
-      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor' }]
+      committed: [acquireEffectAt(1), acModeEffect(0)],
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor' }]
     });
     const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-ac-mode'));
-    expect(evict, 're-board advertises the AC-mode eviction').toBeDefined();
+    expect(evict, 're-acquire advertises the AC-mode eviction').toBeDefined();
     expect(evict!.key).toBe('tormentor-ac-mode');
     expect(evict!.state).toBeUndefined();
     expect(evict!.expiry).toEqual({ kind: 'permanent' });
-    // The fresh board (no selection) resets to Moving: 21, no record.
+    // The fresh acquire (no selection) resets to Moving: 21, no record.
     expect(out.facts[`${F}.acMotionless.recorded`]).toBeUndefined();
     expect(out.facts[`${F}.ac.effective`]).toBe(21);
-    // A re-board SELECTING Motionless stands: 19.
+    // A re-acquire SELECTING Motionless stands: 19.
     const selected = evaluate({
       modules: [module()],
-      committed: [boardEffectAt(0), acModeEffect(0)],
-      planned: [{ instanceId: 'i0', ruleId: 'board-tormentor', selections: { mode: 1 } }]
+      committed: [acquireEffectAt(0), acModeEffect(0)],
+      planned: [{ instanceId: 'i0', ruleId: 'acquire-tormentor', selections: { mode: 1 } }]
     });
     expect(selected.facts[`${F}.acMotionless`]).toBe(1);
     expect(selected.facts[`${F}.ac.effective`]).toBe(19);
   });
 
-  it('de-board evicts the record with the board', () => {
+  it('abandon evicts the record with the acquire', () => {
     const out = evaluate({
       modules: [module()],
-      committed: [boardEffect(), acModeEffect(1)],
-      planned: [{ instanceId: 'i0', ruleId: 'deboard-tormentor' }]
+      committed: [acquireEffect(), acModeEffect(1)],
+      planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
     });
     const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-ac-mode'));
-    expect(evict, 'de-board advertises the AC-mode eviction').toBeDefined();
+    expect(evict, 'abandon advertises the AC-mode eviction').toBeDefined();
     expect(evict!.state).toBeUndefined();
     expect(out.facts[`${F}.acMotionless.recorded`]).toBeUndefined();
     expect(out.facts[`${F}.ac.effective`]).toBe(0);
@@ -1457,7 +1543,7 @@ describe('the AC-mode record rides the board lifecycle', () => {
 });
 
 describe('pass 4 i18n (tlh is the canary)', () => {
-  it('the mode labels exist in BOTH locales, shared by the board and station controls', () => {
+  it('the mode labels exist in BOTH locales, shared by the acquire and vehicle controls', () => {
     const strings: Record<string, string | undefined> = {
       'en moving': en.rule.tormentor.mode?.moving,
       'en-x-tlh moving': tlh.rule.tormentor.mode?.moving,
@@ -1482,5 +1568,68 @@ describe('pass 4 i18n (tlh is the canary)', () => {
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+describe('acquire/abandon i18n (tlh is the canary)', () => {
+  it('the acquire/abandon offer names and descriptions exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en acquire name': en.rule.tormentor.acquire?.name,
+      'en-x-tlh acquire name': tlh.rule.tormentor.acquire?.name,
+      'en acquire description': en.rule.tormentor.acquire?.description,
+      'en-x-tlh acquire description': tlh.rule.tormentor.acquire?.description,
+      'en abandon name': en.rule.tormentor.abandon?.name,
+      'en-x-tlh abandon name': tlh.rule.tormentor.abandon?.name,
+      'en abandon description': en.rule.tormentor.abandon?.description,
+      'en-x-tlh abandon description': tlh.rule.tormentor.abandon?.description
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+
+  it('the EQUIP vehicle sub-bucket label exists in BOTH locales (the picker heading)', () => {
+    const buckets = (locale: Record<string, unknown>): string | undefined =>
+      (
+        (
+          (locale.play as Record<string, unknown>).verbBuckets as Record<
+            string,
+            Record<string, unknown>
+          >
+        ).EQUIP as Record<string, unknown>
+      )?.vehicle as string | undefined;
+    expect(buckets(en as unknown as Record<string, unknown>), 'en label').toEqual(
+      expect.any(String)
+    );
+    expect(buckets(tlh as unknown as Record<string, unknown>), 'en-x-tlh label').toEqual(
+      expect.any(String)
+    );
+  });
+
+  it('the subject label, add-row sublabel and stat labels carry the de-seated key in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en companion label': (en.play.companion as Record<string, string | undefined>).tormentor,
+      'en-x-tlh companion label': (tlh.play.companion as Record<string, string | undefined>)
+        .tormentor,
+      'en addRow sublabel': (en.play.addRow as Record<string, string | undefined>)
+        .tormentorSublabel,
+      'en-x-tlh addRow sublabel': (tlh.play.addRow as Record<string, string | undefined>)
+        .tormentorSublabel,
+      'en stats hp': (
+        (en.play.stats as unknown as Record<string, Record<string, string>>).tormentor as
+          | Record<string, string>
+          | undefined
+      )?.hp,
+      'en-x-tlh stats hp': (
+        (tlh.play.stats as unknown as Record<string, Record<string, string>>).tormentor as
+          | Record<string, string>
+          | undefined
+      )?.hp
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+
+  it('the subject label is de-seated: plain "Tormentor", no parenthetical', () => {
+    expect((en.play.companion as Record<string, string>).tormentor).toBe('🛞 Tormentor');
   });
 });
