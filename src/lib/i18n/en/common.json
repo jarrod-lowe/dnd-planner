@@ -528,8 +528,9 @@
       },
       "drive": {
         "name": "Drive",
-        "description": "Spend your action at the Helm, driving the Tormentor where you will",
-        "no_action": "No action available"
+        "description": "Spend your action at the Helm, driving the Tormentor up to its movement for the turn",
+        "no_action": "No action available",
+        "out_of_movement": "No movement remaining"
       },
       "dash": {
         "name": "Dash",
@@ -1810,7 +1811,8 @@
         "ac": "AC",
         "speed": "SPD",
         "cargo": "Cargo",
-        "creatureCapacity": "Creature Capacity"
+        "creatureCapacity": "Creature Capacity",
+        "movement": "Movement"
       },
       "sections": {
         "resources": "Resources",
@@ -2130,7 +2132,8 @@
           "fellGlare": "Glare"
         },
         "tormentor": {
-          "creatureCapacity": "Creatures"
+          "creatureCapacity": "Creatures",
+          "movement": "SPD"
         }
       }
     },

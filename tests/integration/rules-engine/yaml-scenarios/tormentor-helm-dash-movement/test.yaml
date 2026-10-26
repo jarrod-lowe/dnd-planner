@@ -1,0 +1,65 @@
+name: 'Tormentor - Helm Dash Doubles Movement'
+description: >-
+  Dash keeps the player's ACTION (the economy ruling: a vehicle activity is
+  the player's full slot, never attack accounting) and now DOUBLES the
+  vehicle's movement for the turn — the steed's Dash semantics (total = base
+  while Dashed, remaining rising with it) — replacing the intent-only row. The
+  doubled pool is Drive's to spend, and the doubling ages away with the spend
+  at end of turn. The dash-risk copy stays GM-adjudicated.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+        offers:
+          legal:
+            - dash-tormentor
+  # Dash: the action goes, the pool doubles (the steed's dashed flag — total
+  # and remaining rise together, nothing spent).
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 200
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors: []
+  # The doubled pool is Drive's to spend: the override path (no action left)
+  # still records the move against it — 150 of the 200.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 150
+      assert:
+        facts:
+          companion.tormentor.movement.remaining: 50
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.drive.no_action
+  # No action left: Dash stays visible but ILLEGAL with its own diagnostic.
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - dash-tormentor
+  # End of turn: the doubling and the spends age away together.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100

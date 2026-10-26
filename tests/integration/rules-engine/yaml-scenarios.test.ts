@@ -304,13 +304,17 @@ const EXPECTED_RUNNABLE = [
   // …PR 10 — PR-C: the Helm station — the third seat on the same
   // infrastructure (take/leave pair, exclusivity against the passenger and
   // harpoon seats in every direction, the derived capacity counting it) plus
-  // the station's actions: Drive and Dash as generic action spends (plan-row
-  // intent only — vehicles have no movement economy) and Juke as the driver's
-  // REACTION, illegal-but-committable while the vehicle is prone (its
-  // able-to-move leg)
+  // the station's actions: Drive as the vehicle's MOVEMENT offer and Dash as
+  // its doubling (the steed's movement economy, PC-parity house rule; both
+  // still the player's ACTION) and Juke as the driver's REACTION,
+  // illegal-but-committable while the vehicle is prone (its able-to-move leg)
   'tormentor-helm-seat',
   'tormentor-helm-seat-exclusivity',
   'tormentor-helm-drive-dash',
+  // Drive as the vehicle's MOVEMENT offer (the steed's move rows) and Dash's
+  // doubling — the movement-economy pass
+  'tormentor-helm-drive-movement',
+  'tormentor-helm-dash-movement',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',
   'long-rest-resets-hit-dice',

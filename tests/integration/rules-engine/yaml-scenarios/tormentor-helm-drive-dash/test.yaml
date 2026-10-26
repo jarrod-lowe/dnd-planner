@@ -1,12 +1,13 @@
 name: 'Tormentor - Helm Drive and Dash Actions'
 description: >-
-  Drive and Dash are the Helm's plan-row actions, spending the player's ACTION
-  through the generic spend (the Dash/simple-actions idiom, never the weapon
-  attacks' pool): a vehicle action is not an Attack action, so Extra Attack
-  neither applies nor is granted. Vehicles have no movement economy — the rows
-  carry intent only, applying the plain actions.spent and writing no facts of
-  their own (the seat stays taken, the capacity with it). With no action left
-  each stays visible but ILLEGAL with its OWN no-action diagnostic
+  Drive and Dash are the Helm's plan-row actions, and both spend the player's
+  ACTION through the generic spend (the Dash/simple-actions idiom, never the
+  weapon attacks' pool): a vehicle action is not an Attack action, so Extra
+  Attack neither applies nor is granted. Drive IS the vehicle's movement offer
+  (the steed's move rows, PC-parity house rule): its apply spends the action
+  BESIDE the captured distance against the derived movement pool. Dash doubles
+  the pool for the turn (the steed's dashed flag). With no action left each
+  stays visible but ILLEGAL with its OWN no-action diagnostic
   (illegal-but-committable), and a planned-anyway row still spends, the
   over-commit reading negative until the turn ends.
 ruleGroups:
@@ -21,7 +22,8 @@ steps:
       assert:
         facts:
           companion.tormentor.seats.helm: 1
-  # An action available: both of the Helm's actions are legal.
+  # An action available: both of the Helm's actions are legal. Drive files in
+  # the MOVE section (the steed's move rows); Dash stays a generic action.
   - evaluate:
       assert:
         facts:
@@ -33,7 +35,7 @@ steps:
         offerUi:
           - id: drive-tormentor
             ui:
-              section: action-other
+              section: move
               subject: tormentor
               detailKey: vehicle/tormentor-helm
               actionCost:
@@ -45,13 +47,16 @@ steps:
               detailKey: vehicle/tormentor-helm
               actionCost:
                 - action
-  # Drive spends the action and writes NOTHING of its own: the seat stays
+  # Drive spends the action and the movement — nothing else: the seat stays
   # taken and the capacity counts it still.
   - addOffer:
       id: drive-tormentor
+      selections:
+        distance: 30
       assert:
         facts:
           actions.remaining: 0
+          companion.tormentor.movement.remaining: 70
           companion.tormentor.seats.helm: 1
           companion.tormentor.creatureCapacity.used: 1
         planErrors:
@@ -67,24 +72,28 @@ steps:
             - dash-tormentor
           illegal:
             - dash-tormentor
-  # …and the override path spends anyway, the row carrying DASH's own
-  # diagnostic (the first row stays clean, like every action spend).
+  # …and the override path spends anyway, DOUBLING the movement pool (the
+  # steed's Dash semantics) while the row carries DASH's own diagnostic (the
+  # first row stays clean, like every action spend).
   - addOffer:
       id: dash-tormentor
       assert:
         facts:
           actions.remaining: -1
+          companion.tormentor.movement.total: 200
         planErrors:
           - id: dash-tormentor
             index: 0
             errors:
               - rule.tormentor.dash.no_action
-  # The turn ends: the spends age away and both open again — Drive's own
-  # diagnostic is the mirror case.
+  # The turn ends: the spends and the doubling age away and both open again —
+  # Drive's own diagnostic is the mirror case.
   - endTurn:
       assert:
         facts:
           actions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
           companion.tormentor.seats.helm: 1
   - addOffer:
       id: dash-tormentor
@@ -100,6 +109,7 @@ steps:
       assert:
         facts:
           actions.remaining: -1
+          companion.tormentor.movement.remaining: 0
         planErrors:
           - id: drive-tormentor
             index: 0

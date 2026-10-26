@@ -123,7 +123,8 @@ const RESOURCE_SHORT_LABELS: Record<string, string> = {
   'play.stats.steed.healingTouch': 'play.ledger.short.steed.healingTouch',
   'play.stats.steed.feyStep': 'play.ledger.short.steed.feyStep',
   'play.stats.steed.fellGlare': 'play.ledger.short.steed.fellGlare',
-  'play.stats.tormentor.creatureCapacity': 'play.ledger.short.tormentor.creatureCapacity'
+  'play.stats.tormentor.creatureCapacity': 'play.ledger.short.tormentor.creatureCapacity',
+  'play.stats.tormentor.movement': 'play.ledger.short.tormentor.movement'
 };
 
 export function resourceShortLabelKey(label: string): string | undefined {

@@ -528,8 +528,9 @@
       },
       "drive": {
         "name": "Duj yInab",
-        "description": "SeHyaH Sep yIvI' 'ej Duj Sep Dat DInab",
-        "no_action": "DIvI' tu'lu'be'"
+        "description": "SeHyaH Sep yIvI' 'ej Duj Sep yInab — leng Duj yIlo'",
+        "no_action": "DIvI' tu'lu'be'",
+        "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'"
       },
       "dash": {
         "name": "Duj Do'choH",
@@ -1830,7 +1831,8 @@
         "ac": "DIch Jun",
         "speed": "SPD",
         "cargo": "ngIS",
-        "creatureCapacity": "SuvwI' Sep"
+        "creatureCapacity": "SuvwI' Sep",
+        "movement": "leng"
       },
       "sections": {
         "resources": "DIvI' Duj",
@@ -2130,7 +2132,8 @@
           "fellGlare": "Glare"
         },
         "tormentor": {
-          "creatureCapacity": "SuvwI'"
+          "creatureCapacity": "SuvwI'",
+          "movement": "SPD"
         }
       }
     },
