@@ -47,8 +47,13 @@ steps:
             vars:
               occupancy:
                 capture: true
+                # The RECORDED BASE, never the derived `used`: used counts held
+                # seats beside the record, so a seat-inclusive default
+                # double-counts a seated player and inflates on every accepted
+                # re-record. Unrecorded, the fact resolves undefined and the
+                # slider falls back to its min (0) — the seat counts the player.
                 default:
-                  fact: companion.tormentor.creatureCapacity.used
+                  fact: companion.tormentor.creatureCapacity.occupancy
   # Set 3 of 4: the keyed effect IS the stored value (used reads it at once).
   - addOffer:
       id: set-tormentor-occupancy
@@ -118,3 +123,42 @@ steps:
         offers:
           exists:
             - set-tormentor-occupancy
+  # The default beside a HELD SEAT (the double-count repro): the seat alone
+  # reads used 1 with the occupancy record still gone, so the slider's default
+  # (the recorded base, unrecorded → 0) stays clear of it.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1
+          companion.tormentor.creatureCapacity.occupancy: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-passenger
+  # Recorded occupancy 2 beside the held seat: used reads the SUM (3), the
+  # recorded base stays 2 — the number the slider opens at.
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.occupancy: 2
+          companion.tormentor.creatureCapacity.used: 3
+  # Accepting that default re-writes the base it came from: occupancy stays 2,
+  # used stays 3 — never the seat-inclusive 3-and-then-4 inflation loop.
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.occupancy: 2
+          companion.tormentor.creatureCapacity.used: 3
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.used: 3

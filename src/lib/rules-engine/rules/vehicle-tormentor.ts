@@ -837,7 +837,7 @@ const vehicleTormentor: RuleModule = {
     {
       // The VEHICLE's occupancy record: a vehicle action in the vehicle's +ADD
       // (free, gated on the acquire) whose slider (0..the baked capacity, opening
-      // at the current used) writes ONE permanent KEYED effect — the steed
+      // at the RECORDED occupancy) writes ONE permanent KEYED effect — the steed
       // HP-modifier semantics: the keyed effect IS the stored value, re-apply
       // replaces, removing the chip clears the modification. No legality gates:
       // occupancy past the capacity is illegal-but-possible (the derive clamps
@@ -858,7 +858,16 @@ const vehicleTormentor: RuleModule = {
         intents: { HANDLE: 'gear' },
         actionCost: []
       },
-      vars: { occupancy: { capture: true, default: { fact: `${F}.creatureCapacity.used` } } },
+      // The capture default reads the RECORDED BASE, never the derived `used`:
+      // used counts held seats beside the record (clamp(occupancy + seats)), so
+      // a seat-inclusive default DOUBLE-COUNTS a seated player — recorded 2 +
+      // seated reads used 3, the slider would open at 3, and accepting the
+      // default writes occupancy 3 → used 4, inflating on every repeat. Reading
+      // the base keeps the counters in their lanes: the slider records the
+      // NPCs, the seat counts the player. Unrecorded, the fact resolves
+      // undefined and the slider falls back to its min (0) — the seated player
+      // is counted via their seat, not via the slider.
+      vars: { occupancy: { capture: true, default: { fact: `${F}.creatureCapacity.occupancy` } } },
       apply: (_f, selections): ActionResult => ({
         advertise: [
           {

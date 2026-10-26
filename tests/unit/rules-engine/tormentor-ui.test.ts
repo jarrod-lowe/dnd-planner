@@ -3,6 +3,9 @@ import { evaluate, type FactReader, type RuleModule } from '$lib/rules-engine';
 import { getModule, isRegistered } from '$lib/rules-engine/registry';
 import { lazyRuleGroupIds } from '$lib/rules-engine/lazy';
 import { deriveTopBarEntries, deriveResourceEntries } from '$lib/play/derivePanels';
+import { resolveValueSource } from '$lib/components/play/panel-renderer/resolveValueSource';
+import type { SliderControl } from '$lib/components/play/panel-renderer/types';
+import type { VarDefinition } from '$lib/rules-view';
 import type { EffectInstance } from '$lib/rules-engine';
 import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
@@ -316,10 +319,12 @@ describe('occupancy offer', () => {
       min: { number: 0 },
       max: { fact: `${F}.creatureCapacity.max` }
     });
-    // Opens at the CURRENT occupancy: the derived used (1 unrecorded, the
-    // acquirer; the recorded value once set).
+    // Opens at the RECORDED BASE, never the derived `used`: the seat pass made
+    // used = occupancy + held seats, so a seat-inclusive default double-counts
+    // the seated player and inflates on every accepted re-record (the
+    // resolution behaviour is pinned in the capture-default describe below).
     expect(offer!.rule.vars).toEqual({
-      occupancy: { capture: true, default: { fact: `${F}.creatureCapacity.used` } }
+      occupancy: { capture: true, default: { fact: `${F}.creatureCapacity.occupancy` } }
     });
   });
 
@@ -464,6 +469,80 @@ describe('creature capacity derive', () => {
   it('reads 0 while unacquired (the acquire default is not a free occupant)', () => {
     const out = evaluate({ modules: [module()] });
     expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+  });
+});
+
+/**
+ * The occupancy slider's CAPTURE DEFAULT. The default reads the RECORDED BASE
+ * (`creatureCapacity.occupancy`), never the derived `used`: the seat pass made
+ * used = occupancy + held seats, so a seat-inclusive default DOUBLE-COUNTS a
+ * seated player — recorded 2 + seated reads used 3, the slider would open at
+ * 3, accepting that writes occupancy 3 → used 4, and every repeat inflates by
+ * one more. Reading the base keeps the two counters in their lanes: the slider
+ * records the NPCs, the seat counts the player. An UNRECORDED occupancy
+ * resolves to undefined and the slider falls back to its min (0) — an
+ * INTENDED behaviour change: with no record the default is 0, because the
+ * seated player is counted via their seat, not via the slider.
+ */
+describe('occupancy slider capture default', () => {
+  /**
+   * The slider's opening value, computed exactly as PanelSlider does: the
+   * captured-default resolution against the engine's FINAL facts (the same
+   * resolveValueSource call the component makes), falling back to the resolved
+   * min when the default fact is unrecorded.
+   */
+  function sliderOpensAt(committed: EffectInstance[]): number {
+    const out = evaluate({ modules: [module()], committed });
+    const offer = out.availableRules.find((r) => r.rule.id === 'set-tormentor-occupancy');
+    expect(offer, 'the occupancy offer exists while acquired').toBeDefined();
+    const control = (offer!.rule.ui as Record<string, unknown>).primaryControl as SliderControl;
+    const vars = offer!.rule.vars as Record<string, VarDefinition>;
+    const min = (resolveValueSource(control.min, out.facts, vars) as number) ?? 0;
+    const resolved = resolveValueSource({ var: control.var }, out.facts, vars) as
+      | number
+      | undefined;
+    return resolved ?? min;
+  }
+
+  it('a held seat alone does not lift the default: the slider opens at 0 (the seat counts the player)', () => {
+    // Seat, no occupancy record: used reads 1, but the slider must NOT open at
+    // the seat-inclusive 1 — accepting that would write occupancy 1 and count
+    // the player twice.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()]
+    });
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.occupancy`]).toBeUndefined();
+    expect(sliderOpensAt([acquireEffect(), seatPlannedEffect()])).toBe(0);
+  });
+
+  it('recorded occupancy beside a held seat: the slider opens at the recorded base while used reads the sum', () => {
+    // Recorded 2 + seated: used reads 3, but the slider opens at 2 — accepting
+    // the default re-writes the base it came from, not the seat-inclusive sum.
+    const committed = [acquireEffect(), seatPlannedEffect(), occupancyEffect(2)];
+    const out = evaluate({ modules: [module()], committed });
+    expect(out.facts[`${F}.creatureCapacity.occupancy`]).toBe(2);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(3);
+    expect(sliderOpensAt(committed)).toBe(2);
+  });
+
+  it('accepting the default is idempotent: a re-record at the opening value keeps used at 3 (no inflation)', () => {
+    // The double-count repro, end to end: open the slider (default), accept it
+    // unchanged. The occupancy record stays 2 and used stays 3 — with a
+    // seat-inclusive default this row would write 3 and read used 4, and every
+    // repeat would add one more.
+    const committed = [acquireEffect(), seatPlannedEffect(), occupancyEffect(2)];
+    const opening = sliderOpensAt(committed);
+    const out = evaluate({
+      modules: [module()],
+      committed,
+      planned: [
+        { instanceId: 'i0', ruleId: 'set-tormentor-occupancy', selections: { occupancy: opening } }
+      ]
+    });
+    expect(out.facts[`${F}.creatureCapacity.occupancy`]).toBe(2);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(3);
   });
 });
 
