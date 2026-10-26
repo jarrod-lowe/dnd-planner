@@ -1,11 +1,13 @@
 name: 'Tormentor - Helm Dash Doubles Movement'
 description: >-
-  Dash keeps the player's ACTION (the economy ruling: a vehicle activity is
-  the player's full slot, never attack accounting) and now DOUBLES the
-  vehicle's movement for the turn — the steed's Dash semantics (total = base
-  while Dashed, remaining rising with it) — replacing the intent-only row. The
-  doubled pool is Drive's to spend, and the doubling ages away with the spend
-  at end of turn. The dash-risk copy stays GM-adjudicated.
+  Dash is the player's BONUS ACTION (the 2024-format stat block: the
+  vehicle's Dash rides the bonus-action slot) and DOUBLES the vehicle's
+  movement for the turn — the steed's Dash semantics (total = base while
+  Dashed, remaining rising with it). The doubled pool is Drive's to spend
+  from the still-open ACTION, and the doubling ages away with the spend at
+  end of turn while the PER-ENCOUNTER dash count persists across turns
+  (3 + the vehicle's Constitution modifier each encounter — the keyed
+  running-total record; see tormentor-helm-dash-count).
 ruleGroups:
   - vehicles/tormentor
   - dnd-5e-2024/action-economy
@@ -20,48 +22,68 @@ steps:
         facts:
           companion.tormentor.movement.total: 100
           companion.tormentor.movement.remaining: 100
+          companion.tormentor.dashes.taken: 0
         offers:
           legal:
             - dash-tormentor
-  # Dash: the action goes, the pool doubles (the steed's dashed flag — total
-  # and remaining rise together, nothing spent), and the row carries the
-  # GM-risk note (the per-row 'notice' — see tormentor-helm-dash-note).
+  # Dash: the BONUS action goes (the ACTION untouched), the pool doubles (the
+  # steed's dashed flag — total and remaining rise together, nothing spent),
+  # and the per-encounter count starts at 1 — within the allowance, so the
+  # row carries NO risk note.
   - addOffer:
       id: dash-tormentor
       assert:
         facts:
-          actions.remaining: 0
+          actions.remaining: 1
+          bonusActions.remaining: 0
           companion.tormentor.movement.total: 200
           companion.tormentor.movement.remaining: 200
+          companion.tormentor.dashes.taken: 1
         planErrors:
           - id: dash-tormentor
             index: 0
-            errors:
-              - rule.tormentor.dash.risk
-  # The doubled pool is Drive's to spend: the override path (no action left)
-  # still records the move against it — 150 of the 200.
+            errors: []
+  # The doubled pool is Drive's to spend, the action still open: 150 of the
+  # 200.
   - addOffer:
       id: drive-tormentor
       selections:
         distance: 150
       assert:
         facts:
+          actions.remaining: 0
           companion.tormentor.movement.remaining: 50
         planErrors:
           - id: drive-tormentor
             index: 0
-            errors:
-              - rule.tormentor.drive.no_action
-  # No action left: Dash stays visible but ILLEGAL with its own diagnostic.
+            errors: []
+  # No bonus action left: Dash stays visible but ILLEGAL with its own
+  # diagnostic.
   - evaluate:
       assert:
         offers:
           illegal:
             - dash-tormentor
-  # End of turn: the doubling and the spends age away together.
+  # End of turn: the doubling and the spends age away together — the count
+  # does NOT (per-encounter, not per-turn).
   - endTurn:
       assert:
         facts:
           actions.remaining: 1
+          bonusActions.remaining: 1
           companion.tormentor.movement.total: 100
           companion.tormentor.movement.remaining: 100
+          companion.tormentor.dashes.taken: 1
+  # Turn 2: the doubling is back to a fresh 200 while the count keeps
+  # climbing — 2.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 200
+          companion.tormentor.dashes.taken: 2
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors: []

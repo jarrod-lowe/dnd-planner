@@ -220,10 +220,12 @@ ruleGroups:
             reloads are the crew's bookkeeping.
   # The HELM's flip detail — linked from the Drive, Dash and Juke offers. A
   # catalog-only entry like the harpoon's: our own wording (the Tormentor is
-  # not SRD), in-world voice for what the driver does, plus the dash risk —
-  # unknown and GM-adjudicated, said plainly rather than invented as
-  # mechanics. The stat block's three-quarters cover for the Helm crew stays
-  # out: cover is the table's business here.
+  # not SRD), in-world voice for what the driver does, plus the Dash rule —
+  # the 2024-format stat block takes the vehicle's Dash as a bonus action
+  # under a per-encounter cap (3 + its Constitution modifier; each Dash
+  # beyond that risks damaging the vehicle), the rule stated without baking
+  # the computed total. The stat block's three-quarters cover for the Helm
+  # crew stays out: cover is the table's business here.
   - id: tormentor-helm-detail
     translations:
       en:
@@ -260,9 +262,11 @@ ruleGroups:
             war machine's handle: **Drive** spends the driver's action
             steering the Tormentor through the turn.
 
-            **Dash.** The driver can spend an action pushing the Tormentor
-            flat out for the turn. Dashing presses a war machine hard — any
-            consequence of running it flat out is the GM's to decide.
+            **Dash.** The driver can spend a bonus action pushing the
+            Tormentor flat out, doubling its movement for the turn. Each
+            encounter the vehicle can Dash 3 times plus its Constitution
+            modifier; each Dash beyond that runs the risk of damaging the
+            vehicle.
 
             **Juke.** The driver can spend their reaction to swerve the
             Tormentor, gaining advantage on a Dexterity saving throw. The

@@ -1,0 +1,99 @@
+name: 'Tormentor - Helm Dash Per-Encounter Count and Allowance'
+description: >-
+  Every committed Dash counts against the vehicle's per-encounter Dashes:
+  the count is a KEYED RUNNING-TOTAL record (the vehicle HP recorder's
+  keyed-total idiom — each apply re-advertises the one keyed effect carrying
+  prior + 1, so dashes ADD UP rather than evicting; a same-key effect
+  carrying only 1 would replace, not accumulate) that lasts untilLongRest —
+  encounters are not modelled, and a long rest is the nearest reset, exactly
+  like the HP records. The allowance is DERIVED from the baked Constitution
+  modifier (3 + CON mod — 5 today for CON 14; a re-baked stat block changes
+  it with no other edit), and the count surfaces as the Dashes chip on the
+  vehicle panel (displayFact, the occupancy-chip pattern). The count key
+  joins the acquire lifecycle: abandon evicts it, a re-acquired vehicle
+  starts fresh.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.dashes.allowance: 5
+  # Dash: the count record lands beside the turn's spend — the running-total
+  # FACT reads 1 the moment the row is planned.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.dashes.taken: 1
+  # The keyed-total idiom: a second Dash (the override path — the bonus
+  # action is spent) re-advertises the SAME key carrying prior + 1, so the
+  # count ADDS UP instead of the newer record evicting the older.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.dashes.taken: 2
+        planErrors:
+          - id: dash-tormentor
+            index: 1
+            errors:
+              - rule.tormentor.dash.no_bonus_action
+  # The count persists across turns (per-encounter, not per-turn): ONE keyed
+  # record carrying the running total, committed with the turn.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-dash-count
+        facts:
+          companion.tormentor.dashes.taken: 2
+  # A long rest is the nearest encounter reset: the untilLongRest count
+  # record ages away with it, and the next Dash counts from fresh.
+  - endTurn:
+      longRest: true
+      assert:
+        facts:
+          companion.tormentor.dashes.taken: 0
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.dashes.taken: 1
+  - endTurn: {}
+  # Abandon evicts the count with the acquire (the key joins the lifecycle):
+  # the record, and the count with it, never outlives the vehicle.
+  - addOffer:
+      id: abandon-tormentor
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - evict-tormentor-dash-count
+        facts:
+          companion.tormentor.dashes.taken: 0
+  # A re-acquired vehicle is FRESH: the allowance derives from the new bake
+  # and the count starts from zero again.
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.dashes.allowance: 5
+          companion.tormentor.dashes.taken: 0
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.dashes.taken: 1
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors: []

@@ -534,9 +534,12 @@
       },
       "dash": {
         "name": "Dash",
-        "description": "Push the Tormentor to move fast this turn. Dashing presses the machine hard — the GM decides any consequence",
-        "no_action": "No action available",
-        "risk": "Dashing presses the machine hard — the GM decides any consequence"
+        "description": "Spend a bonus action doubling the Tormentor's movement this turn. The vehicle can Dash 3 times plus its Constitution modifier each encounter — each Dash beyond that risks damaging it",
+        "no_bonus_action": "No bonus action available",
+        "risk": "This Dash exceeds the vehicle's per-encounter Dashes (3 + its Constitution modifier) — each additional Dash risks damaging the vehicle"
+      },
+      "dash-count-effect": {
+        "name": "Dashes {{score}}"
       },
       "juke": {
         "name": "Juke",

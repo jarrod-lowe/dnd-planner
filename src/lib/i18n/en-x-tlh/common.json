@@ -534,9 +534,12 @@
       },
       "dash": {
         "name": "Duj Do'choH",
-        "description": "Duj Sep Do yIcher 'ej Hujqu'choH. qab qaS — DIvI' yIwuqnIS",
-        "no_action": "DIvI' tu'lu'be'",
-        "risk": "Duj Sep Do Hujqu'choH — qab qaS DIvI' wuqnIS"
+        "description": "Duj Sep Do wa'DIch DIvI' yIlo'. wej Do chovmey Duj Sep — Do nIv qaS Duj Sep qIp",
+        "no_bonus_action": "DIvI' cha' tu'lu'be'",
+        "risk": "Do vItlh Duj Sep Do chovmey — Do nIv qaS Duj Sep qIp"
+      },
+      "dash-count-effect": {
+        "name": "Do chovmey {{score}}"
       },
       "juke": {
         "name": "yIvegh",

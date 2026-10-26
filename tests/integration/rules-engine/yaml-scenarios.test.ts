@@ -315,10 +315,15 @@ const EXPECTED_RUNNABLE = [
   // doubling — the movement-economy pass
   'tormentor-helm-drive-movement',
   'tormentor-helm-dash-movement',
-  // …the follow-up to the user's tablet test: the GM-adjudicated dash risk,
-  // surfaced ON every planned Dash row as a per-row 'notice' diagnostic (the
-  // below-threshold bounce-note pattern)
+  // …the rework after the stat-block source landed: Dash is the player's
+  // BONUS action under a per-encounter cap (3 + CON mod), and the risk note
+  // fires only on a Dash BEYOND the cap (the below-threshold bounce-note
+  // pattern, now conditional)
   'tormentor-helm-dash-note',
+  // …the per-encounter counter itself: a keyed running-total record
+  // (untilLongRest, the HP-recorder precedent), the derived allowance, the
+  // Dashes chip, and the acquire-lifecycle eviction
+  'tormentor-helm-dash-count',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',
   'long-rest-resets-hit-dice',
