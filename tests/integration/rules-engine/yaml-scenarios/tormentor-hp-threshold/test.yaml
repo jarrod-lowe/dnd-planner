@@ -7,12 +7,12 @@ description: >-
   carries a [Use Threshold | Ignore Threshold] segmented control (rendered
   only while the threshold fact is positive — its enabled condition names the
   fact, and the panel renderer hides a false-gated control), a Use-Threshold
-  blow BELOW the fact records NOTHING and commits a hidden keyed bounce
-  marker whose annotate pass surfaces the informational below-threshold
-  annotation on the damage panel — never a planErrors diagnostic, never an
-  illegality — and an Ignore-Threshold blow records the RAW amount in full
-  (the GM correction: "last round should have taken 1 more"). At or above the
-  threshold, Use mode records the FULL amount as ever.
+  blow BELOW the fact records NOTHING and returns a 'notice' diagnostic that
+  rides THAT planned row alone (planDiagnostics is per-instance — the note
+  can never render on another damage row of the same panel), and an
+  Ignore-Threshold blow records the RAW amount in full (the GM correction:
+  "last round should have taken 1 more"). At or above the threshold, Use mode
+  records the FULL amount as ever.
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -49,7 +49,7 @@ steps:
                     operator: greaterThan
                     value: 0
   # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
-  # records the RAW amount in full — no bounce marker, no annotation, no error.
+  # records the RAW amount in full — no bounce note, no error.
   - addOffer:
       id: record-tormentor-damage
       selections:
@@ -63,81 +63,65 @@ steps:
           - id: record-tormentor-damage
             index: 0
             errors: []
-        annotations:
-          notExists:
-            - rule.tormentor.record-damage.below_threshold
   - endTurn:
       assert:
         effects:
           exists:
             - effect-tormentor-hp-damage
-          notExists:
-            - effect-tormentor-hp-bounce
-  # Sub-threshold in USE mode (the default): records NOTHING and the feedback
-  # is the ANNOTATION on the damage panel — the row carries no error at all.
+  # THE USER REPRO: TWO damage rows planned — one sub-threshold in Use mode,
+  # one landing at the threshold. The bounce note is a per-row 'notice'
+  # diagnostic: ONLY the bounced row carries it, the landing row never does,
+  # the plan stays legal, and no annotation exists (a per-commit bounce is
+  # not a standing panel truth).
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 10
+      assert:
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors: []
   - addOffer:
       id: record-tormentor-damage
       selections:
         amount: 9
       assert:
         facts:
-          companion.tormentorDamageControl.hp.damageRecorded: 9
-          companion.tormentorDamageControl.hp.current: 51
-        planErrors:
-          - id: record-tormentor-damage
-            index: 0
-            errors: []
-        annotations:
-          exists:
-            - rule.tormentor.record-damage.below_threshold
-          targets:
-            - key: rule.tormentor.record-damage.below_threshold
-              targets:
-                - damage.tormentor.companion
-  # The marker commits with the turn (untilLongRest) and the annotation stands
-  # on the damage panel while the bounced record does.
-  - endTurn:
-      assert:
-        effects:
-          exists:
-            - effect-tormentor-hp-bounce
-        facts:
-          companion.tormentorDamageControl.hp.current: 51
-        annotations:
-          exists:
-            - rule.tormentor.record-damage.below_threshold
-  # USE mode at the threshold: the blow lands in FULL (a floor, not a cap).
-  - addOffer:
-      id: record-tormentor-damage
-      selections:
-        amount: 10
-      assert:
-        facts:
+          # 9 (committed ignore-mode) + 10 (the landing row): the bounced row
+          # adds nothing.
           companion.tormentorDamageControl.hp.damageRecorded: 19
           companion.tormentorDamageControl.hp.current: 41
         planErrors:
           - id: record-tormentor-damage
             index: 0
             errors: []
+          - id: record-tormentor-damage
+            index: 1
+            errors:
+              - rule.tormentor.record-damage.below_threshold
+        status:
+          legal: true
+  # The bounced row commits NOTHING at end of turn — no marker effect, no
+  # state, no record. The note lived on the planned row and leaves with it.
   - endTurn:
       assert:
         effects:
           exists:
             - effect-tormentor-hp-damage
+          notExists:
             - effect-tormentor-hp-bounce
-  # A long rest clears the records AND the bounce marker with them.
+        facts:
+          companion.tormentorDamageControl.hp.current: 41
+  # A long rest clears the records.
   - endTurn:
       longRest: true
       assert:
         effects:
           notExists:
             - effect-tormentor-hp-damage
-            - effect-tormentor-hp-bounce
         facts:
           companion.tormentorDamageControl.hp.current: 60
-        annotations:
-          notExists:
-            - rule.tormentor.record-damage.below_threshold
   # Above the threshold records in full too.
   - addOffer:
       id: record-tormentor-damage

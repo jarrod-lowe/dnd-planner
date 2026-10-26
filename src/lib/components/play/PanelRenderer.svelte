@@ -420,6 +420,17 @@
     matchingAnnotations.filter((ann) => ann.rider?.value === undefined && ann.toggle === undefined)
   );
 
+  // A planned row's NOTICE diagnostics are informational notes about what THIS
+  // row did (the HP recorder's below-threshold bounce: sub-threshold damage is
+  // legal to attempt, and the app tells the player it bounced). The plan fold
+  // keys them to the row's own instance, so they can never render on another
+  // row of the same offer — unlike annotations, which match by panel label.
+  // They ride the same note block as informational annotations (expanded rows
+  // only) and, unlike error diagnostics, never mark the row illegal.
+  const noticeDiagnostics = $derived(
+    (entry.diagnostics ?? []).filter((d) => d.severity === 'notice')
+  );
+
   // Annotations whose rider carries a value become toggleable chips on the dice
   // line; valueless riders stay the text chips they have always been.
   const rollModifiers = $derived<RollModifier[]>(
@@ -866,16 +877,21 @@
         </div>
       {/if}
     {/each}
-    {#if informationalAnnotations.length > 0 && !summary}
+    {#if (informationalAnnotations.length > 0 || noticeDiagnostics.length > 0) && !summary}
       <!--
       Informational annotations (e.g. the Great Weapon Fighting reroll
       reminder) are valueless riders with no number to fold into the strip —
       unlike valued riders, which become dice-line toggle chips. The block
       below is a stacked (flex-column) list, not an inline "word", so
       rendering it in summary mode would add a second line under the strip.
-      Summary mode is one line; expand to see the reminder text.
+      Summary mode is one line; expand to see the reminder text. The row's own
+      notice diagnostics (the below-threshold bounce note) join them here —
+      informational, never the illegal/error path.
     -->
       <div class="panel-renderer__annotations" role="note">
+        {#each noticeDiagnostics as diagnostic (diagnostic.code)}
+          <span class="panel-renderer__annotation">{$t(diagnostic.code)}</span>
+        {/each}
         {#each informationalAnnotations as annotation (annotation.key)}
           {@const addsOffer =
             annotation.addsToPlan && annotationsActionable

@@ -636,8 +636,10 @@ export interface Diagnostic {
 
 /**
  * The result of applying a planned action: fact deltas to merge into the working
- * turn state, plus any per-action legality problems (which drive
- * illegal-but-visible on planned items).
+ * turn state, plus any per-action diagnostics. Only `'error'` severity drives
+ * illegal-but-visible on the planned row; `'notice'` (and `'warning'`) are
+ * informational notes that ride the row without affecting its legality (the
+ * HP recorder's below-threshold bounce).
  */
 export interface ActionResult {
   /**

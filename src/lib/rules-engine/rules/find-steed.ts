@@ -110,14 +110,11 @@ function steedStats(level: number, creatureType: number): Record<string, number>
 
 // The steed's child HP effects, evicted (by key) when the steed is dismissed or
 // its mount chip is removed. The mount effect declares them as `dependents`.
-// The below-threshold bounce marker rides the same lifecycle — the annotation
-// never outlives the steed whose bounce it reports.
 const STEED_CHILD_EFFECTS = [
   'effect-steed-hp-modifier-max',
   'effect-steed-hp-modifier-current',
   'effect-steed-hp-damage',
-  'effect-steed-hp-heal',
-  'effect-steed-hp-bounce'
+  'effect-steed-hp-heal'
 ] as const;
 
 /**
@@ -722,7 +719,7 @@ const STEED_PANELS: SubjectPanelDeclaration[] = [
  * steed's natural `companion.steed.damageThreshold`: nothing derives it, so it
  * reads 0, the recorder never gates and the threshold-mode control never
  * renders today; a future stat-block bake adapts the recorder for free (bounce
- * annotation in this namespace, on the `.companion`-scoped damage label).
+ * note in this namespace).
  */
 const STEED_HP_RECORDERS = hpRecorders({
   idStem: 'steed-record',
@@ -737,10 +734,6 @@ const STEED_HP_RECORDERS = hpRecorders({
   },
   damage: {
     name: `${S}.steed-record-damage.name`,
-    // Steed-scoped (the `.companion` convention): the below-threshold bounce
-    // annotation lands on the STEED's damage panel, never the player's or
-    // another subject's.
-    annotationLabels: ['damage.steed.companion'],
     effectId: 'effect-steed-hp-damage',
     effectName: `${S}.steed-record-damage.effect.name`
   },
@@ -752,8 +745,7 @@ const STEED_HP_RECORDERS = hpRecorders({
   accumulation: 'keyed-total',
   chipSection: 'health',
   bounce: {
-    effectId: 'effect-steed-hp-bounce',
-    annotationKey: `${S}.steed-record-damage.below_threshold`
+    noteKey: `${S}.steed-record-damage.below_threshold`
   },
   lethal: { effects: retireSteedEffects, keepRecord: false }
 });
@@ -1159,7 +1151,7 @@ const findSteed: RuleModule = {
       30
     ),
     // HP: the damage/heal recorders (see STEED_HP_RECORDERS above).
-    ...STEED_HP_RECORDERS.offers,
+    ...STEED_HP_RECORDERS,
     // Dismiss — the steed vanishes (replaces the summon effect). Costs the
     // caster's action (as legacy did).
     {
@@ -1196,12 +1188,10 @@ const findSteed: RuleModule = {
     }
   ],
   // The Life Bond feature — surfaced as an informational annotation while the
-  // steed is summoned (damage the steed takes can be shared with the paladin) —
-  // beside the recorders' own annotate share: the below-threshold bounce
-  // annotation on the steed's damage panel, standing exactly while the bounce
-  // marker does (threshold model v2).
-  annotate: (f, committed) => [
-    ...STEED_HP_RECORDERS.annotate(f, committed),
+  // steed is summoned (damage the steed takes can be shared with the paladin).
+  // The recorders contribute no annotate share: the below-threshold bounce is
+  // a per-row notice diagnostic (threshold model v2), not a panel annotation.
+  annotate: (f) => [
     // Rides the Record Healing panel: spell healing within 5 ft also
     // heals the steed, so the reminder targets `healing.any`, not a steed label.
     // Both this gate and the steed heal recorder are `summoned`, so the

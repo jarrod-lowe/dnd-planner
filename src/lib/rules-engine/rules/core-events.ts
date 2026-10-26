@@ -283,8 +283,8 @@ function shortRestOffer(): Offer {
  * concentration trigger riding `onDamageRecorded`. The threshold fact is the
  * player's natural `hp.damageThreshold`: nothing derives it, so it reads 0,
  * the recorder never gates and the threshold-mode control never renders today;
- * a future subject that bakes one adapts the recorder for free (bounce
- * annotation in this namespace).
+ * a future subject that bakes one adapts the recorder for free (bounce note
+ * in this namespace).
  */
 const HP_RECORDERS = hpRecorders({
   idStem: 'record',
@@ -298,8 +298,7 @@ const HP_RECORDERS = hpRecorders({
     // The recorder idiom (record-heal carries 'healing.any'): the panel the
     // post-hoc damage reminders ride — concentration's
     // save-to-keep-the-spell annotation (with the computed DC) while the slot
-    // is held, and the below-threshold bounce annotation while its marker
-    // stands.
+    // is held.
     annotationLabels: ['damage.any'],
     // The ids are what the scenarios assert (effect-hp-damage / -heal).
     effectId: 'effect-hp-damage',
@@ -314,8 +313,7 @@ const HP_RECORDERS = hpRecorders({
   accumulation: 'keyless-stack',
   chipSection: 'health',
   bounce: {
-    effectId: 'effect-hp-bounce',
-    annotationKey: `${CE}.record-damage.below_threshold`
+    noteKey: `${CE}.record-damage.below_threshold`
   },
   onDamageRecorded: concentrationDamageMarker
 });
@@ -323,7 +321,7 @@ const HP_RECORDERS = hpRecorders({
 const coreEvents: RuleModule = {
   id: 'core-events',
   offer: () => [
-    ...HP_RECORDERS.offers,
+    ...HP_RECORDERS,
     ...ABILITIES.map(saveOffer),
     {
       id: 'record-check',
@@ -358,12 +356,10 @@ const coreEvents: RuleModule = {
       },
       vars: { text: { capture: true, default: { string: '' } } }
     }
-  ],
-  // The recorders' annotate share — the below-threshold bounce annotation on
-  // the damage panel (threshold model v2: the feedback is informational, and
-  // it stands only while the bounce marker does). The player has no other
-  // annotate output today.
-  annotate: HP_RECORDERS.annotate
+  ]
+  // No `annotate` share: the below-threshold bounce is a per-row notice
+  // diagnostic (threshold model v2), not a panel annotation, and the player
+  // has no other annotate output today.
 };
 
 export default defineRule(coreEvents);

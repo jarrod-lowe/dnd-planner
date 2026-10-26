@@ -171,7 +171,10 @@ Two distinct gates:
 ```ts
 interface ActionResult {
   advertise?: EffectInstance[]; // the ONLY way an action changes state
-  diagnostics?: Diagnostic[]; // per-instance legality of THIS execution
+  // Per-instance diagnostics of THIS execution: 'error' flips the row
+  // illegal (illegal-but-visible); 'notice'/'warning' are informational
+  // notes that ride the row (e.g. the HP recorder's below-threshold bounce).
+  diagnostics?: Diagnostic[];
 }
 ```
 
