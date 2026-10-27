@@ -1,7 +1,7 @@
 import { defineRule, type RuleModule } from '../builder';
 
 /**
- * Armor Class: `ac.value = base + dex bonus + armor + shield + misc`.
+ * Armor Class: `ac.value = base + dex bonus + armor + shield + misc + cover`.
  *
  * The legacy engine used an ac-calculation → ac-dex → ac-components → ac-total cascade of groups
  * to copy-then-sum; here the sum derive simply reads the component facts and the
@@ -16,7 +16,12 @@ import { defineRule, type RuleModule } from '../builder';
  *    heavy armor (`ac.dexIgnored`) ignores Dex entirely — even a negative modifier
  *    does not lower AC; medium armor (`ac.dexCap` +2) caps only the POSITIVE side,
  *    so a negative Dex still applies; light/unarmored take the full modifier.
- * Shield/misc bonuses stay additive. Foundational, so no search meta.
+ * Shield/misc bonuses stay additive. Cover is one more component the sum
+ * READS: `cover.bonus` (+2 half / +5 three-quarters cover; +0 none and total —
+ * the cover module owns the mapping and this stays its single consumer-side
+ * seam, so there is never a second writer to `ac.value`). Unassigned, the
+ * cover group derives nothing and the fact reads 0.
+ * Foundational, so no search meta.
  */
 const ac: RuleModule = {
   id: 'ac',
@@ -38,7 +43,8 @@ const ac: RuleModule = {
         f.num('ac.dexBonus') +
         f.num('ac.armorBonus') +
         f.num('ac.shieldBonus') +
-        f.num('ac.miscBonus')
+        f.num('ac.miscBonus') +
+        f.num('cover.bonus')
     }
   ]
 };

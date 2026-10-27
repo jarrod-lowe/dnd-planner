@@ -1,0 +1,188 @@
+name: 'Cover - Player Record'
+description: >-
+  The player +ADD carries an always-present "Cover" record (free section, a
+  DEFEND-class record in its own sub-bucket) with a four-degree segmented
+  control (None/Half/Three-Quarters/Total, ordinals 0-3). Apply is immediate
+  (record-class, the tormentor AC-mode precedent): ONE permanent KEYED effect
+  storing the degree as the distinct cover.recorded fact — re-applying
+  replaces rather than stacks, and dismissing the chip reverts everything.
+  The derives normalize it: cover.current = has(recorded) ? recorded : 0,
+  cover.effective = current (the seam PR-2 maxes with seat contributions),
+  and cover.bonus reads +2 at half and +5 at three-quarters — Total grants
+  NOTHING (SRD 5.2: Total Cover "can't be targeted directly"), so it is
+  notice-only. The EXISTING ac derive reads cover.bonus (a component in the
+  ac.value sum — never a second writer), a NOTICE carries the standing state
+  with a per-degree body, and a flat RIDER chips the +2/+5 onto the DEX save
+  dice-line only (save.dex — cover touches Dex saves, unlike the save.any
+  riders of Aura of Protection and Exhaustion).
+ruleGroups:
+  - dnd-5e-2024/cover
+  - dnd-5e-2024/ac
+steps:
+  # Unrecorded: every cover fact reads 0, AC is the bare 10, no notice, no
+  # rider — but the record is always available (a state, not an activity).
+  - evaluate:
+      assert:
+        facts:
+          cover.current: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        offers:
+          exists:
+            - set-cover
+          legal:
+            - set-cover
+        offerUi:
+          - id: set-cover
+            ui:
+              section: free
+              actionCost: []
+              intents:
+                DEFEND: cover
+              secondaryControl:
+                type: segmented
+                var: degree
+                prefix: play.choices.cover.degree
+                options:
+                  - value: 0
+                    label: rule.dnd-5e-2024.cover.degree.none
+                  - value: 1
+                    label: rule.dnd-5e-2024.cover.degree.half
+                  - value: 2
+                    label: rule.dnd-5e-2024.cover.degree.three-quarters
+                  - value: 3
+                    label: rule.dnd-5e-2024.cover.degree.total
+        offerVars:
+          - id: set-cover
+            vars:
+              degree:
+                capture: true
+                default:
+                  fact: cover.current
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  # Record HALF: the projection folds the advertised keyed effect at once —
+  # AC 12 (10 + 2), the notice states the half-cover benefit, and the Dex-save
+  # rider is worth +2.
+  - addOffer:
+      id: set-cover
+      selections:
+        degree: 1
+      assert:
+        facts:
+          cover.recorded: 1
+          cover.current: 1
+          cover.effective: 1
+          cover.bonus: 2
+          ac.value: 12
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+          targets:
+            - key: rule.dnd-5e-2024.cover.notice
+              targets: [notice]
+            - key: rule.dnd-5e-2024.cover.rider
+              targets: [save.dex]
+          riders:
+            - key: rule.dnd-5e-2024.cover.rider
+              rider:
+                label: rule.dnd-5e-2024.cover.rider
+                type: modifier
+                appliesTo: save
+                value:
+                  kind: flat
+                  bonus: 2
+        planErrors:
+          - id: set-cover
+            errors: []
+  # The record is permanent state — it survives the turn boundary.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-cover
+        facts:
+          cover.effective: 1
+          cover.bonus: 2
+          ac.value: 12
+  # Re-record THREE-QUARTERS: the keyed effect REPLACES — degree 2 (never a
+  # stacked record), AC 15, the rider worth +5, the body keyed per state.
+  - addOffer:
+      id: set-cover
+      selections:
+        degree: 2
+      assert:
+        facts:
+          cover.recorded: 2
+          cover.effective: 2
+          cover.bonus: 5
+          ac.value: 15
+        riders:
+          - key: rule.dnd-5e-2024.cover.rider
+            rider:
+              value:
+                kind: flat
+                bonus: 5
+  # Record TOTAL: the degree reads 3, but Total grants NO bonus — AC stays 10
+  # and the RIDER is gone, while the NOTICE stays (per-state body).
+  - addOffer:
+      id: set-cover
+      selections:
+        degree: 3
+      assert:
+        facts:
+          cover.recorded: 3
+          cover.effective: 3
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+          notExists:
+            - rule.dnd-5e-2024.cover.rider
+  # Record NONE: back to no cover anywhere — no notice, no rider, bare AC.
+  - addOffer:
+      id: set-cover
+      selections:
+        degree: 0
+      assert:
+        facts:
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  # Turn boundary commits the plan: the record is permanent state (a keyed
+  # chip at None), so the effect survives the turn.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-cover
+        facts:
+          cover.recorded: 0
+          cover.effective: 0
+          ac.value: 10
+  # Dismissing the raw chip reverts the record entirely.
+  - removeEffect:
+      id: effect-cover
+      assert:
+        facts:
+          cover.recorded: 0
+          cover.current: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        effects:
+          notExists:
+            - effect-cover
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider

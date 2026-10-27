@@ -2,6 +2,7 @@ import type { EngineInput, RuleModule, SerializableInput } from './types';
 import abilityScores from './rules/ability-scores';
 import proficiency from './rules/proficiency';
 import ac from './rules/ac';
+import cover from './rules/cover';
 import hp from './rules/hp';
 import classPaladinLevel1 from './rules/class-paladin-level1';
 import classPaladinLevel2 from './rules/class-paladin-level2';
@@ -109,6 +110,7 @@ const MODULES: RuleModule[] = [
   abilityScores,
   proficiency,
   ac,
+  cover,
   hp,
   actionEconomy,
   freeActions,

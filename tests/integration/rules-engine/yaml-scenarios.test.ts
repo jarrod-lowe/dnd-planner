@@ -450,6 +450,10 @@ const EXPECTED_RUNNABLE = [
   'sanctuary-ward-notice',
   // Shield of Faith — L1 bonus-action concentration ward (+2 AC)
   'shield-of-faith-cast',
+  // Cover — the player-level generic cover record (PR-1 of
+  // docs/plans/ideas/cover.md): segmented None/Half/Three-Quarters/Total,
+  // keyed permanent effect, AC component, notice, Dex-save rider
+  'cover-record',
   // Shield of Faith cast on an ally — full spend, concentration held, no self AC
   'shield-of-faith-ally-cast',
   // Searing Smite — L1 bonus-action on-hit smite (fire rider, no concentration)

@@ -661,6 +661,20 @@
           "invalid_slot": "DIch woHHa'"
         }
       },
+      "cover": {
+        "record.name": "So'ghach",
+        "record.description": "bIngDaq So'ghach Dalo'bogh yIghItlh",
+        "degree.none": "pagh",
+        "degree.half": "bID",
+        "degree.three-quarters": "wej bID",
+        "degree.total": "naQ",
+        "effect.name": "So'ghach",
+        "notice": "So'ghach",
+        "notice.body.half": "bID So'ghach: AC 'ej Dex toDwI'vaD +{{bonus}}.",
+        "notice.body.three-quarters": "wej bID So'ghach: AC 'ej Dex toDwI'vaD +{{bonus}}.",
+        "notice.body.total": "naQ So'ghach: SoH'e' chonmeH DuHbe'.",
+        "rider": "So'ghach"
+      },
       "proficiency": {},
       "movement": {
         "move-walk": {
@@ -2002,6 +2016,9 @@
         "mode": "leng",
         "fuel": "nIn",
         "boost": "nIn nIv"
+      },
+      "cover": {
+        "degree": "So'ghach"
       }
     },
     "plan": {
@@ -2258,7 +2275,8 @@
       "DEFEND": {
         "default": "OTHER",
         "evade": "EVADE",
-        "ward": "WARD"
+        "ward": "WARD",
+        "cover": "So'ghach"
       },
       "MOVE": {
         "default": "OTHER",
