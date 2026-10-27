@@ -662,7 +662,9 @@
   /* Collapsed strip: three stacked lines — cost pills (this own line), then
      PanelRenderer's own header (name, with the warning indicator overlaid on
      it exactly as in the expanded row — see `.panel-renderer
-     :global(.warning-indicator)`) and its short-form control line, both
+     :global(.warning-indicator)`) and its short-form control line, plus a
+     note line when the row carries notice diagnostics (PanelRenderer renders
+     it below the control line; a legal row gives no signal to expand), both
      rendered by `.plan-row__content`'s `<PanelRenderer summary>` from the
      SAME header markup the expanded row uses (no separate PlanRow-owned
      copy). `.plan-row__right` is already `display:flex; flex-direction:
