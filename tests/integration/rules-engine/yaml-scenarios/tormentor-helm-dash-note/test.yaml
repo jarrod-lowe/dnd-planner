@@ -1,15 +1,14 @@
-name: 'Tormentor - Helm Dash Risk Note Fires Only Beyond the Per-Encounter Dashes'
+name: 'Tormentor - Helm Dash Risk Note Rides Every Dash Row'
 description: >-
-  The stat block's Ability Scores fine print: for each encounter a vehicle
-  may use the Dash action 3 times plus its Constitution modifier (5 for the
-  Tormentor's CON 14), and each additional Dash runs the risk of damaging
-  the vehicle. The per-row risk note (the bounce-note pattern) fires ONLY on
-  a Dash beyond that allowance — the count BEFORE this dash already at the
-  allowance means the row is Dash number allowance+1 or later. Within the
-  allowance a Dash row carries NOTHING: the note is a 'notice' diagnostic
-  (informational, never the error path), so the row and the plan stay LEGAL,
-  and it rides THAT planned row alone (planDiagnostics is per-instance) —
-  no other row ever sees it, and it commits nothing.
+  The stat block's Ability Scores fine print: each encounter the vehicle can
+  Dash 3 times plus its Constitution modifier, and each Dash beyond that runs
+  the risk of damaging the vehicle. The app has no encounter tracking, so the
+  note stating that rule is UNCONDITIONAL — it rides EVERY planned Dash row
+  (the first included, fresh each turn), as a 'notice' diagnostic that is
+  informational only (never the error path, so the row and the plan stay
+  LEGAL) and per-row (planDiagnostics is per-instance: no other row ever
+  sees it, and it commits nothing — only the bonus spend and the doubling
+  age away at end of turn).
 ruleGroups:
   - vehicles/tormentor
   - dnd-5e-2024/action-economy
@@ -19,77 +18,19 @@ steps:
   - addOffer:
       id: take-tormentor-helm-seat
   - endTurn: {}
-  - evaluate:
-      assert:
-        facts:
-          companion.tormentor.dashes.allowance: 5
-          companion.tormentor.dashes.taken: 0
-  # Dashes 1 through 4, one per turn: each within the allowance, each row
-  # clean — no note, ever, below the cap.
+  # The very first Dash of the encounter carries the note: the player counts,
+  # the row informs.
   - addOffer:
       id: dash-tormentor
       assert:
         planErrors:
           - id: dash-tormentor
             index: 0
-            errors: []
-  - endTurn: {}
-  - addOffer:
-      id: dash-tormentor
-      assert:
-        planErrors:
-          - id: dash-tormentor
-            index: 0
-            errors: []
-  - endTurn: {}
-  - addOffer:
-      id: dash-tormentor
-      assert:
-        planErrors:
-          - id: dash-tormentor
-            index: 0
-            errors: []
-  - endTurn: {}
-  - addOffer:
-      id: dash-tormentor
-      assert:
-        planErrors:
-          - id: dash-tormentor
-            index: 0
-            errors: []
-  - endTurn:
-      assert:
-        facts:
-          companion.tormentor.dashes.taken: 4
-  # Dash 5 — the LAST within the allowance (count before it: 4): still no
-  # note, the plan stays legal.
-  - addOffer:
-      id: dash-tormentor
-      assert:
-        facts:
-          companion.tormentor.dashes.taken: 5
-        planErrors:
-          - id: dash-tormentor
-            index: 0
-            errors: []
-        status:
-          legal: true
-  # Dash 6 in the SAME plan (the override path, the bonus action spent): the
-  # count before it is 5 — AT the allowance — so the row is the first beyond
-  # the per-encounter Dashes and carries the risk note beside its own
-  # no-bonus error (dedupe keeps the error first, note after).
-  - addOffer:
-      id: dash-tormentor
-      assert:
-        planErrors:
-          - id: dash-tormentor
-            index: 1
             errors:
-              - rule.tormentor.dash.no_bonus_action
               - rule.tormentor.dash.risk
         status:
-          legal: false
-  # A free record row planned beside them carries nothing (a per-row note is
+          legal: true
+  # A free record row planned beside it carries NOTHING (a per-row note is
   # not a panel truth).
   - addOffer:
       id: set-tormentor-ac-mode
@@ -98,20 +39,18 @@ steps:
           - id: set-tormentor-ac-mode
             index: 0
             errors: []
-  # End of turn: the rows (and their notes) leave with the plan. The note
-  # commits nothing — only the bonus spends and the doublings age away; the
-  # count, the seat and the acquire are what stand.
+  # End of turn: the note commits nothing — only the bonus spend and the
+  # doubling age away; the seat and the acquire are what stand.
   - endTurn:
       assert:
         facts:
           bonusActions.remaining: 1
           companion.tormentor.movement.total: 100
           companion.tormentor.movement.remaining: 100
-          companion.tormentor.dashes.taken: 6
           companion.tormentor.seats.helm: 1
-  # Turn 7: the count (6) is beyond the allowance already, so a fresh, LEGAL
-  # Dash — bonus action open — carries the note ALONE: informational, never
-  # the error path, the plan stays legal.
+  # Turn 2: a fresh, LEGAL Dash — bonus action open — carries the note
+  # ALONE, exactly as the first did: informational, never the error path,
+  # the plan stays legal.
   - addOffer:
       id: dash-tormentor
       assert:

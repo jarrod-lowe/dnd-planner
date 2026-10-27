@@ -204,6 +204,8 @@ export interface Diagnostic {
   severity: 'error' | 'warning' | 'notice';
   /** Human-readable description of the diagnostic (optional) */
   message?: string;
+  /** Interpolation params for the code's translated text (optional) */
+  params?: Record<string, string | number>;
 }
 
 /**

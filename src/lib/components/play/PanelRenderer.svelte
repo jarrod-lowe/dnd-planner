@@ -146,7 +146,7 @@
 
   const warningMessage = $derived.by(() => {
     if (!hasWarning || !entry.diagnostics?.length) return undefined;
-    return entry.diagnostics.map((d) => $t(d.code)).join('\n');
+    return entry.diagnostics.map((d) => $t(d.code, d.params)).join('\n');
   });
 
   const vars = $derived(entry.rule.vars ?? {});
@@ -895,7 +895,7 @@
     -->
       <div class="panel-renderer__annotations" role="note">
         {#each noticeDiagnostics as diagnostic (diagnostic.code)}
-          <span class="panel-renderer__annotation">{$t(diagnostic.code)}</span>
+          <span class="panel-renderer__annotation">{$t(diagnostic.code, diagnostic.params)}</span>
         {/each}
         {#each informationalAnnotations as annotation (annotation.key)}
           {@const addsOffer =
@@ -1008,7 +1008,7 @@
   -->
     <div class="panel-renderer__annotations" role="note">
       {#each noticeDiagnostics as diagnostic (diagnostic.code)}
-        <span class="panel-renderer__annotation">{$t(diagnostic.code)}</span>
+        <span class="panel-renderer__annotation">{$t(diagnostic.code, diagnostic.params)}</span>
       {/each}
     </div>
   {/if}

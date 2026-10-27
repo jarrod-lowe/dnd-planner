@@ -8,11 +8,11 @@ description: >-
   BESIDE the captured distance against the derived movement pool. Dash is
   the player's BONUS ACTION (the 2024-format stat block) and doubles the
   pool for the turn (the steed's dashed flag) — so a turn can Drive AND
-  Dash, each from its own pool. Every committed Dash also counts against the
-  per-encounter Dashes (3 + the vehicle's Constitution modifier — see
-  tormentor-helm-dash-count). With no matching slot left each stays visible
-  but ILLEGAL with its OWN diagnostic (illegal-but-committable), and a
-  planned-anyway row still spends.
+  Dash, each from its own pool. Every Dash row carries the unconditional
+  rule-text note (no counter is tracked; see tormentor-helm-dash-count).
+  With no matching slot left each stays visible but ILLEGAL with its OWN
+  diagnostic (illegal-but-committable), and a planned-anyway row still
+  spends.
 ruleGroups:
   - vehicles/tormentor
   - dnd-5e-2024/action-economy
@@ -32,7 +32,6 @@ steps:
         facts:
           actions.remaining: 1
           bonusActions.remaining: 1
-          companion.tormentor.dashes.allowance: 5
         offers:
           legal:
             - drive-tormentor
@@ -79,8 +78,8 @@ steps:
           illegal:
             - drive-tormentor
   # Dash spends the BONUS action alone (the action pool untouched at 0) and
-  # DOUBLES the pool over the 30 ft already driven. The per-encounter count
-  # starts at 1 — well within the allowance, so the row carries NO note.
+  # DOUBLES the pool over the 30 ft already driven, the unconditional
+  # rule-text note riding the row.
   - addOffer:
       id: dash-tormentor
       assert:
@@ -89,13 +88,13 @@ steps:
           bonusActions.remaining: 0
           companion.tormentor.movement.total: 200
           companion.tormentor.movement.remaining: 170
-          companion.tormentor.dashes.taken: 1
         planErrors:
           - id: dash-tormentor
             index: 0
-            errors: []
-  # The turn ends: both spends and the doubling age away together — the count
-  # does NOT (per-encounter) — and both slots reopen.
+            errors:
+              - rule.tormentor.dash.risk
+  # The turn ends: both spends and the doubling age away together, and both
+  # slots reopen.
   - endTurn:
       assert:
         facts:
@@ -103,10 +102,9 @@ steps:
           bonusActions.remaining: 1
           companion.tormentor.movement.total: 100
           companion.tormentor.movement.remaining: 100
-          companion.tormentor.dashes.taken: 1
           companion.tormentor.seats.helm: 1
   # Turn 2, dash-first: the bonus action goes, the ACTION stays open for
-  # Drive — the mirror of turn 1 — and the count climbs to 2.
+  # Drive — the mirror of turn 1, the note riding the row as before.
   - addOffer:
       id: dash-tormentor
       assert:
@@ -114,11 +112,11 @@ steps:
           actions.remaining: 1
           bonusActions.remaining: 0
           companion.tormentor.movement.total: 200
-          companion.tormentor.dashes.taken: 2
         planErrors:
           - id: dash-tormentor
             index: 0
-            errors: []
+            errors:
+              - rule.tormentor.dash.risk
   - addOffer:
       id: drive-tormentor
       assert:

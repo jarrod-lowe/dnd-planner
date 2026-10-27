@@ -297,5 +297,38 @@ describe('PanelRenderer - annotations', () => {
       });
       expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
     });
+
+    it('interpolates the notice diagnostic params into the note line', () => {
+      // The Tormentor Dash risk note carries the live per-encounter allowance
+      // as Diagnostic.params (the app tracks no counter — the note is what
+      // the player counts by). The rendered line must show the NUMBER
+      // ("Dash 5 times"), never the template slot.
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.dash.risk', severity: 'notice', params: { allowance: 5 } }
+      ]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const block = container.querySelector('.panel-renderer__annotations');
+      expect(block).toBeTruthy();
+      expect(block!.textContent).toContain('Dash 5 times');
+      expect(block!.textContent).not.toContain('{{allowance}}');
+    });
+
+    it('interpolates a re-derived allowance — CON 18 reads 7, never a baked total', () => {
+      // The allowance is computed from the facts at fold time, so a re-baked
+      // stat block moves the number in the params; the note renders whatever
+      // it is handed.
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.dash.risk', severity: 'notice', params: { allowance: 7 } }
+      ]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: false }
+      });
+      const notes = container.querySelectorAll('.panel-renderer__annotation');
+      expect(notes.length).toBe(1);
+      expect(notes[0]!.textContent).toContain('Dash 7 times');
+      expect(notes[0]!.textContent).not.toContain('{{allowance}}');
+    });
   });
 });

@@ -282,8 +282,9 @@ describe('acquire effect', () => {
     // removed effect's declared dependents by key (the generic mechanism is
     // pinned in playStore.test.ts). What THIS pins is the declaration: every
     // record effect key, so removing the mount chip can never strand a recorded
-    // occupancy, a prone record, an HP record, a destroyed wreck or a
-    // per-encounter dash count under an abandoned vehicle.
+    // occupancy, a prone record, an HP record or a destroyed wreck under an
+    // abandoned vehicle. (No dash key: the app tracks no per-encounter Dash
+    // count — the rule text informs, the player counts.)
     expect(acquireEffect().dependents).toEqual([
       'tormentor-occupancy',
       'tormentor-ac-mode',
@@ -291,7 +292,6 @@ describe('acquire effect', () => {
       'tormentor-hp-damage',
       'tormentor-hp-heal',
       'tormentor-destroyed',
-      'tormentor-dash-count',
       'tormentor-seat-passenger',
       'tormentor-seat-harpoon',
       'tormentor-seat-helm'
@@ -1338,19 +1338,6 @@ function seatedAtHelm(): EffectInstance[] {
   return [acquireEffect(), helmSeatEffect()];
 }
 
-/**
- * A committed per-encounter dash count (the keyed running-total record the
- * Dash apply advertises) — seeding later folds with N dashes already taken.
- */
-function dashCountEffect(taken: number): EffectInstance {
-  return {
-    id: 'effect-tormentor-dash-count',
-    key: 'tormentor-dash-count',
-    state: { [`${F}.dashes.taken`]: taken },
-    expiry: { kind: 'untilLongRest' }
-  };
-}
-
 describe('take-tormentor-helm-seat offer', () => {
   it('is a vehicle free-section EQUIP offer while acquired, with the station-specific keys', () => {
     const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
@@ -1735,49 +1722,38 @@ describe('dash-tormentor offer', () => {
     expect(leg.diagnostics).toEqual([{ code: `${T}.dash.no_bonus_action`, severity: 'error' }]);
   });
 
-  it('apply spends the BONUS action, DOUBLES the movement, and counts the dash', () => {
+  it('apply spends the BONUS action and DOUBLES the movement — the spend ALONE, nothing durable', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
       committed: seatedAtHelm(),
       planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
     });
-    // TWO advertised effects, in order: the per-turn spend (the player's
-    // BONUS action and the dashed flag together — the steed's
-    // steedSpend({bonusActions.spent, dashed}) idiom) and the per-encounter
-    // COUNT record (the keyed running total, the HP recorder's keyed-total
-    // idiom) — the doubling resets with the turn, the count persists.
-    expect(out.effects).toHaveLength(2);
-    const [cost, count] = out.effects;
+    // ONE advertised effect: the per-turn spend (the player's BONUS action
+    // and the dashed flag together — the steed's steedSpend({bonusActions.spent,
+    // dashed}) idiom). The app tracks NO per-encounter counter (there is no
+    // encounter to count within — the rule text informs, the player counts),
+    // so nothing durable is written beside the spend.
+    expect(out.effects).toHaveLength(1);
+    const [cost] = out.effects;
     expect(cost!.key).toBeUndefined();
     expect(cost!.expiry).toEqual({ kind: 'endOfTurn' });
     expect(cost!.state).toEqual({ 'bonusActions.spent': 1, [`${F}.dashed`]: 1 });
-    expect(count!.key).toBe('tormentor-dash-count');
-    expect(count!.expiry).toEqual({ kind: 'untilLongRest' });
-    expect(count!.state).toEqual({ [`${F}.dashes.taken`]: 1 });
-    // The Dashes chip (the occupancy-chip pattern): mount section, vehicle
-    // subject, the live count as its displayFact.
-    expect(count!.display).toEqual({
-      name: `${T}.dash-count-effect.name`,
-      section: 'mount',
-      subject: SUBJECT,
-      displayFact: `${F}.dashes.taken`
-    });
-    // Within the allowance the row carries NOTHING — neither the error path
-    // nor the risk note.
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // NO dash-count facts stand — not zero, ABSENT: nothing derives or
+    // records a count or an allowance any more.
+    expect(out.facts[`${F}.dashes.taken`]).toBeUndefined();
+    expect(out.facts[`${F}.dashes.allowance`]).toBeUndefined();
     // The BONUS pool alone: the player's ACTION stays open.
     expect(out.facts['bonusActions.remaining']).toBe(0);
     expect(out.facts['actions.remaining']).toBe(1);
     expect(out.facts[`${F}.movement.total`]).toBe(200);
     expect(out.facts[`${F}.movement.remaining`]).toBe(200);
-    expect(out.facts[`${F}.dashes.taken`]).toBe(1);
     // The seat stays taken and the capacity counts it still.
     expect(out.facts[`${F}.seats.helm`]).toBe(1);
     expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
   });
 
-  it('a no-bonus row still executes (the override path), flagged with its OWN diagnostic', () => {
+  it('a no-bonus row still executes (the override path), error and note together', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
@@ -1788,87 +1764,71 @@ describe('dash-tormentor offer', () => {
       ]
     });
     // The second row over-commits the BONUS action (the first row spent it)
-    // and still executes — and both rows stay within the per-encounter
-    // allowance (count 2), so neither carries the risk note.
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
-    expect(out.planDiagnostics['i1']).toEqual([
-      { code: `${T}.dash.no_bonus_action`, severity: 'error' }
+    // and still executes — carrying its own error BESIDE the unconditional
+    // rule-text note (dedupe keeps the error first, the note after).
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 5 } }
     ]);
-    expect(out.facts[`${F}.dashes.taken`]).toBe(2);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.dash.no_bonus_action`, severity: 'error' },
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 5 } }
+    ]);
+    // No count anywhere — not on the first Dash, not on the second.
+    expect(out.facts[`${F}.dashes.taken`]).toBeUndefined();
   });
 
-  it('the risk note fires ONLY beyond the per-encounter allowance, as a per-row NOTICE', () => {
-    // The stat block's Ability Scores fine print: 3 + CON mod Dashes each
-    // encounter (5 for the Tormentor's CON 14); each additional Dash RISKS
-    // damaging the vehicle. The note rides a Dash row whose count BEFORE the
-    // dash has reached the allowance (this row is Dash number allowance+1 or
-    // later) and never a row within it — the count is fully derived, the
-    // copy bakes no total.
+  it('the rule-text note rides EVERY Dash row — unconditional, with the live allowance as params', () => {
+    // The app has no encounter tracking: it cannot know where the player
+    // sits in the 3-plus-CON-mod Dashes each encounter, so the row carries
+    // the WHOLE rule as an informational note on every Dash (the FIRST
+    // included) and the player counts. The allowance is computed from the
+    // FACTS at fold time — 3 + the baked Constitution modifier, no hardcoded
+    // total — and travels as diagnostic params the render layer interpolates.
     const economy = getModule('action-economy')!;
-    // The LAST Dash within the allowance: count before it 4 — no note.
-    const within = evaluate({
+    const out = evaluate({
       modules: [module(), economy],
-      committed: [...seatedAtHelm(), dashCountEffect(4)],
+      committed: seatedAtHelm(),
       planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
     });
-    expect(within.planDiagnostics['i0'] ?? []).toEqual([]);
-    expect(within.facts[`${F}.dashes.taken`]).toBe(5);
-    // The FIRST Dash beyond: count before it 5 = the allowance — the note,
-    // and nothing else (the bonus action is open).
-    const beyond = evaluate({
-      modules: [module(), economy],
-      committed: [...seatedAtHelm(), dashCountEffect(5)],
-      planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
-    });
-    expect(beyond.planDiagnostics['i0']).toEqual([{ code: `${T}.dash.risk`, severity: 'notice' }]);
-    // A 'notice' is informational, never the error path: the row and the
-    // plan stay LEGAL.
-    expect(beyond.status.legal).toBe(true);
-  });
-
-  it('the allowance DERIVES from the baked CON modifier (3 + CON mod = 5 today)', () => {
-    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
-    expect(out.facts[`${F}.dashes.allowance`]).toBe(5);
-    // A re-baked stat block moves it with no other edit: CON 18 (+4) reads 7.
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 5 } }
+    ]);
+    // Informational, never the error path: the row and the plan stay LEGAL.
+    expect(out.status.legal).toBe(true);
+    // A re-baked stat block moves the number with no other edit: CON 18 (+4)
+    // reads 7 in the note's params, never a hardcoded 5.
     const con18: EffectInstance = {
       ...acquireEffect(),
       state: { ...acquireEffect().state, [`${F}.con.modifier`]: 4 }
     };
-    const rederived = evaluate({ modules: [module()], committed: [con18] });
-    expect(rederived.facts[`${F}.dashes.allowance`]).toBe(7);
-    // Unacquired it settles to 0 (the contribution stays registered).
-    const unacquired = evaluate({ modules: [module()] });
-    expect(unacquired.facts[`${F}.dashes.allowance`]).toBe(0);
-  });
-
-  it('the count accumulates through the keyed-total idiom and rides the acquire lifecycle', () => {
-    const economy = getModule('action-economy')!;
-    // A committed count of 2: the next Dash re-advertises the SAME key
-    // carrying prior + 1 — records ADD UP (a same-key effect carrying only 1
-    // would evict the prior record instead of adding to it).
-    const out = evaluate({
+    const rederived = evaluate({
       modules: [module(), economy],
-      committed: [...seatedAtHelm(), dashCountEffect(2)],
+      committed: [con18, helmSeatEffect()],
       planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
     });
-    expect(out.facts[`${F}.dashes.taken`]).toBe(3);
-    const count = out.effects.find((e) => e.id.split('#').includes('effect-tormentor-dash-count'));
-    expect(count, 'the dash advertises its count record').toBeDefined();
-    expect(count!.state).toEqual({ [`${F}.dashes.taken`]: 3 });
-    // Abandon evicts the count with the acquire — the key joins the
-    // lifecycle, so no count outlives the vehicle it belongs to.
-    const abandoned = evaluate({
+    expect(rederived.planDiagnostics['i0']).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 7 } }
+    ]);
+  });
+
+  it('abandon clears the dashed/movement state — no counter exists to outlive the vehicle', () => {
+    // With the counter gone the acquire lifecycle still owns every durable
+    // vehicle fact: abandoning replaces the acquire effect, the movement
+    // economy settles to nothing, and no dash record can strand under an
+    // abandoned vehicle because none is ever written.
+    const out = evaluate({
       modules: [module()],
-      committed: [...seatedAtHelm(), dashCountEffect(2)],
+      committed: seatedAtHelm(),
       planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
     });
-    const evict = abandoned.effects.find((e) =>
-      e.id.split('#').includes('evict-tormentor-dash-count')
-    );
-    expect(evict, 'abandon advertises the count eviction').toBeDefined();
-    expect(evict!.key).toBe('tormentor-dash-count');
-    expect(evict!.state).toBeUndefined();
-    expect(abandoned.facts[`${F}.dashes.taken`]).toBeUndefined();
+    expect(
+      out.effects.some((e) => e.id.split('#').includes('evict-tormentor-dash-count')),
+      'no dash-count eviction exists to advertise'
+    ).toBe(false);
+    expect(out.facts[`${F}.movement.total`]).toBe(0);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(0);
+    expect(out.facts[`${F}.dashed`] ?? 0).toBe(0);
+    expect(out.facts[`${F}.dashes.taken`]).toBeUndefined();
   });
 
   it('NO prone leg: a fallen vehicle leaves Dash legal (the GM adjudicates the rest)', () => {
@@ -2027,8 +1987,6 @@ describe('helm seat + station actions i18n (tlh is the canary)', () => {
       'en-x-tlh dash no bonus action': tlh.rule.tormentor.dash?.no_bonus_action,
       'en dash risk': en.rule.tormentor.dash?.risk,
       'en-x-tlh dash risk': tlh.rule.tormentor.dash?.risk,
-      'en dash count chip name': en.rule.tormentor['dash-count-effect']?.name,
-      'en-x-tlh dash count chip name': tlh.rule.tormentor['dash-count-effect']?.name,
       'en juke name': en.rule.tormentor.juke?.name,
       'en-x-tlh juke name': tlh.rule.tormentor.juke?.name,
       'en juke description': en.rule.tormentor.juke?.description,
@@ -2040,6 +1998,16 @@ describe('helm seat + station actions i18n (tlh is the canary)', () => {
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));
+    // The risk note is INTERPOLATED: both locales carry the {{allowance}}
+    // slot (double-brace, the sveltekit-i18n convention) the diagnostic's
+    // params fill at render time.
+    expect(en.rule.tormentor.dash?.risk).toContain('{{allowance}}');
+    expect(tlh.rule.tormentor.dash?.risk).toContain('{{allowance}}');
+    // The counter's chip key is DEAD with the counter — no locale carries it
+    // (indexed through a record: the typed import no longer knows the key,
+    // which is exactly the point).
+    expect((en.rule.tormentor as Record<string, unknown>)['dash-count-effect']).toBeUndefined();
+    expect((tlh.rule.tormentor as Record<string, unknown>)['dash-count-effect']).toBeUndefined();
   });
 });
 

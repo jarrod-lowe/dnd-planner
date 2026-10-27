@@ -536,10 +536,7 @@
         "name": "Duj Do'choH",
         "description": "Duj Sep Do wa'DIch DIvI' yIlo'. wej Do chovmey Duj Sep — Do nIv qaS Duj Sep qIp",
         "no_bonus_action": "DIvI' cha' tu'lu'be'",
-        "risk": "Do vItlh Duj Sep Do chovmey — Do nIv qaS Duj Sep qIp"
-      },
-      "dash-count-effect": {
-        "name": "Do chovmey {{score}}"
+        "risk": "qaS Duj Sep {{allowance}} Do chovmey (wej 'ej 'et Duj Sep); Do nIv qaS Duj Sep qIp"
       },
       "juke": {
         "name": "yIvegh",

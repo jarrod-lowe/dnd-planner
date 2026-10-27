@@ -1,17 +1,14 @@
-name: 'Tormentor - Helm Dash Per-Encounter Count and Allowance'
+name: 'Tormentor - Helm Dash Tracks No Per-Encounter Counter (the Rule Text Informs)'
 description: >-
-  Every committed Dash counts against the vehicle's per-encounter Dashes:
-  the count is a KEYED RUNNING-TOTAL record (the vehicle HP recorder's
-  keyed-total idiom — each apply re-advertises the one keyed effect carrying
-  prior + 1, so dashes ADD UP rather than evicting; a same-key effect
-  carrying only 1 would replace, not accumulate) that lasts untilLongRest —
-  encounters are not modelled, and a long rest is the nearest reset, exactly
-  like the HP records. The allowance is DERIVED from the baked Constitution
-  modifier (3 + CON mod — 5 today for CON 14; a re-baked stat block changes
-  it with no other edit), and the count surfaces as the Dashes chip on the
-  vehicle panel (displayFact, the occupancy-chip pattern). The count key
-  joins the acquire lifecycle: abandon evicts it, a re-acquired vehicle
-  starts fresh.
+  The app has no encounter tracking: it cannot know where the player sits in
+  the stat block's fine print (3 Dashes plus the vehicle's Constitution
+  modifier each encounter), so it counts NOTHING — no dashes.taken record, no
+  dashes.allowance derive, no chip. What the row carries instead is the WHOLE
+  rule as an unconditional informational note (the player counts at the
+  table): every planned Dash row, the first included and across turns, shows
+  the risk note, and no dash fact or effect ever appears. The bonus-action
+  economy and the doubling are unchanged, and abandon still clears the
+  dashed/movement state with the acquire.
 ruleGroups:
   - vehicles/tormentor
   - dnd-5e-2024/action-economy
@@ -20,65 +17,89 @@ steps:
       id: acquire-tormentor
   - addOffer:
       id: take-tormentor-helm-seat
-  - endTurn:
+  - endTurn: {}
+  # No counter facts stand on a fresh vehicle — the allowance derive is gone
+  # with the count.
+  - evaluate:
       assert:
         facts:
-          companion.tormentor.dashes.allowance: 5
-  # Dash: the count record lands beside the turn's spend — the running-total
-  # FACT reads 1 the moment the row is planned.
+          companion.tormentor.dashes.taken: 0
+          companion.tormentor.dashes.allowance: 0
+  # The FIRST Dash carries the note (unconditional — there is no count to be
+  # within), spends the bonus action, doubles the pool, and writes NOTHING
+  # durable beside the spend.
   - addOffer:
       id: dash-tormentor
       assert:
         facts:
-          companion.tormentor.dashes.taken: 1
-  # The keyed-total idiom: a second Dash (the override path — the bonus
-  # action is spent) re-advertises the SAME key carrying prior + 1, so the
-  # count ADDS UP instead of the newer record evicting the older.
+          companion.tormentor.dashes.taken: 0
+          companion.tormentor.movement.total: 200
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+        status:
+          legal: true
+  # The override path (the bonus action spent): the row still executes,
+  # error and note together.
   - addOffer:
       id: dash-tormentor
       assert:
         facts:
-          companion.tormentor.dashes.taken: 2
+          companion.tormentor.dashes.taken: 0
         planErrors:
           - id: dash-tormentor
             index: 1
             errors:
               - rule.tormentor.dash.no_bonus_action
-  # The count persists across turns (per-encounter, not per-turn): ONE keyed
-  # record carrying the running total, committed with the turn.
+              - rule.tormentor.dash.risk
+  # End of turn: the spends and the doubling age away; NO count record
+  # persists (there is nothing to persist).
   - endTurn:
       assert:
         effects:
-          exists:
+          notExists:
             - effect-tormentor-dash-count
         facts:
-          companion.tormentor.dashes.taken: 2
-  # A long rest is the nearest encounter reset: the untilLongRest count
-  # record ages away with it, and the next Dash counts from fresh.
-  - endTurn:
-      longRest: true
-      assert:
-        facts:
+          bonusActions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
           companion.tormentor.dashes.taken: 0
+  # Turn 2: a fresh, LEGAL Dash — the note rides it exactly as it did the
+  # first (nothing accumulates across turns).
   - addOffer:
       id: dash-tormentor
       assert:
         facts:
-          companion.tormentor.dashes.taken: 1
+          companion.tormentor.dashes.taken: 0
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+        status:
+          legal: true
   - endTurn: {}
-  # Abandon evicts the count with the acquire (the key joins the lifecycle):
-  # the record, and the count with it, never outlives the vehicle.
+  # Abandon: the acquire lifecycle still clears the vehicle's state — no
+  # dash-count eviction exists to advertise (none was ever written), and the
+  # movement economy settles to nothing with the acquire gone.
   - addOffer:
       id: abandon-tormentor
+      assert:
+        effects:
+          notExists:
+            - evict-tormentor-dash-count
   - endTurn:
       assert:
         effects:
-          exists:
-            - evict-tormentor-dash-count
+          notExists:
+            - effect-tormentor-dash-count
         facts:
+          companion.tormentor.movement.total: 0
           companion.tormentor.dashes.taken: 0
-  # A re-acquired vehicle is FRESH: the allowance derives from the new bake
-  # and the count starts from zero again.
+  # A re-acquired vehicle starts fresh — which now means simply that the
+  # next Dash carries the note and nothing else.
   - addOffer:
       id: acquire-tormentor
   - addOffer:
@@ -86,14 +107,17 @@ steps:
   - endTurn:
       assert:
         facts:
-          companion.tormentor.dashes.allowance: 5
           companion.tormentor.dashes.taken: 0
+          companion.tormentor.dashes.allowance: 0
   - addOffer:
       id: dash-tormentor
       assert:
         facts:
-          companion.tormentor.dashes.taken: 1
+          companion.tormentor.dashes.taken: 0
         planErrors:
           - id: dash-tormentor
             index: 0
-            errors: []
+            errors:
+              - rule.tormentor.dash.risk
+        status:
+          legal: true

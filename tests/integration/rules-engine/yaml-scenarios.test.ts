@@ -316,13 +316,13 @@ const EXPECTED_RUNNABLE = [
   'tormentor-helm-drive-movement',
   'tormentor-helm-dash-movement',
   // …the rework after the stat-block source landed: Dash is the player's
-  // BONUS action under a per-encounter cap (3 + CON mod), and the risk note
-  // fires only on a Dash BEYOND the cap (the below-threshold bounce-note
-  // pattern, now conditional)
+  // BONUS action and the per-encounter rule (3 + CON mod Dashes, each beyond
+  // risking damage) rides every Dash row as an UNCONDITIONAL informational
+  // note — the app tracks no encounters, the player counts
   'tormentor-helm-dash-note',
-  // …the per-encounter counter itself: a keyed running-total record
-  // (untilLongRest, the HP-recorder precedent), the derived allowance, the
-  // Dashes chip, and the acquire-lifecycle eviction
+  // …and NO counter backs that note: no dashes facts, no count record, no
+  // chip, nothing durable beside the per-turn spend (abandon still clears
+  // the dashed/movement state with the acquire)
   'tormentor-helm-dash-count',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',

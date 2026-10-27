@@ -129,12 +129,13 @@ import {
  * slider defaulting to all remaining, MOVE section) carrying the economy
  * ruling's ACTION spend beside the distance; Dash doubles the pool for the
  * turn (the steed's dashed flag) as the player's BONUS ACTION (the
- * 2024-format stat block) under a PER-ENCOUNTER cap — 3 + the vehicle's
- * Constitution modifier Dashes each encounter (the Ability Scores fine
- * print), every committed Dash counted by a keyed running-total record whose
- * chip shows the live number, and each Dash beyond the cap carrying the
- * damage-risk note on its row alone. The movement row joins the resources
- * panel beside creature capacity.
+ * 2024-format stat block). The stat block's per-encounter fine print (3 +
+ * the vehicle's Constitution modifier Dashes each encounter, each Dash
+ * beyond that risking damage) is NOT counted — the app has no encounter
+ * tracking and cannot know when the cap is exceeded, so every planned Dash
+ * row carries the whole rule as an unconditional notice (the allowance
+ * interpolated from the facts) and the player counts. The movement row joins
+ * the resources panel beside creature capacity.
  *
  * Deliberately out of scope this pass (later passes on the plan): fuel and
  * boost (the Helm's refuelling records and the speed they set — PR-D, which
@@ -173,13 +174,6 @@ const HP_DAMAGE_EFFECT_ID = 'effect-tormentor-hp-damage';
 const HP_DAMAGE_KEY = 'tormentor-hp-damage';
 const HP_HEAL_EFFECT_ID = 'effect-tormentor-hp-heal';
 const HP_HEAL_KEY = 'tormentor-hp-heal';
-
-/**
- * The per-encounter Dash counter's effect id and replacement key (ONE running
- * total — the HP recorder's keyed-total idiom, see dashCountRecord).
- */
-const DASH_COUNT_EFFECT_ID = 'effect-tormentor-dash-count';
-const DASH_COUNT_KEY = 'tormentor-dash-count';
 
 /** The destroyed wreck's effect id and replacement key. */
 const DESTROYED_EFFECT_ID = 'effect-tormentor-destroyed';
@@ -255,8 +249,6 @@ const CHILD_KEYS = [
   HP_DAMAGE_KEY,
   HP_HEAL_KEY,
   DESTROYED_KEY,
-  // The per-encounter Dash count — a fresh vehicle starts uncounted.
-  DASH_COUNT_KEY,
   // The seats, station by station as they go live (PR-A passenger, PR-B
   // harpoon, PR-C helm; later passes append their station's key here).
   'tormentor-seat-passenger',
@@ -612,50 +604,24 @@ const DRIVE_OUT_OF_MOVEMENT = `${T}.drive.out_of_movement`;
 const DASH_NO_BONUS = `${T}.dash.no_bonus_action`;
 
 /**
- * The dash RISK note — the informational diagnostic a planned Dash row
- * carries ONLY BEYOND the per-encounter allowance (the bounce-note pattern,
- * threshold model v2). The stat block's Ability Scores fine print: a vehicle
- * may use the Dash action 3 times plus its Constitution modifier each
- * encounter, and each additional Dash runs the risk of damaging the vehicle.
- * The apply re-derives the boundary from the FACTS — the count already taken
- * reaching the DERIVED allowance means this row is Dash number allowance+1
- * or later — and returns ONE 'notice' diagnostic beside its spend, which the
- * plan fold attaches to THAT planned row alone (planDiagnostics is
- * per-instance): the row shows the note in play, every row within the
- * allowance never does, the plan stays LEGAL (a notice is informational,
- * never the error path), and the note lives exactly as long as the row does
- * — never a standing notice (a post-choice risk is not a standing
- * condition), never a panel annotation. The copy bakes no computed total:
- * the wording says the rule (3 + its Constitution modifier), so a re-baked
- * stat block needs no edit.
+ * The dash RISK note — the informational diagnostic EVERY planned Dash row
+ * carries, unconditionally. The stat block's Ability Scores fine print: each
+ * encounter the vehicle can Dash 3 times plus its Constitution modifier,
+ * and each Dash beyond that runs the risk of damaging the vehicle. The app
+ * has NO encounter tracking — it cannot know where the player sits in that
+ * count, and the player counts — so the row states the WHOLE rule and
+ * nothing is gated, recorded or counted: ONE 'notice' diagnostic beside its
+ * spend, which the plan fold attaches to THAT planned row alone
+ * (planDiagnostics is per-instance). The plan stays LEGAL (a notice is
+ * informational, never the error path), and the note lives exactly as long
+ * as the row does — never a standing notice (a post-choice risk is not a
+ * standing condition), never a panel annotation. The allowance travels as
+ * diagnostic `params` (computed from the facts at fold time, 3 + the baked
+ * Constitution modifier — no hardcoded total) for the locale's
+ * {{allowance}} slot, so a re-baked stat block moves the number with no
+ * other edit.
  */
 const DASH_RISK = `${T}.dash.risk`;
-
-/**
- * The per-encounter Dash COUNT record — the HP recorder's keyed-total idiom
- * exactly (builder's `damageRecord`): ONE keyed effect holding the RUNNING
- * total (`prior + 1` baked into `state`), so consecutive Dashes ADD UP — a
- * same-key effect carrying only 1 would evict the prior record instead of
- * adding to it — while one chip shows the live count and a single lifecycle
- * eviction clears the whole count. `untilLongRest` like the HP records:
- * encounters are not modelled, and a long rest is the nearest reset. The
- * `display` is the occupancy-chip pattern (mount section, vehicle subject,
- * `displayFact` the count), so the chip reads "Dashes: 2" at a glance.
- */
-function dashCountRecord(f: FactReader): EffectInstance {
-  return {
-    id: DASH_COUNT_EFFECT_ID,
-    key: DASH_COUNT_KEY,
-    state: { [`${F}.dashes.taken`]: f.num(`${F}.dashes.taken`) + 1 },
-    display: {
-      name: `${T}.dash-count-effect.name`,
-      section: 'mount',
-      subject: SUBJECT,
-      displayFact: `${F}.dashes.taken`
-    },
-    expiry: { kind: 'untilLongRest' }
-  };
-}
 
 /**
  * Drive's distance slider — the steed's STEED_MOVE_CONTROL/STEED_MOVE_VARS
@@ -1007,16 +973,6 @@ const vehicleTormentor: RuleModule = {
     {
       fact: `${F}.harpoon.damageBonus`,
       value: (f) => (acquired(f) ? 2 : 0)
-    },
-    // The per-encounter Dash ALLOWANCE — the stat block's Ability Scores fine
-    // print: "a vehicle may use the Dash action 3 times plus its Constitution
-    // modifier" each encounter. A DERIVATION of the baked modifier, never a
-    // hardcoded total (5 today for CON 14): a re-baked stat block moves the
-    // cap with this one read and no other edit, and the copy bakes no number
-    // either. Gated on the acquire like every other vehicle number.
-    {
-      fact: `${F}.dashes.allowance`,
-      value: (f) => (acquired(f) ? 3 + f.num(`${F}.con.modifier`) : 0)
     },
     // The MOVEMENT ECONOMY, the steed's derives copied exactly (find-steed's
     // movement block): total doubling while Dashed, remaining = total − spent,
@@ -1400,15 +1356,14 @@ const vehicleTormentor: RuleModule = {
       // every vehicle activity), DOUBLING the vehicle's movement for the
       // turn: the steed's Dash semantics (steedSpend({ bonusActions.spent,
       // dashed }) — the total derive reads the dashed flag, so the doubling
-      // resets with the turn and an unspent pool rises with it). Every
-      // committed Dash also counts against the PER-ENCOUNTER Dashes (3 + the
-      // vehicle's Constitution modifier — the stat block's Ability Scores
-      // fine print): the apply advertises the keyed running-total record
-      // beside the spend, and a Dash BEYOND the allowance carries the risk
-      // note (DASH_RISK above) — within it, the row is clean. The PC Dash's
-      // halted leg has no analogue: nothing halts a vehicle's derived pool
-      // today (PR-D's speed.effective will carry that if fuel ever reads
-      // empty).
+      // resets with the turn and an unspent pool rises with it). The
+      // per-encounter fine print (3 Dashes plus the vehicle's Constitution
+      // modifier each encounter, each Dash beyond risking damage) is NOT
+      // counted: the app has no encounter tracking, so every planned Dash
+      // row carries the whole rule as its unconditional risk note (DASH_RISK
+      // above) and the player counts. The PC Dash's halted leg has no
+      // analogue: nothing halts a vehicle's derived pool today (PR-D's
+      // speed.effective will carry that if fuel ever reads empty).
       id: 'dash-tormentor',
       when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
       legalWhen: [
@@ -1429,28 +1384,28 @@ const vehicleTormentor: RuleModule = {
       apply: (f: FactReader): ActionResult => {
         // Re-checked legality (the dash idiom) so a planned-anyway row carries
         // its own error from the fold — the row still executes — and BESIDE it
-        // the risk note ONLY beyond the per-encounter allowance (the count
-        // BEFORE this dash already at the derived allowance: this row is Dash
-        // number allowance+1 or later). Within the allowance the row carries
-        // nothing — Dashing the machine that hard is what it was built for.
+        // the unconditional risk note (the allowance computed from the FACTS
+        // here, 3 + the baked Constitution modifier, travelling as params for
+        // the locale's {{allowance}} slot — no fact, no chip, nothing
+        // durable: the rule text informs, the player counts).
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)
           diagnostics.push({ code: DASH_NO_BONUS, severity: 'error' });
-        if (f.num(`${F}.dashes.taken`) >= f.num(`${F}.dashes.allowance`))
-          diagnostics.push({ code: DASH_RISK, severity: 'notice' });
+        diagnostics.push({
+          code: DASH_RISK,
+          severity: 'notice',
+          params: { allowance: 3 + f.num(`${F}.con.modifier`) }
+        });
         return {
           advertise: [
             {
-              // The steed's Dash idiom: the bonus-action spend and the
+              // The steed's Dash idiom alone: the bonus-action spend and the
               // doubled-this-turn flag in ONE keyless endOfTurn effect (never
-              // attack accounting)…
+              // attack accounting) — nothing else is written.
               id: 'cost',
               state: { 'bonusActions.spent': 1, [`${F}.dashed`]: 1 },
               expiry: { kind: 'endOfTurn' }
-            },
-            // …and BESIDE it the per-encounter count record (the keyed-total
-            // idiom): every committed Dash, legal or overridden, counts.
-            dashCountRecord(f)
+            }
           ],
           diagnostics
         };

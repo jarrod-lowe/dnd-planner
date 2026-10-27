@@ -536,10 +536,7 @@
         "name": "Dash",
         "description": "Spend a bonus action doubling the Tormentor's movement this turn. The vehicle can Dash 3 times plus its Constitution modifier each encounter — each Dash beyond that risks damaging it",
         "no_bonus_action": "No bonus action available",
-        "risk": "This Dash exceeds the vehicle's per-encounter Dashes (3 + its Constitution modifier) — each additional Dash risks damaging the vehicle"
-      },
-      "dash-count-effect": {
-        "name": "Dashes {{score}}"
+        "risk": "Each encounter the vehicle can Dash {{allowance}} times (3 plus its Constitution modifier); each Dash beyond that runs the risk of damaging the vehicle"
       },
       "juke": {
         "name": "Juke",
