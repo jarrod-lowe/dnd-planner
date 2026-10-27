@@ -569,6 +569,15 @@
         "no_reaction": "DIvI' cha' tu'lu'be'",
         "unable_to_move": "Duj Sep vIHlaHbe' — nIn pagh ghajbe'ghach qoj pum — vegh laHbe'"
       },
+      "check-str": {
+        "name": "qaS HoS"
+      },
+      "check-dex": {
+        "name": "qaS Do"
+      },
+      "check-con": {
+        "name": "qaS 'et"
+      },
       "effect": {
         "name": "Duj Sep"
       },
@@ -2286,13 +2295,15 @@
         "default": "OTHER",
         "others": "OTHERS",
         "you": "YOU",
-        "steed": "Sargh"
+        "steed": "Sargh",
+        "vehicle": "Duj"
       },
       "CHECK": {
         "default": "OTHER",
         "skill": "SKILL",
         "raw": "RAW",
-        "steed": "Sargh"
+        "steed": "Sargh",
+        "vehicle": "Duj"
       },
       "REST": {
         "default": "Rest",

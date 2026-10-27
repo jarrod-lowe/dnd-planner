@@ -169,15 +169,32 @@ import {
  * not prone, one shared diagnostic. The Fuel chip renders the fuel's NAME
  * via the value-entry label map (`valueLabels`), never its ordinal.
  *
+ * The vehicle's CHECKS and SAVES (the Later list's "Checks and Saves on the
+ * vehicle, for STR/CON/DEX") are six record rollers — the steed's
+ * save/skill-offer pattern copied exactly (the PC-parity house rule): a
+ * free-section vehicle row per ability while acquired, a d20 dice line whose
+ * bonus READS the baked `str/dex/con.modifier` fact (never a hardcoded
+ * number), the saves carrying the shared pass/fail outcome segmented and the
+ * companion-suffixed save labels, the checks the plain dice-line under the
+ * companion dice label with this group's own name keys (no shared
+ * per-ability check label exists — `planner.record.check` is a plain string).
+ * All six are FREE and ungated — they record GM-called rolls, like the
+ * player's own record rows — and deliberately carry NO wrecked leg (the
+ * wrecked pass's bookkeeping boundary, like damage recording: a destroyed
+ * war machine is still called on to make checks and saves). No `apply` on
+ * any of them (the steed shape): rolling records nothing — the outcome
+ * capture and the roll log are the record.
+ *
  * Deliberately out of scope this pass (later passes on the plan): damage
  * immunities as MECHANICS (detail text only — the recorder never refuses
  * fire/poison/psychic; the mishap threshold IS wired, as the recorder's
  * per-row note), any prone attack/movement or incapacitated mechanics beyond
  * the record, the clinger's Dexterity checks as MECHANICS (the notice states
- * the rule; no check is wired or gated), and MULTIPLE vehicles per character
- * (acquiring while a Tormentor is already present is ILLEGAL — one vehicle
- * per character, for now; a later pass lifts the already-have leg when a
- * second vehicle can exist beside the first).
+ * the rule and the vehicle's Dex-check recorder is the row the player rolls
+ * it on, but nothing gates or wires the check itself), and MULTIPLE vehicles
+ * per character (acquiring while a Tormentor is already present is ILLEGAL —
+ * one vehicle per character, for now; a later pass lifts the already-have leg
+ * when a second vehicle can exist beside the first).
  */
 
 const ID = 'tormentor';
@@ -849,6 +866,106 @@ const JUKE_NO_REACTION = `${T}.juke.no_reaction`;
 const JUKE_UNABLE_TO_MOVE = `${T}.juke.unable_to_move`;
 
 /**
+ * The three abilities the stat block gives the vehicle (STR 16 / DEX 14 /
+ * CON 14, whose MODIFIERS 3/2/2 the acquire bakes): the checks-and-saves
+ * record rollers iterate these.
+ */
+const ABILITIES = ['str', 'dex', 'con'] as const;
+type Ability = (typeof ABILITIES)[number];
+
+/**
+ * The outcome picker every vehicle save recorder renders — the steed's
+ * SAVE_OUTCOME_CONTROL copy (find-steed) exactly: shared planner.record.*
+ * labels, no new keys.
+ */
+const SAVE_OUTCOME_CONTROL = {
+  type: 'segmented',
+  var: 'passed',
+  prefix: 'play.choices.save.outcome',
+  options: [
+    { value: -1, label: 'planner.record.outcome.none' },
+    { value: 1, label: 'planner.record.passed' },
+    { value: 0, label: 'planner.record.failed' }
+  ]
+} as const;
+
+/**
+ * A vehicle SAVE recorder — the steed's steedSaveOffer copy (the PC-parity
+ * house rule): a free-section vehicle row while acquired, d20 + the BAKED
+ * modifier (the dice-line bonus READS `companion.tormentor.<ability>.modifier`
+ * — never a hardcoded +3/+2/+2), the shared pass/fail outcome segmented, and
+ * the save/dice labels companion-suffixed so a self-only rider cannot reach
+ * the vehicle's rolls. UI-only (no apply, the steed shape): rolling records
+ * nothing, and the name reuses the shared `planner.record.save.<ability>` key
+ * the player's and the steed's rows already render.
+ */
+const tormentorSaveOffer = (a: Ability): Offer => ({
+  id: `tormentor-save-${a}`,
+  when: acquired,
+  ui: {
+    section: 'free',
+    subject: SUBJECT,
+    name: `planner.record.save.${a}`,
+    annotationLabels: ['save.any.companion', `save.${a}.companion`, 'dice.any.companion'],
+    primaryControl: {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'save' }]
+    },
+    secondaryControl: SAVE_OUTCOME_CONTROL,
+    intents: { SAVE: 'vehicle' },
+    actionCost: []
+  },
+  vars: {
+    rollBonus: { capture: true, default: { fact: `${F}.${a}.modifier` } },
+    passed: { capture: true, default: { number: -1 } }
+  }
+});
+
+/**
+ * The CHECK recorders' name keys, as LITERALS per ability (the SeatSpec
+ * idiom): module-i18n-coverage scans the source for `${PREFIX}.suffix`
+ * templates, so a key the helper built from the ability string would be
+ * invisible to it. No shared per-ability check label exists — the saves reuse
+ * `planner.record.save.*` but `planner.record.check` is a plain string — so
+ * the check names are this group's own keys.
+ */
+const CHECK_OFFERS: readonly { ability: Ability; name: string }[] = [
+  { ability: 'str', name: `${T}.check-str.name` },
+  { ability: 'dex', name: `${T}.check-dex.name` },
+  { ability: 'con', name: `${T}.check-con.name` }
+];
+
+/**
+ * A vehicle CHECK recorder — the steed's steedSkillOffer copy: the plain
+ * d20 + modifier dice-line under the companion dice label alone, free and
+ * UI-only like the save beside it. Deliberately NOT seat-gated (the clinger's
+ * stay-attached Dex check is the live use, but the row records whatever the
+ * GM calls for on the VEHICLE, not a station's action) and deliberately NOT
+ * wrecked-gated — the bookkeeping boundary of the wrecked pass, exactly like
+ * damage recording: a destroyed war machine is still called on to make
+ * checks and saves, and the way back is people, not repairs.
+ */
+const tormentorCheckOffer = (spec: (typeof CHECK_OFFERS)[number]): Offer => ({
+  id: `tormentor-check-${spec.ability}`,
+  when: acquired,
+  ui: {
+    section: 'free',
+    subject: SUBJECT,
+    name: spec.name,
+    annotationLabels: ['dice.any.companion'],
+    primaryControl: {
+      type: 'dice-line',
+      dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }]
+    },
+    intents: { CHECK: 'vehicle' },
+    actionCost: []
+  },
+  vars: {
+    rollBonus: { capture: true, default: { fact: `${F}.${spec.ability}.modifier` } }
+  }
+});
+
+/**
  * The vehicle's Prone Deficiency, as STATE TRACKING ONLY. The Tormentor is not
  * immune to Prone (its condition-immunity list omits it), and — unlike a
  * creature — it cannot right itself: flipped on its side it stays there and
@@ -997,8 +1114,9 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     }
   },
   {
-    // Like the steed's chip, but three abilities, no saveFact (a vehicle makes
-    // no saves of its own here) and no Int/Wis/Cha — the stat block has none.
+    // Like the steed's chip, but three abilities, no saveFact (a vehicle has
+    // no save-proficiency concept — the save recorders below roll the plain
+    // baked modifier) and no Int/Wis/Cha — the stat block has none.
     subject: SUBJECT,
     panel: 'topBar',
     gate: `${F}.active`,
@@ -1871,6 +1989,13 @@ const vehicleTormentor: RuleModule = {
         };
       }
     },
+    // The vehicle's CHECKS and SAVES — the six record rollers (the steed's
+    // save/skill recorders, the PC-parity copy): Str/Dex/Con × Check/Save,
+    // each a d20 + the BAKED modifier fact, free and UI-only, filed after the
+    // station actions and before the way out (the steed's placement). Saves
+    // first, then checks, in stat-block ability order.
+    ...ABILITIES.map(tormentorSaveOffer),
+    ...CHECK_OFFERS.map(tormentorCheckOffer),
     {
       // The VEHICLE-side way out: gated on the acquire (structurally —
       // unacquired, the action does not exist at all), sitting under the
