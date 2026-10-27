@@ -1120,10 +1120,12 @@ describe('fire-tormentor-harpoon offer', () => {
     expect(unseated.availableRules.some((r) => r.rule.id === 'fire-tormentor-harpoon')).toBe(false);
   });
 
-  it('legality is the generic action-pool idiom (Dash/simple-actions): the action ALONE, own diagnostic', () => {
+  it('legality is the generic action-pool idiom (Dash/simple-actions) plus the wrecked leg', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'fire-tormentor-harpoon');
     expect(raw, 'the fire offer exists').toBeDefined();
-    expect(raw!.legalWhen).toHaveLength(1);
+    // Two legs: the action pool and the shared wrecked leg (pinned in the
+    // wrecked-legality describe below — appended last).
+    expect(raw!.legalWhen).toHaveLength(2);
     const leg = raw!.legalWhen![0]!;
     const poolReader = (actions: number, extra = 0): FactReader => ({
       num: (n) =>
@@ -1620,10 +1622,12 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(unseated.availableRules.some((r) => r.rule.id === 'drive-tormentor')).toBe(false);
   });
 
-  it('legality is the action pool PLUS the steed out-of-movement leg, both with OWN diagnostics', () => {
+  it('legality is the action pool PLUS the steed out-of-movement leg (and the wrecked leg)', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'drive-tormentor');
     expect(raw, 'the drive offer exists').toBeDefined();
-    expect(raw!.legalWhen).toHaveLength(2);
+    // Three legs: the two below plus the shared wrecked leg (pinned in the
+    // wrecked-legality describe — appended last).
+    expect(raw!.legalWhen).toHaveLength(3);
     const reader = (actions: number, remaining: number): FactReader => ({
       num: (n) =>
         n === 'actions.remaining' ? actions : n === `${F}.movement.remaining` ? remaining : 0,
@@ -1773,10 +1777,12 @@ describe('dash-tormentor offer', () => {
     expect(unseated.availableRules.some((r) => r.rule.id === 'dash-tormentor')).toBe(false);
   });
 
-  it('legality is the player bonus-action pool idiom: the bonus ALONE, with its OWN diagnostic', () => {
+  it('legality is the player bonus-action pool idiom plus the wrecked leg', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'dash-tormentor');
     expect(raw, 'the dash offer exists').toBeDefined();
-    expect(raw!.legalWhen).toHaveLength(1);
+    // Two legs: the bonus pool and the shared wrecked leg (pinned in the
+    // wrecked-legality describe below — appended last).
+    expect(raw!.legalWhen).toHaveLength(2);
     const leg = raw!.legalWhen![0]!;
     const poolReader = (bonus: number): FactReader => ({
       num: (n) => (n === 'bonusActions.remaining' ? bonus : 0),
@@ -1943,10 +1949,12 @@ describe('juke-tormentor offer', () => {
     expect(unseated.availableRules.some((r) => r.rule.id === 'juke-tormentor')).toBe(false);
   });
 
-  it('legality is the reaction-pool idiom PLUS the able-to-move leg, both with OWN diagnostics', () => {
+  it('legality is the reaction-pool idiom PLUS the able-to-move leg (and the wrecked leg)', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'juke-tormentor');
     expect(raw, 'the juke offer exists').toBeDefined();
-    expect(raw!.legalWhen).toHaveLength(2);
+    // Three legs: the two below plus the shared wrecked leg (pinned in the
+    // wrecked-legality describe — appended last).
+    expect(raw!.legalWhen).toHaveLength(3);
     const poolReader = (reactions: number, prone: number, speed = 100): FactReader => ({
       num: (n) =>
         n === 'reactions.remaining'
@@ -2177,9 +2185,11 @@ describe('set-tormentor-fuel offer', () => {
     expect(unseated.availableRules.some((r) => r.rule.id === 'set-tormentor-fuel')).toBe(false);
   });
 
-  it('legality is the bonus-action pool alone, with its OWN diagnostic', () => {
+  it('legality is the bonus-action pool plus the wrecked leg', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-fuel');
-    expect(raw!.legalWhen).toHaveLength(1);
+    // Two legs: the bonus pool and the shared wrecked leg (pinned in the
+    // wrecked-legality describe below — appended last).
+    expect(raw!.legalWhen).toHaveLength(2);
     const leg = raw!.legalWhen![0]!;
     const poolReader = (bonus: number): FactReader => ({
       num: (n) => (n === 'bonusActions.remaining' ? bonus : 0),
@@ -2286,9 +2296,11 @@ describe('set-tormentor-boost offer', () => {
     expect(unseated.availableRules.some((r) => r.rule.id === 'set-tormentor-boost')).toBe(false);
   });
 
-  it('legality is the bonus pool PLUS the soul-coin leg, each with its OWN diagnostic', () => {
+  it('legality is the bonus pool PLUS the soul-coin leg (and the wrecked leg)', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-boost');
-    expect(raw!.legalWhen).toHaveLength(2);
+    // Three legs: the two below plus the shared wrecked leg (pinned in the
+    // wrecked-legality describe — appended last).
+    expect(raw!.legalWhen).toHaveLength(3);
     const reader = (bonus: number, fuel: number): FactReader => ({
       num: (n) => (n === 'bonusActions.remaining' ? bonus : n === `${F}.fuel.current` ? fuel : 0),
       has: () => false
@@ -4025,6 +4037,215 @@ describe('clinger seat i18n (tlh is the canary)', () => {
       'en-x-tlh leave description': tlh.rule.tormentor['leave-clinger-seat']?.description,
       'en chip name': en.rule.tormentor['seat-clinger-effect']?.name,
       'en-x-tlh chip name': tlh.rule.tormentor['seat-clinger-effect']?.name
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+/**
+ * The WRECKED-VEHICLE legality pass: while the destroyed wreck stands
+ * (`companion.tormentor.destroyed > 0`), the vehicle's ACTIVITY offers and its
+ * REPAIR recorder are ILLEGAL — ONE shared leg (the `notLockedLegal` shape)
+ * appended LAST beside each offer's existing legs, with the ONE own
+ * diagnostic `rule.tormentor.wrecked`. Illegal-but-COMMITTABLE throughout
+ * (the engine's illegal-but-visible contract): the offers stay visible and
+ * applicable, planned-anyway rows still execute carrying the diagnostic, and
+ * every existing leg keeps composing. The BOUNDARY is deliberate: damage
+ * recording (the blow happened — bookkeeping) and the seat offers (sitting
+ * on a wreck is somebody's choice) carry NO wrecked leg.
+ */
+
+/** The shared wrecked diagnostic key (the one own key every gated offer carries). */
+const WRECKED = `${T}.wrecked`;
+
+/** The seven offers carrying the wrecked leg. */
+const WRECK_GATED = [
+  'fire-tormentor-harpoon',
+  'drive-tormentor',
+  'dash-tormentor',
+  'juke-tormentor',
+  'set-tormentor-fuel',
+  'set-tormentor-boost',
+  'record-tormentor-heal'
+] as const;
+
+/** Every other offer in the module — the explicit negative boundary. */
+const WRECK_UNGATED = [
+  'acquire-tormentor',
+  'abandon-tormentor',
+  'set-tormentor-occupancy',
+  'set-tormentor-ac-mode',
+  'record-tormentor-damage',
+  'knock-tormentor-prone',
+  'flip-tormentor-upright',
+  'take-tormentor-passenger-seat',
+  'leave-tormentor-passenger-seat',
+  'take-tormentor-harpoon-seat',
+  'leave-tormentor-harpoon-seat',
+  'take-tormentor-helm-seat',
+  'leave-tormentor-helm-seat',
+  'take-tormentor-clinger-seat',
+  'leave-tormentor-clinger-seat'
+] as const;
+
+/** A reader with only the destroyed fact set (or absent). */
+function wreckReader(destroyed: number): FactReader {
+  return {
+    num: (n) => (n === `${F}.destroyed` ? destroyed : 0),
+    has: (n) => n === `${F}.destroyed` && destroyed > 0
+  };
+}
+
+describe('wrecked legality (the shared leg)', () => {
+  it('each gated offer carries the wrecked leg LAST — legal whole, illegal wrecked, the ONE shared key', () => {
+    for (const id of WRECK_GATED) {
+      const raw = module().offer!({ selections: {} }).find((o) => o.id === id)!;
+      const legs = raw.legalWhen!;
+      expect(legs.length, `${id} has legs`).toBeGreaterThan(0);
+      const leg = legs[legs.length - 1]!;
+      expect(leg.condition(wreckReader(0)), `${id} legal while whole`).toBe(true);
+      expect(leg.condition(wreckReader(1)), `${id} illegal while wrecked`).toBe(false);
+      expect(leg.diagnostics, `${id} the one own key`).toEqual([
+        { code: WRECKED, severity: 'error' }
+      ]);
+    }
+  });
+
+  it('the leg APPENDS: every gated offer keeps its existing legs in order (counts pinned)', () => {
+    const counts: Record<string, number> = {
+      'fire-tormentor-harpoon': 2, // no-action + wrecked
+      'drive-tormentor': 3, // no-action + out-of-movement + wrecked
+      'dash-tormentor': 2, // no-bonus + wrecked
+      'juke-tormentor': 3, // no-reaction + unable-to-move + wrecked
+      'set-tormentor-fuel': 2, // no-bonus + wrecked
+      'set-tormentor-boost': 3, // no-bonus + without-soul-coin + wrecked
+      'record-tormentor-heal': 1 // wrecked alone (the factory's opt-in legs)
+    };
+    for (const [id, n] of Object.entries(counts)) {
+      const raw = module().offer!({ selections: {} }).find((o) => o.id === id)!;
+      expect(raw.legalWhen, `${id} leg count`).toHaveLength(n);
+    }
+  });
+
+  it('the boundary is explicit: NO other offer carries the wrecked code', () => {
+    for (const id of WRECK_UNGATED) {
+      const raw = module().offer!({ selections: {} }).find((o) => o.id === id)!;
+      const codes = (raw.legalWhen ?? []).flatMap((leg) => leg.diagnostics.map((d) => d.code));
+      expect(codes, `${id} carries no wrecked leg`).not.toContain(WRECKED);
+    }
+  });
+});
+
+/**
+ * A committed WRECKED vehicle — the acquire, the helm or harpoon seat, and a
+ * committed 60-damage record with the permanent destroyed wreck it writes
+ * (the real fold: one pool-emptying blow).
+ */
+function wreckedVehicle(seat: 'helm' | 'harpoon'): EffectInstance[] {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect(), seat === 'helm' ? helmSeatEffect() : harpoonSeatEffect()],
+    planned: [{ instanceId: 'd1', ruleId: 'record-tormentor-damage', selections: { amount: 60 } }]
+  });
+  expect(out.facts[`${F}.destroyed`]).toBe(1);
+  return [
+    acquireEffect(),
+    ...(seat === 'helm' ? [helmSeatEffect()] : [harpoonSeatEffect()]),
+    ...out.effects
+  ];
+}
+
+describe('wrecked legality (through the fold)', () => {
+  it('the gated offers stay VISIBLE but ILLEGAL on the wreck, carrying the shared diagnostic', () => {
+    // At the flinger: fire and the repair recorder. The exact-[wrecked] cases
+    // pin the leg as the SOLE failure where its siblings pass; the composing
+    // cases (drive/juke/boost below) pin the append beside failing siblings.
+    // The economy module joins so the action pool derives (wrecked alone).
+    const flinger = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: wreckedVehicle('harpoon')
+    });
+    const fire = flinger.availableRules.find((r) => r.rule.id === 'fire-tormentor-harpoon');
+    expect(fire, 'fire stays offered on the wreck').toBeDefined();
+    expect(fire!.legal).toBe(false);
+    expect(fire!.diagnostics).toEqual([{ code: WRECKED, severity: 'error' }]);
+    const heal = flinger.availableRules.find((r) => r.rule.id === 'record-tormentor-heal');
+    expect(heal, 'the repair recorder stays offered on the wreck').toBeDefined();
+    expect(heal!.legal).toBe(false);
+    expect(heal!.diagnostics).toEqual([{ code: WRECKED, severity: 'error' }]);
+
+    // At the Helm: dash and fuel fail on the wrecked leg ALONE (fresh pools);
+    // drive, juke and boost compose it beside their own failing legs
+    // (unfuelled: no movement, no speed; no soul coin).
+    const helm = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: wreckedVehicle('helm')
+    });
+    const sole = ['dash-tormentor', 'set-tormentor-fuel'] as const;
+    for (const id of sole) {
+      const offer = helm.availableRules.find((r) => r.rule.id === id);
+      expect(offer, `${id} stays offered on the wreck`).toBeDefined();
+      expect(offer!.legal, `${id} illegal on the wreck`).toBe(false);
+      expect(offer!.diagnostics, `${id} wrecked alone`).toEqual([
+        { code: WRECKED, severity: 'error' }
+      ]);
+    }
+    expect(helm.availableRules.find((r) => r.rule.id === 'drive-tormentor')!.diagnostics).toEqual([
+      { code: `${T}.drive.out_of_movement`, severity: 'error' },
+      { code: WRECKED, severity: 'error' }
+    ]);
+    expect(helm.availableRules.find((r) => r.rule.id === 'juke-tormentor')!.diagnostics).toEqual([
+      { code: `${T}.juke.unable_to_move`, severity: 'error' },
+      { code: WRECKED, severity: 'error' }
+    ]);
+    expect(
+      helm.availableRules.find((r) => r.rule.id === 'set-tormentor-boost')!.diagnostics
+    ).toEqual([
+      { code: `${T}.boost.without_soul_coin`, severity: 'error' },
+      { code: WRECKED, severity: 'error' }
+    ]);
+  });
+
+  it('the ungated offers stay LEGAL on the wreck (bookkeeping and seating)', () => {
+    const out = evaluate({ modules: [module()], committed: wreckedVehicle('helm') });
+    for (const id of ['record-tormentor-damage', 'leave-tormentor-helm-seat'] as const) {
+      const offer = out.availableRules.find((r) => r.rule.id === id);
+      expect(offer, `${id} stays offered on the wreck`).toBeDefined();
+      expect(offer!.legal, `${id} stays legal on the wreck`).toBe(true);
+      expect(offer!.diagnostics, `${id} no diagnostics`).toEqual([]);
+    }
+  });
+
+  it('planned-anyway rows still execute, carrying the shared diagnostic (the apply re-check)', () => {
+    // Dash: the error lands BEFORE its unconditional risk note (push order),
+    // the row still spends the bonus and doubles the pool.
+    const dash = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: wreckedVehicle('helm'),
+      planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
+    });
+    expect(dash.planDiagnostics['i0']).toEqual([
+      { code: WRECKED, severity: 'error' },
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 5 } }
+    ]);
+    expect(dash.facts['bonusActions.remaining']).toBe(0);
+    // The repair: the record still lands beside the diagnostic.
+    const heal = evaluate({
+      modules: [module()],
+      committed: wreckedVehicle('harpoon'),
+      planned: [{ instanceId: 'i0', ruleId: 'record-tormentor-heal', selections: { amount: 10 } }]
+    });
+    expect(heal.facts[`${F}.hp.healRecorded`]).toBe(10);
+    expect(heal.planDiagnostics['i0']).toEqual([{ code: WRECKED, severity: 'error' }]);
+  });
+});
+
+describe('wrecked legality i18n (tlh is the canary)', () => {
+  it('the shared wrecked diagnostic exists in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      en: en.rule.tormentor.wrecked,
+      'en-x-tlh': tlh.rule.tormentor.wrecked
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));

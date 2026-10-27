@@ -1,0 +1,177 @@
+name: 'Tormentor - Wrecked Vehicle Legality'
+description: >-
+  While the destroyed wreck stands (companion.tormentor.destroyed > 0), the
+  vehicle's ACTIVITY offers and its REPAIR recorder are ILLEGAL — ONE shared
+  wrecked legality leg (rule.tormentor.wrecked) appended beside each offer's
+  existing legs: fire-harpoon, drive, dash, juke, fuel, boost and the HEAL
+  recorder. All illegal-but-COMMITTABLE (the engine's illegal-but-visible
+  contract): every offer stays visible and applicable, a planned-anyway row
+  still commits carrying the diagnostic, and the existing legs keep composing
+  (an over-distance Drive on a wreck fails out-of-movement AND wrecked, in
+  leg order). Bookkeeping DELIBERATELY stays legal on a wreck: recording
+  DAMAGE (the blow happened) and taking/leaving SEATS (sitting on a wreck is
+  somebody's choice) — the boundary is the point.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  # Control — a live, fuelled vehicle: every gated offer reads LEGAL.
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - drive-tormentor
+            - dash-tormentor
+            - juke-tormentor
+            - set-tormentor-fuel
+            - set-tormentor-boost
+            - record-tormentor-heal
+            - record-tormentor-damage
+  # Swap to the flinger, then destroy the vehicle: one pool-emptying blow.
+  - addOffer:
+      id: leave-tormentor-helm-seat
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+  - endTurn: {}
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 60
+      assert:
+        facts:
+          companion.tormentor.hp.current: 0
+          companion.tormentor.destroyed: 1
+  # Wrecked at the flinger: firing and repairs are ILLEGAL; damage recording
+  # and seat changes stay LEGAL (the boundary).
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - fire-tormentor-harpoon
+            - record-tormentor-heal
+          legal:
+            - record-tormentor-damage
+            - leave-tormentor-harpoon-seat
+  # Override: both rows still commit, each carrying the wrecked diagnostic
+  # (the repair caps at the missing HP exactly as on a live vehicle).
+  - addOffer:
+      id: fire-tormentor-harpoon
+      assert:
+        planErrors:
+          - id: fire-tormentor-harpoon
+            errors:
+              - rule.tormentor.wrecked
+  - addOffer:
+      id: record-tormentor-heal
+      selections:
+        amount: 20
+      assert:
+        facts:
+          companion.tormentor.hp.healRecorded: 20
+        planErrors:
+          - id: record-tormentor-heal
+            errors:
+              - rule.tormentor.wrecked
+  - endTurn: {}
+  # Back at the Helm on the wreck: drive/dash/juke and fuel/boost illegal,
+  # bookkeeping still legal.
+  - addOffer:
+      id: leave-tormentor-harpoon-seat
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - drive-tormentor
+            - dash-tormentor
+            - juke-tormentor
+            - set-tormentor-fuel
+            - set-tormentor-boost
+            - record-tormentor-heal
+          legal:
+            - record-tormentor-damage
+            - leave-tormentor-helm-seat
+  # The composition pin: an over-distance Drive on a wreck fails BOTH the
+  # wrecked leg and its out-of-movement re-check — the plan fold carries the
+  # legalWhen gates' diagnostics first, the apply's re-checked ones after
+  # (deduped), so the row reads wrecked (the gate) then out-of-movement
+  # (the selected distance).
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 150
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            errors:
+              - rule.tormentor.wrecked
+              - rule.tormentor.drive.out_of_movement
+  - endTurn: {}
+  # The sole-failing-leg pins, one row per turn so every sibling leg passes
+  # and wrecked stands ALONE on the row (Dash keeps its unconditional risk
+  # note beside the error, in push order).
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 30
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            errors:
+              - rule.tormentor.wrecked
+  - endTurn: {}
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        planErrors:
+          - id: dash-tormentor
+            errors:
+              - rule.tormentor.wrecked
+              - rule.tormentor.dash.risk
+  - endTurn: {}
+  - addOffer:
+      id: juke-tormentor
+      assert:
+        planErrors:
+          - id: juke-tormentor
+            errors:
+              - rule.tormentor.wrecked
+  - endTurn: {}
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 2
+      assert:
+        facts:
+          companion.tormentor.fuel.recorded: 2
+        planErrors:
+          - id: set-tormentor-fuel
+            errors:
+              - rule.tormentor.wrecked
+  - endTurn: {}
+  # The fuel row left demon ichor in the burner, so Boost composes the OTHER
+  # way: without a soul coin AND wrecked, in leg order.
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 1
+      assert:
+        facts:
+          companion.tormentor.boost.recorded: 1
+        planErrors:
+          - id: set-tormentor-boost
+            errors:
+              - rule.tormentor.boost.without_soul_coin
+              - rule.tormentor.wrecked
