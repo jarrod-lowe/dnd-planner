@@ -3,11 +3,13 @@ description: >-
   Acquiring the Tormentor advertises ONE permanent keyed effect baking the
   display-only stat block into facts: active, the AC MODE (Moving by default —
   the derived ac.effective reads 21; the flat ac.value bake is retired), HP 60,
-  Speed 100 ft., Cargo 500 lb., STR/DEX/CON 16/14/14 with +3/+2/+2 modifiers.
-  The keyed effect replaces on re-acquire (facts never double), and end of turn
-  commits it so the stats persist on later turns. Acquiring also makes the
-  VEHICLE's +ADD panel available: the abandon offer appears under the
-  vehicle's subject, in the free section, gated on the acquire.
+  Cargo 500 lb., STR/DEX/CON 16/14/14 with +3/+2/+2 modifiers. Speed bakes
+  NOTHING any more (PR-D): the derived speed.effective reads the fuel, so a
+  fresh unfuelled vehicle stands at 0 ft. until the Helm feeds it. The keyed
+  effect replaces on re-acquire (facts never double), and end of turn commits
+  it so the stats persist on later turns. Acquiring also makes the VEHICLE's
+  +ADD panel available: the abandon offer appears under the vehicle's subject,
+  in the free section, gated on the acquire.
 ruleGroups:
   - vehicles/tormentor
 steps:
@@ -19,7 +21,7 @@ steps:
           companion.tormentor.active: 1
           companion.tormentor.ac.effective: 21
           companion.tormentor.hp.max: 60
-          companion.tormentor.speed: 100
+          companion.tormentor.speed.effective: 0
           companion.tormentor.cargo: 500
           companion.tormentor.str: 16
           companion.tormentor.dex: 14
@@ -64,7 +66,7 @@ steps:
           companion.tormentor.active: 1
           companion.tormentor.ac.effective: 21
           companion.tormentor.hp.max: 60
-          companion.tormentor.speed: 100
+          companion.tormentor.speed.effective: 0
           companion.tormentor.cargo: 500
   # A later turn still reads the committed stat block.
   - evaluate:

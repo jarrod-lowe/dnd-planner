@@ -1,0 +1,128 @@
+name: 'Tormentor - Boost Needs a Soul Coin'
+description: >-
+  Boost (Demon Ichor) is legal only while the Tormentor runs on a soul coin
+  — the stat block's own rule. The leg is LEGALITY, never `when` (the
+  engine's illegal-but-visible contract): without a soul coin the offer
+  stays visible and applicable with its OWN without-soul-coin diagnostic
+  beside the bonus-action leg, and a planned-anyway row still commits —
+  the boost record lands and the derived speed projects the over-commit
+  (+30 the rules would not have allowed), exactly like any other override.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+  # Unfuelled (fuel none): the boost offer exists with its segmented control
+  # but is ILLEGAL — the only failing leg is the soul coin.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-tormentor-boost
+          illegal:
+            - set-tormentor-boost
+        offerUi:
+          - id: set-tormentor-boost
+            ui:
+              section: free
+              subject: tormentor
+              detailKey: vehicle/tormentor-fuel
+              actionCost:
+                - bonus
+              intents:
+                HANDLE: gear
+              secondaryControl:
+                type: segmented
+                var: boost
+                prefix: play.choices.tormentor.boost
+                options:
+                  - value: 0
+                    label: rule.tormentor.boost.none
+                  - value: 1
+                    label: rule.tormentor.boost.demon-ichor
+        offerVars:
+          - id: set-tormentor-boost
+            vars:
+              boost:
+                capture: true
+                default:
+                  fact: companion.tormentor.boost.current
+  # The override path: the row still commits — the bonus goes, the boost
+  # record lands, the derived speed projects 30 ft. the rules would not have
+  # allowed — and the row carries the diagnostic.
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          companion.tormentor.boost.recorded: 1
+          companion.tormentor.boost.current: 1
+          companion.tormentor.speed.effective: 30
+        planErrors:
+          - id: set-tormentor-boost
+            index: 0
+            errors:
+              - rule.tormentor.boost.without_soul_coin
+  - endTurn: {}
+  # Demon ichor fuel (80 ft.) also fails the soul-coin leg: boost stays
+  # illegal beside a full tank of the wrong fuel.
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 2
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.fuel.current: 2
+          companion.tormentor.boost.current: 1
+          companion.tormentor.speed.effective: 110
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - set-tormentor-boost
+  # A soul coin in the burner: the boost turns LEGAL (both legs pass).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.fuel.current: 1
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - set-tormentor-boost
+  # And with no bonus action left (the fuel row's turn... a fresh turn, the
+  # fuel committed, the bonus spent by the boost itself on a second row):
+  # the no-bonus leg flags with its OWN diagnostic too.
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 1
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - set-tormentor-boost
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 0
+      assert:
+        planErrors:
+          - id: set-tormentor-boost
+            index: 1
+            errors:
+              - rule.tormentor.boost.no_bonus_action

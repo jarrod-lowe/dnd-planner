@@ -278,3 +278,52 @@ ruleGroups:
             Tormentor, gaining advantage on a Dexterity saving throw. The
             swerve needs the machine rolling: the Tormentor can juke only
             while it is able to move.
+  # The FUEL and BOOST records' flip detail — linked from both PR-D offers. A
+  # catalog-only entry like the helm's: our own wording (the Tormentor is not
+  # SRD), in-world voice for the fuels and their speeds, the boost rule, and
+  # the bonus-action cost of each. The 1-minute duration is copy only —
+  # nothing times it for the crew; when the minute is up, the driver records
+  # the boost as spent (sets it back to none).
+  - id: tormentor-fuel-detail
+    translations:
+      en:
+        name: Fuel and Boost (Tormentor)
+        description: Detail text for the Tormentor's fuel and boost records
+        keywords:
+          - fuel
+          - boost
+          - soul coin
+          - demon ichor
+          - tormentor
+          - vehicle
+          - speed
+          - burner
+      en-x-tlh:
+        name: Fuel and Boost (Tormentor)
+        description: Detail text for the Tormentor's fuel and boost records
+        keywords:
+          - fuel
+          - boost
+          - soul coin
+          - demon ichor
+          - tormentor
+          - vehicle
+          - speed
+          - burner
+    detail:
+      key: vehicle/tormentor-fuel
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Fuel
+          body: |
+            **Fuel.** The Tormentor runs on what its crew feeds the burner:
+            no fuel and its wheels stand still (Speed 0), a soul coin drives
+            it at 100 ft., and a flask of demon ichor burns at 80 ft.
+            Setting the fuel takes a bonus action at the Helm.
+
+            **Boost.** A flask of demon ichor poured into the boost tank
+            takes a bonus action at the Helm and adds 30 ft. to the
+            Tormentor's speed for 1 minute. The boost only burns while the
+            machine runs on a soul coin. Nothing counts the minute for the
+            crew: when it runs out, the driver records the boost as spent.

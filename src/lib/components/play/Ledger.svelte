@@ -393,7 +393,7 @@
             ><TickerCopies>{shortLabelFor(entry)}</TickerCopies></span
           >
           <span class="ledger__cell-value ticker" use:ticker
-            ><TickerCopies>{resolveEntryValue(entry, facts)}</TickerCopies></span
+            ><TickerCopies>{resolveEntryValue(entry, facts, (key) => $t(key))}</TickerCopies></span
           >
         </div>
       {/if}

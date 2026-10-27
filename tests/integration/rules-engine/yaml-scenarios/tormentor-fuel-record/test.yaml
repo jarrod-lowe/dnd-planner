@@ -1,0 +1,149 @@
+name: 'Tormentor - Fuel Segmented Record at the Helm'
+description: >-
+  Fuel is a BONUS-ACTION segmented record (the economy ruling: refuelling is
+  the player's bonus action, never a free control) offered in the vehicle's
+  +ADD while acquired AND holding the Helm seat — the AC-mode record's
+  filing (free section, HANDLE gear) with a [None | Soul Coin | Demon
+  Ichor] secondaryControl pre-showing the CURRENT fuel. Apply advertises the
+  generic bonus-action spend beside ONE permanent KEYED effect writing the
+  DISTINCT companion.tormentor.fuel.recorded fact (the AC-mode pattern:
+  never write the derive's fuel.current), re-applying replacing by key, and
+  the derived speed.effective follows the fuel at once (0 / 100 / 80). With
+  no bonus action left the offer stays visible but ILLEGAL with its OWN
+  diagnostic, and a planned-anyway row still commits (the spend projecting
+  the over-commit).
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  # Unacquired: the record does not exist at all (the acquire gates it).
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - set-tormentor-fuel
+  - addOffer:
+      id: acquire-tormentor
+  # Acquired but NOT at the Helm: the offer still does not exist — refuelling
+  # is the Helm's to do.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - set-tormentor-fuel
+  - addOffer:
+      id: take-tormentor-helm-seat
+  # At the Helm: the offer exists and is legal, the segmented control pinned
+  # with the three fuels, opening at the CURRENT fuel (0, none recorded).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-tormentor-fuel
+          legal:
+            - set-tormentor-fuel
+        offerUi:
+          - id: set-tormentor-fuel
+            ui:
+              section: free
+              subject: tormentor
+              detailKey: vehicle/tormentor-fuel
+              actionCost:
+                - bonus
+              intents:
+                HANDLE: gear
+              secondaryControl:
+                type: segmented
+                var: fuel
+                prefix: play.choices.tormentor.fuel
+                options:
+                  - value: 0
+                    label: rule.tormentor.fuel.none
+                  - value: 1
+                    label: rule.tormentor.fuel.soul-coin
+                  - value: 2
+                    label: rule.tormentor.fuel.demon-ichor
+        offerVars:
+          - id: set-tormentor-fuel
+            vars:
+              fuel:
+                capture: true
+                default:
+                  fact: companion.tormentor.fuel.current
+  # Insert a soul coin: the bonus action goes and the DISTINCT recorded fact
+  # stands, the derived fuel.current and speed.effective following at once
+  # (the projection folds the advertised keyed effect).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          companion.tormentor.fuel.recorded: 1
+          companion.tormentor.fuel.current: 1
+          companion.tormentor.speed.effective: 100
+        planErrors:
+          - id: set-tormentor-fuel
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-fuel
+        facts:
+          companion.tormentor.fuel.recorded: 1
+          companion.tormentor.speed.effective: 100
+  # A fresh turn, the bonus action back: the control pre-shows the CURRENT
+  # fuel (a soul coin), and re-recording Demon Ichor REPLACES by key — never
+  # a stacked record — the speed following to 80.
+  - evaluate:
+      assert:
+        offerVars:
+          - id: set-tormentor-fuel
+            vars:
+              fuel:
+                capture: true
+                default:
+                  fact: companion.tormentor.fuel.current
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 2
+      assert:
+        facts:
+          companion.tormentor.fuel.recorded: 2
+          companion.tormentor.fuel.current: 2
+          companion.tormentor.speed.effective: 80
+        planErrors:
+          - id: set-tormentor-fuel
+            index: 0
+            errors: []
+  # No bonus action left (the ichor row spent it): the offer stays visible
+  # but ILLEGAL with its OWN no-bonus diagnostic…
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-tormentor-fuel
+          illegal:
+            - set-tormentor-fuel
+  # …and the planned-anyway row still commits — recording None (flipping the
+  # fuel back) while the spend projects the over-commit and the row carries
+  # the diagnostic.
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 0
+      assert:
+        facts:
+          bonusActions.remaining: -1
+          companion.tormentor.fuel.recorded: 0
+          companion.tormentor.fuel.current: 0
+          companion.tormentor.speed.effective: 0
+        planErrors:
+          - id: set-tormentor-fuel
+            index: 1
+            errors:
+              - rule.tormentor.fuel.no_bonus_action

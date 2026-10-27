@@ -133,13 +133,27 @@ export function resourceShortLabelKey(label: string): string | undefined {
 
 // ── Shared Value Resolution ──
 
-export function resolveEntryValue(entry: UiEntry, facts: Facts): string {
+/**
+ * Resolves an entry to its display string.
+ *
+ * A `value` entry may carry `valueLabels` (numeric fact value → i18n key —
+ * the textual-state map, e.g. a vehicle's fuel): when the fact maps, the KEY
+ * is returned (or its translation, when a `translate` callback is supplied —
+ * render sites pass their `$t`); unmapped values fall back to the raw fact.
+ */
+export function resolveEntryValue(
+  entry: UiEntry,
+  facts: Facts,
+  translate?: (key: string) => string
+): string {
   if (entry.type === 'usedMax') {
     const total = Number(facts[entry.total] ?? 0);
     const remaining = Number(facts[entry.remaining] ?? 0);
     return `${remaining}/${total}`;
   }
   if (entry.type === 'value') {
+    const mapped = entry.valueLabels?.[Number(facts[entry.fact])];
+    if (mapped !== undefined) return translate ? translate(mapped) : mapped;
     return String(facts[entry.fact] ?? '');
   }
   if (entry.type === 'modifier') {

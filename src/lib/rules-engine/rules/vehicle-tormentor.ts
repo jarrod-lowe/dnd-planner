@@ -122,26 +122,42 @@ import {
  * The vehicle's MOVEMENT ECONOMY is the steed's, copied exactly (the
  * PC-parity house rule, landed after the user's tablet test found the
  * intent-only Drive row did nothing): `movement.base/total/remaining` derives
- * in the steed's shape — base a DERIVATION of the speed facts (the seam PR-D
- * re-plumbs to `speed.effective` under fuel/boost), total doubling while
- * Dashed, remaining = total − spent, every spend endOfTurn so the pool resets
- * with the turn. Drive IS the movement offer (the steed's move rows: distance
- * slider defaulting to all remaining, MOVE section) carrying the economy
- * ruling's ACTION spend beside the distance; Dash doubles the pool for the
- * turn (the steed's dashed flag) as the player's BONUS ACTION (the
- * 2024-format stat block). The stat block's per-encounter fine print (3 +
- * the vehicle's Constitution modifier Dashes each encounter, each Dash
- * beyond that risking damage) is NOT counted — the app has no encounter
- * tracking and cannot know when the cap is exceeded, so every planned Dash
- * row carries the whole rule as an unconditional notice (the allowance
- * interpolated from the facts) and the player counts. The movement row joins
- * the resources panel beside creature capacity.
+ * in the steed's shape — base a DERIVATION of the derived `speed.effective`
+ * (the PR-D seam, re-plumbed), total doubling while Dashed, remaining =
+ * total − spent, every spend endOfTurn so the pool resets with the turn.
+ * Drive IS the movement offer (the steed's move rows: distance slider
+ * defaulting to all remaining, MOVE section) carrying the economy ruling's
+ * ACTION spend beside the distance; Dash doubles the pool for the turn (the
+ * steed's dashed flag) as the player's BONUS ACTION (the 2024-format stat
+ * block). The stat block's per-encounter fine print (3 + the vehicle's
+ * Constitution modifier Dashes each encounter, each Dash beyond that risking
+ * damage) is NOT counted — the app has no encounter tracking and cannot know
+ * when the cap is exceeded, so every planned Dash row carries the whole rule
+ * as an unconditional notice (the allowance interpolated from the facts) and
+ * the player counts. The movement row joins the resources panel beside
+ * creature capacity.
  *
- * Deliberately out of scope this pass (later passes on the plan): fuel and
- * boost (the Helm's refuelling records and the speed they set — PR-D, which
- * re-plumbs movement.base to the derived `speed.effective` and refines Juke's
- * able-to-move leg), the clinger
- * station, damage immunities and the mishap threshold
+ * FUEL and BOOST (PR-D) are the Helm's two BONUS-ACTION segmented records —
+ * the economy ruling prices them as the player's bonus action, never free
+ * controls. Both are the AC-mode record pattern (free-section vehicle offer,
+ * segmented secondaryControl pre-showing the current selection, ONE
+ * permanent KEYED effect on the DISTINCT `fuel.recorded`/`boost.recorded`
+ * fact the resolved current prefers), gated `when` acquired AND holding the
+ * Helm seat — while the RECORDS are vehicle state no seat change touches.
+ * The derived `speed.effective` maps the fuel (none/soul coin/demon ichor →
+ * 0/100/80) and adds 30 while boosted; the acquire bakes NO speed any more
+ * (the flat `speed` name is retired like `ac.value` — a legacy persisted
+ * bake stays inert), the Speed chip and the whole movement pool read the
+ * derived name, and an unfuelled vehicle stands still. Boost's own legality
+ * leg is the stat block's rule — a boost only burns on a soul coin —
+ * illegal-but-COMMITTABLE like every leg; its 1-minute duration is copy
+ * only (nothing times it; the player flips the record back to none). Juke's
+ * able-to-move leg refines to the derived speed: `speed.effective > 0` AND
+ * not prone, one shared diagnostic. The Fuel chip renders the fuel's NAME
+ * via the value-entry label map (`valueLabels`), never its ordinal.
+ *
+ * Deliberately out of scope this pass (later passes on the plan): the
+ * clinger station, damage immunities and the mishap threshold
  * as MECHANICS (they are detail text only — the recorder never refuses
  * fire/poison/psychic and no mishap is modelled), any prone attack/movement
  * or incapacitated mechanics beyond the record, and MULTIPLE vehicles per
@@ -164,6 +180,14 @@ const OCCUPANCY_KEY = 'tormentor-occupancy';
 /** The AC-mode record's effect id and replacement key (ONE live record). */
 const AC_MODE_EFFECT_ID = 'effect-tormentor-ac-mode';
 const AC_MODE_KEY = 'tormentor-ac-mode';
+
+/** The fuel record's effect id and replacement key (ONE live record). */
+const FUEL_EFFECT_ID = 'effect-tormentor-fuel';
+const FUEL_KEY = 'tormentor-fuel';
+
+/** The boost record's effect id and replacement key (ONE live record). */
+const BOOST_EFFECT_ID = 'effect-tormentor-boost';
+const BOOST_KEY = 'tormentor-boost';
 
 /** The vehicle-prone record's effect id and replacement key (ONE live record). */
 const PRONE_EFFECT_ID = 'effect-tormentor-prone';
@@ -245,6 +269,8 @@ const ALREADY_HAVE = `${T}.acquire.already_have`;
 const CHILD_KEYS = [
   OCCUPANCY_KEY,
   AC_MODE_KEY,
+  FUEL_KEY,
+  BOOST_KEY,
   PRONE_KEY,
   HP_DAMAGE_KEY,
   HP_HEAL_KEY,
@@ -259,13 +285,14 @@ const CHILD_KEYS = [
 /** The stat block acquiring bakes. HP bakes its BASE (the pool derives from
  * it — the steed shape) plus the damage threshold as DATA the recorder gates
  * on; everything else is display-only. AC bakes NO value at all — the acquire
- * selection's MODE fact is the bake, and `ac.effective` derives the number
- * (see the derive below for why the flat `ac.value` name is retired). */
+ * selection's MODE fact is the bake, and `ac.effective` derives the number —
+ * and Speed bakes nothing either (PR-D): `speed.effective` derives from the
+ * fuel, so the flat `speed` name is retired exactly like `ac.value` (a legacy
+ * persisted bake stays inert, never a two-writer conflict). */
 const ACQUIRE_STATE: Record<string, number> = {
   [`${F}.active`]: 1,
   [`${F}.hp.base`]: 60,
   [`${F}.damageThreshold`]: 10,
-  [`${F}.speed`]: 100,
   [`${F}.cargo`]: 500,
   [`${F}.str`]: 16,
   [`${F}.dex`]: 14,
@@ -296,6 +323,42 @@ const AC_MODE_CONTROL = {
 /** The selected AC mode from a segmented capture (Moving when unset). */
 const modeFrom = (selections: Record<string, unknown>): number =>
   typeof selections.mode === 'number' ? selections.mode : 0;
+
+/**
+ * The [None | Soul Coin | Demon Ichor] picker the fuel record renders (the
+ * AC-mode segmented precedent — a segmented control can only ever be a
+ * `secondaryControl`). The values ARE the ordinals the record stores and the
+ * fuel map reads: 0 none, 1 soul coin, 2 demon ichor.
+ */
+const FUEL_CONTROL = {
+  type: 'segmented',
+  var: 'fuel',
+  prefix: 'play.choices.tormentor.fuel',
+  options: [
+    { value: 0, label: `${T}.fuel.none` },
+    { value: 1, label: `${T}.fuel.soul-coin` },
+    { value: 2, label: `${T}.fuel.demon-ichor` }
+  ]
+} as const;
+
+/**
+ * The [None | Demon Ichor] boost picker — 0 none (the default), 1 demon
+ * ichor. The 1-minute duration is COPY ONLY: nothing times it, the player
+ * flips the record back to none when the minute is up.
+ */
+const BOOST_CONTROL = {
+  type: 'segmented',
+  var: 'boost',
+  prefix: 'play.choices.tormentor.boost',
+  options: [
+    { value: 0, label: `${T}.boost.none` },
+    { value: 1, label: `${T}.boost.demon-ichor` }
+  ]
+} as const;
+
+/** The selected fuel/boost ordinal from a segmented capture (unset reads 0). */
+const segmentedFrom = (selections: Record<string, unknown>, key: string): number =>
+  typeof selections[key] === 'number' ? (selections[key] as number) : 0;
 
 /**
  * The acquire effect (permanent, keyed so a re-acquire or abandon REPLACES rather
@@ -604,6 +667,19 @@ const DRIVE_OUT_OF_MOVEMENT = `${T}.drive.out_of_movement`;
 const DASH_NO_BONUS = `${T}.dash.no_bonus_action`;
 
 /**
+ * The fuel/boost records' diagnostics — each offer's OWN no-bonus key (the
+ * Dash/divine-smite per-offer style; a vehicle activity is never a PC weapon
+ * attack, so none of them share the weapon pools' keys), plus Boost's second
+ * leg: the stat block's own rule that a boost only burns on a soul coin.
+ * Both legs are illegal-but-COMMITTABLE (the engine's illegal-but-visible
+ * contract): the record still lands, the projection showing what the rules
+ * would not have allowed.
+ */
+const FUEL_NO_BONUS = `${T}.fuel.no_bonus_action`;
+const BOOST_NO_BONUS = `${T}.boost.no_bonus_action`;
+const BOOST_WITHOUT_SOUL_COIN = `${T}.boost.without_soul_coin`;
+
+/**
  * The dash RISK note — the informational diagnostic EVERY planned Dash row
  * carries, unconditionally. The stat block's Ability Scores fine print: each
  * encounter the vehicle can Dash 3 times plus its Constitution modifier,
@@ -647,9 +723,10 @@ const driveDistance = (f: FactReader, selections: Record<string, unknown>): numb
 
 /**
  * Juke's two legs: the reaction pool (the unarmed opportunity-attack
- * spelling) and the able-to-move approximation — PR-C reads the vehicle's
- * prone record (a fallen war machine cannot swerve); PR-D refines the leg to
- * `speed.effective > 0` once fuel exists.
+ * spelling) and the able-to-move leg — PR-D's refinement, ONE leg reading
+ * the derived speed AND the prone record (`speed.effective > 0 AND not
+ * prone`): out of fuel OR fallen over, a war machine that cannot roll
+ * cannot swerve, and the one shared unable-to-move diagnostic covers both.
  */
 const JUKE_NO_REACTION = `${T}.juke.no_reaction`;
 const JUKE_UNABLE_TO_MOVE = `${T}.juke.unable_to_move`;
@@ -759,13 +836,36 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
     }
   },
   {
+    // The DERIVED speed (the fuel's — 0/100/80, +30 boosted): the flat
+    // `speed` read is retired with the bake (a legacy acquire's stale bake
+    // must never reach the chip).
     subject: SUBJECT,
     panel: 'topBar',
     gate: `${F}.active`,
     entry: {
       type: 'value',
       label: 'play.stats.tormentor.speed',
-      fact: `${F}.speed`
+      fact: `${F}.speed.effective`
+    }
+  },
+  {
+    // The FUEL as its NAME, not its ordinal: valueLabels maps the numeric
+    // current to the i18n keys the segmented control shares, so the chip
+    // reads "Soul Coin" (the render sites translate; unmapped reads the raw
+    // number). Deliberately NO Boost entry — the settled decision: the boost
+    // state is the record chip + the control's pre-show, nothing more.
+    subject: SUBJECT,
+    panel: 'topBar',
+    gate: `${F}.active`,
+    entry: {
+      type: 'value',
+      label: 'play.stats.tormentor.fuel',
+      fact: `${F}.fuel.current`,
+      valueLabels: {
+        0: `${T}.fuel.none`,
+        1: `${T}.fuel.soul-coin`,
+        2: `${T}.fuel.demon-ichor`
+      }
     }
   },
   {
@@ -974,15 +1074,44 @@ const vehicleTormentor: RuleModule = {
       fact: `${F}.harpoon.damageBonus`,
       value: (f) => (acquired(f) ? 2 : 0)
     },
+    // The FUEL and BOOST records, resolved (the AC-mode has-preference idiom
+    // on DISTINCT recorded facts — the record writes `fuel.recorded`, NEVER
+    // the derived current, so a keyed replacement can flip any value to any
+    // other). Gated on the acquire: unacquired they settle to 0, and the
+    // records themselves never outlive the acquire lifecycle anyway.
+    {
+      fact: `${F}.fuel.current`,
+      value: (f) => (acquired(f) && f.has(`${F}.fuel.recorded`) ? f.num(`${F}.fuel.recorded`) : 0)
+    },
+    {
+      fact: `${F}.boost.current`,
+      value: (f) => (acquired(f) && f.has(`${F}.boost.recorded`) ? f.num(`${F}.boost.recorded`) : 0)
+    },
+    // The stat block's Speed line as a DERIVED fact under a deliberately NEW
+    // name (the ac.effective precedent): fuel none/soul coin/demon ichor map
+    // to 0/100/80, a Demon Ichor BOOST adds 30 while it stands. The boost's
+    // arithmetic is deliberately independent of its LEGALITY (a soul coin is
+    // required to boost, but an illegally-committed boost still projects its
+    // +30 — the over-commit projection, like any override). Gated on the
+    // acquire like every vehicle number; the flat `speed` name a legacy
+    // acquire bakes is inert — nothing derives or reads it.
+    {
+      fact: `${F}.speed.effective`,
+      value: (f) => {
+        if (!acquired(f)) return 0;
+        const byFuel = [0, 100, 80][f.num(`${F}.fuel.current`)] ?? 0;
+        return byFuel + (f.num(`${F}.boost.current`) === 1 ? 30 : 0);
+      }
+    },
     // The MOVEMENT ECONOMY, the steed's derives copied exactly (find-steed's
     // movement block): total doubling while Dashed, remaining = total − spent,
     // every spend endOfTurn so the pool resets with the turn. base is a
-    // DERIVATION of the speed facts, never a copy of the number — the seam
-    // PR-D re-plumbs (the flat baked `speed` becomes the derived
-    // `speed.effective` under fuel/boost) by changing this ONE read.
+    // DERIVATION of the effective speed, never a copy of a number — the PR-D
+    // seam, re-plumbed: the pool is the FUEL's, and an unfuelled vehicle
+    // stands still (0 ft.) until the Helm feeds it.
     {
       fact: `${F}.movement.base`,
-      value: (f) => f.num(`${F}.speed`)
+      value: (f) => f.num(`${F}.speed.effective`)
     },
     {
       fact: `${F}.movement.total`,
@@ -1136,6 +1265,129 @@ const vehicleTormentor: RuleModule = {
           }
         ]
       })
+    },
+    {
+      // The VEHICLE's FUEL record — PR-D, the Helm's refuelling row. The
+      // AC-mode record's shape (free section, HANDLE gear, segmented
+      // secondaryControl pre-showing the current selection, ONE permanent
+      // KEYED effect on the DISTINCT `fuel.recorded` fact) priced as the
+      // economy ruling demands: refuelling is the player's BONUS ACTION
+      // (the generic spend, never attack accounting), so the row carries the
+      // bonus cost chip and the bonus-pool legality leg with its OWN
+      // diagnostic — illegal-but-COMMITTABLE (a planned-anyway row still
+      // records while the projection reads the over-commit). `when` is the
+      // acquire AND the helm seat: nobody at the Helm, no refuelling offer —
+      // but the RECORD is vehicle state no seat change ever touches.
+      id: 'set-tormentor-fuel',
+      when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
+      legalWhen: [
+        {
+          condition: (f: FactReader): boolean => f.num('bonusActions.remaining') > 0,
+          diagnostics: [{ code: FUEL_NO_BONUS, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.fuel.name`,
+        description: `${T}.fuel.description`,
+        detailKey: 'vehicle/tormentor-fuel',
+        secondaryControl: FUEL_CONTROL,
+        intents: { HANDLE: 'gear' },
+        actionCost: ['bonus']
+      },
+      vars: { fuel: { capture: true, default: { fact: `${F}.fuel.current` } } },
+      apply: (f: FactReader, selections): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own diagnostic from the fold — the record still lands as the
+        // one keyed replacement.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('bonusActions.remaining') <= 0)
+          diagnostics.push({ code: FUEL_NO_BONUS, severity: 'error' });
+        return {
+          advertise: [
+            // The generic per-turn BONUS spend (the dash/divine-smite idiom —
+            // keyless, endOfTurn) beside the record.
+            { id: 'cost', state: { 'bonusActions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+            {
+              id: FUEL_EFFECT_ID,
+              key: FUEL_KEY,
+              state: { [`${F}.fuel.recorded`]: segmentedFrom(selections, 'fuel') },
+              display: {
+                name: `${T}.fuel-effect.name`,
+                section: 'mount',
+                subject: SUBJECT,
+                displayFact: `${F}.fuel.current`
+              },
+              expiry: { kind: 'permanent' }
+            }
+          ],
+          diagnostics
+        };
+      }
+    },
+    {
+      // The VEHICLE's BOOST record — the fuel record mirrored: the same
+      // filing, economy and record shape on `boost.recorded`, with the stat
+      // block's own SECOND legality leg — a boost only burns while the
+      // machine runs on a SOUL COIN (fuel.current === 1; none and demon
+      // ichor both fail). Illegal-but-COMMITTABLE like every leg: the row
+      // still records, the derived speed projecting the +30 the rules would
+      // not have allowed. The 1-minute duration is copy only (the detail and
+      // the offer description) — nothing times it; the player flips the
+      // record back to none when the minute is up.
+      id: 'set-tormentor-boost',
+      when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
+      legalWhen: [
+        {
+          condition: (f: FactReader): boolean => f.num('bonusActions.remaining') > 0,
+          diagnostics: [{ code: BOOST_NO_BONUS, severity: 'error' }]
+        },
+        {
+          // The stat block's rule: no boosting without a soul coin in the burner.
+          condition: (f: FactReader): boolean => f.num(`${F}.fuel.current`) === 1,
+          diagnostics: [{ code: BOOST_WITHOUT_SOUL_COIN, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.boost.name`,
+        description: `${T}.boost.description`,
+        detailKey: 'vehicle/tormentor-fuel',
+        secondaryControl: BOOST_CONTROL,
+        intents: { HANDLE: 'gear' },
+        actionCost: ['bonus']
+      },
+      vars: { boost: { capture: true, default: { fact: `${F}.boost.current` } } },
+      apply: (f: FactReader, selections): ActionResult => {
+        // Re-checked legality (the dash idiom): both legs, so a planned-anyway
+        // row carries exactly its own diagnostics while the record still
+        // lands as the one keyed replacement.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('bonusActions.remaining') <= 0)
+          diagnostics.push({ code: BOOST_NO_BONUS, severity: 'error' });
+        if (f.num(`${F}.fuel.current`) !== 1)
+          diagnostics.push({ code: BOOST_WITHOUT_SOUL_COIN, severity: 'error' });
+        return {
+          advertise: [
+            { id: 'cost', state: { 'bonusActions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
+            {
+              id: BOOST_EFFECT_ID,
+              key: BOOST_KEY,
+              state: { [`${F}.boost.recorded`]: segmentedFrom(selections, 'boost') },
+              display: {
+                name: `${T}.boost-effect.name`,
+                section: 'mount',
+                subject: SUBJECT,
+                displayFact: `${F}.boost.current`
+              },
+              expiry: { kind: 'permanent' }
+            }
+          ],
+          diagnostics
+        };
+      }
     },
     // The VEHICLE's damage/repair recorders (see HP_RECORDERS above).
     ...HP_RECORDERS,
@@ -1362,8 +1614,9 @@ const vehicleTormentor: RuleModule = {
       // counted: the app has no encounter tracking, so every planned Dash
       // row carries the whole rule as its unconditional risk note (DASH_RISK
       // above) and the player counts. The PC Dash's halted leg has no
-      // analogue: nothing halts a vehicle's derived pool today (PR-D's
-      // speed.effective will carry that if fuel ever reads empty).
+      // analogue: nothing halts a vehicle's derived pool — an unfuelled
+      // machine simply has none to double (base 0, doubled still 0), and
+      // Juke's able-to-move leg is where the empty burner bites.
       id: 'dash-tormentor',
       when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
       legalWhen: [
@@ -1420,9 +1673,9 @@ const vehicleTormentor: RuleModule = {
       // no facts of its own, because the advantage is applied at the table
       // (the plan row records the intent; no dice are wired). TWO legality
       // legs, both illegal-but-COMMITTABLE with their OWN keys: (a) the
-      // reaction pool; (b) the vehicle able to move — PR-C's approximation is
-      // the prone record (a fallen war machine cannot swerve), which PR-D
-      // refines to `speed.effective > 0` once fuel exists.
+      // reaction pool; (b) the vehicle able to move — PR-D's leg, the derived
+      // speed AND the prone record together (out of fuel or fallen over, one
+      // shared diagnostic: a machine that cannot roll cannot swerve).
       id: 'juke-tormentor',
       when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
       legalWhen: [
@@ -1431,7 +1684,8 @@ const vehicleTormentor: RuleModule = {
           diagnostics: [{ code: JUKE_NO_REACTION, severity: 'error' }]
         },
         {
-          condition: (f: FactReader): boolean => f.num(`${F}.prone`) === 0,
+          condition: (f: FactReader): boolean =>
+            f.num(`${F}.speed.effective`) > 0 && f.num(`${F}.prone`) === 0,
           diagnostics: [{ code: JUKE_UNABLE_TO_MOVE, severity: 'error' }]
         }
       ],
@@ -1447,11 +1701,13 @@ const vehicleTormentor: RuleModule = {
       apply: (f: FactReader): ActionResult => {
         // The reaction spend alone, with the legality re-checked (the dash
         // idiom) so a planned-anyway row carries its own diagnostics from the
-        // fold — the row still spends the reaction.
+        // fold — the row still spends the reaction. The able-to-move
+        // re-check mirrors the leg exactly: unfuelled or prone, the same one
+        // diagnostic.
         const diagnostics: Diagnostic[] = [];
         if (f.num('reactions.remaining') <= 0)
           diagnostics.push({ code: JUKE_NO_REACTION, severity: 'error' });
-        if (f.num(`${F}.prone`) > 0)
+        if (f.num(`${F}.speed.effective`) <= 0 || f.num(`${F}.prone`) > 0)
           diagnostics.push({ code: JUKE_UNABLE_TO_MOVE, severity: 'error' });
         return {
           advertise: [

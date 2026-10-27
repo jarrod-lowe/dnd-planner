@@ -1,12 +1,15 @@
 name: 'Tormentor - Juke While The Vehicle Is Prone'
 description: >-
-  Juke requires the vehicle able to move. This pass's leg is the prone
-  record: while companion.tormentor.prone stands, Juke is
-  illegal-but-committable with its OWN unable-to-move diagnostic (a
-  planned-anyway row still spends the reaction — the row records the
-  attempt). Drive and Dash carry NO prone leg: the Helm's actions stay legal
-  beside a fallen vehicle (the GM adjudicates what a prone war machine can
-  do), and flipping it upright restores Juke's legality.
+  Juke requires the vehicle able to move. PR-D's leg is the derived speed
+  AND the prone record (speed.effective > 0 AND not prone); this scenario
+  pins the PRONE side — fuelled (a soul coin committed), while
+  companion.tormentor.prone stands, Juke is illegal-but-committable with its
+  OWN unable-to-move diagnostic (a planned-anyway row still spends the
+  reaction — the row records the attempt; the unfuelled side is pinned in
+  tormentor-juke-unfuelled). Drive and Dash carry NO prone leg: the Helm's
+  actions stay legal beside a fallen vehicle (the GM adjudicates what a
+  prone war machine can do), and flipping it upright restores Juke's
+  legality.
 ruleGroups:
   - vehicles/tormentor
   - dnd-5e-2024/action-economy
@@ -22,6 +25,13 @@ steps:
         facts:
           companion.tormentor.seats.helm: 1
           companion.tormentor.prone: 1
+  # PR-D: a soul coin in the burner (the Helm's bonus-action record, committed
+  # here) so the ONLY failing able-to-move leg below is the prone record.
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
   # Prone: Juke is illegal-but-committable with its OWN unable-to-move
   # diagnostic, while Drive and Dash — no prone leg — stay legal.
   - evaluate:

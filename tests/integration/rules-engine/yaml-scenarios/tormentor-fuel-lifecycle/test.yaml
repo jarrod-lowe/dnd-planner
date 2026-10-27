@@ -1,0 +1,71 @@
+name: 'Tormentor - Abandon and Re-Acquire Reset Fuel and Boost'
+description: >-
+  The fuel and boost keys ride the acquire lifecycle like every vehicle
+  record (CHILD_KEYS + the explicit same-key evictions): abandoning evicts
+  both records with the acquire — fuel none, boost none, the derived
+  speed.effective and the whole movement economy settling to 0 — and a
+  re-acquired vehicle starts FRESH (a new machine, unfuelled), not a
+  persisted one.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.fuel.current: 1
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.speed.effective: 130
+          companion.tormentor.movement.base: 130
+  # Abandon: the fuel and boost evictions are advertised beside the acquire
+  # marker, and every derived speed/movement fact settles to 0 with the
+  # records gone.
+  - addOffer:
+      id: abandon-tormentor
+      assert:
+        facts:
+          companion.tormentor.fuel.current: 0
+          companion.tormentor.boost.current: 0
+          companion.tormentor.speed.effective: 0
+          companion.tormentor.movement.base: 0
+          companion.tormentor.movement.total: 0
+          companion.tormentor.movement.remaining: 0
+        offers:
+          notExists:
+            - set-tormentor-fuel
+            - set-tormentor-boost
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-fuel
+            - effect-tormentor-boost
+        facts:
+          companion.tormentor.fuel.current: 0
+          companion.tormentor.boost.current: 0
+          companion.tormentor.speed.effective: 0
+  # Re-acquire: a FRESH machine — unfuelled, unboosted, standing still until
+  # the Helm feeds it again.
+  - addOffer:
+      id: acquire-tormentor
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.fuel.current: 0
+          companion.tormentor.boost.current: 0
+          companion.tormentor.speed.effective: 0
+          companion.tormentor.movement.base: 0

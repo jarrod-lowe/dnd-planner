@@ -40,6 +40,14 @@ export interface UiEntryUsedMax extends UiEntryBase {
 export interface UiEntryValue extends UiEntryBase {
   type: 'value';
   fact: string;
+  /**
+   * A textual state's label map: numeric fact value → i18n key. A value
+   * entry without one renders the raw fact (the number); with one, the
+   * render sites translate the mapped key ("Soul Coin", never "1") and fall
+   * back to the raw value for unmapped ordinals. The engine's facts are
+   * numbers, so this map is the only way a panel chip states a textual mode.
+   */
+  valueLabels?: Record<number, string>;
 }
 
 export interface UiEntryModifier extends UiEntryBase {
@@ -124,7 +132,10 @@ export function isUiEntry(entry: unknown): entry is UiEntry {
   }
 
   if (obj.type === 'value') {
-    return typeof obj.label === 'string' && typeof obj.fact === 'string';
+    if (typeof obj.label !== 'string' || typeof obj.fact !== 'string') return false;
+    if (obj.valueLabels === undefined) return true;
+    if (typeof obj.valueLabels !== 'object' || obj.valueLabels === null) return false;
+    return Object.values(obj.valueLabels).every((v) => typeof v === 'string');
   }
 
   if (obj.type === 'modifier') {

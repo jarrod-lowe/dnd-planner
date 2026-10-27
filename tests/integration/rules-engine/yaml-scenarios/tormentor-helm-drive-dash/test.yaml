@@ -25,6 +25,13 @@ steps:
       assert:
         facts:
           companion.tormentor.seats.helm: 1
+  # PR-D: the pool is the FUEL's — a soul coin in the burner (the Helm's
+  # bonus-action record, committed here so the bonus reopens below).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
   # Both slots open: both of the Helm's actions are legal. Drive files in the
   # MOVE section (the steed's move rows); Dash files as a BONUS action row.
   - evaluate:

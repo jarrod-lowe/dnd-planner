@@ -1,0 +1,63 @@
+name: 'Tormentor - Juke While Unfuelled'
+description: >-
+  PR-D refines Juke's able-to-move leg to the derived speed: the leg reads
+  speed.effective > 0 AND the vehicle not prone — out of fuel OR fallen
+  over, the war machine cannot swerve, one shared unable-to-move
+  diagnostic covering both. The leg is LEGALITY, never `when` (the
+  engine's illegal-but-visible contract): unfuelled the offer stays
+  visible and applicable with its diagnostic, a planned-anyway row still
+  spends the reaction, and fuel or righting the vehicle restores legality.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+          companion.tormentor.speed.effective: 0
+  # Unfuelled (upright, reaction open): Juke is ILLEGAL — the one failing
+  # leg is able-to-move.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - juke-tormentor
+          illegal:
+            - juke-tormentor
+  # The override row still spends the reaction, carrying the diagnostic.
+  - addOffer:
+      id: juke-tormentor
+      assert:
+        facts:
+          reactions.remaining: 0
+        planErrors:
+          - id: juke-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.juke.unable_to_move
+  # A soul coin: the machine can roll, Juke is legal again.
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.speed.effective: 100
+          reactions.remaining: 1
+        offers:
+          legal:
+            - juke-tormentor
+  # Fuelled but fallen prone: the same single leg fails the same way.
+  - addOffer:
+      id: knock-tormentor-prone
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - juke-tormentor

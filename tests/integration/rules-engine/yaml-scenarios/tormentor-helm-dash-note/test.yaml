@@ -18,6 +18,13 @@ steps:
   - addOffer:
       id: take-tormentor-helm-seat
   - endTurn: {}
+  # PR-D: the pool is the FUEL's — a soul coin in the burner (the Helm's
+  # bonus-action record, committed here so the bonus reopens below).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
   # The very first Dash of the encounter carries the note: the player counts,
   # the row informs.
   - addOffer:

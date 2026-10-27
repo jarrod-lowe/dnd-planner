@@ -379,3 +379,72 @@ describe('tormentor damage detail body', () => {
     }
   });
 });
+
+describe('tormentor helm detail body', () => {
+  // The Helm's flip detail (linked from the Drive, Dash and Juke offers —
+  // PR-C). The app-meta guard was not extended when the body landed; PR-D
+  // folds it in. Same discipline as the stat block: our own words, in-world
+  // voice, no app meta.
+  const body = tormentorDetailBody('vehicle/tormentor-helm');
+
+  it('exists as a detail block in tormentor.yaml', () => {
+    expect(body, 'a catalog group in vehicles/tormentor.yaml carries the helm detail').toEqual(
+      expect.any(String)
+    );
+  });
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the helm detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the station and its three actions', () => {
+    for (const notion of [
+      'Helm',
+      'Drive',
+      'Dash',
+      'Juke',
+      'bonus action',
+      'advantage on a Dexterity'
+    ]) {
+      expect(body, `the helm detail body states "${notion}"`).toContain(notion);
+    }
+  });
+});
+
+describe('tormentor fuel detail body', () => {
+  // The fuel/boost records' flip detail (linked from both PR-D offers): the
+  // fuels and their speeds, the boost's +30/1-minute/soul-coin rule, both as
+  // bonus actions at the Helm. The 1-minute duration is COPY ONLY (no timer;
+  // the crew ends the boost by recording it off) — stated in-world, never as
+  // app meta. Same discipline: our own words, in-world voice, no app meta.
+  const body = tormentorDetailBody('vehicle/tormentor-fuel');
+
+  it('exists as a detail block in tormentor.yaml', () => {
+    expect(body, 'a catalog group in vehicles/tormentor.yaml carries the fuel detail').toEqual(
+      expect.any(String)
+    );
+  });
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the fuel detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the fuels, their speeds and the boost rule', () => {
+    for (const notion of [
+      'Fuel',
+      'soul coin',
+      'demon ichor',
+      '100 ft.',
+      '80 ft.',
+      'Boost',
+      '30 ft.',
+      '1 minute',
+      'bonus action',
+      'Helm'
+    ]) {
+      expect(body, `the fuel detail body states "${notion}"`).toContain(notion);
+    }
+  });
+});

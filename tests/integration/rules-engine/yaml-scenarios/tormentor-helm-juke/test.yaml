@@ -20,6 +20,14 @@ steps:
       assert:
         facts:
           companion.tormentor.seats.helm: 1
+  # PR-D: a soul coin in the burner (the Helm's bonus-action record, committed
+  # here) — Juke's able-to-move leg reads the derived speed, so the machine
+  # must be able to roll for the legality pins below.
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
   # A reaction available: Juke is legal, and spending it touches the REACTION
   # pool alone (the action stays open).
   - evaluate:

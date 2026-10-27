@@ -1,0 +1,45 @@
+name: 'Tormentor - Legacy Flat Speed Tolerance'
+description: >-
+  A persisted LEGACY acquire effect (the pre-fuel shape: a flat
+  companion.tormentor.speed 100 baked, no fuel facts — seeded via
+  INITIAL_EFFECTS) must evaluate without error: nothing derives or reads
+  the flat `speed` name any more, so the stale bake is inert rather than a
+  two-writer conflict (the ac.effective precedent, no load-seam migration),
+  the derived speed.effective reads the fuel (0 unfuelled), and the fuel
+  record works on top of the legacy acquire.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.active: 1
+          companion.tormentor.speed: 100
+          companion.tormentor.fuel.current: 0
+          companion.tormentor.speed.effective: 0
+          companion.tormentor.movement.base: 0
+          companion.tormentor.movement.total: 0
+        offers:
+          notExists:
+            - set-tormentor-fuel
+  # At the Helm, the fuel record works on the legacy acquire — and the flat
+  # legacy speed stays exactly where it was (inert, untouched).
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+      assert:
+        facts:
+          companion.tormentor.speed.effective: 100
+          companion.tormentor.movement.base: 100
+          companion.tormentor.speed: 100
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-fuel
+        facts:
+          companion.tormentor.speed.effective: 100
+          companion.tormentor.speed: 100
