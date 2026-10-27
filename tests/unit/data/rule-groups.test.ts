@@ -255,6 +255,18 @@ describe('rule group dependencies', () => {
   it('pulls Thunderous Smite into the paladin L1 spell list', () => {
     expect(requiresById.get('paladin-spells-l1')).toContain('spell-thunderous-smite');
   });
+
+  // Cover is CORE (user ruling 2026-10-28): every character has it by default,
+  // never opt-in content. The always-on mechanism for groups in code is the
+  // requires self-heal (playStore.loadRuleGroups auto-assigns a group's deps
+  // and persists them — the SEED#CHAR terraform records reach NEW characters
+  // only). Anchoring cover on ac — seeded onto every character, and the one
+  // foundational group whose derive reads cover.bonus — delivers cover to every
+  // existing character at its next load and locks it in the picker
+  // (required-by-assigned), exactly like movement/core-events.
+  it('anchors cover on ac so every character self-heals it', () => {
+    expect(requiresById.get('ac')).toContain('cover');
+  });
 });
 
 /** Phrases that would read as app meta in a tormentor detail body. */
