@@ -59,6 +59,12 @@ ruleGroups:
             Harpoon Flinger fires its 10 harpoons at +7 to hit, range
             120 ft., for 2d8+2 piercing damage.
 
+            **Dash.** The driver can spend a bonus action to push the
+            Tormentor flat out, doubling its movement for the turn. Each
+            encounter the vehicle can Dash 3 times plus its Constitution
+            modifier; each Dash beyond that runs the risk of damaging the
+            vehicle.
+
             **Juke.** The driver can spend their reaction, while the
             Tormentor is able to move, to gain advantage on a Dexterity
             saving throw.
