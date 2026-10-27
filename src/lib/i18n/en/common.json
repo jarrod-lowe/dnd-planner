@@ -512,13 +512,13 @@
         "not_prone": "The Tormentor is not prone — there is nothing to flip upright"
       },
       "take-seat": {
-        "name": "Take the Passenger seat",
+        "name": "Take a Passenger seat",
         "description": "Board the Tormentor as a passenger, taking a seat",
         "already_seated": "You already hold a seat — leave it before taking another",
         "full": "The Tormentor is at creature capacity — no seat is free"
       },
       "leave-seat": {
-        "name": "Leave the Passenger seat",
+        "name": "Leave a Passenger seat",
         "description": "Step off the Tormentor, freeing the seat",
         "not_seated": "You do not hold that seat"
       },
@@ -539,11 +539,11 @@
         "description": "Step away from the Helm, freeing the seat"
       },
       "take-clinger-seat": {
-        "name": "Take the Clinger seat",
+        "name": "Cling to the Tormentor",
         "description": "Hold on to the Tormentor's outside, taking no seat"
       },
       "leave-clinger-seat": {
-        "name": "Leave the Clinger seat",
+        "name": "Let go of the Tormentor",
         "description": "Let go of the Tormentor's outside"
       },
       "fire-harpoon": {
