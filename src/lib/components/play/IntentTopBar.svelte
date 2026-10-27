@@ -11,6 +11,7 @@
     UiEntryConcentration,
     UiEntryAbility
   } from '$lib/play/extractTopBar';
+  import { resolveEntryValue } from '$lib/play/extractTopBar';
   import type { Facts } from '$lib/rules-view';
 
   interface Props {
@@ -190,16 +191,17 @@
       {#each valueEntries as entry (entry.label)}
         {@const value = facts[entry.fact]}
         {#if value !== undefined}
+          {@const display = resolveEntryValue(entry, facts, (key) => $t(key))}
           <div
             class="intent-top-bar__chip intent-top-bar__chip--stack"
-            aria-label="{$t(entry.label)} {value}"
-            title="{$t(entry.label)} {value}"
+            aria-label="{$t(entry.label)} {display}"
+            title="{$t(entry.label)} {display}"
           >
             <span class="intent-top-bar__chip-label ticker" use:ticker
               ><TickerCopies>{$t(entry.label)}</TickerCopies></span
             >
             <span class="intent-top-bar__chip-value ticker" use:ticker
-              ><TickerCopies>{value}</TickerCopies></span
+              ><TickerCopies>{display}</TickerCopies></span
             >
           </div>
         {/if}

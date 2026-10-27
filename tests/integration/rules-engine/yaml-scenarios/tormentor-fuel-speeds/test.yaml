@@ -1,0 +1,94 @@
+name: 'Tormentor - Fuel and Boost Set the Effective Speed'
+description: >-
+  The derived companion.tormentor.speed.effective maps the fuel (none 0,
+  soul coin 100, demon ichor 80) and adds 30 while Boost records Demon
+  Ichor — a deliberately NEW name under which the whole movement economy
+  derives (movement.base READS it: the PR-D seam re-plumbed), so the flat
+  baked `speed` the acquire used to carry is simply gone. Unfuelled, a
+  freshly acquired vehicle reads speed 0 — the wheels stand still until the
+  Helm feeds the burner.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  # A fresh vehicle is unfuelled: speed.effective 0 and the movement pool
+  # 0/0 with it (base reads the effective speed).
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.fuel.current: 0
+          companion.tormentor.boost.current: 0
+          companion.tormentor.speed.effective: 0
+          companion.tormentor.movement.base: 0
+          companion.tormentor.movement.total: 0
+          companion.tormentor.movement.remaining: 0
+  # Soul coin: 100 ft., the pool following.
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+      assert:
+        facts:
+          companion.tormentor.speed.effective: 100
+          companion.tormentor.movement.base: 100
+          companion.tormentor.movement.total: 100
+  # Demon ichor: 80 ft.
+  - updateSelections:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 2
+      assert:
+        facts:
+          companion.tormentor.speed.effective: 80
+          companion.tormentor.movement.total: 80
+  # Back to a soul coin and committed; the turn ends so the bonus action
+  # reopens for the boost.
+  - updateSelections:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.fuel.recorded: 1
+          companion.tormentor.speed.effective: 100
+  # Boost (Demon Ichor) on a soul coin: legal, +30 ft. for the pool.
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 1
+      assert:
+        facts:
+          bonusActions.remaining: 0
+          companion.tormentor.boost.recorded: 1
+          companion.tormentor.boost.current: 1
+          companion.tormentor.speed.effective: 130
+          companion.tormentor.movement.base: 130
+          companion.tormentor.movement.total: 130
+        planErrors:
+          - id: set-tormentor-boost
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-boost
+        facts:
+          companion.tormentor.speed.effective: 130
+  # The boost off (the player flips it back when the minute is up — the app
+  # times nothing): the speed returns to the fuel alone.
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 0
+      assert:
+        facts:
+          companion.tormentor.boost.recorded: 0
+          companion.tormentor.boost.current: 0
+          companion.tormentor.speed.effective: 100
+          companion.tormentor.movement.total: 100

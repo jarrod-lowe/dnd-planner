@@ -1,0 +1,77 @@
+name: 'Tormentor - Fuel and Boost Are Helm-Gated, State Persists Off the Helm'
+description: >-
+  The fuel and boost records are the HELM's to set: the offers are
+  structurally gated on the acquire AND the helm seat (`when` — nobody at
+  the Helm, no offers), but the RECORDS themselves are vehicle state that
+  no seat change touches (leaving a seat never touches vehicle state). So
+  leaving the Helm hides both offers while the fuel and boost facts stand
+  — and re-taking the Helm brings the offers back pre-showing the current
+  fuel and boost.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+          companion.tormentor.fuel.current: 1
+  # A fresh turn, the bonus back: the boost lands beside the soul coin.
+  - addOffer:
+      id: set-tormentor-boost
+      selections:
+        boost: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.boost.current: 1
+          companion.tormentor.speed.effective: 130
+  # Leaving the Helm: both offers go with the seat, the state stays.
+  - addOffer:
+      id: leave-tormentor-helm-seat
+      assert:
+        facts:
+          companion.tormentor.fuel.current: 1
+          companion.tormentor.boost.current: 1
+          companion.tormentor.speed.effective: 130
+        offers:
+          notExists:
+            - set-tormentor-fuel
+            - set-tormentor-boost
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.fuel.recorded: 1
+          companion.tormentor.boost.recorded: 1
+          companion.tormentor.speed.effective: 130
+  # Re-taking the Helm: the offers return, pre-showing the CURRENT fuel and
+  # boost (the capture defaults read the derived currents).
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-tormentor-fuel
+            - set-tormentor-boost
+        offerVars:
+          - id: set-tormentor-fuel
+            vars:
+              fuel:
+                capture: true
+                default:
+                  fact: companion.tormentor.fuel.current
+          - id: set-tormentor-boost
+            vars:
+              boost:
+                capture: true
+                default:
+                  fact: companion.tormentor.boost.current

@@ -475,6 +475,22 @@
         "name": "Duj Sep leng yIcher",
         "description": "Duj Sep lengtaH'a' QamtaHbe'ghach yIcher"
       },
+      "fuel": {
+        "name": "nIn yIcher",
+        "description": "SeHyaH Sep yIvI' 'ej meQchet yIlo' 'ej nIn yIcher: pagh (0), wa' qeng Sep (100), ghIch qIj (80)",
+        "no_bonus_action": "DIvI' cha' tu'lu'be'",
+        "none": "pagh",
+        "soul-coin": "qeng Sep",
+        "demon-ichor": "ghIch qIj"
+      },
+      "boost": {
+        "name": "nIn nIv yIcher",
+        "description": "SeHyaH Sep yIvI' 'ej ghIch qIj yIngeH 'ej nIn nIv yIcher: wa' tup 30 'ej qeng Sep neH",
+        "no_bonus_action": "DIvI' cha' tu'lu'be'",
+        "without_soul_coin": "qeng Sep meQchet pagh — nIn nIv laHbe' Duj Sep",
+        "none": "pagh",
+        "demon-ichor": "ghIch qIj"
+      },
       "record-damage": {
         "name": "Duj Sep qIp yIcher",
         "description": "Duj Sep qIpmeH qIp yIcher",
@@ -542,7 +558,7 @@
         "name": "yIvegh",
         "description": "Quv DIvI' yIlo' 'ej Duj Sep yIvegh — DIvI' ngeDqu'choH Sup qaS. Duj vIHlaHbe'chugh, vegh laHbe'",
         "no_reaction": "DIvI' cha' tu'lu'be'",
-        "unable_to_move": "Duj Sep vIHlaHbe' — vegh laHbe'"
+        "unable_to_move": "Duj Sep vIHlaHbe' — nIn pagh ghajbe'ghach qoj pum — vegh laHbe'"
       },
       "effect": {
         "name": "Duj Sep"
@@ -552,6 +568,12 @@
       },
       "ac-mode-effect": {
         "name": "leng chovang"
+      },
+      "fuel-effect": {
+        "name": "nIn {{score}}"
+      },
+      "boost-effect": {
+        "name": "nIn nIv {{score}}"
       },
       "hp-damage-effect": {
         "name": "Duj qIp {{score}}"
@@ -1831,6 +1853,7 @@
         "hp": "HP",
         "ac": "DIch Jun",
         "speed": "SPD",
+        "fuel": "nIn",
         "cargo": "ngIS",
         "creatureCapacity": "SuvwI' Sep",
         "movement": "leng"
@@ -1952,7 +1975,9 @@
         "type": "Segh"
       },
       "tormentor": {
-        "mode": "leng"
+        "mode": "leng",
+        "fuel": "nIn",
+        "boost": "nIn nIv"
       }
     },
     "plan": {

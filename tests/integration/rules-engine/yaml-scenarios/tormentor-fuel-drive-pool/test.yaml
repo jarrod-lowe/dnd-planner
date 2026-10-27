@@ -1,0 +1,69 @@
+name: 'Tormentor - Drive Pool Follows the Effective Speed'
+description: >-
+  movement.base reads the derived speed.effective (the PR-D seam), so the
+  Drive pool is the FUEL's: unfuelled, the vehicle has 0 ft. to drive —
+  Drive is illegal with its out-of-movement diagnostic (the action is
+  open, the pool is the failing leg) and a planned-anyway over-distance
+  row carries the diagnostic while its over-commit projects negative. With
+  a soul coin in the burner the pool opens at 100 ft. and Drive is legal
+  again; a Dash on top doubles whatever the fuel allows.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+  # Unfuelled: the pool is 0/0 and Drive is ILLEGAL — the action pool is
+  # open, the failing leg is movement alone.
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.movement.total: 0
+          companion.tormentor.movement.remaining: 0
+        offers:
+          illegal:
+            - drive-tormentor
+  # The override row: an over-distance selection carries the steed's
+  # out-of-movement diagnostic while the over-commit projects negative.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 50
+      assert:
+        facts:
+          companion.tormentor.movement.remaining: -50
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.drive.out_of_movement
+  - endTurn: {}
+  # A soul coin: the pool opens at 100 ft. and Drive turns legal.
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.movement.base: 100
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - drive-tormentor
+  # A Dash on top doubles what the fuel allows: 200 ft. of soul-coin speed.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 200

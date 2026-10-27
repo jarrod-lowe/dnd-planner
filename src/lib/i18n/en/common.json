@@ -475,6 +475,22 @@
         "name": "Set AC Mode",
         "description": "Record whether the Tormentor is moving (AC 21) or motionless (AC 19)"
       },
+      "fuel": {
+        "name": "Set Fuel",
+        "description": "Spend a bonus action at the Helm feeding the burner: none (0 ft.), a soul coin (100 ft.), or demon ichor (80 ft.)",
+        "no_bonus_action": "No bonus action available",
+        "none": "None",
+        "soul-coin": "Soul Coin",
+        "demon-ichor": "Demon Ichor"
+      },
+      "boost": {
+        "name": "Set Boost",
+        "description": "Spend a bonus action at the Helm pouring demon ichor into the boost tank: +30 ft. for 1 minute, only while running on a soul coin",
+        "no_bonus_action": "No bonus action available",
+        "without_soul_coin": "The Tormentor needs a soul coin in the burner before it can boost",
+        "none": "None",
+        "demon-ichor": "Demon Ichor"
+      },
       "record-damage": {
         "name": "Record Vehicle Damage",
         "description": "Record damage dealt to the Tormentor",
@@ -542,7 +558,7 @@
         "name": "Juke",
         "description": "Spend your reaction at the Helm to swerve the Tormentor, gaining advantage on Dexterity saving throws. Only while the vehicle can move",
         "no_reaction": "No reaction available",
-        "unable_to_move": "The Tormentor is unable to move — it cannot juke"
+        "unable_to_move": "The Tormentor is unable to move — out of fuel or fallen prone — it cannot juke"
       },
       "effect": {
         "name": "Tormentor"
@@ -552,6 +568,12 @@
       },
       "ac-mode-effect": {
         "name": "AC Mode"
+      },
+      "fuel-effect": {
+        "name": "Fuel {{score}}"
+      },
+      "boost-effect": {
+        "name": "Boost {{score}}"
       },
       "hp-damage-effect": {
         "name": "Vehicle Damage {{score}}"
@@ -1811,6 +1833,7 @@
         "hp": "HP",
         "ac": "AC",
         "speed": "SPD",
+        "fuel": "Fuel",
         "cargo": "Cargo",
         "creatureCapacity": "Creature Capacity",
         "movement": "Movement"
@@ -1952,7 +1975,9 @@
         "type": "Type"
       },
       "tormentor": {
-        "mode": "Mode"
+        "mode": "Mode",
+        "fuel": "Fuel",
+        "boost": "Boost"
       }
     },
     "plan": {

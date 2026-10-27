@@ -64,6 +64,8 @@ describe('acquire offer ui', () => {
       'acquire-tormentor',
       'set-tormentor-occupancy',
       'set-tormentor-ac-mode',
+      'set-tormentor-fuel',
+      'set-tormentor-boost',
       'record-tormentor-damage',
       'record-tormentor-heal',
       'knock-tormentor-prone',
@@ -264,7 +266,9 @@ describe('acquire effect', () => {
       // gates on a fact rather than a literal in the module.
       [`${F}.hp.base`]: 60,
       [`${F}.damageThreshold`]: 10,
-      [`${F}.speed`]: 100,
+      // Speed bakes NOTHING (PR-D): the derived speed.effective reads the
+      // fuel, and the flat `speed` name is retired exactly like ac.value —
+      // a legacy persisted bake stays inert, never a two-writer conflict.
       [`${F}.cargo`]: 500,
       [`${F}.str`]: 16,
       [`${F}.dex`]: 14,
@@ -288,6 +292,8 @@ describe('acquire effect', () => {
     expect(acquireEffect().dependents).toEqual([
       'tormentor-occupancy',
       'tormentor-ac-mode',
+      'tormentor-fuel',
+      'tormentor-boost',
       'tormentor-prone',
       'tormentor-hp-damage',
       'tormentor-hp-heal',
@@ -1338,6 +1344,45 @@ function seatedAtHelm(): EffectInstance[] {
   return [acquireEffect(), helmSeatEffect()];
 }
 
+/**
+ * The fuel record a row at `n` advertises, for committing as stored state —
+ * the committed shape every fuelled fold below starts from.
+ */
+function fuelRecordEffect(n: number): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect(), helmSeatEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-fuel', selections: { fuel: n } }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-fuel'));
+  expect(advertised, `a fuel row at ${n} advertises exactly one record`).toHaveLength(1);
+  return advertised[0]!;
+}
+
+/**
+ * The boost record a row at `n` advertises, for committing as stored state —
+ * committed on a SOUL-COIN fuel (the legal combination).
+ */
+function boostRecordEffect(n: number): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect(), helmSeatEffect(), fuelRecordEffect(1)],
+    planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-boost', selections: { boost: n } }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-boost'));
+  expect(advertised, `a boost row at ${n} advertises exactly one record`).toHaveLength(1);
+  return advertised[0]!;
+}
+
+/**
+ * A committed acquire with the helm seat held AND a soul coin in the burner —
+ * the fuelled helm fold the station's movement/reaction offers test against
+ * (PR-D: the pool is the fuel's, and Juke needs the machine rolling).
+ */
+function helmFuelled(): EffectInstance[] {
+  return [acquireEffect(), helmSeatEffect(), fuelRecordEffect(1)];
+}
+
 describe('take-tormentor-helm-seat offer', () => {
   it('is a vehicle free-section EQUIP offer while acquired, with the station-specific keys', () => {
     const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
@@ -1468,20 +1513,34 @@ describe('the helm seat rides the acquire lifecycle', () => {
  * endOfTurn so the pool resets with the turn.
  */
 describe('tormentor movement derives (the steed pattern)', () => {
-  it('derives base/total/remaining from the speed facts while acquired (base 100 today)', () => {
+  it('derives base/total/remaining from the FUEL while acquired (unfuelled reads 0)', () => {
     // No seat needed: the movement economy belongs to the VEHICLE, not the
-    // Helm — the offers are seat-gated, the pool is acquire-gated.
+    // Helm — the offers are seat-gated, the pool is acquire-gated. PR-D
+    // re-plumbed base to the derived speed.effective, so a fresh unfuelled
+    // vehicle stands still (0 ft.) until the Helm feeds it.
     const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(out.facts[`${F}.speed.effective`]).toBe(0);
+    expect(out.facts[`${F}.movement.base`]).toBe(0);
+    expect(out.facts[`${F}.movement.total`]).toBe(0);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(0);
+  });
+
+  it('a soul coin opens the pool at 100 (base READS the effective speed)', () => {
+    const out = evaluate({ modules: [module()], committed: helmFuelled() });
+    expect(out.facts[`${F}.fuel.current`]).toBe(1);
+    expect(out.facts[`${F}.speed.effective`]).toBe(100);
     expect(out.facts[`${F}.movement.base`]).toBe(100);
     expect(out.facts[`${F}.movement.total`]).toBe(100);
     expect(out.facts[`${F}.movement.remaining`]).toBe(100);
   });
 
-  it('base is a derivation, never a bake: no movement fact rides the acquire effect', () => {
-    // The seam PR-D re-plumbs (speed → speed.effective): base must READ the
-    // speed facts, so the acquire effect bakes no movement state of its own.
+  it('base is a derivation, never a bake: no movement or speed fact rides the acquire effect', () => {
+    // The PR-D seam, re-plumbed: base READS the derived speed.effective, and
+    // the acquire bakes neither — the flat `speed` name is retired like
+    // ac.value (a legacy bake stays inert, never a two-writer conflict).
     expect(acquireEffect().state).not.toHaveProperty(`${F}.movement.base`);
     expect(acquireEffect().state).not.toHaveProperty(`${F}.movement.total`);
+    expect(acquireEffect().state).not.toHaveProperty(`${F}.speed`);
   });
 
   it('settles to 0 unacquired and on abandon (the contributions stay registered)', () => {
@@ -1491,7 +1550,7 @@ describe('tormentor movement derives (the steed pattern)', () => {
     expect(unacquired.facts[`${F}.movement.remaining`]).toBe(0);
     const abandoned = evaluate({
       modules: [module()],
-      committed: [acquireEffect()],
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
     });
     expect(abandoned.facts[`${F}.movement.base`]).toBe(0);
@@ -1502,7 +1561,7 @@ describe('tormentor movement derives (the steed pattern)', () => {
   it('a planned Dash doubles total and remaining for the turn (the steed semantics)', () => {
     const out = evaluate({
       modules: [module()],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
     });
     expect(out.facts[`${F}.movement.total`]).toBe(200);
@@ -1581,7 +1640,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
     });
     // Exactly ONE advertised effect — the action spend and the movement spend
@@ -1606,7 +1665,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor' }]
     });
     expect(out.effects[0]!.state).toEqual({
@@ -1624,7 +1683,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 150 } }]
     });
     expect(out.effects[0]!.state).toEqual({
@@ -1641,7 +1700,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [
         { instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } },
         { instanceId: 'i1', ruleId: 'drive-tormentor' }
@@ -1662,7 +1721,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
     });
     expect(out.facts[`${F}.prone`]).toBe(1);
@@ -1726,7 +1785,7 @@ describe('dash-tormentor offer', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
     });
     // ONE advertised effect: the per-turn spend (the player's BONUS action
@@ -1818,7 +1877,7 @@ describe('dash-tormentor offer', () => {
     // abandoned vehicle because none is ever written.
     const out = evaluate({
       modules: [module()],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
     });
     expect(
@@ -1882,8 +1941,15 @@ describe('juke-tormentor offer', () => {
     const raw = module().offer!({ selections: {} }).find((o) => o.id === 'juke-tormentor');
     expect(raw, 'the juke offer exists').toBeDefined();
     expect(raw!.legalWhen).toHaveLength(2);
-    const poolReader = (reactions: number, prone: number): FactReader => ({
-      num: (n) => (n === 'reactions.remaining' ? reactions : n === `${F}.prone` ? prone : 0),
+    const poolReader = (reactions: number, prone: number, speed = 100): FactReader => ({
+      num: (n) =>
+        n === 'reactions.remaining'
+          ? reactions
+          : n === `${F}.prone`
+            ? prone
+            : n === `${F}.speed.effective`
+              ? speed
+              : 0,
       has: () => false
     });
     // Leg (a) — the reaction pool (the unarmed opportunity-attack spelling).
@@ -1891,10 +1957,12 @@ describe('juke-tormentor offer', () => {
     expect(legA.condition(poolReader(1, 0))).toBe(true);
     expect(legA.condition(poolReader(0, 0))).toBe(false);
     expect(legA.diagnostics).toEqual([{ code: `${T}.juke.no_reaction`, severity: 'error' }]);
-    // Leg (b) — the vehicle able to move: PR-C's approximation is the prone
-    // record (PR-D refines to speed.effective > 0 once fuel exists).
+    // Leg (b) — the vehicle able to move, PR-D's refinement: the derived
+    // speed AND the prone record — out of fuel OR fallen over, one shared
+    // unable-to-move diagnostic (a war machine that cannot roll cannot swerve).
     const legB = raw!.legalWhen![1]!;
     expect(legB.condition(poolReader(1, 0))).toBe(true);
+    expect(legB.condition(poolReader(1, 0, 0))).toBe(false);
     expect(legB.condition(poolReader(1, 1))).toBe(false);
     expect(legB.diagnostics).toEqual([{ code: `${T}.juke.unable_to_move`, severity: 'error' }]);
   });
@@ -1903,7 +1971,7 @@ describe('juke-tormentor offer', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'juke-tormentor' }]
     });
     // Exactly ONE advertised effect — the generic per-turn REACTION spend,
@@ -1924,7 +1992,7 @@ describe('juke-tormentor offer', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [
         { instanceId: 'i0', ruleId: 'juke-tormentor' },
         { instanceId: 'i1', ruleId: 'juke-tormentor' }
@@ -1940,7 +2008,7 @@ describe('juke-tormentor offer', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
-      committed: seatedAtHelm(),
+      committed: helmFuelled(),
       planned: [
         { instanceId: 'i0', ruleId: 'knock-tormentor-prone' },
         { instanceId: 'i1', ruleId: 'juke-tormentor' }
@@ -1954,6 +2022,23 @@ describe('juke-tormentor offer', () => {
       { code: `${T}.juke.unable_to_move`, severity: 'error' }
     ]);
     // The override row still spends the reaction (the over-commit projection).
+    expect(out.facts['reactions.remaining']).toBe(0);
+  });
+
+  it('an unfuelled row is illegal the same way: the one leg covers out-of-fuel and prone together', () => {
+    // PR-D's refinement, the fuel side: a fresh unfuelled vehicle (upright,
+    // reaction open) fails the SAME single able-to-move leg, and the
+    // planned-anyway row still spends the reaction.
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'juke-tormentor' }]
+    });
+    expect(out.facts[`${F}.speed.effective`]).toBe(0);
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.juke.unable_to_move`, severity: 'error' }
+    ]);
     expect(out.facts['reactions.remaining']).toBe(0);
   });
 });
@@ -2027,14 +2112,378 @@ describe('tormentor movement panel i18n (tlh is the canary)', () => {
   });
 });
 
-// The acquired stat facts (every gate the declarations read, plus the pool the
-// HP chip renders).
+/**
+ * PR-D — FUEL + BOOST: the Helm's two bonus-action segmented records and the
+ * derived speed they set. Both are the AC-mode record pattern (a free-section
+ * vehicle offer with a segmented secondaryControl writing ONE permanent KEYED
+ * effect on the DISTINCT recorded fact, re-applying replacing by key) priced
+ * as the economy ruling demands — the player's BONUS ACTION, the generic
+ * spend, illegal-but-COMMITTABLE with per-offer diagnostics. Boost adds the
+ * stat block's own legality leg (a soul coin in the burner). The derived
+ * speed.effective (fuel map 0/100/80 + 30 boosted) is what the movement
+ * economy and the Speed chip read; the flat `speed` bake is retired, and
+ * Juke's able-to-move leg refines to the derived speed.
+ */
+describe('set-tormentor-fuel offer', () => {
+  it('is the AC-mode record shape priced as a BONUS action, with the fuel segmented control', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    const offer = out.availableRules.find((r) => r.rule.id === 'set-tormentor-fuel');
+    expect(offer, 'the vehicle +ADD carries the fuel offer at the Helm').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    // The AC-mode filing (free section, HANDLE gear, subject) with the fuel
+    // detail and the BONUS cost chip — refuelling is the player's bonus action.
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.fuel.name`);
+    expect(ui.description).toBe(`${T}.fuel.description`);
+    expect(ui.detailKey).toBe('vehicle/tormentor-fuel');
+    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+    expect(ui.actionCost).toEqual(['bonus']);
+    // A segmented control is ALWAYS a secondaryControl: the three fuels, the
+    // values ARE the ordinals the record stores.
+    expect(ui.secondaryControl).toEqual({
+      type: 'segmented',
+      var: 'fuel',
+      prefix: 'play.choices.tormentor.fuel',
+      options: [
+        { value: 0, label: `${T}.fuel.none` },
+        { value: 1, label: `${T}.fuel.soul-coin` },
+        { value: 2, label: `${T}.fuel.demon-ichor` }
+      ]
+    });
+    // The capture default pre-shows the CURRENT fuel (the derived current, so
+    // the row opens on the fuel in force).
+    expect(offer!.rule.vars).toEqual({
+      fuel: { capture: true, default: { fact: `${F}.fuel.current` } }
+    });
+    expect(ui.primaryControl).toBeUndefined();
+  });
+
+  it('is gated structurally on the acquire AND the helm seat (when)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-fuel');
+    expect(raw, 'the fuel offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.when!(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({}))).toBe(false);
+    // Through the fold: acquired but not at the Helm, the offer does not exist.
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(unseated.availableRules.some((r) => r.rule.id === 'set-tormentor-fuel')).toBe(false);
+  });
+
+  it('legality is the bonus-action pool alone, with its OWN diagnostic', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-fuel');
+    expect(raw!.legalWhen).toHaveLength(1);
+    const leg = raw!.legalWhen![0]!;
+    const poolReader = (bonus: number): FactReader => ({
+      num: (n) => (n === 'bonusActions.remaining' ? bonus : 0),
+      has: () => false
+    });
+    expect(leg.condition(poolReader(1))).toBe(true);
+    expect(leg.condition(poolReader(0))).toBe(false);
+    expect(leg.diagnostics).toEqual([{ code: `${T}.fuel.no_bonus_action`, severity: 'error' }]);
+  });
+
+  it('apply advertises the bonus spend beside ONE permanent keyed effect on the DISTINCT recorded fact', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-fuel', selections: { fuel: 1 } }]
+    });
+    // Exactly TWO advertised effects: the generic per-turn BONUS spend (the
+    // dash idiom — keyless, endOfTurn) and the keyed record. The record
+    // writes `fuel.recorded`, NEVER the derived `fuel.current` (the AC-mode
+    // distinct-fact pattern: two live effects sum-combine one fact, so a
+    // record writing the current itself could never flip a value back).
+    expect(out.effects).toHaveLength(2);
+    const cost = out.effects.find((e) => e.id.endsWith('#cost'));
+    expect(cost!.key).toBeUndefined();
+    expect(cost!.expiry).toEqual({ kind: 'endOfTurn' });
+    expect(cost!.state).toEqual({ 'bonusActions.spent': 1 });
+    const record = out.effects.find((e) => e.id.endsWith('effect-tormentor-fuel'))!;
+    expect(record.key).toBe('tormentor-fuel');
+    expect(record.expiry).toEqual({ kind: 'permanent' });
+    expect(record.state).toEqual({ [`${F}.fuel.recorded`]: 1 });
+    // The mount-section chip shows the live ordinal (the occupancy displayFact
+    // precedent) so the fuel state is visible off the Helm too.
+    expect(record.display).toEqual({
+      name: `${T}.fuel-effect.name`,
+      section: 'mount',
+      subject: SUBJECT,
+      displayFact: `${F}.fuel.current`
+    });
+    // The derivation follows at once (the projection folds the record).
+    expect(out.facts[`${F}.fuel.current`]).toBe(1);
+    expect(out.facts[`${F}.speed.effective`]).toBe(100);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+  });
+
+  it('a no-bonus row still commits (the override path), carrying its OWN diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'set-tormentor-fuel', selections: { fuel: 1 } },
+        { instanceId: 'i1', ruleId: 'set-tormentor-fuel', selections: { fuel: 2 } }
+      ]
+    });
+    // The second row over-commits the BONUS action and still executes — the
+    // keyed replacement stores Demon Ichor (newest-wins, never stacked) while
+    // the row carries the diagnostic.
+    expect(out.facts[`${F}.fuel.recorded`]).toBe(2);
+    expect(out.facts[`${F}.speed.effective`]).toBe(80);
+    expect(out.facts['bonusActions.remaining']).toBe(-1);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.fuel.no_bonus_action`, severity: 'error' }
+    ]);
+  });
+});
+
+describe('set-tormentor-boost offer', () => {
+  it('is the fuel record mirrored: [None | Demon Ichor], gated on the Helm, bonus-priced', () => {
+    const out = evaluate({ modules: [module()], committed: helmFuelled() });
+    const offer = out.availableRules.find((r) => r.rule.id === 'set-tormentor-boost');
+    expect(offer, 'the vehicle +ADD carries the boost offer at the Helm').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.boost.name`);
+    expect(ui.description).toBe(`${T}.boost.description`);
+    expect(ui.detailKey).toBe('vehicle/tormentor-fuel');
+    expect(ui.intents).toEqual({ HANDLE: 'gear' });
+    expect(ui.actionCost).toEqual(['bonus']);
+    expect(ui.secondaryControl).toEqual({
+      type: 'segmented',
+      var: 'boost',
+      prefix: 'play.choices.tormentor.boost',
+      options: [
+        { value: 0, label: `${T}.boost.none` },
+        { value: 1, label: `${T}.boost.demon-ichor` }
+      ]
+    });
+    expect(offer!.rule.vars).toEqual({
+      boost: { capture: true, default: { fact: `${F}.boost.current` } }
+    });
+  });
+
+  it('is gated structurally on the acquire AND the helm seat (when)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-boost');
+    expect(raw, 'the boost offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.when!(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({}))).toBe(false);
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(unseated.availableRules.some((r) => r.rule.id === 'set-tormentor-boost')).toBe(false);
+  });
+
+  it('legality is the bonus pool PLUS the soul-coin leg, each with its OWN diagnostic', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'set-tormentor-boost');
+    expect(raw!.legalWhen).toHaveLength(2);
+    const reader = (bonus: number, fuel: number): FactReader => ({
+      num: (n) => (n === 'bonusActions.remaining' ? bonus : n === `${F}.fuel.current` ? fuel : 0),
+      has: () => false
+    });
+    // Leg (a) — the player's bonus pool (shared style with Dash/fuel).
+    const legA = raw!.legalWhen![0]!;
+    expect(legA.condition(reader(1, 1))).toBe(true);
+    expect(legA.condition(reader(0, 1))).toBe(false);
+    expect(legA.diagnostics).toEqual([{ code: `${T}.boost.no_bonus_action`, severity: 'error' }]);
+    // Leg (b) — the stat block's own rule: a boost only burns on a soul coin
+    // (fuel.current === 1; none and demon ichor both fail).
+    const legB = raw!.legalWhen![1]!;
+    expect(legB.condition(reader(1, 1))).toBe(true);
+    expect(legB.condition(reader(1, 0))).toBe(false);
+    expect(legB.condition(reader(1, 2))).toBe(false);
+    expect(legB.diagnostics).toEqual([{ code: `${T}.boost.without_soul_coin`, severity: 'error' }]);
+  });
+
+  it('apply advertises the bonus spend beside the keyed boost record on the DISTINCT recorded fact', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: helmFuelled(),
+      planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-boost', selections: { boost: 1 } }]
+    });
+    expect(out.effects).toHaveLength(2);
+    const cost = out.effects.find((e) => e.id.endsWith('#cost'));
+    expect(cost!.state).toEqual({ 'bonusActions.spent': 1 });
+    expect(cost!.expiry).toEqual({ kind: 'endOfTurn' });
+    const record = out.effects.find((e) => e.id.endsWith('effect-tormentor-boost'))!;
+    expect(record.key).toBe('tormentor-boost');
+    expect(record.expiry).toEqual({ kind: 'permanent' });
+    expect(record.state).toEqual({ [`${F}.boost.recorded`]: 1 });
+    expect(record.display).toEqual({
+      name: `${T}.boost-effect.name`,
+      section: 'mount',
+      subject: SUBJECT,
+      displayFact: `${F}.boost.current`
+    });
+    // Soul coin 100 + boost 30 = 130, the pool following.
+    expect(out.facts[`${F}.boost.current`]).toBe(1);
+    expect(out.facts[`${F}.speed.effective`]).toBe(130);
+    expect(out.facts[`${F}.movement.total`]).toBe(130);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+  });
+
+  it('a boost-without-soul-coin row still commits, projecting the over-commit with its diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'set-tormentor-boost', selections: { boost: 1 } }]
+    });
+    // Unfuelled: the only failing leg is the soul coin — the row commits, the
+    // spend lands, and the derived speed projects 30 ft. the rules would not
+    // have allowed (the over-commit projection, exactly like any override).
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.boost.without_soul_coin`, severity: 'error' }
+    ]);
+    expect(out.facts[`${F}.boost.recorded`]).toBe(1);
+    expect(out.facts[`${F}.speed.effective`]).toBe(30);
+    expect(out.facts['bonusActions.remaining']).toBe(0);
+  });
+});
+
+describe('fuel and boost derives (the effective speed)', () => {
+  /** The effective speed at a committed fuel/boost combination. */
+  const speedAt = (fuel?: number, boost?: number): number | undefined =>
+    evaluate({
+      modules: [module()],
+      committed: [
+        acquireEffect(),
+        ...(fuel === undefined ? [] : [fuelRecordEffect(fuel)]),
+        ...(boost === undefined ? [] : [boostRecordEffect(boost)])
+      ]
+    }).facts[`${F}.speed.effective`];
+
+  it('maps the fuel: none 0, soul coin 100, demon ichor 80', () => {
+    expect(speedAt()).toBe(0);
+    expect(speedAt(0)).toBe(0);
+    expect(speedAt(1)).toBe(100);
+    expect(speedAt(2)).toBe(80);
+  });
+
+  it('adds 30 while boosted (the boost is fuel-independent arithmetic; its LEGALITY is the soul coin)', () => {
+    expect(speedAt(1, 1)).toBe(130);
+    expect(speedAt(2, 1)).toBe(110);
+    expect(speedAt(1, 0)).toBe(100);
+  });
+
+  it('reads 0 unacquired even with records standing (gated on the acquire)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [fuelRecordEffect(1), boostRecordEffect(1)]
+    });
+    expect(out.facts[`${F}.active`] ?? 0).toBe(0);
+    expect(out.facts[`${F}.fuel.current`]).toBe(0);
+    expect(out.facts[`${F}.boost.current`]).toBe(0);
+    expect(out.facts[`${F}.speed.effective`]).toBe(0);
+  });
+});
+
+describe('fuel and boost ride the acquire lifecycle', () => {
+  it('a re-acquire and an abandon both advertise the empty same-key evictions', () => {
+    for (const ruleId of ['acquire-tormentor', 'abandon-tormentor'] as const) {
+      const out = evaluate({
+        modules: [module()],
+        committed: [acquireEffect(), fuelRecordEffect(1), boostRecordEffect(1)],
+        planned: [{ instanceId: 'i0', ruleId }]
+      });
+      for (const key of ['tormentor-fuel', 'tormentor-boost']) {
+        const evict = out.effects.find((e) => e.id.endsWith(`evict-${key}`));
+        expect(evict, `${ruleId} advertises the ${key} eviction`).toBeDefined();
+        expect(evict!.key).toBe(key);
+        expect(evict!.state).toBeUndefined();
+      }
+      expect(out.facts[`${F}.fuel.current`]).toBe(0);
+      expect(out.facts[`${F}.boost.current`]).toBe(0);
+      expect(out.facts[`${F}.speed.effective`]).toBe(0);
+    }
+  });
+
+  it('leaving the Helm hides the offers while the records stand (seat changes never touch vehicle state)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: helmFuelled(),
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-helm-seat' }]
+    });
+    expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-fuel')).toBe(false);
+    expect(out.availableRules.some((r) => r.rule.id === 'set-tormentor-boost')).toBe(false);
+    expect(out.facts[`${F}.fuel.recorded`]).toBe(1);
+    expect(out.facts[`${F}.speed.effective`]).toBe(100);
+  });
+});
+
+describe('fuel and boost i18n (tlh is the canary)', () => {
+  it('the offer names/descriptions, diagnostics, option labels and chip names exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en fuel name': en.rule.tormentor.fuel?.name,
+      'en-x-tlh fuel name': tlh.rule.tormentor.fuel?.name,
+      'en fuel description': en.rule.tormentor.fuel?.description,
+      'en-x-tlh fuel description': tlh.rule.tormentor.fuel?.description,
+      'en fuel no bonus': en.rule.tormentor.fuel?.no_bonus_action,
+      'en-x-tlh fuel no bonus': tlh.rule.tormentor.fuel?.no_bonus_action,
+      'en fuel none': en.rule.tormentor.fuel?.none,
+      'en-x-tlh fuel none': tlh.rule.tormentor.fuel?.none,
+      'en fuel soul coin': en.rule.tormentor.fuel?.['soul-coin'],
+      'en-x-tlh fuel soul coin': tlh.rule.tormentor.fuel?.['soul-coin'],
+      'en fuel demon ichor': en.rule.tormentor.fuel?.['demon-ichor'],
+      'en-x-tlh fuel demon ichor': tlh.rule.tormentor.fuel?.['demon-ichor'],
+      'en boost name': en.rule.tormentor.boost?.name,
+      'en-x-tlh boost name': tlh.rule.tormentor.boost?.name,
+      'en boost description': en.rule.tormentor.boost?.description,
+      'en-x-tlh boost description': tlh.rule.tormentor.boost?.description,
+      'en boost no bonus': en.rule.tormentor.boost?.no_bonus_action,
+      'en-x-tlh boost no bonus': tlh.rule.tormentor.boost?.no_bonus_action,
+      'en boost without soul coin': en.rule.tormentor.boost?.without_soul_coin,
+      'en-x-tlh boost without soul coin': tlh.rule.tormentor.boost?.without_soul_coin,
+      'en boost none': en.rule.tormentor.boost?.none,
+      'en-x-tlh boost none': tlh.rule.tormentor.boost?.none,
+      'en boost demon ichor': en.rule.tormentor.boost?.['demon-ichor'],
+      'en-x-tlh boost demon ichor': tlh.rule.tormentor.boost?.['demon-ichor'],
+      'en fuel chip': en.rule.tormentor['fuel-effect']?.name,
+      'en-x-tlh fuel chip': tlh.rule.tormentor['fuel-effect']?.name,
+      'en boost chip': en.rule.tormentor['boost-effect']?.name,
+      'en-x-tlh boost chip': tlh.rule.tormentor['boost-effect']?.name,
+      // The panel label and the segmented prefixes (play.* keys the module
+      // references as literals, beside the rule.* family).
+      'en stats fuel': en.play.stats.tormentor?.fuel,
+      'en-x-tlh stats fuel': tlh.play.stats.tormentor?.fuel,
+      'en choices fuel': en.play.choices.tormentor?.fuel,
+      'en-x-tlh choices fuel': tlh.play.choices.tormentor?.fuel,
+      'en choices boost': en.play.choices.tormentor?.boost,
+      'en-x-tlh choices boost': tlh.play.choices.tormentor?.boost
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+    // The chip name templates interpolate the live ordinal ({{score}}, the
+    // occupancy precedent) in BOTH locales.
+    for (const name of [
+      en.rule.tormentor['fuel-effect']?.name,
+      en.rule.tormentor['boost-effect']?.name
+    ])
+      expect(name?.match(/{{[a-zA-Z]+}}/g)).toEqual(['{{score}}']);
+    for (const name of [
+      tlh.rule.tormentor['fuel-effect']?.name,
+      tlh.rule.tormentor['boost-effect']?.name
+    ])
+      expect(name?.match(/{{[a-zA-Z]+}}/g)).toEqual(['{{score}}']);
+  });
+});
+
+// The acquired, fuelled stat facts (every gate the declarations read, plus
+// the pools the chips render).
 const BOARDED = {
   [`${F}.active`]: 1,
   [`${F}.ac.effective`]: 21,
   [`${F}.hp.max`]: 60,
   [`${F}.hp.current`]: 60,
-  [`${F}.speed`]: 100,
+  [`${F}.fuel.current`]: 1,
+  [`${F}.speed.effective`]: 100,
   [`${F}.cargo`]: 500,
   [`${F}.str.modifier`]: 3,
   [`${F}.dex.modifier`]: 2,
@@ -2047,7 +2496,7 @@ const BOARDED = {
 };
 
 describe('module-declared panel entries', () => {
-  it('top bar: a usedMax HP chip (current/max) + AC/Speed/Cargo value chips + a STR/DEX/CON ability chip, stamped with the subject', () => {
+  it('top bar: a usedMax HP chip + AC/Speed/Fuel/Cargo value chips + a STR/DEX/CON ability chip, stamped with the subject', () => {
     expect(deriveTopBarEntries(BOARDED, [module()]).filter((e) => e.subject === SUBJECT)).toEqual([
       {
         // The HP chip becomes a POOL with the damageable pass: usedMax renders
@@ -2065,9 +2514,25 @@ describe('module-declared panel entries', () => {
         subject: SUBJECT
       },
       {
+        // PR-D: the Speed chip reads the DERIVED effective speed (the fuel's),
+        // never the retired flat bake.
         type: 'value',
         label: 'play.stats.tormentor.speed',
-        fact: `${F}.speed`,
+        fact: `${F}.speed.effective`,
+        subject: SUBJECT
+      },
+      {
+        // The Fuel chip renders the fuel's NAME, not its ordinal: a value
+        // entry may carry valueLabels, a numeric-fact → i18n-key map the
+        // render sites translate ("Soul Coin", never "1").
+        type: 'value',
+        label: 'play.stats.tormentor.fuel',
+        fact: `${F}.fuel.current`,
+        valueLabels: {
+          0: `${T}.fuel.none`,
+          1: `${T}.fuel.soul-coin`,
+          2: `${T}.fuel.demon-ichor`
+        },
         subject: SUBJECT
       },
       {

@@ -278,6 +278,12 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   // the missing acMotionless mode fact reads as the Moving default.
   'tormentor-ac-mode-legacy': [legacyTormentorBoard()],
 
+  // === Tormentor — the same LEGACY board, pinning the PR-D speed contract ===
+  // The flat `speed` bake is an input no module derives or reads any more
+  // (inert, the ac.value precedent), so it never two-writer-conflicts with
+  // the derived speed.effective, and the missing fuel facts read as unfuelled.
+  'tormentor-fuel-legacy': [legacyTormentorBoard()],
+
   // === HP-recorder threshold adaptation (a threshold fact seeded as a bake) ===
   // The player/steed recorders consult the builder's generic threshold gate on
   // their natural fact names; nothing derives those facts, so seeding one as a

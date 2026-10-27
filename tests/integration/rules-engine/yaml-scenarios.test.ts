@@ -326,6 +326,21 @@ const EXPECTED_RUNNABLE = [
   'tormentor-helm-dash-count',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',
+  // …PR 11 — PR-D: Fuel + Boost — the Helm's bonus-action segmented records
+  // (keyed writes on the DISTINCT recorded facts, the AC-mode pattern), the
+  // derived speed.effective (0/100/80 by fuel, +30 boosted) that the whole
+  // movement economy now reads, the boost's soul-coin legality leg, the
+  // helm-gated offers whose state persists across seat changes, the acquire
+  // lifecycle resetting both records, the legacy flat-speed tolerance, and
+  // Juke's able-to-move leg refined to the derived speed
+  'tormentor-fuel-record',
+  'tormentor-fuel-speeds',
+  'tormentor-boost-soul-coin',
+  'tormentor-fuel-helm-gate',
+  'tormentor-fuel-lifecycle',
+  'tormentor-fuel-legacy',
+  'tormentor-fuel-drive-pool',
+  'tormentor-juke-unfuelled',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

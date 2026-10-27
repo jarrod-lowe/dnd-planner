@@ -22,6 +22,13 @@ steps:
       assert:
         facts:
           companion.tormentor.seats.helm: 1
+  # PR-D: the pool is the FUEL's — a soul coin in the burner (the Helm's
+  # bonus-action record, committed here so the bonus reopens below).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
   # The movement economy exists the moment the vehicle does (the steed's
   # derives): base derives from the baked speed (100), total undoubled,
   # nothing spent — and Drive is the steed move-offer shape (MOVE section,

@@ -657,6 +657,41 @@ describe('resolveEntryValue', () => {
     ).toBe('16');
   });
 
+  it('maps a valueLabels ordinal to its label key, translated when a translator is given', async () => {
+    // The Fuel chip contract: a value entry may carry valueLabels, a
+    // numeric-fact → i18n-key map, so a textual state renders its NAME
+    // ("Soul Coin"), never its ordinal. Without a translator the KEY is
+    // returned (the pure, deterministic fallback); with one, its text.
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    const entry = {
+      type: 'value',
+      label: 'play.stats.tormentor.fuel',
+      fact: 'companion.tormentor.fuel.current',
+      valueLabels: {
+        0: 'rule.tormentor.fuel.none',
+        1: 'rule.tormentor.fuel.soul-coin',
+        2: 'rule.tormentor.fuel.demon-ichor'
+      }
+    } as const;
+    const facts: Facts = { 'companion.tormentor.fuel.current': 1 };
+    expect(resolveEntryValue(entry, facts)).toBe('rule.tormentor.fuel.soul-coin');
+    expect(resolveEntryValue(entry, facts, (key) => `«${key}»`)).toBe(
+      '«rule.tormentor.fuel.soul-coin»'
+    );
+  });
+
+  it('falls back to the raw value when valueLabels does not map it', async () => {
+    const { resolveEntryValue } = await import('$lib/play/extractTopBar');
+    const entry = {
+      type: 'value',
+      label: 'x',
+      fact: 'n',
+      valueLabels: { 1: 'one' }
+    } as const;
+    expect(resolveEntryValue(entry, { n: 9 })).toBe('9');
+    expect(resolveEntryValue(entry, {})).toBe('');
+  });
+
   it('returns signed modifier for modifier type', async () => {
     const { resolveEntryValue } = await import('$lib/play/extractTopBar');
     const facts: Facts = { 'initiative.value': 3 };
