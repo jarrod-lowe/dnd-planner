@@ -1,0 +1,109 @@
+name: 'Tormentor - Vehicle Saving Throws'
+description: >-
+  The vehicle's Str/Dex/Con SAVE recorders (the steed save-offer pattern,
+  PC-parity copy): a free-section vehicle row per ability while acquired —
+  d20 + the BAKED modifier fact (companion.tormentor.<ability>.modifier,
+  never a hardcoded number), the shared pass/fail outcome segmented, and the
+  companion-suffixed labels so self-only riders cannot reach the vehicle's
+  rolls. Absent while unacquired; no legality gates and deliberately NO
+  wrecked leg (recording a GM-called save is bookkeeping, like damage
+  recording — the wrecked leg belongs to activity offers and repairs).
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Unacquired: no vehicle, no save rows.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - tormentor-save-str
+            - tormentor-save-dex
+            - tormentor-save-con
+  - addOffer:
+      id: acquire-tormentor
+  - endTurn:
+      assert:
+        facts:
+          # The baked modifiers the dice lines read (3/2/2 from the stat block).
+          companion.tormentor.str.modifier: 3
+          companion.tormentor.dex.modifier: 2
+          companion.tormentor.con.modifier: 2
+  # Acquired: all three save rows exist, legal, in the copied shape (the STR
+  # row pins the full ui; the unit test mirrors every ability).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - tormentor-save-str
+            - tormentor-save-dex
+            - tormentor-save-con
+          legal:
+            - tormentor-save-str
+            - tormentor-save-dex
+            - tormentor-save-con
+        offerUi:
+          - id: tormentor-save-str
+            ui:
+              section: free
+              subject: tormentor
+              name: planner.record.save.str
+              annotationLabels:
+                - save.any.companion
+                - save.str.companion
+                - dice.any.companion
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: rollBonus
+                    purpose: save
+              secondaryControl:
+                type: segmented
+                var: passed
+                prefix: play.choices.save.outcome
+                options:
+                  - value: -1
+                    label: planner.record.outcome.none
+                  - value: 1
+                    label: planner.record.passed
+                  - value: 0
+                    label: planner.record.failed
+              intents:
+                SAVE: vehicle
+              actionCost: []
+        offerVars:
+          - id: tormentor-save-str
+            vars:
+              # The bonus READS the baked fact — no hardcoded +3 anywhere.
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.tormentor.str.modifier
+              passed:
+                capture: true
+                default:
+                  number: -1
+          - id: tormentor-save-dex
+            vars:
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.tormentor.dex.modifier
+  # Destroy the vehicle (one pool-emptying blow): the save recorders stay
+  # LEGAL — the bookkeeping boundary of the wrecked pass, pinned.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 60
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.destroyed: 1
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - tormentor-save-str
+            - tormentor-save-dex
+            - tormentor-save-con

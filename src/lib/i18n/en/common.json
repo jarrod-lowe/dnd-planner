@@ -569,6 +569,15 @@
         "no_reaction": "No reaction available",
         "unable_to_move": "The Tormentor is unable to move — out of fuel or fallen prone — it cannot juke"
       },
+      "check-str": {
+        "name": "Strength Check"
+      },
+      "check-dex": {
+        "name": "Dexterity Check"
+      },
+      "check-con": {
+        "name": "Constitution Check"
+      },
       "effect": {
         "name": "Tormentor"
       },
@@ -2286,13 +2295,15 @@
         "default": "Other",
         "others": "Others",
         "you": "You",
-        "steed": "Steed"
+        "steed": "Steed",
+        "vehicle": "Vehicle"
       },
       "CHECK": {
         "default": "Other",
         "skill": "Skill",
         "raw": "Raw",
-        "steed": "Steed"
+        "steed": "Steed",
+        "vehicle": "Vehicle"
       },
       "REST": {
         "default": "Rest",

@@ -359,6 +359,11 @@ const EXPECTED_RUNNABLE = [
   // are illegal-but-committable on ONE shared wrecked leg — while damage
   // recording and seat changes stay legal (bookkeeping on a wreck)
   'tormentor-wrecked-legality',
+  // …the checks+saves pass: the vehicle's six record rollers (the steed's
+  // save/skill recorder pattern) — Str/Dex/Con × Check/Save, d20 + the baked
+  // modifier fact, free and ungated (bookkeeping, legal on a wreck)
+  'tormentor-saves',
+  'tormentor-checks',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

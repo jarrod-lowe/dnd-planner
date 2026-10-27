@@ -1,0 +1,89 @@
+name: 'Tormentor - Vehicle Ability Checks'
+description: >-
+  The vehicle's Str/Dex/Con CHECK recorders (the steed skill-offer pattern,
+  PC-parity copy): a free-section vehicle row per ability while acquired —
+  d20 + the BAKED modifier fact, the companion dice label, module-local name
+  keys (no shared per-ability check label exists; the saves reuse
+  planner.record.save.*, the checks are this group's own text). Absent while
+  unacquired; free, ungated and — like the saves — deliberately NO wrecked leg
+  (recording a GM-called check is bookkeeping).
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Unacquired: no vehicle, no check rows.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - tormentor-check-str
+            - tormentor-check-dex
+            - tormentor-check-con
+  - addOffer:
+      id: acquire-tormentor
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.active: 1
+  # Acquired: all three check rows exist, legal, in the copied shape (the DEX
+  # row pins the full ui — the clinger's stay-attached check is the live use;
+  # the unit test mirrors every ability).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - tormentor-check-str
+            - tormentor-check-dex
+            - tormentor-check-con
+          legal:
+            - tormentor-check-str
+            - tormentor-check-dex
+            - tormentor-check-con
+        offerUi:
+          - id: tormentor-check-dex
+            ui:
+              section: free
+              subject: tormentor
+              name: rule.tormentor.check-dex.name
+              annotationLabels:
+                - dice.any.companion
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: rollBonus
+                    purpose: check
+              intents:
+                CHECK: vehicle
+              actionCost: []
+        offerVars:
+          - id: tormentor-check-str
+            vars:
+              # The bonus READS the baked fact — no hardcoded +3 anywhere.
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.tormentor.str.modifier
+          - id: tormentor-check-con
+            vars:
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.tormentor.con.modifier
+  # Destroy the vehicle (one pool-emptying blow): the check recorders stay
+  # LEGAL — the bookkeeping boundary of the wrecked pass, pinned.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 60
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.destroyed: 1
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - tormentor-check-str
+            - tormentor-check-dex
+            - tormentor-check-con

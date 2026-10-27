@@ -82,6 +82,14 @@ describe('acquire offer ui', () => {
       'drive-tormentor',
       'dash-tormentor',
       'juke-tormentor',
+      // The six record rollers (the steed's saves/skills placement: after the
+      // station actions, before the way out) — saves first, then checks.
+      'tormentor-save-str',
+      'tormentor-save-dex',
+      'tormentor-save-con',
+      'tormentor-check-str',
+      'tormentor-check-dex',
+      'tormentor-check-con',
       'abandon-tormentor'
     ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
@@ -4246,6 +4254,251 @@ describe('wrecked legality i18n (tlh is the canary)', () => {
     const strings: Record<string, string | undefined> = {
       en: en.rule.tormentor.wrecked,
       'en-x-tlh': tlh.rule.tormentor.wrecked
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+/**
+ * CHECKS + SAVES — the vehicle's six record rollers (the Later list's "Checks
+ * and Saves on the vehicle, for STR/CON/DEX"): the steed's save/skill
+ * recorder pattern copied exactly (the PC-parity house rule). A free-section
+ * vehicle row per ability while ACQUIRED — d20 + the BAKED modifier fact
+ * (`companion.tormentor.<ability>.modifier`, 3/2/2 from the stat block; never
+ * a hardcoded number) — with the saves carrying the shared pass/fail outcome
+ * segmented and the save/dice labels companion-suffixed, and the checks the
+ * plain dice-line (the steed skill shape) under module-local name keys (no
+ * shared per-ability check label exists; the saves reuse
+ * `planner.record.save.*`). Both kinds are FREE and ungated: they record
+ * GM-called rolls, like the player's own record rows, and deliberately carry
+ * NO wrecked leg (the wrecked pass's bookkeeping boundary — a destroyed
+ * vehicle still gets called on to make saves, and the way back is people,
+ * not repairs). No `apply` on either (the steed shape): rolling records
+ * nothing — the roll log and the outcome capture are the record.
+ */
+
+/** The three abilities the stat block gives the vehicle. */
+const CHECK_SAVE_ABILITIES = ['str', 'dex', 'con'] as const;
+
+/** The shared outcome picker every save recorder renders (the steed's copy). */
+const SAVE_OUTCOME_CONTROL = {
+  type: 'segmented',
+  var: 'passed',
+  prefix: 'play.choices.save.outcome',
+  options: [
+    { value: -1, label: 'planner.record.outcome.none' },
+    { value: 1, label: 'planner.record.passed' },
+    { value: 0, label: 'planner.record.failed' }
+  ]
+} as const;
+
+describe('tormentor save recorders (the steed save-offer copy)', () => {
+  it('str/dex/con: d20 + the BAKED modifier, the shared outcome segmented, companion-suffixed labels', () => {
+    const raw = module().offer!({ selections: {} });
+    for (const a of CHECK_SAVE_ABILITIES) {
+      const o = raw.find((x) => x.id === `tormentor-save-${a}`);
+      expect(o, `tormentor-save-${a} exists`).toBeDefined();
+      // Free recorders of GM-called rolls: structurally gated on the acquire
+      // alone, NO legality gates, NO apply (UI-only, the steed shape).
+      expect(typeof o!.when).toBe('function');
+      expect(o!.legalWhen).toBeUndefined();
+      expect(o!.apply).toBeUndefined();
+      const ui = o!.ui as Record<string, unknown>;
+      expect(ui.section).toBe('free');
+      expect(ui.subject).toBe(SUBJECT);
+      // The SHARED name key the player's and the steed's save rows reuse.
+      expect(ui.name).toBe(`planner.record.save.${a}`);
+      // Companion-suffixed save labels + the companion dice label (the steed's
+      // set exactly): a self-only rider must not reach the vehicle's saves.
+      expect(ui.annotationLabels).toEqual([
+        'save.any.companion',
+        `save.${a}.companion`,
+        'dice.any.companion'
+      ]);
+      expect(ui.primaryControl).toEqual({
+        type: 'dice-line',
+        dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'save' }]
+      });
+      expect(ui.secondaryControl).toEqual(SAVE_OUTCOME_CONTROL);
+      expect(ui.intents).toEqual({ SAVE: 'vehicle' });
+      expect(ui.actionCost).toEqual([]);
+      // The bonus READS the baked fact — no hardcoded +3/+2/+2 anywhere.
+      expect(o!.vars).toEqual({
+        rollBonus: { capture: true, default: { fact: `${F}.${a}.modifier` } },
+        passed: { capture: true, default: { number: -1 } }
+      });
+    }
+  });
+
+  it('exist through the fold while acquired and vanish with the acquire', () => {
+    const acquired = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    for (const a of CHECK_SAVE_ABILITIES) {
+      expect(
+        acquired.availableRules.some((r) => r.rule.id === `tormentor-save-${a}`),
+        `tormentor-save-${a} exists while acquired`
+      ).toBe(true);
+    }
+    const unacquired = evaluate({ modules: [module()] });
+    for (const a of CHECK_SAVE_ABILITIES) {
+      expect(
+        unacquired.availableRules.some((r) => r.rule.id === `tormentor-save-${a}`),
+        `tormentor-save-${a} absent while unacquired`
+      ).toBe(false);
+    }
+  });
+
+  it('the dice-line bonus DERIVES from the fact: a differently-baked modifier moves the captured default', () => {
+    // The repo rule (derive, never bake derived numbers): the vars reference
+    // the FACT, so a re-baked stat block moves the roll with no module edit.
+    // resolveValueSource is what the panel renders — the occupancy-slider
+    // precedent — resolved against the real acquire (the 3/2/2 read) and
+    // against a synthetic bake at different numbers.
+    const resolvedAt = (committed: EffectInstance[]): number | undefined => {
+      const out = evaluate({ modules: [module()], committed });
+      const offer = out.availableRules.find((r) => r.rule.id === 'tormentor-save-str');
+      expect(offer, 'the str save exists').toBeDefined();
+      const vars = offer!.rule.vars as Record<string, VarDefinition>;
+      return resolveValueSource({ var: 'rollBonus' }, out.facts, vars) as number | undefined;
+    };
+    // The real acquire: STR 16 → +3.
+    expect(resolvedAt([acquireEffect()])).toBe(3);
+    // A synthetic bake at STR 22 (and DEX 8): the SAME row rolls +6 — the
+    // number follows the fact, never the module.
+    expect(
+      resolvedAt([
+        {
+          id: 'test-modifier-bake',
+          state: { [`${F}.active`]: 1, [`${F}.str.modifier`]: 6 },
+          expiry: { kind: 'permanent' }
+        }
+      ])
+    ).toBe(6);
+  });
+
+  it('a rolled row commits NOTHING (UI-only, the steed shape)', () => {
+    // The steed's recorders carry no apply; the outcome capture and the roll
+    // log are the record. A planned row must advertise no effects and carry no
+    // diagnostics — recording a roll is not an action.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'tormentor-save-dex', selections: { passed: 1 } }]
+    });
+    expect(out.effects).toEqual([]);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // Nothing about the vehicle moved.
+    expect(out.facts[`${F}.active`]).toBe(1);
+    expect(out.facts[`${F}.hp.current`]).toBe(60);
+  });
+});
+
+describe('tormentor check recorders (the steed skill-offer copy)', () => {
+  it('str/dex/con: d20 + the BAKED modifier, the companion dice label, module-local names', () => {
+    const raw = module().offer!({ selections: {} });
+    for (const a of CHECK_SAVE_ABILITIES) {
+      const o = raw.find((x) => x.id === `tormentor-check-${a}`);
+      expect(o, `tormentor-check-${a} exists`).toBeDefined();
+      // The same free-record contract as the saves.
+      expect(typeof o!.when).toBe('function');
+      expect(o!.legalWhen).toBeUndefined();
+      expect(o!.apply).toBeUndefined();
+      const ui = o!.ui as Record<string, unknown>;
+      expect(ui.section).toBe('free');
+      expect(ui.subject).toBe(SUBJECT);
+      // No shared per-ability check label exists (planner.record.check is a
+      // plain string), so the check names are THIS group's own keys.
+      expect(ui.name).toBe(`${T}.check-${a}.name`);
+      // The steed skill shape: the companion dice label alone.
+      expect(ui.annotationLabels).toEqual(['dice.any.companion']);
+      expect(ui.primaryControl).toEqual({
+        type: 'dice-line',
+        dice: [{ sides: 20, bonus: { var: 'rollBonus' }, purpose: 'check' }]
+      });
+      expect(ui.secondaryControl).toBeUndefined();
+      expect(ui.intents).toEqual({ CHECK: 'vehicle' });
+      expect(ui.actionCost).toEqual([]);
+      expect(o!.vars).toEqual({
+        rollBonus: { capture: true, default: { fact: `${F}.${a}.modifier` } }
+      });
+    }
+  });
+
+  it('exist through the fold while acquired and vanish with the acquire', () => {
+    const acquired = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const unacquired = evaluate({ modules: [module()] });
+    for (const a of CHECK_SAVE_ABILITIES) {
+      expect(
+        acquired.availableRules.some((r) => r.rule.id === `tormentor-check-${a}`),
+        `tormentor-check-${a} exists while acquired`
+      ).toBe(true);
+      expect(
+        unacquired.availableRules.some((r) => r.rule.id === `tormentor-check-${a}`),
+        `tormentor-check-${a} absent while unacquired`
+      ).toBe(false);
+    }
+  });
+});
+
+describe('checks and saves on a wreck (the bookkeeping boundary)', () => {
+  it('every roller stays LEGAL while the destroyed wreck stands — no wrecked leg', () => {
+    // The wrecked pass gates ACTIVITY offers and repairs; recording a
+    // GM-called check or save is bookkeeping, like damage recording (a
+    // destroyed vehicle is still called on to make saves). The negative pin:
+    // the rows stay legal with no diagnostics beside a standing wreck.
+    const destroyed = evaluate({
+      modules: [module()],
+      committed: [
+        acquireEffect(),
+        {
+          id: 'effect-tormentor-destroyed',
+          key: 'tormentor-destroyed',
+          state: { [`${F}.destroyed`]: 1 },
+          expiry: { kind: 'permanent' }
+        }
+      ]
+    });
+    expect(destroyed.facts[`${F}.destroyed`]).toBe(1);
+    for (const id of [
+      'tormentor-save-str',
+      'tormentor-save-dex',
+      'tormentor-save-con',
+      'tormentor-check-str',
+      'tormentor-check-dex',
+      'tormentor-check-con'
+    ]) {
+      const offer = destroyed.availableRules.find((r) => r.rule.id === id);
+      expect(offer, `${id} stays offered on the wreck`).toBeDefined();
+      expect(offer!.legal, `${id} stays legal on the wreck`).toBe(true);
+      expect(offer!.diagnostics, `${id} carries no diagnostics`).toEqual([]);
+    }
+  });
+});
+
+describe('checks and saves i18n (tlh is the canary)', () => {
+  it('the check names exist in BOTH locales; the saves reuse the shared save keys', () => {
+    const strings: Record<string, string | undefined> = {
+      'en check str name': en.rule.tormentor['check-str']?.name,
+      'en-x-tlh check str name': tlh.rule.tormentor['check-str']?.name,
+      'en check dex name': en.rule.tormentor['check-dex']?.name,
+      'en-x-tlh check dex name': tlh.rule.tormentor['check-dex']?.name,
+      'en check con name': en.rule.tormentor['check-con']?.name,
+      'en-x-tlh check con name': tlh.rule.tormentor['check-con']?.name,
+      // The saves reuse the shared planner.record.save.* keys (the steed
+      // precedent) — pinned here so the reuse cannot silently rot.
+      'en shared save str': en.planner.record.save?.str,
+      'en-x-tlh shared save str': tlh.planner.record.save?.str,
+      'en shared save dex': en.planner.record.save?.dex,
+      'en-x-tlh shared save dex': tlh.planner.record.save?.dex,
+      'en shared save con': en.planner.record.save?.con,
+      'en-x-tlh shared save con': tlh.planner.record.save?.con,
+      // The new SAVE/CHECK 'vehicle' sub-buckets the add picker groups under.
+      'en save vehicle bucket': (en.play.verbBuckets.SAVE as Record<string, string>)?.vehicle,
+      'en-x-tlh save vehicle bucket': (tlh.play.verbBuckets.SAVE as Record<string, string>)
+        ?.vehicle,
+      'en check vehicle bucket': (en.play.verbBuckets.CHECK as Record<string, string>)?.vehicle,
+      'en-x-tlh check vehicle bucket': (tlh.play.verbBuckets.CHECK as Record<string, string>)
+        ?.vehicle
     };
     for (const [where, value] of Object.entries(strings))
       expect(value, where).toEqual(expect.any(String));
