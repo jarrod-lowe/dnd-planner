@@ -1,0 +1,56 @@
+name: 'Tormentor - Clinger Dex-Check Notice'
+description: >-
+  The clinger's standing NOTICE (the notice taxonomy: a condition the player
+  must know BEFORE acting — while clinging, Dex checks keep you attached).
+  The notice stands exactly while the clinger seat is held: absent on a bare
+  acquire, present the moment the seat lands (planned or committed), and
+  withdrawn by leaving the seat or abandoning the vehicle. Own wording, no
+  invented DC or frequency.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Acquired but not clinging: no notice — nothing to know.
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        annotations:
+          notExists:
+            - rule.tormentor.clinger-notice
+  # Take the clinger seat: the notice stands the moment the row is planned,
+  # carrying the notice target and the vehicle as its source.
+  - addOffer:
+      id: take-tormentor-clinger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.clinger: 1
+        annotations:
+          exists:
+            - rule.tormentor.clinger-notice
+          targets:
+            - key: rule.tormentor.clinger-notice
+              targets: [notice]
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-clinger
+        annotations:
+          exists:
+            - rule.tormentor.clinger-notice
+  # Leave the seat: the eviction clears the fact and the notice goes with it.
+  - addOffer:
+      id: leave-tormentor-clinger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.clinger: 0
+        annotations:
+          notExists:
+            - rule.tormentor.clinger-notice
+  # Another station's seat is NOT the clinger: the passenger seat carries no
+  # such notice.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        annotations:
+          notExists:
+            - rule.tormentor.clinger-notice

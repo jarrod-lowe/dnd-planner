@@ -341,6 +341,18 @@ const EXPECTED_RUNNABLE = [
   'tormentor-fuel-legacy',
   'tormentor-fuel-drive-pool',
   'tormentor-juke-unfuelled',
+  // …PR 12 — PR-E: the Clinger station — the fourth and final seat on the
+  // same infrastructure (take/leave pair, exclusivity against the other
+  // stations in every direction) but CAPACITY-FREE: a clinger rides the
+  // outside and consumes no seat, so the take offer carries no free-seat leg
+  // (legal at used 4/4) and the capacity derive does not count it; a
+  // standing NOTICE carries the cling-on Dex-check rule while the seat is
+  // held, and the seat rides the acquire lifecycle like every record
+  'tormentor-clinger-seat',
+  'tormentor-clinger-exclusivity',
+  'tormentor-clinger-capacity-free',
+  'tormentor-clinger-notice',
+  'tormentor-clinger-lifecycle',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

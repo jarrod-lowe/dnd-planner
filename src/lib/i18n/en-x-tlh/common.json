@@ -537,6 +537,14 @@
         "name": "SeHyaH Sepvo' yImej",
         "description": "SeHyaH Sepvo' yImej 'ej Sep yIchImmoH"
       },
+      "take-clinger-seat": {
+        "name": "ngIpwI' Sep yIchol",
+        "description": "Duj Sep mevyap yIngIp 'ej Sep DaLo'be'"
+      },
+      "leave-clinger-seat": {
+        "name": "ngIpwI' Sepvo' yImej",
+        "description": "Duj Sep mevyapvo' yIngIpHa' 'ej bImej"
+      },
       "fire-harpoon": {
         "name": "ghoch nuH yIbaH",
         "description": "chuS nuH HIj: HIch 7, chuq 120, wa' jav, 2d8+2 qIp. ghoch nuHmey maj; wa'maH ghoch nuH tu'lu'.",
@@ -596,10 +604,15 @@
       "seat-helm-effect": {
         "name": "SeHyaH Sep"
       },
+      "seat-clinger-effect": {
+        "name": "ngIpwI' Sep"
+      },
       "notice": "pum qay'",
       "notice.body": "Pumpu' Duj Sep 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'.",
       "destroyed-notice": "Duj Sep Qaw'lu'pu'",
-      "destroyed-notice.body": "Qaw'pu' Duj Sep — meQtaHbogh Duj. Paghtagh Daghu'laHbe'; chenmoHwI'pu' tlhutlhDI' Duj yIchagh."
+      "destroyed-notice.body": "Qaw'pu' Duj Sep — meQtaHbogh Duj. Paghtagh Daghu'laHbe'; chenmoHwI'pu' tlhutlhDI' Duj yIchagh.",
+      "clinger-notice": "ngIptaH",
+      "clinger-notice.body": "Duj Sep mevyapDaq bIngIptaH: SuvtaHvIS ngIpwI' DIvI' chovangmey tongnIS 'ej ngIptaH."
     },
     "dnd-5e-2024": {
       "action-economy": {},

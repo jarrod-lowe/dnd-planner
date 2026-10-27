@@ -1,0 +1,55 @@
+name: 'Tormentor - Clinger Exclusivity, Both Directions'
+description: >-
+  One seat per player, globally — the already-seated legality leg reads EVERY
+  station's seat fact, and the clinger is a seat like any other for
+  exclusivity (only its CAPACITY term is free): the passenger and clinger
+  stations exclude each other in BOTH directions. Taking the clinger seat
+  while holding the passenger seat is ILLEGAL, never hidden (the offer stays
+  applicable with its diagnostic and a planned-anyway row still executes as
+  the ONE keyed replacement), and taking the passenger seat while clinging is
+  the same illegal path mirrored.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # Hold the passenger seat first.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1
+  # Passenger held: taking the CLINGER seat is illegal-but-committable with
+  # the shared already-seated diagnostic — one seat per player, any station,
+  # clingers included.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-clinger-seat
+          illegal:
+            - take-tormentor-clinger-seat
+  # The override path: the planned-anyway take still applies, the clinger
+  # fact lands beside the passenger's (used counts the passenger alone), and
+  # the row carries its diagnostic.
+  - addOffer:
+      id: take-tormentor-clinger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.seats.clinger: 1
+          companion.tormentor.creatureCapacity.used: 1
+        planErrors:
+          - id: take-tormentor-clinger-seat
+            index: 0
+            errors:
+              - rule.tormentor.take-seat.already_seated
+  # Clinger held: the mirror — taking the PASSENGER seat is the same illegal
+  # path with the same shared diagnostic.
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-tormentor-passenger-seat

@@ -44,20 +44,23 @@ import {
  * illegal-but-possible: the derive clamps the READ to 0..max and diagnostics
  * are deferred with acquiring's.
  *
- * SEATS are PLAYER-side state (the seat infrastructure, PR-A: passenger,
- * PR-B harpoon, PR-C helm are the live stations; clinger joins in a later
- * pass by extending SEAT_STATIONS and instantiating its spec beside
- * PASSENGER_SEAT). A seat is ONE permanent keyed effect writing
+ * SEATS are PLAYER-side state (the seat infrastructure: PR-A passenger, PR-B
+ * harpoon, PR-C helm and PR-E clinger are the live stations, each a SeatSpec
+ * in the SEATS registry). A seat is ONE permanent keyed effect writing
  * `companion.tormentor.seats.<station> = 1` with a chip under the vehicle
  * panel (the at-a-glance "where am I seated"), taken and left by a TAKE/LEAVE
  * offer pair in the vehicle's +ADD — both illegal-but-COMMITTABLE (the
  * duplicate-acquire pattern): re-boarding while holding ANY station's seat is
- * illegal (one seat per player, GLOBALLY), boarding a full vehicle is illegal
- * (the derived capacity), and leaving an unheld seat is illegal (the
- * flip-upright idiom, its apply the empty same-key eviction — leaving never
- * touches occupancy or any other vehicle state). The seat key joins
- * CHILD_KEYS, so the acquire/abandon lifecycle evicts it: a re-acquired
- * vehicle starts with no seat.
+ * illegal (one seat per player, GLOBALLY — the clinger is exclusive like
+ * everyone), boarding a full vehicle is illegal for a SEAT-CONSUMING station
+ * alone (the derived capacity; the clinger rides the outside and takes no
+ * seat, so its take is legal at capacity and the derive never counts it), and
+ * leaving an unheld seat is illegal (the flip-upright idiom, its apply the
+ * empty same-key eviction — leaving never touches occupancy or any other
+ * vehicle state). While the clinger seat is held, a standing NOTICE carries
+ * the station's one rule (Dexterity checks to stay attached in combat). The
+ * seat key joins CHILD_KEYS, so the acquire/abandon lifecycle evicts it: a
+ * re-acquired vehicle starts with no seat.
  *
  * The vehicle's Prone Deficiency is STATE TRACKING ONLY: a namespaced
  * `companion.tormentor.prone` fact under its own keyed effect —
@@ -156,14 +159,15 @@ import {
  * not prone, one shared diagnostic. The Fuel chip renders the fuel's NAME
  * via the value-entry label map (`valueLabels`), never its ordinal.
  *
- * Deliberately out of scope this pass (later passes on the plan): the
- * clinger station, damage immunities and the mishap threshold
- * as MECHANICS (they are detail text only — the recorder never refuses
- * fire/poison/psychic and no mishap is modelled), any prone attack/movement
- * or incapacitated mechanics beyond the record, and MULTIPLE vehicles per
- * character (acquiring while a Tormentor is already present is ILLEGAL — one
- * vehicle per character, for now; a later pass lifts the already-have leg
- * when a second vehicle can exist beside the first).
+ * Deliberately out of scope this pass (later passes on the plan): damage
+ * immunities and the mishap threshold as MECHANICS (they are detail text
+ * only — the recorder never refuses fire/poison/psychic and no mishap is
+ * modelled), any prone attack/movement or incapacitated mechanics beyond the
+ * record, the clinger's Dexterity checks as MECHANICS (the notice states the
+ * rule; no check is wired or gated), and MULTIPLE vehicles per character
+ * (acquiring while a Tormentor is already present is ILLEGAL — one vehicle
+ * per character, for now; a later pass lifts the already-have leg when a
+ * second vehicle can exist beside the first).
  */
 
 const ID = 'tormentor';
@@ -204,11 +208,14 @@ const DESTROYED_EFFECT_ID = 'effect-tormentor-destroyed';
 const DESTROYED_KEY = 'tormentor-destroyed';
 
 /**
- * The vehicle's ACTION STATIONS with a seat a player can hold — the seat
- * infrastructure's ONE registry. The passenger (PR-A), harpoon (PR-B) and
- * helm (PR-C) stations are live; later passes add theirs. EVERY seat
- * condition and count iterates this list, so a new station joins the
- * exclusivity leg and the capacity derive by EXTENDING it — no other edit.
+ * The vehicle's ACTION STATIONS with a seat a player can hold — the station
+ * NAME registry. All four are live (PR-A passenger, PR-B harpoon, PR-C helm,
+ * PR-E clinger); EVERY station iterates it, exclusivity first among them
+ * (one seat per player means ANY station's seat, capacity-free ones
+ * included). Which stations CONSUME a seat (the capacity derive's term) is
+ * the spec's `consumesSeat` flag — the SEATS registry below — so the two
+ * questions stay one edit each: a station joins by entering its name here
+ * and its spec there.
  */
 const SEAT_STATIONS = ['passenger', 'harpoon', 'helm', 'clinger'] as const;
 type SeatStation = (typeof SEAT_STATIONS)[number];
@@ -220,14 +227,21 @@ const seatFact = (station: SeatStation): string => `${F}.seats.${station}`;
  * True while the player holds ANY station's seat. One seat per player
  * GLOBALLY (any station — and, future-proof, any vehicle): re-taking the seat
  * you hold is the same illegal-but-committable path as holding another
- * station's.
+ * station's. The clinger is exclusive like every station — capacity-free is
+ * not seat-free.
  */
 const seatedAnywhere = (f: FactReader): boolean =>
   SEAT_STATIONS.some((station) => f.num(seatFact(station)) > 0);
 
-/** How many seats the player holds — the capacity derive's seat term. */
+/**
+ * How many SEAT-CONSUMING seats the player holds — the capacity derive's seat
+ * term. The registry is the SEATS SPECS (the one place a station says whether
+ * its rider sits inside or clings to the outside): a capacity-free station
+ * (the clinger) contributes nothing, so the derived occupancy never counts a
+ * rider hanging off the hull.
+ */
 const activeSeatCount = (f: FactReader): number =>
-  SEAT_STATIONS.reduce((n, station) => n + f.num(seatFact(station)), 0);
+  SEATS.reduce((n, spec) => n + (spec.consumesSeat ? f.num(seatFact(spec.station)) : 0), 0);
 
 /**
  * The take-seat offer's two legality legs (the duplicate-acquire
@@ -275,11 +289,13 @@ const CHILD_KEYS = [
   HP_DAMAGE_KEY,
   HP_HEAL_KEY,
   DESTROYED_KEY,
-  // The seats, station by station as they go live (PR-A passenger, PR-B
-  // harpoon, PR-C helm; later passes append their station's key here).
+  // The seats, station by station (PR-A passenger, PR-B harpoon, PR-C helm,
+  // PR-E clinger — the clinger's key rides the lifecycle like any seat's:
+  // capacity-free is not lifecycle-free).
   'tormentor-seat-passenger',
   'tormentor-seat-harpoon',
-  'tormentor-seat-helm'
+  'tormentor-seat-helm',
+  'tormentor-seat-clinger'
 ] as const;
 
 /** The stat block acquiring bakes. HP bakes its BASE (the pool derives from
@@ -434,13 +450,20 @@ function evictChildEffects(): EffectInstance[] {
  * LITERALS per station (module-i18n-coverage scans the source for
  * `${PREFIX}.suffix` templates — a key the helper built from the station
  * string would be invisible to it); the diagnostics above are shared by every
- * station. A later station instantiates its own spec beside PASSENGER_SEAT.
+ * station. `consumesSeat` is the capacity question: a rider INSIDE consumes
+ * one of the stat block's seats (every station but the clinger), a rider on
+ * the OUTSIDE consumes none — the flag drives both the capacity derive's seat
+ * term and whether the take offer carries the free-seat legality leg at all.
+ * `detailKey` optionally links the TAKE offer to a station detail (the
+ * clinger's: the one station whose rule is worth reading before taking it).
  */
 interface SeatSpec {
   station: SeatStation;
   take: { name: string; description: string };
   leave: { name: string; description: string };
   effectName: string;
+  consumesSeat: boolean;
+  detailKey?: string;
 }
 
 /**
@@ -486,9 +509,11 @@ function evictSeatEffect(station: SeatStation): EffectInstance {
  * nothing to evict):
  *
  * - TAKE: leg (a) no seat held at ANY station (one seat per player,
- *   globally), leg (b) the free-seat rule (derived used < max). Apply
- *   re-checks both legs (the dash idiom) so a planned-anyway row carries its
- *   own diagnostics from the fold.
+ *   globally), leg (b) the free-seat rule (derived used < max) — but ONLY for
+ *   a seat-consuming station: the clinger rides the outside, so its take
+ *   carries the exclusivity leg ALONE and clinging is LEGAL at a full
+ *   vehicle. Apply re-checks the same legs (the dash idiom) so a
+ *   planned-anyway row carries its own diagnostics from the fold.
  * - LEAVE: leg (a) THIS station's seat held. Its apply is the empty same-key
  *   eviction alone — leaving a seat never touches occupancy or any other
  *   vehicle state.
@@ -505,19 +530,26 @@ function seatOffers(spec: SeatSpec): Offer[] {
           condition: (f: FactReader): boolean => !seatedAnywhere(f),
           diagnostics: [{ code: SEAT_TAKEN, severity: 'error' }]
         },
-        {
-          // The free-seat rule: no boarding while the derived capacity reads
-          // full (used counts the recorded occupancy plus held seats).
-          condition: (f: FactReader): boolean =>
-            f.num(`${F}.creatureCapacity.used`) < f.num(`${F}.creatureCapacity.max`),
-          diagnostics: [{ code: SEAT_FULL, severity: 'error' }]
-        }
+        // The free-seat rule — no boarding while the derived capacity reads
+        // full — is a SEAT-CONSUMING station's leg alone (used counts the
+        // recorded occupancy plus held consuming seats): a capacity-free
+        // station takes no seat, so there is never one to need.
+        ...(spec.consumesSeat
+          ? [
+              {
+                condition: (f: FactReader): boolean =>
+                  f.num(`${F}.creatureCapacity.used`) < f.num(`${F}.creatureCapacity.max`),
+                diagnostics: [{ code: SEAT_FULL, severity: 'error' as const }]
+              }
+            ]
+          : [])
       ],
       ui: {
         section: 'free',
         subject: SUBJECT,
         name: spec.take.name,
         description: spec.take.description,
+        ...(spec.detailKey ? { detailKey: spec.detailKey } : {}),
         intents: { EQUIP: 'vehicle' },
         actionCost: []
       },
@@ -527,7 +559,10 @@ function seatOffers(spec: SeatSpec): Offer[] {
         // one keyed replacement (the seat fact stays single; nothing stacks).
         const diagnostics: Diagnostic[] = [];
         if (seatedAnywhere(f)) diagnostics.push({ code: SEAT_TAKEN, severity: 'error' });
-        if (f.num(`${F}.creatureCapacity.used`) >= f.num(`${F}.creatureCapacity.max`))
+        if (
+          spec.consumesSeat &&
+          f.num(`${F}.creatureCapacity.used`) >= f.num(`${F}.creatureCapacity.max`)
+        )
           diagnostics.push({ code: SEAT_FULL, severity: 'error' });
         return { advertise: [seatEffect(spec)], diagnostics };
       }
@@ -572,7 +607,8 @@ const PASSENGER_SEAT: SeatSpec = {
   station: 'passenger',
   take: { name: `${T}.take-seat.name`, description: `${T}.take-seat.description` },
   leave: { name: `${T}.leave-seat.name`, description: `${T}.leave-seat.description` },
-  effectName: `${T}.seat-passenger-effect.name`
+  effectName: `${T}.seat-passenger-effect.name`,
+  consumesSeat: true
 };
 
 /**
@@ -591,7 +627,8 @@ const HARPOON_SEAT: SeatSpec = {
     name: `${T}.leave-harpoon-seat.name`,
     description: `${T}.leave-harpoon-seat.description`
   },
-  effectName: `${T}.seat-harpoon-effect.name`
+  effectName: `${T}.seat-harpoon-effect.name`,
+  consumesSeat: true
 };
 
 /**
@@ -608,8 +645,45 @@ const HELM_SEAT: SeatSpec = {
     name: `${T}.leave-helm-seat.name`,
     description: `${T}.leave-helm-seat.description`
   },
-  effectName: `${T}.seat-helm-effect.name`
+  effectName: `${T}.seat-helm-effect.name`,
+  consumesSeat: true
 };
+
+/**
+ * The CLINGER station — PR-E's seat, the infrastructure's last (the stat
+ * block's Clinger: a rider holding on to the OUTSIDE of the vehicle). The
+ * take/leave pair is the shared helper's like every station's, with the one
+ * structural difference the whole station IS: `consumesSeat: false` — the
+ * take carries no free-seat leg (clinging is legal at a full vehicle) and
+ * the capacity derive never counts the fact. Everything else is
+ * seat-as-usual: one-seat-per-player exclusivity both directions, the chip,
+ * the lifecycle eviction. The station's rule (while in combat, a clinger
+ * must make Dexterity checks to stay attached — the stat block states no DC
+ * or frequency) rides as a STANDING NOTICE while the seat is held (the
+ * notice taxonomy: a condition to know BEFORE acting) and the take links
+ * the station detail.
+ */
+const CLINGER_SEAT: SeatSpec = {
+  station: 'clinger',
+  take: {
+    name: `${T}.take-clinger-seat.name`,
+    description: `${T}.take-clinger-seat.description`
+  },
+  leave: {
+    name: `${T}.leave-clinger-seat.name`,
+    description: `${T}.leave-clinger-seat.description`
+  },
+  effectName: `${T}.seat-clinger-effect.name`,
+  consumesSeat: false,
+  detailKey: 'vehicle/tormentor-clinger'
+};
+
+/**
+ * Every live station's spec, in +ADD order — the SPEC registry: the offer
+ * list and the capacity derive's seat term iterate THIS (a station that
+ * consumes no seat says so on its spec, and the derive skips it there).
+ */
+const SEATS: readonly SeatSpec[] = [PASSENGER_SEAT, HARPOON_SEAT, HELM_SEAT, CLINGER_SEAT];
 
 /**
  * The fire offer's dice line: d20 + the derived hit bonus to hit, 2d8 + the
@@ -994,13 +1068,15 @@ const vehicleTormentor: RuleModule = {
   derive: () => [
     {
       // Occupancy used: the RECORDED occupancy (the slider's NPCs/manual
-      // base) plus every HELD SEAT (each station's effect contributes 1 — the
-      // passenger-seat pass retired the default-1 acquirer, so a freshly
-      // acquired vehicle reads 0/4 until someone takes a seat or records an
-      // occupancy). The READ clamps the SUM to 0..max — the slider's own
-      // bound is UI-only, so a stale or foreign stored value can never read
-      // past the stat block, and a planned-anyway boarding at capacity reads
-      // max, never max+1. Unacquired, the contribution reads 0.
+      // base) plus every held SEAT-CONSUMING seat (each inside station's
+      // effect contributes 1; the clinger's contributes none — a rider on
+      // the outside is no occupant — the passenger-seat pass retired the
+      // default-1 acquirer, so a freshly acquired vehicle reads 0/4 until
+      // someone takes a seat or records an occupancy). The READ clamps the
+      // SUM to 0..max — the slider's own bound is UI-only, so a stale or
+      // foreign stored value can never read past the stat block, and a
+      // planned-anyway boarding at capacity reads max, never max+1.
+      // Unacquired, the contribution reads 0.
       fact: `${F}.creatureCapacity.used`,
       value: (f) => {
         if (f.num(`${F}.active`) === 0) return 0;
@@ -1478,11 +1554,10 @@ const vehicleTormentor: RuleModule = {
         return { advertise: [evictProneEffect()], diagnostics };
       }
     },
-    // The VEHICLE's seat offers — the take/leave pair for every live station
-    // (see seatOffers/PASSENGER_SEAT/HARPOON_SEAT/HELM_SEAT above).
-    ...seatOffers(PASSENGER_SEAT),
-    ...seatOffers(HARPOON_SEAT),
-    ...seatOffers(HELM_SEAT),
+    // The VEHICLE's seat offers — the take/leave pair for every live station,
+    // straight off the SEATS registry in +ADD order (see seatOffers and the
+    // specs above).
+    ...SEATS.flatMap((spec) => seatOffers(spec)),
     {
       // The HARPOON FLINGER's attack — the station's whole point, and the one
       // seat offer that is a plan-row ACTION. `when` is the acquire AND the
@@ -1756,6 +1831,14 @@ const vehicleTormentor: RuleModule = {
   // the way out is people, not repairs), gated on the destroyed fact alone —
   // the wreck never outlives the acquire either. Distinct key from the prone
   // notice, so a prone wreck (somehow) carries both.
+  //
+  // The CLINGER seat carries the station's one standing notice, gated on the
+  // clinger seat fact alone (PR-E): while the player hangs off the outside,
+  // they must know BEFORE acting that combat demands Dexterity checks to stay
+  // attached — the notice taxonomy's standing condition, stated in our own
+  // words with NO invented DC or frequency (the stat block gives none; the
+  // GM adjudicates). Like the seat fact it rides, the notice never outlives
+  // the leave offer's eviction or the acquire lifecycle.
   annotate: (f: FactReader): Annotation[] => {
     // No recorders' share: the below-threshold bounce is a per-row notice
     // diagnostic (threshold model v2 — informational feedback, never a panel
@@ -1774,6 +1857,13 @@ const vehicleTormentor: RuleModule = {
         targets: ['notice'],
         source: `${T}.effect.name`,
         body: `${T}.destroyed-notice.body`
+      });
+    if (f.num(seatFact('clinger')) > 0)
+      out.push({
+        key: `${T}.clinger-notice`,
+        targets: ['notice'],
+        source: `${T}.effect.name`,
+        body: `${T}.clinger-notice.body`
       });
     return out;
   }

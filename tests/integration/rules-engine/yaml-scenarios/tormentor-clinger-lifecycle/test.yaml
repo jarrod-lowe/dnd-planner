@@ -1,0 +1,71 @@
+name: 'Tormentor - Clinger Lifecycle'
+description: >-
+  The clinger seat rides the acquire lifecycle like every other vehicle
+  record: the seat key joins the acquire effect's dependents, and the
+  acquire/abandon applies advertise the empty same-key eviction beside their
+  replacement — a re-acquired vehicle starts with NO clinger and NO notice,
+  used 0/4 until someone sits or clings.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-clinger-seat
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-clinger
+        facts:
+          companion.tormentor.seats.clinger: 1
+        annotations:
+          exists:
+            - rule.tormentor.clinger-notice
+  # Abandon evicts the seat with everything else: the clinger fact, the
+  # notice and the offers' structural gate all go.
+  - addOffer:
+      id: abandon-tormentor
+      assert:
+        facts:
+          companion.tormentor.active: 0
+          companion.tormentor.seats.clinger: 0
+        annotations:
+          notExists:
+            - rule.tormentor.clinger-notice
+        offers:
+          notExists:
+            - take-tormentor-clinger-seat
+            - leave-tormentor-clinger-seat
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-clinger
+        facts:
+          companion.tormentor.seats.clinger: 0
+  # Re-acquire starts FRESH: no clinger stands, no notice, used reads 0/4,
+  # and the take offer is legal again.
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        facts:
+          companion.tormentor.seats.clinger: 0
+          companion.tormentor.creatureCapacity.used: 0
+        annotations:
+          notExists:
+            - rule.tormentor.clinger-notice
+        offers:
+          legal:
+            - take-tormentor-clinger-seat
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+          notExists:
+            - effect-tormentor-seat-clinger
+        facts:
+          companion.tormentor.seats.clinger: 0

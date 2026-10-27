@@ -76,6 +76,8 @@ describe('acquire offer ui', () => {
       'leave-tormentor-harpoon-seat',
       'take-tormentor-helm-seat',
       'leave-tormentor-helm-seat',
+      'take-tormentor-clinger-seat',
+      'leave-tormentor-clinger-seat',
       'fire-tormentor-harpoon',
       'drive-tormentor',
       'dash-tormentor',
@@ -300,7 +302,8 @@ describe('acquire effect', () => {
       'tormentor-destroyed',
       'tormentor-seat-passenger',
       'tormentor-seat-harpoon',
-      'tormentor-seat-helm'
+      'tormentor-seat-helm',
+      'tormentor-seat-clinger'
     ]);
   });
 
@@ -3723,5 +3726,304 @@ describe('acquire/abandon i18n (tlh is the canary)', () => {
 
   it('the subject label is de-seated: plain "Tormentor", no parenthetical', () => {
     expect((en.play.companion as Record<string, string>).tormentor).toBe('🛞 Tormentor');
+  });
+});
+
+/**
+ * PR-E — the Clinger station: the seat infrastructure's FOURTH and FINAL
+ * seat. A clinger holds on to the OUTSIDE of the vehicle, so the seat is
+ * CAPACITY-FREE: the spec carries `consumesSeat: false`, the take offer
+ * drops the free-seat legality leg (clinging is LEGAL at used 4/4 — the
+ * pinned asymmetry against the passenger take), the derived capacity does
+ * not count the fact, and the exclusivity leg keeps reading every station
+ * (a clinger is one-seat-exclusive like anyone). While the seat is held, a
+ * standing NOTICE carries the cling-on rule (the notice taxonomy: a
+ * condition the player must know BEFORE acting — while in combat, a clinger
+ * must make Dexterity checks to stay attached; own wording, no invented DC
+ * or frequency). The key joins CHILD_KEYS, so the acquire lifecycle evicts
+ * it like every record.
+ */
+
+/** The clinger-seat effect, through the real plan fold (acquired, then taken). */
+function clingerSeatEffect(): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-clinger-seat' }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-seat-clinger'));
+  expect(advertised, 'taking the seat applies exactly one named effect').toHaveLength(1);
+  return advertised[0]!;
+}
+
+/** A committed acquire with the clinger seat held (stored state for later folds). */
+function seatedAtClinger(): EffectInstance[] {
+  return [acquireEffect(), clingerSeatEffect()];
+}
+
+describe('take-tormentor-clinger-seat offer', () => {
+  it('is a vehicle free-section EQUIP offer while acquired, station-specific keys, linking the detail', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'take-tormentor-clinger-seat');
+    expect(offer, 'the vehicle +ADD carries the take-clinger offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.take-clinger-seat.name`);
+    expect(ui.description).toBe(`${T}.take-clinger-seat.description`);
+    expect(ui.actionCost).toEqual([]);
+    // Seat offers file with the acquire/abandon EQUIP 'vehicle' family.
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
+    // The station's one explanation hangs off the take (the clinger detail:
+    // riding the outside, capacity-free, the Dex checks).
+    expect(ui.detailKey).toBe('vehicle/tormentor-clinger');
+    // Acquired and unseated at 0/4: legal, no diagnostics.
+    expect(offer!.legal).toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+
+  it('rides the shared seat helper MINUS the capacity leg: ONE legality leg, the station-generic exclusivity', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'take-tormentor-clinger-seat'
+    );
+    expect(raw, 'the take-clinger offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    // The clinger takes NO seat, so there is NO free-seat leg to fail — the
+    // take carries the one-seat-per-player leg ALONE, with the shared
+    // station-generic diagnostic key (clingers are exclusive like everyone).
+    expect(raw!.legalWhen).toHaveLength(1);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ clinger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ helm: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('the pinned asymmetry: LEGAL at a FULL vehicle (used 4/4) where the passenger take is not', () => {
+    // Recorded occupancy 4 of 4, no seat held. The clinger rides the
+    // OUTSIDE — the free-seat rule does not apply to it; the passenger take
+    // keeps its full diagnostic at the same facts.
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), occupancyEffect(4)]
+    });
+    const clinger = out.availableRules.find((r) => r.rule.id === 'take-tormentor-clinger-seat');
+    const passenger = out.availableRules.find((r) => r.rule.id === 'take-tormentor-passenger-seat');
+    expect(clinger!.legal, 'clinging takes no seat — legal at capacity').toBe(true);
+    expect(clinger!.diagnostics).toEqual([]);
+    expect(passenger!.legal, 'boarding still needs a free seat').toBe(false);
+    expect(passenger!.diagnostics).toEqual([{ code: `${T}.take-seat.full`, severity: 'error' }]);
+  });
+
+  it('apply advertises ONE permanent keyed effect writing exactly the station fact, with the chip', () => {
+    const e = clingerSeatEffect();
+    expect(e.id).toContain('effect-tormentor-seat-clinger');
+    expect(e.key).toBe('tormentor-seat-clinger');
+    // EXACT equality: the state writes the namespaced seat fact and NOTHING
+    // else — the same contract every station's seat carries.
+    expect(e.state).toEqual({ [`${F}.seats.clinger`]: 1 });
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    // The at-a-glance "where am I seated" chip, passenger-shaped.
+    expect(e.display).toEqual({
+      name: `${T}.seat-clinger-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('a planned-anyway take while seated still applies, carrying the exclusivity diagnostic alone', () => {
+    // The player-override path: holding the passenger seat, the clinger take
+    // is illegal-but-committable; the row executes as the one keyed
+    // replacement carrying the SHARED already-seated diagnostic — never a
+    // capacity diagnostic (there is no capacity leg to re-check).
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect(), occupancyEffect(4)],
+      planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-clinger-seat' }]
+    });
+    expect(out.facts[`${F}.seats.clinger`]).toBe(1);
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+  });
+});
+
+describe('the capacity derive excludes the clinger (capacity-free seat)', () => {
+  it('a held clinger alone reads used 0 — committed AND merely planned', () => {
+    const committed = evaluate({ modules: [module()], committed: seatedAtClinger() });
+    expect(committed.facts[`${F}.seats.clinger`]).toBe(1);
+    expect(committed.facts[`${F}.creatureCapacity.used`]).toBe(0);
+    const planned = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-clinger-seat' }]
+    });
+    expect(planned.facts[`${F}.seats.clinger`]).toBe(1);
+    expect(planned.facts[`${F}.creatureCapacity.used`]).toBe(0);
+  });
+
+  it('the clinger adds NO occupant beside the recorded occupancy', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [...seatedAtClinger(), occupancyEffect(3)]
+    });
+    // 3 recorded NPCs + a clinger hanging off the outside = 3 of 4, not 4.
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(3);
+  });
+
+  it('a consuming station still counts beside the clinger (the override path, both seats held)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-clinger-seat' }]
+    });
+    // Passenger 1 + clinger 0: the clinger never lifts the count.
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+  });
+});
+
+describe('leave-tormentor-clinger-seat offer', () => {
+  it("is the passenger mirror: the not-seated leg reads THIS station's seat alone", () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'leave-tormentor-clinger-seat'
+    );
+    expect(raw, 'the leave-clinger offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.legalWhen).toHaveLength(1);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ clinger: 1 }))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(false);
+    // Another station's seat does not satisfy the leg — each leave clears its own.
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.leave-seat.not_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('apply advertises the EMPTY same-key eviction — and the notice goes with the seat', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: seatedAtClinger(),
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-clinger-seat' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-clinger'));
+    expect(evict, 'leave advertises the seat eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-seat-clinger');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    // The seat fact is GONE the moment the row is merely planned
+    // (newest-wins), used never moved, and the clinger notice is withdrawn.
+    expect(out.facts[`${F}.seats.clinger`]).toBeUndefined();
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+    expect(out.annotations.some((a) => a.key === `${T}.clinger-notice`)).toBe(false);
+  });
+
+  it('a planned-anyway leave while NOT seated still executes as a no-op eviction, with its diagnostic', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-clinger-seat' }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.leave-seat.not_seated`, severity: 'error' }
+    ]);
+    expect(out.effects.some((e) => e.id.endsWith('evict-tormentor-seat-clinger'))).toBe(true);
+  });
+});
+
+describe('the clinger seat rides the acquire lifecycle', () => {
+  it('a re-acquire and an abandon both advertise the empty same-key eviction', () => {
+    for (const ruleId of ['acquire-tormentor', 'abandon-tormentor'] as const) {
+      const out = evaluate({
+        modules: [module()],
+        committed: seatedAtClinger(),
+        planned: [{ instanceId: 'i0', ruleId }]
+      });
+      const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-clinger'));
+      expect(evict, `${ruleId} advertises the clinger-seat eviction`).toBeDefined();
+      expect(evict!.key).toBe('tormentor-seat-clinger');
+      expect(evict!.state).toBeUndefined();
+      expect(out.facts[`${F}.seats.clinger`]).toBeUndefined();
+    }
+  });
+});
+
+describe('clinger notice (the standing Dex-check rule)', () => {
+  it('stands only while the clinger seat is held, with the vehicle as its source', () => {
+    // Acquired but not clinging: NO notice — nothing to know before acting.
+    const bare = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(
+      bare.annotations.some((a) => a.key === `${T}.clinger-notice`),
+      'no notice while acquired and not clinging'
+    ).toBe(false);
+    // Clinging (committed): the notice stands (the prone/destroyed annotate
+    // pattern), sourced on the vehicle.
+    const clinging = evaluate({ modules: [module()], committed: seatedAtClinger() });
+    const notice = clinging.annotations.find((a) => a.key === `${T}.clinger-notice`);
+    expect(notice, 'a notice stands while the clinger seat is held').toBeDefined();
+    expect(notice!.targets).toEqual(['notice']);
+    expect(notice!.source).toBe(`${T}.effect.name`);
+    expect(notice!.body).toBe(`${T}.clinger-notice.body`);
+    // Merely PLANNED: the seat fact is live the moment the row is planned,
+    // so the notice is too.
+    const planned = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-clinger-seat' }]
+    });
+    expect(planned.annotations.some((a) => a.key === `${T}.clinger-notice`)).toBe(true);
+  });
+
+  it('tracks the seat: leaving withdraws it, and another station never carries it', () => {
+    // Leaving (the eviction merely PLANNED — newest-wins clears the fact
+    // now): the seat is gone, so its notice goes with it…
+    const left = evaluate({
+      modules: [module()],
+      committed: seatedAtClinger(),
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-clinger-seat' }]
+    });
+    expect(left.annotations.some((a) => a.key === `${T}.clinger-notice`)).toBe(false);
+    // …a PASSENGER seat does not carry the clinger's notice…
+    const seated = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()]
+    });
+    expect(seated.annotations.some((a) => a.key === `${T}.clinger-notice`)).toBe(false);
+    // …and the unacquired vehicle carries no notice at all (the seat never
+    // outlives the acquire).
+    const unacquired = evaluate({ modules: [module()] });
+    expect(unacquired.annotations.some((a) => a.key === `${T}.clinger-notice`)).toBe(false);
+  });
+
+  it('carries the notice label and body in BOTH locales (tlh is the canary)', () => {
+    const strings: Record<string, string | undefined> = {
+      'en notice label': en.rule.tormentor['clinger-notice'],
+      'en-x-tlh notice label': tlh.rule.tormentor['clinger-notice'],
+      'en notice body': en.rule.tormentor['clinger-notice.body'],
+      'en-x-tlh notice body': tlh.rule.tormentor['clinger-notice.body']
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
+describe('clinger seat i18n (tlh is the canary)', () => {
+  it('the take/leave offer names/descriptions and the chip name exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en take name': en.rule.tormentor['take-clinger-seat']?.name,
+      'en-x-tlh take name': tlh.rule.tormentor['take-clinger-seat']?.name,
+      'en take description': en.rule.tormentor['take-clinger-seat']?.description,
+      'en-x-tlh take description': tlh.rule.tormentor['take-clinger-seat']?.description,
+      'en leave name': en.rule.tormentor['leave-clinger-seat']?.name,
+      'en-x-tlh leave name': tlh.rule.tormentor['leave-clinger-seat']?.name,
+      'en leave description': en.rule.tormentor['leave-clinger-seat']?.description,
+      'en-x-tlh leave description': tlh.rule.tormentor['leave-clinger-seat']?.description,
+      'en chip name': en.rule.tormentor['seat-clinger-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['seat-clinger-effect']?.name
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
   });
 });

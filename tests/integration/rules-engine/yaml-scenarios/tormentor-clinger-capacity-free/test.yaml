@@ -1,0 +1,86 @@
+name: 'Tormentor - Clinger Takes No Seat'
+description: >-
+  The clinger asymmetry, pinned: a clinger rides the OUTSIDE of the vehicle
+  and consumes NO seat, so the take-clinger offer carries NO free-seat
+  legality leg — taking it is LEGAL even while the derived creature capacity
+  reads full (used 4 of 4), and committing it moves nothing. The passenger
+  take offer at the same occupancy keeps the free-seat leg: illegal-but-
+  committable with the full diagnostic, the planned-anyway row clamping used
+  at the max.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # NPCs fill the vehicle: recorded occupancy 4 of 4 (the slider's manual
+  # base; no seats held).
+  - addOffer:
+      id: set-tormentor-occupancy
+      selections:
+        occupancy: 4
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.used: 4
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.used: 4
+  # The asymmetry: at used 4/4 the CLINGER take is LEGAL (no capacity leg —
+  # a clinger does not consume a seat)…
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - take-tormentor-clinger-seat
+          illegal:
+            - take-tormentor-passenger-seat
+  # …and the passenger take keeps the full diagnostic beside it: the
+  # planned-anyway row lands the seat fact, the derive clamps used at the
+  # max (4, never 5).
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 4
+        planErrors:
+          - id: take-tormentor-passenger-seat
+            index: 0
+            errors:
+              - rule.tormentor.take-seat.full
+  # Un-plan the passenger row (its fact goes with it), so the clinger take
+  # stands alone at the full occupancy.
+  - removeFromPlan:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 0
+          companion.tormentor.creatureCapacity.used: 4
+  # The clinger beside the full vehicle: the fact lands LEGAL (no errors on
+  # the row) and used does not move (4, the recorded occupancy — the clinger
+  # adds no occupant).
+  - addOffer:
+      id: take-tormentor-clinger-seat
+      assert:
+        planErrors:
+          - id: take-tormentor-clinger-seat
+            index: 0
+            errors: []
+        facts:
+          companion.tormentor.seats.clinger: 1
+          companion.tormentor.creatureCapacity.used: 4
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-clinger
+        facts:
+          companion.tormentor.seats.clinger: 1
+          companion.tormentor.creatureCapacity.used: 4
+  # Leaving the clinger leaves the full capacity exactly where it was.
+  - addOffer:
+      id: leave-tormentor-clinger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.clinger: 0
+          companion.tormentor.creatureCapacity.used: 4
