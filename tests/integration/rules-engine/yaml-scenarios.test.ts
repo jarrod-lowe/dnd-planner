@@ -354,6 +354,11 @@ const EXPECTED_RUNNABLE = [
   'tormentor-clinger-capacity-free',
   'tormentor-clinger-notice',
   'tormentor-clinger-lifecycle',
+  // …the wrecked-vehicle pass: while the destroyed wreck stands, the vehicle's
+  // ACTIVITY offers (fire/drive/dash/juke/fuel/boost) and its REPAIR recorder
+  // are illegal-but-committable on ONE shared wrecked leg — while damage
+  // recording and seat changes stay legal (bookkeeping on a wreck)
+  'tormentor-wrecked-legality',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

@@ -610,6 +610,7 @@
       },
       "notice": "Prone Deficiency",
       "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright.",
+      "wrecked": "The Tormentor is wrecked",
       "destroyed-notice": "Tormentor Destroyed",
       "destroyed-notice.body": "The Tormentor is destroyed — a burning wreck. It can no longer act; abandon it when the crew scrambles.",
       "clinger-notice": "Clinging On",

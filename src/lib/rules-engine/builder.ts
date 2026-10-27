@@ -330,6 +330,18 @@ export interface HpRecorderSpec {
    * generic: omit it (the player, the steed) and no note can ever fire.
    */
   mishap?: HpRecorderMishap;
+  /**
+   * Extra legality legs the HEAL direction carries — the caller's own
+   * condition and diagnostics, exactly an offer's `legalWhen` entry (e.g. a
+   * wrecked vehicle cannot be repaired). Appended to the heal offer's
+   * `legalWhen` and re-checked in its apply (the dash idiom), so a
+   * planned-anyway row still records — the missing-HP cap untouched — while
+   * carrying its own diagnostics. OPT-IN and heal-only: the damage direction
+   * never sees these legs (damage is bookkeeping on a subject in any state),
+   * and a subject that configures none (the player, the steed) keeps a heal
+   * offer with no legality at all, exactly as before.
+   */
+  healLegality?: LegalWhen[];
   /** What a pool-emptying blow does; omit when the subject has no lethal rule (the player). */
   lethal?: HpRecorderLethal;
   /**
@@ -513,7 +525,13 @@ export function hpRecorders(spec: HpRecorderSpec): Offer[] {
     // The heal caps at the net missing HP (recorded damage AND any manual
     // modifier fold into it) — the surplus is lost, never banked.
     const missing = Math.max(0, -f.num(facts.modifierCurrent));
-    return { advertise: [healRecord(f, Math.min(amount, missing))] };
+    // The opt-in heal legs, re-checked (the dash idiom): a planned-anyway row
+    // still records — the cap untouched — while carrying its own diagnostics
+    // from the fold.
+    const diagnostics: Diagnostic[] = [];
+    for (const leg of spec.healLegality ?? [])
+      if (!leg.condition(f)) diagnostics.push(...leg.diagnostics);
+    return { advertise: [healRecord(f, Math.min(amount, missing))], diagnostics };
   };
 
   const ui = (d: HpRecorderDirection, withThresholdControl: boolean): OfferUI => ({
@@ -542,6 +560,9 @@ export function hpRecorders(spec: HpRecorderSpec): Offer[] {
     {
       id: `${spec.idStem}-heal`,
       ...(spec.when ? { when: spec.when } : {}),
+      // The caller's opt-in heal legs, when any are configured (the player's
+      // and the steed's recorders configure none and carry no legality).
+      ...(spec.healLegality ? { legalWhen: spec.healLegality } : {}),
       ui: ui(spec.heal, false),
       vars: amountVar,
       apply: applyHeal

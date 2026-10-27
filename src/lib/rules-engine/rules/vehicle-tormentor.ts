@@ -7,6 +7,7 @@ import {
   type Diagnostic,
   type EffectInstance,
   type FactReader,
+  type LegalWhen,
   type Offer,
   type RuleModule,
   type SubjectPanelDeclaration
@@ -102,6 +103,14 @@ import {
  * wreck stays inspectable; the destroyed NOTICE says what that means). The HP
  * records and the wreck join the acquire lifecycle like
  * every other record.
+ *
+ * While the wreck stands, the vehicle's ACTIVITY offers and its REPAIR
+ * recorder are ILLEGAL (the WRECKED legality leg, below — the builder's
+ * `notLockedLegal` shape): a destroyed war machine cannot act, and the way
+ * back is people, not repairs. One shared diagnostic, appended beside every
+ * offer's existing legs, illegal-but-COMMITTABLE throughout — while damage
+ * recording and the seat offers deliberately stay LEGAL on a wreck
+ * (bookkeeping, and sitting on one is somebody's choice).
  *
  * The stat block's "AC 21 (19 while motionless)" is a MODE the player
  * records (v2 — v1's annotation state chip was abandoned; see the plan): the
@@ -284,6 +293,27 @@ const NOT_PRONE = `${T}.flip-upright.not_prone`;
  * already present is ILLEGAL, never hidden.
  */
 const ALREADY_HAVE = `${T}.acquire.already_have`;
+
+/**
+ * The WRECKED legality leg — the one shared gate every vehicle ACTIVITY and
+ * the REPAIR recorder carry while the destroyed wreck stands (the builder's
+ * `notLockedLegal` shape): a destroyed war machine cannot act, and the way
+ * back is people, not repairs. ONE own diagnostic for every offer that
+ * carries it, appended LAST beside each offer's existing legs (all of which
+ * keep composing), illegal-but-COMMITTABLE throughout (the engine's
+ * illegal-but-visible contract): the offers stay visible and applicable, and
+ * a planned-anyway row still executes carrying the diagnostic — the
+ * projection showing what the rules would not have allowed. The BOUNDARY is
+ * deliberate: damage recording (the blow happened — bookkeeping on a wreck)
+ * and the seat offers (sitting on a wreck is somebody's choice) carry NO
+ * wrecked leg. Gated offers: fire-harpoon, drive, dash, juke, fuel, boost
+ * and the heal recorder (via the factory's opt-in `healLegality`).
+ */
+const WRECKED = `${T}.wrecked`;
+const notWrecked: LegalWhen = {
+  condition: (f: FactReader): boolean => f.num(`${F}.destroyed`) === 0,
+  diagnostics: [{ code: WRECKED, severity: 'error' }]
+};
 
 /**
  * Every vehicle record that must die with the acquire. The acquire effect declares
@@ -1041,7 +1071,12 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
  * notice, never blocking the record; the amount and threshold travel as
  * params, so a re-baked stat block moves the numbers with no other edit).
  * The repair offer keeps the minimal surface (no detailKey, no threshold
- * control — repairs never bounce).
+ * control — repairs never bounce) but carries the ONE shared WRECKED leg
+ * (the factory's opt-in healLegality): a destroyed war machine cannot be
+ * patched back to life, so repairs are illegal-but-COMMITTABLE while the
+ * wreck stands — the row still records (capped at the missing HP) carrying
+ * the wrecked diagnostic. The DAMAGE direction carries no legs: a wrecked
+ * vehicle still takes the blows that land on it.
  */
 const HP_RECORDERS = hpRecorders({
   idStem: 'record-tormentor',
@@ -1074,6 +1109,8 @@ const HP_RECORDERS = hpRecorders({
   bounce: {
     noteKey: BELOW_THRESHOLD
   },
+  // The one shared WRECKED leg, on the HEAL direction alone (see above).
+  healLegality: [notWrecked],
   mishap: {
     thresholdFact: `${F}.mishapThreshold`,
     noteKey: MISHAP_THRESHOLD
@@ -1384,7 +1421,8 @@ const vehicleTormentor: RuleModule = {
         {
           condition: (f: FactReader): boolean => f.num('bonusActions.remaining') > 0,
           diagnostics: [{ code: FUEL_NO_BONUS, severity: 'error' }]
-        }
+        },
+        notWrecked
       ],
       ui: {
         section: 'free',
@@ -1400,10 +1438,11 @@ const vehicleTormentor: RuleModule = {
       apply: (f: FactReader, selections): ActionResult => {
         // Re-checked legality (the dash idiom) so a planned-anyway row carries
         // its own diagnostic from the fold — the record still lands as the
-        // one keyed replacement.
+        // one keyed replacement. Both legs, in leg order.
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)
           diagnostics.push({ code: FUEL_NO_BONUS, severity: 'error' });
+        if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
         return {
           advertise: [
             // The generic per-turn BONUS spend (the dash/divine-smite idiom —
@@ -1447,7 +1486,8 @@ const vehicleTormentor: RuleModule = {
           // The stat block's rule: no boosting without a soul coin in the burner.
           condition: (f: FactReader): boolean => f.num(`${F}.fuel.current`) === 1,
           diagnostics: [{ code: BOOST_WITHOUT_SOUL_COIN, severity: 'error' }]
-        }
+        },
+        notWrecked
       ],
       ui: {
         section: 'free',
@@ -1461,14 +1501,15 @@ const vehicleTormentor: RuleModule = {
       },
       vars: { boost: { capture: true, default: { fact: `${F}.boost.current` } } },
       apply: (f: FactReader, selections): ActionResult => {
-        // Re-checked legality (the dash idiom): both legs, so a planned-anyway
-        // row carries exactly its own diagnostics while the record still
-        // lands as the one keyed replacement.
+        // Re-checked legality (the dash idiom): all three legs, so a
+        // planned-anyway row carries exactly its own diagnostics while the
+        // record still lands as the one keyed replacement.
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)
           diagnostics.push({ code: BOOST_NO_BONUS, severity: 'error' });
         if (f.num(`${F}.fuel.current`) !== 1)
           diagnostics.push({ code: BOOST_WITHOUT_SOUL_COIN, severity: 'error' });
+        if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
         return {
           advertise: [
             { id: 'cost', state: { 'bonusActions.spent': 1 }, expiry: { kind: 'endOfTurn' } },
@@ -1609,7 +1650,8 @@ const vehicleTormentor: RuleModule = {
         {
           condition: (f: FactReader): boolean => f.num('actions.remaining') > 0,
           diagnostics: [{ code: NO_ACTION, severity: 'error' }]
-        }
+        },
+        notWrecked
       ],
       ui: {
         section: 'action-attack',
@@ -1628,14 +1670,21 @@ const vehicleTormentor: RuleModule = {
         primaryControl: HARPOON_CONTROL
       },
       vars: HARPOON_VARS,
-      apply: (f: FactReader): ActionResult => ({
+      apply: (f: FactReader): ActionResult => {
         // The generic action spend (the simple-actions actionOffer shape): ONE
         // keyless endOfTurn effect writing the action and nothing else, with
         // the legality re-checked so a planned-anyway row carries its own
-        // diagnostic from the fold (the row still fires).
-        advertise: [{ id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
-        diagnostics: f.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }]
-      })
+        // diagnostic from the fold (the row still fires). Both legs, in leg
+        // order.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: NO_ACTION, severity: 'error' });
+        if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
+        return {
+          advertise: [{ id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
+          diagnostics
+        };
+      }
     },
     {
       // The HELM's Drive — the vehicle's MOVEMENT offer, the steed's move rows
@@ -1666,7 +1715,8 @@ const vehicleTormentor: RuleModule = {
         {
           condition: (f: FactReader): boolean => f.num(`${F}.movement.remaining`) >= 5,
           diagnostics: [{ code: DRIVE_OUT_OF_MOVEMENT, severity: 'error' }]
-        }
+        },
+        notWrecked
       ],
       ui: {
         section: 'move',
@@ -1685,6 +1735,7 @@ const vehicleTormentor: RuleModule = {
           diagnostics.push({ code: DRIVE_NO_ACTION, severity: 'error' });
         if (f.num(`${F}.movement.remaining`) < driveDistance(f, selections))
           diagnostics.push({ code: DRIVE_OUT_OF_MOVEMENT, severity: 'error' });
+        if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
         return {
           advertise: [
             {
@@ -1722,7 +1773,8 @@ const vehicleTormentor: RuleModule = {
         {
           condition: (f: FactReader): boolean => f.num('bonusActions.remaining') > 0,
           diagnostics: [{ code: DASH_NO_BONUS, severity: 'error' }]
-        }
+        },
+        notWrecked
       ],
       ui: {
         section: 'bonus-action',
@@ -1743,6 +1795,7 @@ const vehicleTormentor: RuleModule = {
         const diagnostics: Diagnostic[] = [];
         if (f.num('bonusActions.remaining') <= 0)
           diagnostics.push({ code: DASH_NO_BONUS, severity: 'error' });
+        if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
         diagnostics.push({
           code: DASH_RISK,
           severity: 'notice',
@@ -1786,7 +1839,8 @@ const vehicleTormentor: RuleModule = {
           condition: (f: FactReader): boolean =>
             f.num(`${F}.speed.effective`) > 0 && f.num(`${F}.prone`) === 0,
           diagnostics: [{ code: JUKE_UNABLE_TO_MOVE, severity: 'error' }]
-        }
+        },
+        notWrecked
       ],
       ui: {
         section: 'reaction',
@@ -1808,6 +1862,7 @@ const vehicleTormentor: RuleModule = {
           diagnostics.push({ code: JUKE_NO_REACTION, severity: 'error' });
         if (f.num(`${F}.speed.effective`) <= 0 || f.num(`${F}.prone`) > 0)
           diagnostics.push({ code: JUKE_UNABLE_TO_MOVE, severity: 'error' });
+        if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
         return {
           advertise: [
             { id: 'cost', state: { 'reactions.spent': 1 }, expiry: { kind: 'endOfTurn' } }
