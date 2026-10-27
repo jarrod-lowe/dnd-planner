@@ -41,7 +41,9 @@ steps:
               subject: tormentor
               detailKey: vehicle/tormentor-damage
               actionCost: []
-  # Record 25 damage: current drops the moment the row is planned.
+  # Record 25 damage: current drops the moment the row is planned. 25 meets
+  # the baked mishap threshold (20), so the row also carries the per-row
+  # mishap note (the mishap-threshold scenario pins the note itself).
   - addOffer:
       id: record-tormentor-damage
       selections:
@@ -54,7 +56,8 @@ steps:
         planErrors:
           - id: record-tormentor-damage
             index: 0
-            errors: []
+            errors:
+              - rule.tormentor.record-damage.mishap_threshold
   - endTurn:
       assert:
         effects:

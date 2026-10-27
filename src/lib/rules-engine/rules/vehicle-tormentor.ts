@@ -79,7 +79,8 @@ import {
  * a vehicle condition groups with PC conditions in the vehicle +ADD.
  *
  * The vehicle is DAMAGEABLE (the steed HP pool, adapted): acquiring bakes
- * `hp.base` 60 and `damageThreshold` 10 as DATA, and the module derives
+ * `hp.base` 60 and `damageThreshold` 10 as DATA (beside them the
+ * `mishapThreshold` 20 — see the recorder below), and the module derives
  * max/current/modifier (`currentHp` from the builder — a fixed stat block, so
  * no max-modifier and no manual setters; the top-bar HP chip becomes a
  * usedMax pool). The vehicle's +ADD carries damage and repair recorders (the
@@ -160,11 +161,11 @@ import {
  * via the value-entry label map (`valueLabels`), never its ordinal.
  *
  * Deliberately out of scope this pass (later passes on the plan): damage
- * immunities and the mishap threshold as MECHANICS (they are detail text
- * only — the recorder never refuses fire/poison/psychic and no mishap is
- * modelled), any prone attack/movement or incapacitated mechanics beyond the
- * record, the clinger's Dexterity checks as MECHANICS (the notice states the
- * rule; no check is wired or gated), and MULTIPLE vehicles per character
+ * immunities as MECHANICS (detail text only — the recorder never refuses
+ * fire/poison/psychic; the mishap threshold IS wired, as the recorder's
+ * per-row note), any prone attack/movement or incapacitated mechanics beyond
+ * the record, the clinger's Dexterity checks as MECHANICS (the notice states
+ * the rule; no check is wired or gated), and MULTIPLE vehicles per character
  * (acquiring while a Tormentor is already present is ILLEGAL — one vehicle
  * per character, for now; a later pass lifts the already-have leg when a
  * second vehicle can exist beside the first).
@@ -262,6 +263,17 @@ const NOT_SEATED = `${T}.leave-seat.not_seated`;
  */
 const BELOW_THRESHOLD = `${T}.record-damage.below_threshold`;
 
+/**
+ * The damage recorder's at-mishap-threshold key — the INFORMATIONAL note a
+ * single-source recording that meets the baked mishap threshold (20) carries
+ * on its own planned row: the high-damage mirror of the bounce note, same
+ * slot (a post-hoc consequence on the action row, never a standing notice),
+ * same severity ('notice' rides the row and never blocks the record — the
+ * note is not the bounce gate). The amount and the threshold travel as
+ * diagnostic params for the locale's {{amount}}/{{threshold}} slots.
+ */
+const MISHAP_THRESHOLD = `${T}.record-damage.mishap_threshold`;
+
 /** Each prone offer's single legality leg (the get-up not_prone idiom). */
 const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
 const NOT_PRONE = `${T}.flip-upright.not_prone`;
@@ -309,6 +321,7 @@ const ACQUIRE_STATE: Record<string, number> = {
   [`${F}.active`]: 1,
   [`${F}.hp.base`]: 60,
   [`${F}.damageThreshold`]: 10,
+  [`${F}.mishapThreshold`]: 20,
   [`${F}.cargo`]: 500,
   [`${F}.str`]: 16,
   [`${F}.dex`]: 14,
@@ -1020,8 +1033,15 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
  * machine). The damage offer carries the damage DETAIL — threshold,
  * immunities and the mishap trigger live there, not on standing notices
  * (nothing else behaves differently, so there is nothing to warn about before
- * acting); the repair offer keeps the minimal surface (no detailKey, no
- * threshold control — repairs never bounce).
+ * acting) — while the MISHAP TRIGGER also rides the recording ROW itself:
+ * acquiring bakes `mishapThreshold` 20, and the factory's OPT-IN mishap
+ * option names the fact, so a single-source recording that meets it carries
+ * ONE informational note on that row alone (the bounce-note slot's
+ * high-damage mirror — post-hoc feedback on the action row, never a standing
+ * notice, never blocking the record; the amount and threshold travel as
+ * params, so a re-baked stat block moves the numbers with no other edit).
+ * The repair offer keeps the minimal surface (no detailKey, no threshold
+ * control — repairs never bounce).
  */
 const HP_RECORDERS = hpRecorders({
   idStem: 'record-tormentor',
@@ -1053,6 +1073,10 @@ const HP_RECORDERS = hpRecorders({
   chipSection: 'mount',
   bounce: {
     noteKey: BELOW_THRESHOLD
+  },
+  mishap: {
+    thresholdFact: `${F}.mishapThreshold`,
+    noteKey: MISHAP_THRESHOLD
   },
   lethal: { effects: () => [tormentorDestroyedEffect()], keepRecord: true }
 });

@@ -494,7 +494,8 @@
       "record-damage": {
         "name": "Record Vehicle Damage",
         "description": "Record damage dealt to the Tormentor",
-        "below_threshold": "Below the damage threshold (10) — the Tormentor takes no damage"
+        "below_threshold": "Below the damage threshold (10) — the Tormentor takes no damage",
+        "mishap_threshold": "A single source dealt {{amount}} damage, meeting the mishap threshold ({{threshold}}) — consult the mishap table for what breaks loose"
       },
       "record-heal": {
         "name": "Record Vehicle Repairs",

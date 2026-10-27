@@ -494,7 +494,8 @@
       "record-damage": {
         "name": "Duj Sep qIp yIcher",
         "description": "Duj Sep qIpmeH qIp yIcher",
-        "below_threshold": "qIp chuqHa' (10) — Duj Sep qIpbe' 'e' chaw'be'"
+        "below_threshold": "qIp chuqHa' (10) — Duj Sep qIpbe' 'e' chaw'be'",
+        "mishap_threshold": "wa' Sep qIp {{amount}} qIp chuq nIv ({{threshold}}) SIplu' — qagh Dotlh yIlaD 'ej ghIq Dotlh qIp yIlegh"
       },
       "record-heal": {
         "name": "Duj Sep tej yIcher",

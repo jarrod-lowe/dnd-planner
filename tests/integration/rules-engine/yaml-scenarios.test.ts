@@ -270,6 +270,7 @@ const EXPECTED_RUNNABLE = [
   'tormentor-hp-damage-records',
   'tormentor-hp-heal-caps',
   'tormentor-hp-threshold',
+  'tormentor-mishap-threshold',
   'tormentor-destroyed-at-zero',
   'tormentor-hp-lifecycle',
   // …PR 7 — pass 4 v2: the AC mode — a [Moving | Motionless] segmented control
