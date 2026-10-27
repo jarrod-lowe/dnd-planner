@@ -1,0 +1,92 @@
+name: 'Tormentor (Damage Control) - Mishap Threshold Notes The Recording Row'
+description: >-
+  The stat block's mishap threshold 20 is a BAKED FACT beside the damage
+  threshold (a per-vehicle stat the factory reads, never a literal in its
+  code): when a single-source damage RECORDING meets it, the recording row
+  carries the informational mishap note — a 'notice' diagnostic riding THAT
+  planned row alone (planDiagnostics is per-instance) with the amount and the
+  threshold as interpolation params. The note never blocks recording: the
+  amount lands in full exactly as before (the bounce gate alone is the damage
+  threshold), the plan stays legal, and nothing commits beyond the damage
+  itself (the mishap table is the crew's business). Between the thresholds a
+  row records with NO note of either kind, below the damage threshold the
+  bounce note fires ALONE, and abandon clears the baked fact with the panel —
+  no threshold, no note paths.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        # The mishap threshold is data on the acquire effect, not code —
+        # exactly like the damage threshold beside it.
+        facts:
+          companion.tormentor.damageThreshold: 10
+          companion.tormentor.mishapThreshold: 20
+  # A single source dealing exactly 20: the FULL amount records (the mishap
+  # note is not the bounce gate) and the row carries the note.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 20
+      assert:
+        facts:
+          companion.tormentor.hp.damageRecorded: 20
+          companion.tormentor.hp.current: 40
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors:
+              - rule.tormentor.record-damage.mishap_threshold
+        status:
+          legal: true
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-damage
+  # 15 — above the damage threshold, below the mishap: records as ever, NO
+  # note of either kind (the existing behaviour pinned unchanged).
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 15
+      assert:
+        facts:
+          companion.tormentor.hp.damageRecorded: 35
+          companion.tormentor.hp.current: 25
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors: []
+  # 5 — below the damage threshold: the bounce note fires ALONE (nothing was
+  # taken, so nothing can break loose). The 15-row is still planned, so the
+  # bounced row is the SECOND instance of the offer.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 5
+      assert:
+        planErrors:
+          - id: record-tormentor-damage
+            index: 1
+            errors:
+              - rule.tormentor.record-damage.below_threshold
+        status:
+          legal: true
+  - endTurn:
+      assert:
+        facts:
+          # The 15-row committed; the bounced row added nothing: 20 + 15.
+          companion.tormentor.hp.damageRecorded: 35
+          companion.tormentor.hp.current: 25
+  # Abandon clears the baked fact with everything else — the recorder's gate
+  # closes with the panel, so no note path remains.
+  - addOffer:
+      id: abandon-tormentor
+      assert:
+        facts:
+          companion.tormentor.mishapThreshold: 0
+        offers:
+          notExists:
+            - record-tormentor-damage

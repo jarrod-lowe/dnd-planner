@@ -265,9 +265,12 @@ describe('acquire effect', () => {
       [`${F}.acMotionless`]: 0,
       // HP bakes its BASE (the pool derives max/current from it — the steed
       // shape) plus the stat block's damage threshold as DATA, so the recorder
-      // gates on a fact rather than a literal in the module.
+      // gates on a fact rather than a literal in the module — and beside it
+      // the mishap threshold, the same DATA shape the recorder's per-row
+      // mishap note reads.
       [`${F}.hp.base`]: 60,
       [`${F}.damageThreshold`]: 10,
+      [`${F}.mishapThreshold`]: 20,
       // Speed bakes NOTHING (PR-D): the derived speed.effective reads the
       // fuel, and the flat `speed` name is retired exactly like ac.value —
       // a legacy persisted bake stays inert, never a two-writer conflict.

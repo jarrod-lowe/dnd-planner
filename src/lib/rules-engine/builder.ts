@@ -188,7 +188,8 @@ const THRESHOLD_MODE_VAR = 'thresholdMode';
 // found them drifting copies — only the vehicle consulted the threshold gate.
 // The factory is the ONE code path now; what differs between subjects stays
 // per-module DATA (fact names, i18n keys, effect ids, the accumulation idiom,
-// the lethal consequence, the threshold fact + bounce annotation).
+// the lethal consequence, the threshold fact + bounce annotation, the
+// opt-in mishap threshold + note).
 
 /**
  * How a recorder's records accumulate — the one structural choice the caller
@@ -270,6 +271,26 @@ export interface HpRecorderBounce {
   noteKey: string;
 }
 
+/**
+ * The at-threshold MISHAP note — the high-damage mirror of the bounce: what
+ * a recording that MEETS a second, higher threshold tells the player WHILE
+ * recording. Like the bounce it is never an error and never an illegality
+ * (the amount records in full — this note is not the bounce gate), and it
+ * rides the recording row alone (`planDiagnostics` is per-instance) exactly
+ * as long as the row does. The threshold is a FACT the caller names, never
+ * a literal here: an UNSET or non-positive fact reads 0 and never notes (the
+ * same unset-never-gates convention the bounce follows), so a subject that
+ * configures no mishap — or whose fact is absent — sees zero behaviour
+ * change. The amount and the live threshold travel as diagnostic `params`
+ * for the locale's {{amount}}/{{threshold}} slots.
+ */
+export interface HpRecorderMishap {
+  /** The fact carrying the subject's mishap threshold; a recording at/above it carries the note. */
+  thresholdFact: string;
+  /** i18n key for the informational note on the recording row — the caller's own wording. */
+  noteKey: string;
+}
+
 /** The one spec every HP recorder is built from — data, not code. */
 export interface HpRecorderSpec {
   /** Offer id stem: the damage offer is `<stem>-damage`, the heal `<stem>-heal`. */
@@ -304,6 +325,11 @@ export interface HpRecorderSpec {
   chipSection: Section;
   /** The below-threshold bounce — see {@link HpRecorderBounce}. */
   bounce: HpRecorderBounce;
+  /**
+   * The at-threshold mishap note — see {@link HpRecorderMishap}. OPT-IN and
+   * generic: omit it (the player, the steed) and no note can ever fire.
+   */
+  mishap?: HpRecorderMishap;
   /** What a pool-emptying blow does; omit when the subject has no lethal rule (the player). */
   lethal?: HpRecorderLethal;
   /**
@@ -334,6 +360,13 @@ export interface HpRecorderSpec {
  *   the blow was legal to attempt); Ignore mode skips the gate and records
  *   the RAW amount (the GM correction); at/above the threshold Use mode
  *   records in full — the threshold is a floor, not a cap;
+ * - the damage apply's OPT-IN mishap note (see {@link HpRecorderMishap}): a
+ *   spec that names a mishap threshold fact gets ONE more informational
+ *   `'notice'` diagnostic on any row whose recorded amount MEETS it — the
+ *   amount still records in full (the note never gates), and the amount and
+ *   the live threshold travel as params for the locale's
+ *   {{amount}}/{{threshold}} slots. No option configured, no note can ever
+ *   fire — the player's and the steed's recorders ride unchanged;
  * - the missing-HP heal cap (`min(amount, max(0, -modifierCurrent))` — regained
  *   HP cannot exceed the max, so surplus is lost rather than banked to
  *   pre-cancel a later blow);
@@ -442,16 +475,37 @@ export function hpRecorders(spec: HpRecorderSpec): Offer[] {
         diagnostics: [{ code: spec.bounce.noteKey, severity: 'notice' }]
       };
     }
+    // The at-threshold MISHAP note (the opt-in mirror): when a configured
+    // threshold fact is positive and this RECORDED amount meets it, ONE
+    // informational notice rides the row BESIDE whatever the record does —
+    // never blocking it (the note is not the bounce gate), on every path
+    // where the damage is taken (a raw Ignore-Threshold correction and a
+    // pool-emptying blow included — damage taken is damage taken). The
+    // amount and the live fact travel as params; an unset/non-positive fact
+    // never notes, so unconfigured subjects are untouched.
+    const mishapDiagnostics: Diagnostic[] = [];
+    if (spec.mishap) {
+      const mishapThreshold = f.num(spec.mishap.thresholdFact);
+      if (mishapThreshold > 0 && amount >= mishapThreshold)
+        mishapDiagnostics.push({
+          code: spec.mishap.noteKey,
+          severity: 'notice',
+          params: { amount, threshold: mishapThreshold }
+        });
+    }
     // The lethal check (the steed's placement): currentHp floors at 0, so a
     // pool-emptying blow — overkill included — takes the lethal branch.
     if (spec.lethal && currentHp(f.num(facts.max), f.num(facts.modifierCurrent) - amount) <= 0) {
       return spec.lethal.keepRecord
-        ? { advertise: [damageRecord(f, amount), ...spec.lethal.effects()] }
-        : { advertise: spec.lethal.effects() };
+        ? {
+            advertise: [damageRecord(f, amount), ...spec.lethal.effects()],
+            diagnostics: mishapDiagnostics
+          }
+        : { advertise: spec.lethal.effects(), diagnostics: mishapDiagnostics };
     }
     const advertise = [damageRecord(f, amount)];
     if (spec.onDamageRecorded) advertise.push(...spec.onDamageRecorded(f, amount));
-    return { advertise };
+    return { advertise, diagnostics: mishapDiagnostics };
   };
 
   const applyHeal = (f: FactReader, selections: Record<string, unknown>): ActionResult => {
