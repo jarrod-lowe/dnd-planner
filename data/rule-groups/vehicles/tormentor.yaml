@@ -327,3 +327,48 @@ ruleGroups:
             Tormentor's speed for 1 minute. The boost only burns while the
             machine runs on a soul coin. Nothing counts the minute for the
             crew: when it runs out, the driver records the boost as spent.
+  # The CLINGER's flip detail — linked from the take-clinger offer. A
+  # catalog-only entry like the others: our own wording (the Tormentor is not
+  # SRD), in-world voice. The station's one rule (Dexterity checks to stay
+  # attached in combat) is stated with NO DC and NO frequency — the stat
+  # block gives neither; the GM adjudicates — and the capacity-free fact
+  # rides beside it.
+  - id: tormentor-clinger-detail
+    translations:
+      en:
+        name: Clinger (Tormentor)
+        description: Detail text for clinging to the outside of the Tormentor
+        keywords:
+          - clinger
+          - clinging
+          - tormentor
+          - vehicle
+          - outside
+          - dexterity
+          - hang on
+      en-x-tlh:
+        name: Clinger (Tormentor)
+        description: Detail text for clinging to the outside of the Tormentor
+        keywords:
+          - clinger
+          - clinging
+          - tormentor
+          - vehicle
+          - outside
+          - dexterity
+          - hang on
+    detail:
+      key: vehicle/tormentor-clinger
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Station
+          body: |
+            **Clinger.** A rider who cannot fit inside can still ride the
+            Tormentor: a clinger hangs on to the war machine's outside,
+            finding hand- and footholds on its iron hide. A clinger takes no
+            seat — they do not count against the vehicle's creature
+            capacity.
+
+            **Hanging On.** While the Tormentor is in combat, a clinger must
+            make Dexterity checks to stay attached.

@@ -537,6 +537,14 @@
         "name": "Leave the Helm seat",
         "description": "Step away from the Helm, freeing the seat"
       },
+      "take-clinger-seat": {
+        "name": "Take the Clinger seat",
+        "description": "Hold on to the Tormentor's outside, taking no seat"
+      },
+      "leave-clinger-seat": {
+        "name": "Leave the Clinger seat",
+        "description": "Let go of the Tormentor's outside"
+      },
       "fire-harpoon": {
         "name": "Fire Harpoon",
         "description": "Ranged weapon attack: +7 to hit, range 120 ft., one target, 2d8+2 piercing damage. The harpoons are magical; the flinger carries 10.",
@@ -596,10 +604,15 @@
       "seat-helm-effect": {
         "name": "Helm Seat"
       },
+      "seat-clinger-effect": {
+        "name": "Clinger Seat"
+      },
       "notice": "Prone Deficiency",
       "notice.body": "The Tormentor has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright.",
       "destroyed-notice": "Tormentor Destroyed",
-      "destroyed-notice.body": "The Tormentor is destroyed — a burning wreck. It can no longer act; abandon it when the crew scrambles."
+      "destroyed-notice.body": "The Tormentor is destroyed — a burning wreck. It can no longer act; abandon it when the crew scrambles.",
+      "clinger-notice": "Clinging On",
+      "clinger-notice.body": "Clinging to the Tormentor's outside: while in combat, a clinger must make Dexterity checks to stay attached."
     },
     "dnd-5e-2024": {
       "action-economy": {},

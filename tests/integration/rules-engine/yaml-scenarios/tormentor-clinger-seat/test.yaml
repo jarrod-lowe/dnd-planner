@@ -1,0 +1,96 @@
+name: 'Tormentor - Take The Clinger Seat'
+description: >-
+  The Clinger station (the seat infrastructure's fourth and final seat): the
+  same TAKE/LEAVE offer pair in the vehicle's +ADD, free and gated
+  structurally on the acquire, filed with the acquire/abandon EQUIP 'vehicle'
+  family. A clinger holds on to the OUTSIDE of the vehicle — the seat is
+  CAPACITY-FREE: taking it advertises ONE permanent KEYED effect writing
+  companion.tormentor.seats.clinger = 1 (a chip under the vehicle panel like
+  every station's) but the derived creature capacity does NOT count it (used
+  stays put). Leaving evicts by key, and leaving while not seated is the
+  shared illegal-but-committable not-seated path.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Unacquired: the seat offers do not exist at all (structural gate on the
+  # acquire — there is no vehicle to cling to).
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - take-tormentor-clinger-seat
+            - leave-tormentor-clinger-seat
+  # Acquire: fresh vehicle reads 0/4, and the clinger take offer is there.
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        facts:
+          companion.tormentor.creatureCapacity.used: 0
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-clinger-seat
+          legal:
+            - take-tormentor-clinger-seat
+          illegal:
+            - leave-tormentor-clinger-seat
+        offerUi:
+          - id: take-tormentor-clinger-seat
+            ui:
+              section: free
+              subject: tormentor
+              detailKey: vehicle/tormentor-clinger
+              actionCost: []
+  # Take the seat: the station fact lands and the capacity derive does NOT
+  # count it — a clinger takes no seat (used stays 0).
+  - addOffer:
+      id: take-tormentor-clinger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.clinger: 1
+          companion.tormentor.creatureCapacity.used: 0
+        planErrors:
+          - id: take-tormentor-clinger-seat
+            index: 0
+            errors: []
+  # Commit: the seat effect persists beside the acquire (the chip on the
+  # strip), still capacity-free.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-clinger
+        facts:
+          companion.tormentor.seats.clinger: 1
+          companion.tormentor.creatureCapacity.used: 0
+  # Leave the seat: the eviction clears the fact the moment the row is merely
+  # planned (newest-wins), and used never moved.
+  - addOffer:
+      id: leave-tormentor-clinger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.clinger: 0
+          companion.tormentor.creatureCapacity.used: 0
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-seat-clinger
+  # Leave again while NOT seated: the shared not-seated leg — visible,
+  # illegal-but-committable, and the planned-anyway row still executes as the
+  # no-op eviction carrying its diagnostic.
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - leave-tormentor-clinger-seat
+  - addOffer:
+      id: leave-tormentor-clinger-seat
+      assert:
+        planErrors:
+          - id: leave-tormentor-clinger-seat
+            index: 0
+            errors:
+              - rule.tormentor.leave-seat.not_seated
