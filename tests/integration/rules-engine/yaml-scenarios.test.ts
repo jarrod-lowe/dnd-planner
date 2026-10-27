@@ -301,6 +301,31 @@ const EXPECTED_RUNNABLE = [
   'tormentor-harpoon-seat-exclusivity',
   'tormentor-harpoon-fire',
   'tormentor-harpoon-fire-action',
+  // …PR 10 — PR-C: the Helm station — the third seat on the same
+  // infrastructure (take/leave pair, exclusivity against the passenger and
+  // harpoon seats in every direction, the derived capacity counting it) plus
+  // the station's actions: Drive as the vehicle's MOVEMENT offer and Dash as
+  // its doubling (the steed's movement economy, PC-parity house rule; both
+  // still the player's ACTION) and Juke as the driver's REACTION,
+  // illegal-but-committable while the vehicle is prone (its able-to-move leg)
+  'tormentor-helm-seat',
+  'tormentor-helm-seat-exclusivity',
+  'tormentor-helm-drive-dash',
+  // Drive as the vehicle's MOVEMENT offer (the steed's move rows) and Dash's
+  // doubling — the movement-economy pass
+  'tormentor-helm-drive-movement',
+  'tormentor-helm-dash-movement',
+  // …the rework after the stat-block source landed: Dash is the player's
+  // BONUS action and the per-encounter rule (3 + CON mod Dashes, each beyond
+  // risking damage) rides every Dash row as an UNCONDITIONAL informational
+  // note — the app tracks no encounters, the player counts
+  'tormentor-helm-dash-note',
+  // …and NO counter backs that note: no dashes facts, no count record, no
+  // chip, nothing durable beside the per-turn spend (abandon still clears
+  // the dashed/movement state with the acquire)
+  'tormentor-helm-dash-count',
+  'tormentor-helm-juke',
+  'tormentor-helm-juke-prone',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

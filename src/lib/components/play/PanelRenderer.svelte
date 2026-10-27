@@ -146,7 +146,7 @@
 
   const warningMessage = $derived.by(() => {
     if (!hasWarning || !entry.diagnostics?.length) return undefined;
-    return entry.diagnostics.map((d) => $t(d.code)).join('\n');
+    return entry.diagnostics.map((d) => $t(d.code, d.params)).join('\n');
   });
 
   const vars = $derived(entry.rule.vars ?? {});
@@ -425,8 +425,10 @@
   // legal to attempt, and the app tells the player it bounced). The plan fold
   // keys them to the row's own instance, so they can never render on another
   // row of the same offer — unlike annotations, which match by panel label.
-  // They ride the same note block as informational annotations (expanded rows
-  // only) and, unlike error diagnostics, never mark the row illegal.
+  // Expanded rows show them beside informational annotations in the note
+  // block; collapsed rows show them as their own note line (a legal row gives
+  // no signal to expand, so the note must be visible collapsed). Unlike error
+  // diagnostics, they never mark the row illegal.
   const noticeDiagnostics = $derived(
     (entry.diagnostics ?? []).filter((d) => d.severity === 'notice')
   );
@@ -886,11 +888,14 @@
       rendering it in summary mode would add a second line under the strip.
       Summary mode is one line; expand to see the reminder text. The row's own
       notice diagnostics (the below-threshold bounce note) join them here —
-      informational, never the illegal/error path.
+      informational, never the illegal/error path. Notices are the one
+      exception to expanded-only: a collapsed row carries them as its own
+      note line after `.panel-renderer__body` (see the summary-gated block
+      below the body), because a legal row gives no signal to expand.
     -->
       <div class="panel-renderer__annotations" role="note">
         {#each noticeDiagnostics as diagnostic (diagnostic.code)}
-          <span class="panel-renderer__annotation">{$t(diagnostic.code)}</span>
+          <span class="panel-renderer__annotation">{$t(diagnostic.code, diagnostic.params)}</span>
         {/each}
         {#each informationalAnnotations as annotation (annotation.key)}
           {@const addsOffer =
@@ -990,6 +995,23 @@
       </div>
     {/if}
   </div>
+  {#if summary && noticeDiagnostics.length > 0}
+    <!--
+    The collapsed copy of the note line. A legal row gives the player no
+    signal to expand it, so a notice — an at-a-glance risk warning like the
+    6th+ per-encounter Dash — must render on the collapsed row itself. It
+    sits AFTER `.panel-renderer__body`, never inside it: in summary mode the
+    body IS the row's single ellipsized line (see the summary rules in the
+    style block), and a note swallowed by that clip is invisible. `summary`
+    here and the `!summary` gate on the expanded note block are mutually
+    exclusive, so the two renderings can never double-render a notice.
+  -->
+    <div class="panel-renderer__annotations" role="note">
+      {#each noticeDiagnostics as diagnostic (diagnostic.code)}
+        <span class="panel-renderer__annotation">{$t(diagnostic.code, diagnostic.params)}</span>
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>

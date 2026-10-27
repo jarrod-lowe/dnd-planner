@@ -59,6 +59,12 @@ ruleGroups:
             Harpoon Flinger fires its 10 harpoons at +7 to hit, range
             120 ft., for 2d8+2 piercing damage.
 
+            **Dash.** The driver can spend a bonus action to push the
+            Tormentor flat out, doubling its movement for the turn. Each
+            encounter the vehicle can Dash 3 times plus its Constitution
+            modifier; each Dash beyond that runs the risk of damaging the
+            vehicle.
+
             **Juke.** The driver can spend their reaction, while the
             Tormentor is able to move, to gain advantage on a Dexterity
             saving throw.
@@ -218,3 +224,57 @@ ruleGroups:
             **Ammunition.** The flinger's rack carries 10 harpoons. The app
             does not track how many have been fired — spent harpoons and
             reloads are the crew's bookkeeping.
+  # The HELM's flip detail — linked from the Drive, Dash and Juke offers. A
+  # catalog-only entry like the harpoon's: our own wording (the Tormentor is
+  # not SRD), in-world voice for what the driver does, plus the Dash rule —
+  # the 2024-format stat block takes the vehicle's Dash as a bonus action
+  # under a per-encounter cap (3 + its Constitution modifier; each Dash
+  # beyond that risks damaging the vehicle), the rule stated without baking
+  # the computed total. The stat block's three-quarters cover for the Helm
+  # crew stays out: cover is the table's business here.
+  - id: tormentor-helm-detail
+    translations:
+      en:
+        name: Helm (Tormentor)
+        description: Detail text for driving the Tormentor from the Helm
+        keywords:
+          - helm
+          - drive
+          - dash
+          - juke
+          - tormentor
+          - vehicle
+          - driver
+          - steer
+      en-x-tlh:
+        name: Helm (Tormentor)
+        description: Detail text for driving the Tormentor from the Helm
+        keywords:
+          - helm
+          - drive
+          - dash
+          - juke
+          - tormentor
+          - vehicle
+          - driver
+    detail:
+      key: vehicle/tormentor-helm
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Station
+          body: |
+            **Helm.** The Helm takes one crew member, and its driver holds the
+            war machine's handle: **Drive** spends the driver's action
+            steering the Tormentor through the turn.
+
+            **Dash.** The driver can spend a bonus action pushing the
+            Tormentor flat out, doubling its movement for the turn. Each
+            encounter the vehicle can Dash 3 times plus its Constitution
+            modifier; each Dash beyond that runs the risk of damaging the
+            vehicle.
+
+            **Juke.** The driver can spend their reaction to swerve the
+            Tormentor, gaining advantage on a Dexterity saving throw. The
+            swerve needs the machine rolling: the Tormentor can juke only
+            while it is able to move.

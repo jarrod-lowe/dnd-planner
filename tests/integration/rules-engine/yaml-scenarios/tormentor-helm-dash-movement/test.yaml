@@ -1,0 +1,85 @@
+name: 'Tormentor - Helm Dash Doubles Movement'
+description: >-
+  Dash is the player's BONUS ACTION (the 2024-format stat block: the
+  vehicle's Dash rides the bonus-action slot) and DOUBLES the vehicle's
+  movement for the turn — the steed's Dash semantics (total = base while
+  Dashed, remaining rising with it). The doubled pool is Drive's to spend
+  from the still-open ACTION, and the doubling ages away with the spend at
+  end of turn. Every Dash row carries the unconditional rule-text note (no
+  counter is tracked — the player counts; see tormentor-helm-dash-count).
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+        offers:
+          legal:
+            - dash-tormentor
+  # Dash: the BONUS action goes (the ACTION untouched), the pool doubles (the
+  # steed's dashed flag — total and remaining rise together, nothing spent),
+  # and the row carries the unconditional rule-text note.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 0
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 200
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+  # The doubled pool is Drive's to spend, the action still open: 150 of the
+  # 200.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 150
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.tormentor.movement.remaining: 50
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+  # No bonus action left: Dash stays visible but ILLEGAL with its own
+  # diagnostic.
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - dash-tormentor
+  # End of turn: the doubling and the spends age away together — nothing
+  # dash-related persists.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+  # Turn 2: the doubling is back to a fresh 200, the note riding the row as
+  # before.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 200
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk

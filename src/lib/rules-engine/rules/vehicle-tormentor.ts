@@ -44,9 +44,9 @@ import {
  * illegal-but-possible: the derive clamps the READ to 0..max and diagnostics
  * are deferred with acquiring's.
  *
- * SEATS are PLAYER-side state (the seat infrastructure, PR-A: passenger is
- * the one live station; harpoon/helm/clinger join in later passes by
- * extending SEAT_STATIONS and instantiating their spec beside
+ * SEATS are PLAYER-side state (the seat infrastructure, PR-A: passenger,
+ * PR-B harpoon, PR-C helm are the live stations; clinger joins in a later
+ * pass by extending SEAT_STATIONS and instantiating its spec beside
  * PASSENGER_SEAT). A seat is ONE permanent keyed effect writing
  * `companion.tormentor.seats.<station> = 1` with a chip under the vehicle
  * panel (the at-a-glance "where am I seated"), taken and left by a TAKE/LEAVE
@@ -119,15 +119,35 @@ import {
  * The mode key joins the acquire lifecycle like every other record: a
  * re-acquire resets to the fresh acquire SELECTION.
  *
- * Deliberately out of scope this pass (later passes on the plan): the Helm /
- * Harpoon Flinger vehicles and the Juke reaction, movement economy, damage
- * immunities and the mishap threshold as MECHANICS (they are detail text
- * only — the recorder never refuses fire/poison/psychic and no mishap is
- * modelled), any prone attack/movement or incapacitated mechanics beyond the
- * record, and MULTIPLE vehicles per character (acquiring while a Tormentor is
- * already present is ILLEGAL — one vehicle per character, for now; a later
- * pass lifts the already-have leg when a second vehicle can exist beside the
- * first).
+ * The vehicle's MOVEMENT ECONOMY is the steed's, copied exactly (the
+ * PC-parity house rule, landed after the user's tablet test found the
+ * intent-only Drive row did nothing): `movement.base/total/remaining` derives
+ * in the steed's shape — base a DERIVATION of the speed facts (the seam PR-D
+ * re-plumbs to `speed.effective` under fuel/boost), total doubling while
+ * Dashed, remaining = total − spent, every spend endOfTurn so the pool resets
+ * with the turn. Drive IS the movement offer (the steed's move rows: distance
+ * slider defaulting to all remaining, MOVE section) carrying the economy
+ * ruling's ACTION spend beside the distance; Dash doubles the pool for the
+ * turn (the steed's dashed flag) as the player's BONUS ACTION (the
+ * 2024-format stat block). The stat block's per-encounter fine print (3 +
+ * the vehicle's Constitution modifier Dashes each encounter, each Dash
+ * beyond that risking damage) is NOT counted — the app has no encounter
+ * tracking and cannot know when the cap is exceeded, so every planned Dash
+ * row carries the whole rule as an unconditional notice (the allowance
+ * interpolated from the facts) and the player counts. The movement row joins
+ * the resources panel beside creature capacity.
+ *
+ * Deliberately out of scope this pass (later passes on the plan): fuel and
+ * boost (the Helm's refuelling records and the speed they set — PR-D, which
+ * re-plumbs movement.base to the derived `speed.effective` and refines Juke's
+ * able-to-move leg), the clinger
+ * station, damage immunities and the mishap threshold
+ * as MECHANICS (they are detail text only — the recorder never refuses
+ * fire/poison/psychic and no mishap is modelled), any prone attack/movement
+ * or incapacitated mechanics beyond the record, and MULTIPLE vehicles per
+ * character (acquiring while a Tormentor is already present is ILLEGAL — one
+ * vehicle per character, for now; a later pass lifts the already-have leg
+ * when a second vehicle can exist beside the first).
  */
 
 const ID = 'tormentor';
@@ -161,10 +181,10 @@ const DESTROYED_KEY = 'tormentor-destroyed';
 
 /**
  * The vehicle's ACTION STATIONS with a seat a player can hold — the seat
- * infrastructure's ONE registry. The passenger (PR-A) and harpoon (PR-B)
- * stations are live; later passes add theirs. EVERY seat condition and count
- * iterates this list, so a new station joins the exclusivity leg and the
- * capacity derive by EXTENDING it — no other edit.
+ * infrastructure's ONE registry. The passenger (PR-A), harpoon (PR-B) and
+ * helm (PR-C) stations are live; later passes add theirs. EVERY seat
+ * condition and count iterates this list, so a new station joins the
+ * exclusivity leg and the capacity derive by EXTENDING it — no other edit.
  */
 const SEAT_STATIONS = ['passenger', 'harpoon', 'helm', 'clinger'] as const;
 type SeatStation = (typeof SEAT_STATIONS)[number];
@@ -230,9 +250,10 @@ const CHILD_KEYS = [
   HP_HEAL_KEY,
   DESTROYED_KEY,
   // The seats, station by station as they go live (PR-A passenger, PR-B
-  // harpoon; later passes append their station's key here).
+  // harpoon, PR-C helm; later passes append their station's key here).
   'tormentor-seat-passenger',
-  'tormentor-seat-harpoon'
+  'tormentor-seat-harpoon',
+  'tormentor-seat-helm'
 ] as const;
 
 /** The stat block acquiring bakes. HP bakes its BASE (the pool derives from
@@ -511,6 +532,23 @@ const HARPOON_SEAT: SeatSpec = {
 };
 
 /**
+ * The HELM station — PR-C's seat (the stat block's Helm, one crew). Taking it
+ * is the same take/leave pair on the shared helper; what the station ADDS is
+ * its three ECONOMY offers — Drive, Dash and Juke — the driver's handle on
+ * the war machine (see the offers below). The chip stays plain like the other
+ * seats'; the station's explanation hangs off its offers' DETAIL.
+ */
+const HELM_SEAT: SeatSpec = {
+  station: 'helm',
+  take: { name: `${T}.take-helm-seat.name`, description: `${T}.take-helm-seat.description` },
+  leave: {
+    name: `${T}.leave-helm-seat.name`,
+    description: `${T}.leave-helm-seat.description`
+  },
+  effectName: `${T}.seat-helm-effect.name`
+};
+
+/**
  * The fire offer's dice line: d20 + the derived hit bonus to hit, 2d8 + the
  * derived damage bonus piercing (the HEAL_TOUCH count:2 precedent for a
  * two-die damage entry). NO ranges machinery — 120 ft. and one target are
@@ -544,12 +582,77 @@ const HARPOON_VARS = {
 
 /**
  * The fire offer's no-action diagnostic — its OWN key, the per-offer key every
- * generic action offer carries (Dash, the simple actions). A VEHICLE action is
+ * generic action offer carries (the simple actions). A VEHICLE action is
  * not a PC weapon attack, so it deliberately does NOT share the weapon
  * attacks' key: the shared one means "no Attack action or follow-up swing",
  * and firing means neither.
  */
 const NO_ACTION = `${T}.fire-harpoon.no_action`;
+
+/**
+ * The Helm's action diagnostics — each offer's OWN key, the per-offer key
+ * every generic action offer carries (Dash, the simple actions). Like the
+ * fire offer's, they deliberately do NOT share the weapon attacks' key: a
+ * vehicle action is not a PC weapon attack. Drive's second leg is the steed
+ * move offers' out-of-movement key, vehicle-spelled; Dash's key is the
+ * player BONUS-action pool (the 2024-format stat block takes the vehicle's
+ * Dash as a bonus action, and the economy ruling makes every vehicle
+ * activity consume the player's matching slot).
+ */
+const DRIVE_NO_ACTION = `${T}.drive.no_action`;
+const DRIVE_OUT_OF_MOVEMENT = `${T}.drive.out_of_movement`;
+const DASH_NO_BONUS = `${T}.dash.no_bonus_action`;
+
+/**
+ * The dash RISK note — the informational diagnostic EVERY planned Dash row
+ * carries, unconditionally. The stat block's Ability Scores fine print: each
+ * encounter the vehicle can Dash 3 times plus its Constitution modifier,
+ * and each Dash beyond that runs the risk of damaging the vehicle. The app
+ * has NO encounter tracking — it cannot know where the player sits in that
+ * count, and the player counts — so the row states the WHOLE rule and
+ * nothing is gated, recorded or counted: ONE 'notice' diagnostic beside its
+ * spend, which the plan fold attaches to THAT planned row alone
+ * (planDiagnostics is per-instance). The plan stays LEGAL (a notice is
+ * informational, never the error path), and the note lives exactly as long
+ * as the row does — never a standing notice (a post-choice risk is not a
+ * standing condition), never a panel annotation. The allowance travels as
+ * diagnostic `params` (computed from the facts at fold time, 3 + the baked
+ * Constitution modifier — no hardcoded total) for the locale's
+ * {{allowance}} slot, so a re-baked stat block moves the number with no
+ * other edit.
+ */
+const DASH_RISK = `${T}.dash.risk`;
+
+/**
+ * Drive's distance slider — the steed's STEED_MOVE_CONTROL/STEED_MOVE_VARS
+ * shape exactly (find-steed): record the actual feet driven rather than a
+ * fixed chunk, bounded by the (Dash-doubled) total, so a short roll of the
+ * machine doesn't consume the whole pool.
+ */
+const DRIVE_CONTROL = {
+  type: 'slider',
+  var: 'distance',
+  max: { fact: `${F}.movement.total` },
+  step: 5,
+  unit: 'ft'
+} as const;
+const DRIVE_VARS = {
+  // min 0: an over-committed prefix can read remaining negative — never a
+  // meaningful opening distance (authored min, mirroring the steed moves).
+  distance: { capture: true, min: 0, default: { fact: `${F}.movement.remaining` } }
+} as const;
+/** Feet to spend for a drive: the captured distance, else all remaining. */
+const driveDistance = (f: FactReader, selections: Record<string, unknown>): number =>
+  typeof selections.distance === 'number' ? selections.distance : f.num(`${F}.movement.remaining`);
+
+/**
+ * Juke's two legs: the reaction pool (the unarmed opportunity-attack
+ * spelling) and the able-to-move approximation — PR-C reads the vehicle's
+ * prone record (a fallen war machine cannot swerve); PR-D refines the leg to
+ * `speed.effective > 0` once fuel exists.
+ */
+const JUKE_NO_REACTION = `${T}.juke.no_reaction`;
+const JUKE_UNABLE_TO_MOVE = `${T}.juke.unable_to_move`;
 
 /**
  * The vehicle's Prone Deficiency, as STATE TRACKING ONLY. The Tormentor is not
@@ -706,6 +809,21 @@ const TORMENTOR_PANELS: SubjectPanelDeclaration[] = [
       total: `${F}.creatureCapacity.max`,
       remaining: `${F}.creatureCapacity.used`
     }
+  },
+  {
+    // The movement pool — the steed's resources row, copied: usedMax renders
+    // "remaining/total" ("70/100") against the derived economy, spent by
+    // Drive, doubled by Dash, reset each turn. Gate on `active` like every
+    // vehicle entry (the derives settle to 0 unacquired, never absent).
+    subject: SUBJECT,
+    panel: 'resources',
+    gate: `${F}.active`,
+    entry: {
+      type: 'usedMax',
+      label: 'play.stats.tormentor.movement',
+      total: `${F}.movement.total`,
+      remaining: `${F}.movement.remaining`
+    }
   }
 ];
 
@@ -855,6 +973,24 @@ const vehicleTormentor: RuleModule = {
     {
       fact: `${F}.harpoon.damageBonus`,
       value: (f) => (acquired(f) ? 2 : 0)
+    },
+    // The MOVEMENT ECONOMY, the steed's derives copied exactly (find-steed's
+    // movement block): total doubling while Dashed, remaining = total − spent,
+    // every spend endOfTurn so the pool resets with the turn. base is a
+    // DERIVATION of the speed facts, never a copy of the number — the seam
+    // PR-D re-plumbs (the flat baked `speed` becomes the derived
+    // `speed.effective` under fuel/boost) by changing this ONE read.
+    {
+      fact: `${F}.movement.base`,
+      value: (f) => f.num(`${F}.speed`)
+    },
+    {
+      fact: `${F}.movement.total`,
+      value: (f) => f.num(`${F}.movement.base`) * (f.num(`${F}.dashed`) > 0 ? 2 : 1)
+    },
+    {
+      fact: `${F}.movement.remaining`,
+      value: (f) => f.num(`${F}.movement.total`) - f.num(`${F}.movement.spent`)
     }
   ],
   offer: () => [
@@ -1012,8 +1148,9 @@ const vehicleTormentor: RuleModule = {
       // and a planned-anyway row still executes): while prone the offer stays
       // visible and applicable, flagged illegal with its already-prone
       // diagnostic, and committing it anyway re-advertises the one keyed
-      // record (newest-wins — still a single prone fact). No Speed leg: a
-      // vehicle has no movement economy. State tracking only: no attack flags,
+      // record (newest-wins — still a single prone fact). No Speed leg: the
+      // vehicle's movement pool is Drive's to spend, not the prone record's
+      // concern. State tracking only: no attack flags,
       // no movement legs, no incapacitated modelling this pass.
       id: 'knock-tormentor-prone',
       when: acquired,
@@ -1057,7 +1194,8 @@ const vehicleTormentor: RuleModule = {
       // exactly like Get Up while standing. Newest-wins clears the record
       // while merely planned. PC get-up parity check: of Get Up's three
       // legality legs, prone-only is this gate; Speed-0 and half-Speed
-      // affordability do not translate — a vehicle has no movement economy.
+      // affordability do not translate — the flip is free and spends none of
+      // the vehicle's movement pool.
       id: 'flip-tormentor-upright',
       when: acquired,
       legalWhen: [
@@ -1089,9 +1227,10 @@ const vehicleTormentor: RuleModule = {
       }
     },
     // The VEHICLE's seat offers — the take/leave pair for every live station
-    // (see seatOffers/PASSENGER_SEAT/HARPOON_SEAT above).
+    // (see seatOffers/PASSENGER_SEAT/HARPOON_SEAT/HELM_SEAT above).
     ...seatOffers(PASSENGER_SEAT),
     ...seatOffers(HARPOON_SEAT),
+    ...seatOffers(HELM_SEAT),
     {
       // The HARPOON FLINGER's attack — the station's whole point, and the one
       // seat offer that is a plan-row ACTION. `when` is the acquire AND the
@@ -1146,6 +1285,181 @@ const vehicleTormentor: RuleModule = {
         advertise: [{ id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
         diagnostics: f.num('actions.remaining') > 0 ? [] : [{ code: NO_ACTION, severity: 'error' }]
       })
+    },
+    {
+      // The HELM's Drive — the vehicle's MOVEMENT offer, the steed's move rows
+      // copied onto the vehicle (the PC-parity house rule): the row captures a
+      // DISTANCE bounded by the derived movement total and defaulting to all
+      // remaining (the steed's slider idiom), filed in the MOVE section with
+      // the ACTION cost chip the steed's free moves lack — the economy ruling:
+      // a vehicle activity consumes the player's full slot through the GENERIC
+      // spend, never the weapon attacks' pool (Extra Attack neither applies
+      // nor is granted). Apply spends the action AND the distance against the
+      // pool in ONE endOfTurn effect (the steed-dash two-facts-one-spend
+      // idiom), so the pool resets with the turn. `when` is the acquire AND
+      // the helm seat (the seat fact is the gate the leave offer's eviction
+      // closes); legality is the action pool PLUS the steed's
+      // out-of-movement leg (remaining >= 5 — a machine with under 5 ft left
+      // cannot usefully roll), both illegal-but-COMMITTABLE with OWN keys.
+      // Apply re-checks both (the dash idiom), the distance re-check
+      // validating the SELECTED distance — an over-distance row carries the
+      // steed's out-of-movement diagnostic while its spend still lands (the
+      // over-commit projection, unfloored like the steed's).
+      id: 'drive-tormentor',
+      when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
+      legalWhen: [
+        {
+          condition: (f: FactReader): boolean => f.num('actions.remaining') > 0,
+          diagnostics: [{ code: DRIVE_NO_ACTION, severity: 'error' }]
+        },
+        {
+          condition: (f: FactReader): boolean => f.num(`${F}.movement.remaining`) >= 5,
+          diagnostics: [{ code: DRIVE_OUT_OF_MOVEMENT, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'move',
+        subject: SUBJECT,
+        name: `${T}.drive.name`,
+        description: `${T}.drive.description`,
+        detailKey: 'vehicle/tormentor-helm',
+        primaryControl: DRIVE_CONTROL,
+        intents: { MOVE: 'travel' },
+        actionCost: ['action']
+      },
+      vars: DRIVE_VARS,
+      apply: (f: FactReader, selections): ActionResult => {
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('actions.remaining') <= 0)
+          diagnostics.push({ code: DRIVE_NO_ACTION, severity: 'error' });
+        if (f.num(`${F}.movement.remaining`) < driveDistance(f, selections))
+          diagnostics.push({ code: DRIVE_OUT_OF_MOVEMENT, severity: 'error' });
+        return {
+          advertise: [
+            {
+              id: 'cost',
+              state: {
+                'actions.spent': 1,
+                [`${F}.movement.spent`]: driveDistance(f, selections)
+              },
+              expiry: { kind: 'endOfTurn' }
+            }
+          ],
+          diagnostics
+        };
+      }
+    },
+    {
+      // The HELM's Dash — the player's BONUS ACTION (the 2024-format stat
+      // block takes the vehicle's Dash as a bonus action; the economy ruling
+      // makes it consume the PLAYER's matching slot, the generic spend like
+      // every vehicle activity), DOUBLING the vehicle's movement for the
+      // turn: the steed's Dash semantics (steedSpend({ bonusActions.spent,
+      // dashed }) — the total derive reads the dashed flag, so the doubling
+      // resets with the turn and an unspent pool rises with it). The
+      // per-encounter fine print (3 Dashes plus the vehicle's Constitution
+      // modifier each encounter, each Dash beyond risking damage) is NOT
+      // counted: the app has no encounter tracking, so every planned Dash
+      // row carries the whole rule as its unconditional risk note (DASH_RISK
+      // above) and the player counts. The PC Dash's halted leg has no
+      // analogue: nothing halts a vehicle's derived pool today (PR-D's
+      // speed.effective will carry that if fuel ever reads empty).
+      id: 'dash-tormentor',
+      when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
+      legalWhen: [
+        {
+          condition: (f: FactReader): boolean => f.num('bonusActions.remaining') > 0,
+          diagnostics: [{ code: DASH_NO_BONUS, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'bonus-action',
+        subject: SUBJECT,
+        name: `${T}.dash.name`,
+        description: `${T}.dash.description`,
+        detailKey: 'vehicle/tormentor-helm',
+        intents: { MOVE: 'dash' },
+        actionCost: ['bonus']
+      },
+      apply: (f: FactReader): ActionResult => {
+        // Re-checked legality (the dash idiom) so a planned-anyway row carries
+        // its own error from the fold — the row still executes — and BESIDE it
+        // the unconditional risk note (the allowance computed from the FACTS
+        // here, 3 + the baked Constitution modifier, travelling as params for
+        // the locale's {{allowance}} slot — no fact, no chip, nothing
+        // durable: the rule text informs, the player counts).
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('bonusActions.remaining') <= 0)
+          diagnostics.push({ code: DASH_NO_BONUS, severity: 'error' });
+        diagnostics.push({
+          code: DASH_RISK,
+          severity: 'notice',
+          params: { allowance: 3 + f.num(`${F}.con.modifier`) }
+        });
+        return {
+          advertise: [
+            {
+              // The steed's Dash idiom alone: the bonus-action spend and the
+              // doubled-this-turn flag in ONE keyless endOfTurn effect (never
+              // attack accounting) — nothing else is written.
+              id: 'cost',
+              state: { 'bonusActions.spent': 1, [`${F}.dashed`]: 1 },
+              expiry: { kind: 'endOfTurn' }
+            }
+          ],
+          diagnostics
+        };
+      }
+    },
+    {
+      // The HELM's Juke — the driver's REACTION (the stat block's defensive
+      // swerve: advantage on Dexterity saving throws). `when` is the acquire
+      // AND the helm seat like the station's actions; the economy is the
+      // reaction pool (the unarmed opportunity-attack spelling): the PLAYER's
+      // reaction, spent through the plain `reactions.spent` and NOTHING else —
+      // no facts of its own, because the advantage is applied at the table
+      // (the plan row records the intent; no dice are wired). TWO legality
+      // legs, both illegal-but-COMMITTABLE with their OWN keys: (a) the
+      // reaction pool; (b) the vehicle able to move — PR-C's approximation is
+      // the prone record (a fallen war machine cannot swerve), which PR-D
+      // refines to `speed.effective > 0` once fuel exists.
+      id: 'juke-tormentor',
+      when: (f: FactReader): boolean => acquired(f) && f.num(seatFact('helm')) > 0,
+      legalWhen: [
+        {
+          condition: (f: FactReader): boolean => f.num('reactions.remaining') > 0,
+          diagnostics: [{ code: JUKE_NO_REACTION, severity: 'error' }]
+        },
+        {
+          condition: (f: FactReader): boolean => f.num(`${F}.prone`) === 0,
+          diagnostics: [{ code: JUKE_UNABLE_TO_MOVE, severity: 'error' }]
+        }
+      ],
+      ui: {
+        section: 'reaction',
+        subject: SUBJECT,
+        name: `${T}.juke.name`,
+        description: `${T}.juke.description`,
+        detailKey: 'vehicle/tormentor-helm',
+        intents: { REACT: 'ward' },
+        actionCost: ['reaction']
+      },
+      apply: (f: FactReader): ActionResult => {
+        // The reaction spend alone, with the legality re-checked (the dash
+        // idiom) so a planned-anyway row carries its own diagnostics from the
+        // fold — the row still spends the reaction.
+        const diagnostics: Diagnostic[] = [];
+        if (f.num('reactions.remaining') <= 0)
+          diagnostics.push({ code: JUKE_NO_REACTION, severity: 'error' });
+        if (f.num(`${F}.prone`) > 0)
+          diagnostics.push({ code: JUKE_UNABLE_TO_MOVE, severity: 'error' });
+        return {
+          advertise: [
+            { id: 'cost', state: { 'reactions.spent': 1 }, expiry: { kind: 'endOfTurn' } }
+          ],
+          diagnostics
+        };
+      }
     },
     {
       // The VEHICLE-side way out: gated on the acquire (structurally —

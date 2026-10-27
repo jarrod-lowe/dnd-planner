@@ -81,7 +81,7 @@
   }
 
   function illegalMessage(item: SearchItem): string {
-    return item.entry.diagnostics.map((d) => $t(d.code)).join('\n');
+    return item.entry.diagnostics.map((d) => $t(d.code, d.params)).join('\n');
   }
 
   function resultAriaLabel(item: SearchItem): string {

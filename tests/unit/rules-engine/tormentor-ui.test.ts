@@ -72,7 +72,12 @@ describe('acquire offer ui', () => {
       'leave-tormentor-passenger-seat',
       'take-tormentor-harpoon-seat',
       'leave-tormentor-harpoon-seat',
+      'take-tormentor-helm-seat',
+      'leave-tormentor-helm-seat',
       'fire-tormentor-harpoon',
+      'drive-tormentor',
+      'dash-tormentor',
+      'juke-tormentor',
       'abandon-tormentor'
     ]);
     const ui = offers[0]!.ui as Record<string, unknown>;
@@ -277,8 +282,9 @@ describe('acquire effect', () => {
     // removed effect's declared dependents by key (the generic mechanism is
     // pinned in playStore.test.ts). What THIS pins is the declaration: every
     // record effect key, so removing the mount chip can never strand a recorded
-    // occupancy, a prone record, an HP record or a destroyed wreck under a
-    // abandoned vehicle.
+    // occupancy, a prone record, an HP record or a destroyed wreck under an
+    // abandoned vehicle. (No dash key: the app tracks no per-encounter Dash
+    // count — the rule text informs, the player counts.)
     expect(acquireEffect().dependents).toEqual([
       'tormentor-occupancy',
       'tormentor-ac-mode',
@@ -287,7 +293,8 @@ describe('acquire effect', () => {
       'tormentor-hp-heal',
       'tormentor-destroyed',
       'tormentor-seat-passenger',
-      'tormentor-seat-harpoon'
+      'tormentor-seat-harpoon',
+      'tormentor-seat-helm'
     ]);
   });
 
@@ -1292,6 +1299,734 @@ describe('harpoon seat + attack i18n (tlh is the canary)', () => {
   });
 });
 
+/**
+ * PR-C — the HELM station: the seat infrastructure's third seat plus the
+ * station's OFFERS. The seat is another SeatSpec on the same helper (effect
+ * `effect-tormentor-seat-helm`, key `tormentor-seat-helm`, fact
+ * `companion.tormentor.seats.helm = 1`, chip like the passenger's); every
+ * seat condition and count iterates SEAT_STATIONS, so the exclusivity leg and
+ * the capacity derive picked the station up by extending the list — and the
+ * key joins CHILD_KEYS, so the acquire lifecycle evicts it like every record.
+ *
+ * The station's offers are the ECONOMY RULING in miniature: vehicle activities
+ * consume the PLAYER's matching economy slot through the GENERIC spend (never
+ * the weapon attacks' pool — Extra Attack neither applies nor is granted).
+ * Drive is the vehicle's MOVEMENT offer (the steed's move rows, PC-parity
+ * house rule): a distance slider against the derived movement pool, apply
+ * spending the player's ACTION beside the captured distance. Dash spends the
+ * action and DOUBLES the pool for the turn (the steed's dashed flag). Juke is
+ * the driver's REACTION (the opportunity-attack economy idiom), spending the
+ * reaction alone — the Dex-save advantage is applied at the table — with a
+ * second able-to-move leg reading the vehicle's prone record (PR-D refines
+ * that leg to speed.effective > 0 once fuel exists).
+ */
+
+/** The helm-seat effect, through the real plan fold (acquired, then taken). */
+function helmSeatEffect(): EffectInstance {
+  const out = evaluate({
+    modules: [module()],
+    committed: [acquireEffect()],
+    planned: [{ instanceId: 'i0', ruleId: 'take-tormentor-helm-seat' }]
+  });
+  const advertised = out.effects.filter((e) => e.id.endsWith('effect-tormentor-seat-helm'));
+  expect(advertised, 'taking the seat applies exactly one named effect').toHaveLength(1);
+  return advertised[0]!;
+}
+
+/** A committed acquire with the helm seat held (stored state for later folds). */
+function seatedAtHelm(): EffectInstance[] {
+  return [acquireEffect(), helmSeatEffect()];
+}
+
+describe('take-tormentor-helm-seat offer', () => {
+  it('is a vehicle free-section EQUIP offer while acquired, with the station-specific keys', () => {
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const offer = out.availableRules.find((r) => r.rule.id === 'take-tormentor-helm-seat');
+    expect(offer, 'the vehicle +ADD carries the take-helm offer').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('free');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.take-helm-seat.name`);
+    expect(ui.description).toBe(`${T}.take-helm-seat.description`);
+    expect(ui.actionCost).toEqual([]);
+    // Seat offers file with the acquire/abandon EQUIP 'vehicle' family.
+    expect(ui.intents).toEqual({ EQUIP: 'vehicle' });
+    // Acquired and unseated at 0/4: legal, no diagnostics.
+    expect(offer!.legal).toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+
+  it('rides the shared seat helper: the same two legs with the station-generic diagnostics', () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'take-tormentor-helm-seat'
+    );
+    expect(raw, 'the take-helm offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.legalWhen).toHaveLength(2);
+    // Leg (a) — one seat per player, GLOBALLY: any other station's seat held
+    // makes taking the Helm illegal, and re-taking the Helm you hold is the
+    // same path. NO new diagnostic keys: the station-generic pair.
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ helm: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    // Leg (b) — the free-seat rule, shared key like the passenger's.
+    expect(raw!.legalWhen![1]!.condition(seatLegReader({}, 3, 4))).toBe(true);
+    expect(raw!.legalWhen![1]!.condition(seatLegReader({}, 4, 4))).toBe(false);
+    expect(raw!.legalWhen![1]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.full`, severity: 'error' }
+    ]);
+  });
+
+  it('apply advertises ONE permanent keyed effect writing exactly the station fact, with the chip', () => {
+    const e = helmSeatEffect();
+    expect(e.id).toContain('effect-tormentor-seat-helm');
+    expect(e.key).toBe('tormentor-seat-helm');
+    expect(e.state).toEqual({ [`${F}.seats.helm`]: 1 });
+    expect(e.expiry).toEqual({ kind: 'permanent' });
+    expect(e.display).toEqual({
+      name: `${T}.seat-helm-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('the derived capacity counts the held helm seat (the derive iterates every station)', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    expect(out.facts[`${F}.seats.helm`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+  });
+});
+
+describe('leave-tormentor-helm-seat offer', () => {
+  it("is the passenger mirror: the not-seated leg reads THIS station's seat alone", () => {
+    const raw = module().offer!({ selections: {} }).find(
+      (o) => o.id === 'leave-tormentor-helm-seat'
+    );
+    expect(raw, 'the leave-helm offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.legalWhen).toHaveLength(1);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({}))).toBe(false);
+    // Another station's seat does not satisfy the leg — each leave clears its own.
+    expect(raw!.legalWhen![0]!.condition(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.leave-seat.not_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('apply advertises the EMPTY same-key eviction — and the station offers go with the seat', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'leave-tormentor-helm-seat' }]
+    });
+    const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-helm'));
+    expect(evict, 'leave advertises the seat eviction').toBeDefined();
+    expect(evict!.key).toBe('tormentor-seat-helm');
+    expect(evict!.state).toBeUndefined();
+    expect(evict!.expiry).toEqual({ kind: 'permanent' });
+    // The seat fact is GONE the moment the row is merely planned (newest-wins),
+    // the capacity falls with it — and with nobody at the Helm the station's
+    // offers no longer exist (the `when` gate).
+    expect(out.facts[`${F}.seats.helm`]).toBeUndefined();
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+    for (const id of ['drive-tormentor', 'dash-tormentor', 'juke-tormentor'])
+      expect(
+        out.availableRules.some((r) => r.rule.id === id),
+        `${id} goes with the seat`
+      ).toBe(false);
+  });
+});
+
+describe('the helm seat rides the acquire lifecycle', () => {
+  it('a re-acquire and an abandon both advertise the empty same-key eviction', () => {
+    for (const ruleId of ['acquire-tormentor', 'abandon-tormentor'] as const) {
+      const out = evaluate({
+        modules: [module()],
+        committed: seatedAtHelm(),
+        planned: [{ instanceId: 'i0', ruleId }]
+      });
+      const evict = out.effects.find((e) => e.id.endsWith('evict-tormentor-seat-helm'));
+      expect(evict, `${ruleId} advertises the helm-seat eviction`).toBeDefined();
+      expect(evict!.key).toBe('tormentor-seat-helm');
+      expect(evict!.state).toBeUndefined();
+      expect(out.facts[`${F}.seats.helm`]).toBeUndefined();
+    }
+  });
+});
+
+/**
+ * The vehicle's MOVEMENT ECONOMY — the steed's, copied exactly (the PC-parity
+ * house rule): `movement.base/total/remaining` derives in the steed's shape
+ * (find-steed's derives), with base a DERIVATION of the speed facts (the PR-D
+ * seam: fuel/boost re-plumbs that one read) rather than a copy of the number,
+ * total doubling while Dashed, remaining = total − spent, every spend
+ * endOfTurn so the pool resets with the turn.
+ */
+describe('tormentor movement derives (the steed pattern)', () => {
+  it('derives base/total/remaining from the speed facts while acquired (base 100 today)', () => {
+    // No seat needed: the movement economy belongs to the VEHICLE, not the
+    // Helm — the offers are seat-gated, the pool is acquire-gated.
+    const out = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(out.facts[`${F}.movement.base`]).toBe(100);
+    expect(out.facts[`${F}.movement.total`]).toBe(100);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(100);
+  });
+
+  it('base is a derivation, never a bake: no movement fact rides the acquire effect', () => {
+    // The seam PR-D re-plumbs (speed → speed.effective): base must READ the
+    // speed facts, so the acquire effect bakes no movement state of its own.
+    expect(acquireEffect().state).not.toHaveProperty(`${F}.movement.base`);
+    expect(acquireEffect().state).not.toHaveProperty(`${F}.movement.total`);
+  });
+
+  it('settles to 0 unacquired and on abandon (the contributions stay registered)', () => {
+    const unacquired = evaluate({ modules: [module()] });
+    expect(unacquired.facts[`${F}.movement.base`]).toBe(0);
+    expect(unacquired.facts[`${F}.movement.total`]).toBe(0);
+    expect(unacquired.facts[`${F}.movement.remaining`]).toBe(0);
+    const abandoned = evaluate({
+      modules: [module()],
+      committed: [acquireEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
+    });
+    expect(abandoned.facts[`${F}.movement.base`]).toBe(0);
+    expect(abandoned.facts[`${F}.movement.total`]).toBe(0);
+    expect(abandoned.facts[`${F}.movement.remaining`]).toBe(0);
+  });
+
+  it('a planned Dash doubles total and remaining for the turn (the steed semantics)', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
+    });
+    expect(out.facts[`${F}.movement.total`]).toBe(200);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(200);
+  });
+});
+
+describe('drive-tormentor offer (the vehicle movement offer)', () => {
+  it('is the steed move-offer shape on the vehicle subject: MOVE section, distance slider, ACTION cost', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    const offer = out.availableRules.find((r) => r.rule.id === 'drive-tormentor');
+    expect(offer, 'the vehicle panel carries Drive while seated').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    // The steed's move rows sit in the MOVE section (the movement panel); the
+    // economy ruling adds what the steed's moves lack — the ACTION cost chip
+    // (a vehicle activity is the player's full slot).
+    expect(ui.section).toBe('move');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.drive.name`);
+    expect(ui.description).toBe(`${T}.drive.description`);
+    expect(ui.detailKey).toBe('vehicle/tormentor-helm');
+    expect(ui.intents).toEqual({ MOVE: 'travel' });
+    expect(ui.actionCost).toEqual(['action']);
+    // The steed's STEED_MOVE_CONTROL/STEED_MOVE_VARS shape exactly: record the
+    // actual feet driven, bounded by the (Dash-doubled) total, defaulting to
+    // all remaining — min 0 so an over-committed prefix is never a meaningful
+    // opening distance.
+    expect(ui.primaryControl).toEqual({
+      type: 'slider',
+      var: 'distance',
+      max: { fact: `${F}.movement.total` },
+      step: 5,
+      unit: 'ft'
+    });
+    expect(offer!.rule.vars).toEqual({
+      distance: { capture: true, min: 0, default: { fact: `${F}.movement.remaining` } }
+    });
+  });
+
+  it('is gated structurally on the acquire AND the helm seat (when)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'drive-tormentor');
+    expect(raw, 'the drive offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.when!(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({}))).toBe(false);
+    // Through the fold: acquired but unseated, the offer does not exist.
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(unseated.availableRules.some((r) => r.rule.id === 'drive-tormentor')).toBe(false);
+  });
+
+  it('legality is the action pool PLUS the steed out-of-movement leg, both with OWN diagnostics', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'drive-tormentor');
+    expect(raw, 'the drive offer exists').toBeDefined();
+    expect(raw!.legalWhen).toHaveLength(2);
+    const reader = (actions: number, remaining: number): FactReader => ({
+      num: (n) =>
+        n === 'actions.remaining' ? actions : n === `${F}.movement.remaining` ? remaining : 0,
+      has: () => false
+    });
+    // Leg (a) — the player's action pool (the economy ruling).
+    const legA = raw!.legalWhen![0]!;
+    expect(legA.condition(reader(1, 100))).toBe(true);
+    expect(legA.condition(reader(0, 100))).toBe(false);
+    expect(legA.diagnostics).toEqual([{ code: `${T}.drive.no_action`, severity: 'error' }]);
+    // Leg (b) — the steed's out-of-movement gate (remaining >= 5: a machine
+    // with under 5 ft left cannot usefully roll).
+    const legB = raw!.legalWhen![1]!;
+    expect(legB.condition(reader(1, 100))).toBe(true);
+    expect(legB.condition(reader(1, 0))).toBe(false);
+    expect(legB.diagnostics).toEqual([{ code: `${T}.drive.out_of_movement`, severity: 'error' }]);
+  });
+
+  it('apply spends the player ACTION and the distance against the pool — ONE keyless endOfTurn effect', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
+    });
+    // Exactly ONE advertised effect — the action spend and the movement spend
+    // together (the steed-dash idiom: two facts, one per-turn effect).
+    expect(out.effects).toHaveLength(1);
+    expect(out.effects[0]!.key).toBeUndefined();
+    expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
+    expect(out.effects[0]!.state).toEqual({
+      'actions.spent': 1,
+      [`${F}.movement.spent`]: 30
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.facts['actions.remaining']).toBe(0);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(70);
+    // The seat stays taken and the capacity counts it still — moving writes
+    // nothing else.
+    expect(out.facts[`${F}.seats.helm`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+  });
+
+  it('distance defaults to ALL remaining when the row carries no selection (the steed idiom)', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor' }]
+    });
+    expect(out.effects[0]!.state).toEqual({
+      'actions.spent': 1,
+      [`${F}.movement.spent`]: 100
+    });
+    expect(out.facts[`${F}.movement.remaining`]).toBe(0);
+  });
+
+  it('an over-distance row carries the steed out-of-movement diagnostic while its spend still lands', () => {
+    // The steed partial-distance pin: the legality gate alone (>= 5) would let
+    // an oversized selection through — apply validates the SELECTED distance,
+    // so the row errors while the over-commit still projects (remaining reads
+    // negative, floored nowhere — the steed spells it the same way).
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 150 } }]
+    });
+    expect(out.effects[0]!.state).toEqual({
+      'actions.spent': 1,
+      [`${F}.movement.spent`]: 150
+    });
+    expect(out.facts[`${F}.movement.remaining`]).toBe(-50);
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.drive.out_of_movement`, severity: 'error' }
+    ]);
+  });
+
+  it('a no-action row still moves (the override path), flagged with its OWN diagnostic alone', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } },
+        { instanceId: 'i1', ruleId: 'drive-tormentor' }
+      ]
+    });
+    // The second row over-commits the ACTION (the first row spent it) with 70
+    // ft still in the pool, so the out-of-movement gate passes and the failing
+    // leg is the action alone — the row carries exactly its own diagnostic
+    // while its default distance (all remaining) still lands.
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.drive.no_action`, severity: 'error' }
+    ]);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(0);
+  });
+
+  it('NO prone leg: a fallen vehicle leaves Drive legal (the GM adjudicates the rest)', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+    });
+    expect(out.facts[`${F}.prone`]).toBe(1);
+    const offer = out.availableRules.find((r) => r.rule.id === 'drive-tormentor');
+    expect(offer, 'drive stays offered while prone').toBeDefined();
+    expect(offer!.legal, 'drive is legal while prone').toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+});
+
+describe('dash-tormentor offer', () => {
+  it('is the BONUS-action row (bonus-action section, no control), the player BONUS ACTION', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    const offer = out.availableRules.find((r) => r.rule.id === 'dash-tormentor');
+    expect(offer, 'the vehicle +ADD carries Dash while seated').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    // The 2024-format stat block takes the vehicle's Dash as a BONUS action
+    // (the user's ruling): the row files with the bonus actions (the steed's
+    // ability rows' section), in the MOVE verb's dash bucket.
+    expect(ui.section).toBe('bonus-action');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.dash.name`);
+    expect(ui.description).toBe(`${T}.dash.description`);
+    expect(ui.detailKey).toBe('vehicle/tormentor-helm');
+    expect(ui.intents).toEqual({ MOVE: 'dash' });
+    expect(ui.actionCost).toEqual(['bonus']);
+    // No dice, no vars: the doubling is a fact, not a capture — there is
+    // nothing to roll and nothing to select.
+    expect(ui.primaryControl).toBeUndefined();
+    expect(offer!.rule.vars).toBeUndefined();
+  });
+
+  it('is gated structurally on the acquire AND the helm seat (when)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'dash-tormentor');
+    expect(raw, 'the dash offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.when!(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({}))).toBe(false);
+    // Through the fold: acquired but unseated, the offer does not exist.
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(unseated.availableRules.some((r) => r.rule.id === 'dash-tormentor')).toBe(false);
+  });
+
+  it('legality is the player bonus-action pool idiom: the bonus ALONE, with its OWN diagnostic', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'dash-tormentor');
+    expect(raw, 'the dash offer exists').toBeDefined();
+    expect(raw!.legalWhen).toHaveLength(1);
+    const leg = raw!.legalWhen![0]!;
+    const poolReader = (bonus: number): FactReader => ({
+      num: (n) => (n === 'bonusActions.remaining' ? bonus : 0),
+      has: () => false
+    });
+    expect(leg.condition(poolReader(1))).toBe(true);
+    expect(leg.condition(poolReader(0))).toBe(false);
+    expect(leg.diagnostics).toEqual([{ code: `${T}.dash.no_bonus_action`, severity: 'error' }]);
+  });
+
+  it('apply spends the BONUS action and DOUBLES the movement — the spend ALONE, nothing durable', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
+    });
+    // ONE advertised effect: the per-turn spend (the player's BONUS action
+    // and the dashed flag together — the steed's steedSpend({bonusActions.spent,
+    // dashed}) idiom). The app tracks NO per-encounter counter (there is no
+    // encounter to count within — the rule text informs, the player counts),
+    // so nothing durable is written beside the spend.
+    expect(out.effects).toHaveLength(1);
+    const [cost] = out.effects;
+    expect(cost!.key).toBeUndefined();
+    expect(cost!.expiry).toEqual({ kind: 'endOfTurn' });
+    expect(cost!.state).toEqual({ 'bonusActions.spent': 1, [`${F}.dashed`]: 1 });
+    // NO dash-count facts stand — not zero, ABSENT: nothing derives or
+    // records a count or an allowance any more.
+    expect(out.facts[`${F}.dashes.taken`]).toBeUndefined();
+    expect(out.facts[`${F}.dashes.allowance`]).toBeUndefined();
+    // The BONUS pool alone: the player's ACTION stays open.
+    expect(out.facts['bonusActions.remaining']).toBe(0);
+    expect(out.facts['actions.remaining']).toBe(1);
+    expect(out.facts[`${F}.movement.total`]).toBe(200);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(200);
+    // The seat stays taken and the capacity counts it still.
+    expect(out.facts[`${F}.seats.helm`]).toBe(1);
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(1);
+  });
+
+  it('a no-bonus row still executes (the override path), error and note together', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'dash-tormentor' },
+        { instanceId: 'i1', ruleId: 'dash-tormentor' }
+      ]
+    });
+    // The second row over-commits the BONUS action (the first row spent it)
+    // and still executes — carrying its own error BESIDE the unconditional
+    // rule-text note (dedupe keeps the error first, the note after).
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 5 } }
+    ]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.dash.no_bonus_action`, severity: 'error' },
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 5 } }
+    ]);
+    // No count anywhere — not on the first Dash, not on the second.
+    expect(out.facts[`${F}.dashes.taken`]).toBeUndefined();
+  });
+
+  it('the rule-text note rides EVERY Dash row — unconditional, with the live allowance as params', () => {
+    // The app has no encounter tracking: it cannot know where the player
+    // sits in the 3-plus-CON-mod Dashes each encounter, so the row carries
+    // the WHOLE rule as an informational note on every Dash (the FIRST
+    // included) and the player counts. The allowance is computed from the
+    // FACTS at fold time — 3 + the baked Constitution modifier, no hardcoded
+    // total — and travels as diagnostic params the render layer interpolates.
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 5 } }
+    ]);
+    // Informational, never the error path: the row and the plan stay LEGAL.
+    expect(out.status.legal).toBe(true);
+    // A re-baked stat block moves the number with no other edit: CON 18 (+4)
+    // reads 7 in the note's params, never a hardcoded 5.
+    const con18: EffectInstance = {
+      ...acquireEffect(),
+      state: { ...acquireEffect().state, [`${F}.con.modifier`]: 4 }
+    };
+    const rederived = evaluate({
+      modules: [module(), economy],
+      committed: [con18, helmSeatEffect()],
+      planned: [{ instanceId: 'i0', ruleId: 'dash-tormentor' }]
+    });
+    expect(rederived.planDiagnostics['i0']).toEqual([
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 7 } }
+    ]);
+  });
+
+  it('abandon clears the dashed/movement state — no counter exists to outlive the vehicle', () => {
+    // With the counter gone the acquire lifecycle still owns every durable
+    // vehicle fact: abandoning replaces the acquire effect, the movement
+    // economy settles to nothing, and no dash record can strand under an
+    // abandoned vehicle because none is ever written.
+    const out = evaluate({
+      modules: [module()],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'abandon-tormentor' }]
+    });
+    expect(
+      out.effects.some((e) => e.id.split('#').includes('evict-tormentor-dash-count')),
+      'no dash-count eviction exists to advertise'
+    ).toBe(false);
+    expect(out.facts[`${F}.movement.total`]).toBe(0);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(0);
+    expect(out.facts[`${F}.dashed`] ?? 0).toBe(0);
+    expect(out.facts[`${F}.dashes.taken`]).toBeUndefined();
+  });
+
+  it('NO prone leg: a fallen vehicle leaves Dash legal (the GM adjudicates the rest)', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'knock-tormentor-prone' }]
+    });
+    expect(out.facts[`${F}.prone`]).toBe(1);
+    const offer = out.availableRules.find((r) => r.rule.id === 'dash-tormentor');
+    expect(offer, 'dash stays offered while prone').toBeDefined();
+    expect(offer!.legal, 'dash is legal while prone').toBe(true);
+    expect(offer!.diagnostics).toEqual([]);
+  });
+});
+
+describe('juke-tormentor offer', () => {
+  it('is the Helm REACTION on the vehicle subject, filed like an opportunity attack', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    const offer = out.availableRules.find((r) => r.rule.id === 'juke-tormentor');
+    expect(offer, 'the vehicle +ADD carries Juke while seated').toBeDefined();
+    const ui = offer!.rule.ui as Record<string, unknown>;
+    expect(ui.section).toBe('reaction');
+    expect(ui.subject).toBe(SUBJECT);
+    expect(ui.name).toBe(`${T}.juke.name`);
+    expect(ui.description).toBe(`${T}.juke.description`);
+    expect(ui.detailKey).toBe('vehicle/tormentor-helm');
+    expect(ui.intents).toEqual({ REACT: 'ward' });
+    expect(ui.actionCost).toEqual(['reaction']);
+    // No dice, no vars: the Dex-save advantage is applied at the table — the
+    // row records the intent, nothing is wired to roll.
+    expect(ui.primaryControl).toBeUndefined();
+    expect(offer!.rule.vars).toBeUndefined();
+  });
+
+  it('is gated structurally on the acquire AND the helm seat (when)', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'juke-tormentor');
+    expect(raw, 'the juke offer exists').toBeDefined();
+    expect(typeof raw!.when).toBe('function');
+    expect(raw!.when!(seatLegReader({ helm: 1 }))).toBe(true);
+    expect(raw!.when!(seatLegReader({ passenger: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({ harpoon: 1 }))).toBe(false);
+    expect(raw!.when!(seatLegReader({}))).toBe(false);
+    // Through the fold: acquired but unseated, the offer does not exist.
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    expect(unseated.availableRules.some((r) => r.rule.id === 'juke-tormentor')).toBe(false);
+  });
+
+  it('legality is the reaction-pool idiom PLUS the able-to-move leg, both with OWN diagnostics', () => {
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'juke-tormentor');
+    expect(raw, 'the juke offer exists').toBeDefined();
+    expect(raw!.legalWhen).toHaveLength(2);
+    const poolReader = (reactions: number, prone: number): FactReader => ({
+      num: (n) => (n === 'reactions.remaining' ? reactions : n === `${F}.prone` ? prone : 0),
+      has: () => false
+    });
+    // Leg (a) — the reaction pool (the unarmed opportunity-attack spelling).
+    const legA = raw!.legalWhen![0]!;
+    expect(legA.condition(poolReader(1, 0))).toBe(true);
+    expect(legA.condition(poolReader(0, 0))).toBe(false);
+    expect(legA.diagnostics).toEqual([{ code: `${T}.juke.no_reaction`, severity: 'error' }]);
+    // Leg (b) — the vehicle able to move: PR-C's approximation is the prone
+    // record (PR-D refines to speed.effective > 0 once fuel exists).
+    const legB = raw!.legalWhen![1]!;
+    expect(legB.condition(poolReader(1, 0))).toBe(true);
+    expect(legB.condition(poolReader(1, 1))).toBe(false);
+    expect(legB.diagnostics).toEqual([{ code: `${T}.juke.unable_to_move`, severity: 'error' }]);
+  });
+
+  it('apply is the reaction spend ALONE: ONE keyless endOfTurn effect, no facts of its own', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: 'juke-tormentor' }]
+    });
+    // Exactly ONE advertised effect — the generic per-turn REACTION spend,
+    // never a vehicle fact: the Dex-save advantage is applied at the table,
+    // the plan row records the intent.
+    expect(out.effects).toHaveLength(1);
+    expect(out.effects[0]!.key).toBeUndefined();
+    expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
+    expect(out.effects[0]!.state).toEqual({ 'reactions.spent': 1 });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // The REACTION pool alone: the action stays open.
+    expect(out.facts['reactions.remaining']).toBe(0);
+    expect(out.facts['actions.remaining']).toBe(1);
+    expect(out.facts[`${F}.seats.helm`]).toBe(1);
+  });
+
+  it('a no-reaction row still executes (the override path), flagged with its OWN diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'juke-tormentor' },
+        { instanceId: 'i1', ruleId: 'juke-tormentor' }
+      ]
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.juke.no_reaction`, severity: 'error' }
+    ]);
+  });
+
+  it('a prone-vehicle row is illegal-but-committable: the spend lands with the unable-to-move diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: seatedAtHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'knock-tormentor-prone' },
+        { instanceId: 'i1', ruleId: 'juke-tormentor' }
+      ]
+    });
+    expect(out.facts[`${F}.prone`]).toBe(1);
+    // A reaction IS available — the ONLY failing leg is able-to-move, so the
+    // row carries exactly that diagnostic.
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `${T}.juke.unable_to_move`, severity: 'error' }
+    ]);
+    // The override row still spends the reaction (the over-commit projection).
+    expect(out.facts['reactions.remaining']).toBe(0);
+  });
+});
+
+describe('helm seat + station actions i18n (tlh is the canary)', () => {
+  it('the take/leave names, chip name, action names/descriptions and diagnostics exist in BOTH locales', () => {
+    const strings: Record<string, string | undefined> = {
+      'en take name': en.rule.tormentor['take-helm-seat']?.name,
+      'en-x-tlh take name': tlh.rule.tormentor['take-helm-seat']?.name,
+      'en take description': en.rule.tormentor['take-helm-seat']?.description,
+      'en-x-tlh take description': tlh.rule.tormentor['take-helm-seat']?.description,
+      'en leave name': en.rule.tormentor['leave-helm-seat']?.name,
+      'en-x-tlh leave name': tlh.rule.tormentor['leave-helm-seat']?.name,
+      'en leave description': en.rule.tormentor['leave-helm-seat']?.description,
+      'en-x-tlh leave description': tlh.rule.tormentor['leave-helm-seat']?.description,
+      'en chip name': en.rule.tormentor['seat-helm-effect']?.name,
+      'en-x-tlh chip name': tlh.rule.tormentor['seat-helm-effect']?.name,
+      'en drive name': en.rule.tormentor.drive?.name,
+      'en-x-tlh drive name': tlh.rule.tormentor.drive?.name,
+      'en drive description': en.rule.tormentor.drive?.description,
+      'en-x-tlh drive description': tlh.rule.tormentor.drive?.description,
+      'en drive no action': en.rule.tormentor.drive?.no_action,
+      'en-x-tlh drive no action': tlh.rule.tormentor.drive?.no_action,
+      'en drive out of movement': en.rule.tormentor.drive?.out_of_movement,
+      'en-x-tlh drive out of movement': tlh.rule.tormentor.drive?.out_of_movement,
+      'en dash name': en.rule.tormentor.dash?.name,
+      'en-x-tlh dash name': tlh.rule.tormentor.dash?.name,
+      'en dash description': en.rule.tormentor.dash?.description,
+      'en-x-tlh dash description': tlh.rule.tormentor.dash?.description,
+      'en dash no bonus action': en.rule.tormentor.dash?.no_bonus_action,
+      'en-x-tlh dash no bonus action': tlh.rule.tormentor.dash?.no_bonus_action,
+      'en dash risk': en.rule.tormentor.dash?.risk,
+      'en-x-tlh dash risk': tlh.rule.tormentor.dash?.risk,
+      'en juke name': en.rule.tormentor.juke?.name,
+      'en-x-tlh juke name': tlh.rule.tormentor.juke?.name,
+      'en juke description': en.rule.tormentor.juke?.description,
+      'en-x-tlh juke description': tlh.rule.tormentor.juke?.description,
+      'en juke no reaction': en.rule.tormentor.juke?.no_reaction,
+      'en-x-tlh juke no reaction': tlh.rule.tormentor.juke?.no_reaction,
+      'en juke unable to move': en.rule.tormentor.juke?.unable_to_move,
+      'en-x-tlh juke unable to move': tlh.rule.tormentor.juke?.unable_to_move
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+    // The risk note is INTERPOLATED: both locales carry the {{allowance}}
+    // slot (double-brace, the sveltekit-i18n convention) the diagnostic's
+    // params fill at render time.
+    expect(en.rule.tormentor.dash?.risk).toContain('{{allowance}}');
+    expect(tlh.rule.tormentor.dash?.risk).toContain('{{allowance}}');
+    // The counter's chip key is DEAD with the counter — no locale carries it
+    // (indexed through a record: the typed import no longer knows the key,
+    // which is exactly the point).
+    expect((en.rule.tormentor as Record<string, unknown>)['dash-count-effect']).toBeUndefined();
+    expect((tlh.rule.tormentor as Record<string, unknown>)['dash-count-effect']).toBeUndefined();
+  });
+});
+
+describe('tormentor movement panel i18n (tlh is the canary)', () => {
+  it('the movement resource label and its ledger short label exist in BOTH locales', () => {
+    // The creatureCapacity precedent's key family: the resources row's label
+    // under play.stats.tormentor.*, its ledger short form under
+    // play.ledger.short.tormentor.* (wired by RESOURCE_SHORT_LABELS).
+    const strings: Record<string, string | undefined> = {
+      'en stats movement': en.play.stats.tormentor?.movement,
+      'en-x-tlh stats movement': tlh.play.stats.tormentor?.movement,
+      'en short movement': en.play.ledger.short.tormentor?.movement,
+      'en-x-tlh short movement': tlh.play.ledger.short.tormentor?.movement
+    };
+    for (const [where, value] of Object.entries(strings))
+      expect(value, where).toEqual(expect.any(String));
+  });
+});
+
 // The acquired stat facts (every gate the declarations read, plus the pool the
 // HP chip renders).
 const BOARDED = {
@@ -1305,7 +2040,10 @@ const BOARDED = {
   [`${F}.dex.modifier`]: 2,
   [`${F}.con.modifier`]: 2,
   [`${F}.creatureCapacity.max`]: 4,
-  [`${F}.creatureCapacity.used`]: 1
+  [`${F}.creatureCapacity.used`]: 1,
+  [`${F}.movement.base`]: 100,
+  [`${F}.movement.total`]: 100,
+  [`${F}.movement.remaining`]: 100
 };
 
 describe('module-declared panel entries', () => {
@@ -1353,7 +2091,7 @@ describe('module-declared panel entries', () => {
     ]);
   });
 
-  it('resources: one usedMax creature-capacity row reading used/max, stamped with the subject', () => {
+  it('resources: usedMax creature-capacity and movement rows, stamped with the subject', () => {
     expect(deriveResourceEntries(BOARDED, [module()]).filter((e) => e.subject === SUBJECT)).toEqual(
       [
         {
@@ -1363,6 +2101,16 @@ describe('module-declared panel entries', () => {
           label: 'play.stats.tormentor.creatureCapacity',
           total: `${F}.creatureCapacity.max`,
           remaining: `${F}.creatureCapacity.used`,
+          subject: SUBJECT
+        },
+        {
+          // The steed's movement row: the derived movement pool (spent by
+          // Drive, doubled by Dash, reset each turn) renders "remaining/total"
+          // ("70/100") — the vehicle's movement economy on the ledger.
+          type: 'usedMax',
+          label: 'play.stats.tormentor.movement',
+          total: `${F}.movement.total`,
+          remaining: `${F}.movement.remaining`,
           subject: SUBJECT
         }
       ]

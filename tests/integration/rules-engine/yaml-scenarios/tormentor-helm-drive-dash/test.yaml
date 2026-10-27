@@ -1,0 +1,129 @@
+name: 'Tormentor - Helm Drive and Dash Actions'
+description: >-
+  Drive and Dash are the Helm's plan-row actions, each spending the PLAYER's
+  matching slot through the generic spend (never the weapon attacks' pool: a
+  vehicle action is not an Attack action, so Extra Attack neither applies nor
+  is granted). Drive spends the ACTION and IS the vehicle's movement offer
+  (the steed's move rows, PC-parity house rule): its apply spends the action
+  BESIDE the captured distance against the derived movement pool. Dash is
+  the player's BONUS ACTION (the 2024-format stat block) and doubles the
+  pool for the turn (the steed's dashed flag) — so a turn can Drive AND
+  Dash, each from its own pool. Every Dash row carries the unconditional
+  rule-text note (no counter is tracked; see tormentor-helm-dash-count).
+  With no matching slot left each stays visible but ILLEGAL with its OWN
+  diagnostic (illegal-but-committable), and a planned-anyway row still
+  spends.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+  # Both slots open: both of the Helm's actions are legal. Drive files in the
+  # MOVE section (the steed's move rows); Dash files as a BONUS action row.
+  - evaluate:
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 1
+        offers:
+          legal:
+            - drive-tormentor
+            - dash-tormentor
+        offerUi:
+          - id: drive-tormentor
+            ui:
+              section: move
+              subject: tormentor
+              detailKey: vehicle/tormentor-helm
+              actionCost:
+                - action
+          - id: dash-tormentor
+            ui:
+              section: bonus-action
+              subject: tormentor
+              detailKey: vehicle/tormentor-helm
+              actionCost:
+                - bonus
+  # Drive spends the action and the movement — nothing else: the bonus action
+  # stays open, the seat stays taken, the capacity counts the driver still.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 30
+      assert:
+        facts:
+          actions.remaining: 0
+          bonusActions.remaining: 1
+          companion.tormentor.movement.remaining: 70
+          companion.tormentor.seats.helm: 1
+          companion.tormentor.creatureCapacity.used: 1
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+  # The action is gone but the BONUS action is not: Dash stays LEGAL beside a
+  # driven turn, while Drive turns illegal.
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - dash-tormentor
+          illegal:
+            - drive-tormentor
+  # Dash spends the BONUS action alone (the action pool untouched at 0) and
+  # DOUBLES the pool over the 30 ft already driven, the unconditional
+  # rule-text note riding the row.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: 0
+          bonusActions.remaining: 0
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 170
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+  # The turn ends: both spends and the doubling age away together, and both
+  # slots reopen.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+          companion.tormentor.seats.helm: 1
+  # Turn 2, dash-first: the bonus action goes, the ACTION stays open for
+  # Drive — the mirror of turn 1, the note riding the row as before.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          actions.remaining: 1
+          bonusActions.remaining: 0
+          companion.tormentor.movement.total: 200
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+  - addOffer:
+      id: drive-tormentor
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.tormentor.movement.remaining: 0
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []

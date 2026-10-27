@@ -642,6 +642,14 @@ export interface EngineOutput {
 export interface Diagnostic {
   code: string;
   severity: 'error' | 'warning' | 'notice';
+  /**
+   * Interpolation params for the code's translated text — double-brace slots
+   * in the locale files, the sveltekit-i18n convention. Optional: a
+   * diagnostic whose copy bakes no number carries none, and the render layer
+   * forwards them to $t untouched (a number computed from the facts at fold
+   * time, so the copy stays a rule statement rather than a snapshot).
+   */
+  params?: Record<string, string | number>;
 }
 
 /**

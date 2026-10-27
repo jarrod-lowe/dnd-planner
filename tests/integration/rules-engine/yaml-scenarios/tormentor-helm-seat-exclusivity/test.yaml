@@ -1,0 +1,63 @@
+name: 'Tormentor - Helm Seat Exclusivity, Every Direction'
+description: >-
+  One seat per player, globally — the already-seated legality leg reads EVERY
+  station's seat fact, so the Helm excludes the passenger and harpoon seats
+  and both exclude it: taking the Helm while holding any other seat is
+  ILLEGAL, never hidden (the offer stays applicable with its diagnostic and a
+  planned-anyway row still executes as the ONE keyed replacement), and holding
+  the Helm makes taking any other station's seat — or re-taking the Helm
+  itself — the same illegal path with the same shared diagnostic.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # Hold the passenger seat first.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.creatureCapacity.used: 1
+  # Passenger held: taking the HELM seat is illegal-but-committable with the
+  # shared already-seated diagnostic — one seat per player, any station.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-tormentor-helm-seat
+          illegal:
+            - take-tormentor-helm-seat
+  # The override path: the planned-anyway take still applies, the seat fact
+  # lands beside the passenger's, and the row carries its diagnostic.
+  - addOffer:
+      id: take-tormentor-helm-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.seats.helm: 1
+          companion.tormentor.creatureCapacity.used: 2
+        planErrors:
+          - id: take-tormentor-helm-seat
+            index: 0
+            errors:
+              - rule.tormentor.take-seat.already_seated
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-seat-passenger
+            - effect-tormentor-seat-helm
+        facts:
+          companion.tormentor.seats.passenger: 1
+          companion.tormentor.seats.helm: 1
+  # Helm held: taking the PASSENGER seat, the HARPOON seat, or re-taking the
+  # HELM seat is the same illegal path with the same shared diagnostic.
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-tormentor-passenger-seat
+            - take-tormentor-harpoon-seat
+            - take-tormentor-helm-seat

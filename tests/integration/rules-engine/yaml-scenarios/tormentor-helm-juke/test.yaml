@@ -1,0 +1,78 @@
+name: 'Tormentor - Helm Juke Reaction'
+description: >-
+  Juke is the Helm's REACTION (the opportunity-attack economy idiom): it
+  spends the PLAYER's reaction through the plain reactions.spent spend — one
+  keyless endOfTurn effect and nothing else, no facts of its own (the plan row
+  records the intent; the Dexterity-save advantage is applied at the table).
+  With no reaction left the offer stays visible but ILLEGAL with its OWN
+  no-reaction diagnostic (illegal-but-committable), and a planned-anyway row
+  still spends, the over-commit reading negative until the turn ends. The
+  action pool is never touched — a reaction is a reaction.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+  # A reaction available: Juke is legal, and spending it touches the REACTION
+  # pool alone (the action stays open).
+  - evaluate:
+      assert:
+        facts:
+          reactions.remaining: 1
+        offers:
+          legal:
+            - juke-tormentor
+        offerUi:
+          - id: juke-tormentor
+            ui:
+              section: reaction
+              subject: tormentor
+              detailKey: vehicle/tormentor-helm
+              actionCost:
+                - reaction
+  - addOffer:
+      id: juke-tormentor
+      assert:
+        facts:
+          reactions.remaining: 0
+          actions.remaining: 1
+          companion.tormentor.seats.helm: 1
+        planErrors:
+          - id: juke-tormentor
+            index: 0
+            errors: []
+  # No reaction left: the offer stays visible but ILLEGAL with its OWN
+  # no-reaction diagnostic…
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - juke-tormentor
+          illegal:
+            - juke-tormentor
+  # …and the override row still spends, carrying its diagnostic.
+  - addOffer:
+      id: juke-tormentor
+      assert:
+        facts:
+          reactions.remaining: -1
+        planErrors:
+          - id: juke-tormentor
+            index: 1
+            errors:
+              - rule.tormentor.juke.no_reaction
+  # The turn ends: the spend ages away and the reaction opens again.
+  - endTurn:
+      assert:
+        facts:
+          reactions.remaining: 1
+        offers:
+          legal:
+            - juke-tormentor

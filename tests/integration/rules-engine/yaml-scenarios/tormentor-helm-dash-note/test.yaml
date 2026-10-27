@@ -1,0 +1,63 @@
+name: 'Tormentor - Helm Dash Risk Note Rides Every Dash Row'
+description: >-
+  The stat block's Ability Scores fine print: each encounter the vehicle can
+  Dash 3 times plus its Constitution modifier, and each Dash beyond that runs
+  the risk of damaging the vehicle. The app has no encounter tracking, so the
+  note stating that rule is UNCONDITIONAL — it rides EVERY planned Dash row
+  (the first included, fresh each turn), as a 'notice' diagnostic that is
+  informational only (never the error path, so the row and the plan stay
+  LEGAL) and per-row (planDiagnostics is per-instance: no other row ever
+  sees it, and it commits nothing — only the bonus spend and the doubling
+  age away at end of turn).
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  # The very first Dash of the encounter carries the note: the player counts,
+  # the row informs.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+        status:
+          legal: true
+  # A free record row planned beside it carries NOTHING (a per-row note is
+  # not a panel truth).
+  - addOffer:
+      id: set-tormentor-ac-mode
+      assert:
+        planErrors:
+          - id: set-tormentor-ac-mode
+            index: 0
+            errors: []
+  # End of turn: the note commits nothing — only the bonus spend and the
+  # doubling age away; the seat and the acquire are what stand.
+  - endTurn:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+          companion.tormentor.seats.helm: 1
+  # Turn 2: a fresh, LEGAL Dash — bonus action open — carries the note
+  # ALONE, exactly as the first did: informational, never the error path,
+  # the plan stays legal.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+        status:
+          legal: true

@@ -57,6 +57,10 @@
   const engineErrorCode = $derived(
     playStore.state.engineOutput?.diagnostics.errors[0]?.code ?? 'play.error.engineCycle'
   );
+  // …and any interpolation params that diagnostic carries (none today — the
+  // engine-level codes bake no numbers — but the banner forwards them so a
+  // param-carrying code can never silently lose them).
+  const engineErrorParams = $derived(playStore.state.engineOutput?.diagnostics.errors[0]?.params);
 
   // Collect active annotations from engine output
   const activeAnnotations = $derived(playStore.state.engineOutput?.annotations ?? []);
@@ -177,7 +181,9 @@
   {:else}
     <div class="play-character__intent-body">
       {#if hasEngineErrors}
-        <div class="play-character__engine-error" role="alert">{$t(engineErrorCode)}</div>
+        <div class="play-character__engine-error" role="alert">
+          {$t(engineErrorCode, engineErrorParams)}
+        </div>
       {/if}
       <ActiveStateStrip
         effects={currentEffects}

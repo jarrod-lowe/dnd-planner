@@ -67,7 +67,12 @@ vi.mock('sveltekit-i18n', () => {
     // production user): panel annotations interpolate $t(key, values) exactly
     // as the notices strip interpolates bodies.
     'play.annotations.concentration-save':
-      'Concentration save — DC {{dc}} Constitution save to keep the spell.'
+      'Concentration save — DC {{dc}} Constitution save to keep the spell.',
+    // A notice-diagnostic template (the Tormentor Dash risk note is the
+    // production user of Diagnostic.params): the per-row note interpolates
+    // $t(code, params) — the live per-encounter allowance into the rule text.
+    'rule.tormentor.dash.risk':
+      'Each encounter the vehicle can Dash {{allowance}} times (3 plus its Constitution modifier); each Dash beyond that runs the risk of damaging the vehicle.'
   };
 
   return {

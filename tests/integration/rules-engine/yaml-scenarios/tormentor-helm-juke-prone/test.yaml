@@ -1,0 +1,60 @@
+name: 'Tormentor - Juke While The Vehicle Is Prone'
+description: >-
+  Juke requires the vehicle able to move. This pass's leg is the prone
+  record: while companion.tormentor.prone stands, Juke is
+  illegal-but-committable with its OWN unable-to-move diagnostic (a
+  planned-anyway row still spends the reaction — the row records the
+  attempt). Drive and Dash carry NO prone leg: the Helm's actions stay legal
+  beside a fallen vehicle (the GM adjudicates what a prone war machine can
+  do), and flipping it upright restores Juke's legality.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - addOffer:
+      id: knock-tormentor-prone
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+          companion.tormentor.prone: 1
+  # Prone: Juke is illegal-but-committable with its OWN unable-to-move
+  # diagnostic, while Drive and Dash — no prone leg — stay legal.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - juke-tormentor
+          illegal:
+            - juke-tormentor
+          legal:
+            - drive-tormentor
+            - dash-tormentor
+  # The override path: the row still executes — the reaction was available
+  # (leg a passes), so it SPENDS (the pool empties) — and carries its
+  # unable-to-move diagnostic.
+  - addOffer:
+      id: juke-tormentor
+      assert:
+        facts:
+          reactions.remaining: 0
+        planErrors:
+          - id: juke-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.juke.unable_to_move
+  # Flipped upright (a fresh turn, the prone-override spend aged away): the
+  # leg clears and Juke is legal again.
+  - addOffer:
+      id: flip-tormentor-upright
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.prone: 0
+        offers:
+          legal:
+            - juke-tormentor

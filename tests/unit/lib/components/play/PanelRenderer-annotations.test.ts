@@ -168,8 +168,10 @@ describe('PanelRenderer - annotations', () => {
     // The HP recorder's below-threshold bounce rides the bounced row as a
     // 'notice' diagnostic (planDiagnostics is per-instance): sub-threshold
     // damage is legal to attempt, so the note is informational — never the
-    // illegal/error path — and renders in the same note block as
-    // informational annotations, expanded rows only.
+    // illegal/error path. Expanded rows render it in the same note block as
+    // informational annotations; collapsed rows render it as its own note
+    // line (a legal row gives no signal to expand, so the note must be
+    // visible collapsed).
     const createEntryWithNotice = (
       diagnostics: AvailableRuleEntry['diagnostics']
     ): AvailableRuleEntry => ({
@@ -250,14 +252,83 @@ describe('PanelRenderer - annotations', () => {
       expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
     });
 
-    it('hides the note in summary mode (one line; expand to see the note)', () => {
+    it('shows the notice on the collapsed (summary) row as its own note line', () => {
+      // A legal row gives the player no signal to expand, so the notice must
+      // be visible without expanding — the at-a-glance risk warning is the
+      // whole point of the note. The line reuses the expanded note block's
+      // classes and renders once (never beside the expanded copy).
       const entry = createEntryWithNotice([
         { code: 'rule.tormentor.record-damage.below_threshold', severity: 'notice' }
       ]);
       const { container } = render(PanelRenderer, {
         props: { entry, editable: true, facts: {}, summary: true }
       });
+      const block = container.querySelector('.panel-renderer__annotations');
+      expect(block).toBeTruthy();
+      expect(block!.textContent).toContain('rule.tormentor.record-damage.below_threshold');
+      expect(container.querySelectorAll('.panel-renderer__annotation').length).toBe(1);
+    });
+
+    it('renders the notice exactly once on an expanded row (no collapsed duplicate)', () => {
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.record-damage.below_threshold', severity: 'notice' }
+      ]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: false }
+      });
+      expect(container.querySelectorAll('.panel-renderer__annotation').length).toBe(1);
+    });
+
+    it('renders no note line on a collapsed row without notice diagnostics', () => {
+      const { container } = render(PanelRenderer, {
+        props: { entry: createEntryWithNotice([]), editable: true, facts: {}, summary: true }
+      });
       expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+    });
+
+    it('renders no note line on a collapsed row for error diagnostics alone', () => {
+      const { container } = render(PanelRenderer, {
+        props: {
+          entry: createEntryWithNotice([{ code: 'some.error.code', severity: 'error' }]),
+          editable: true,
+          facts: {},
+          summary: true
+        }
+      });
+      expect(container.querySelector('.panel-renderer__annotations')).toBeNull();
+    });
+
+    it('interpolates the notice diagnostic params into the note line', () => {
+      // The Tormentor Dash risk note carries the live per-encounter allowance
+      // as Diagnostic.params (the app tracks no counter — the note is what
+      // the player counts by). The rendered line must show the NUMBER
+      // ("Dash 5 times"), never the template slot.
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.dash.risk', severity: 'notice', params: { allowance: 5 } }
+      ]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: true }
+      });
+      const block = container.querySelector('.panel-renderer__annotations');
+      expect(block).toBeTruthy();
+      expect(block!.textContent).toContain('Dash 5 times');
+      expect(block!.textContent).not.toContain('{{allowance}}');
+    });
+
+    it('interpolates a re-derived allowance — CON 18 reads 7, never a baked total', () => {
+      // The allowance is computed from the facts at fold time, so a re-baked
+      // stat block moves the number in the params; the note renders whatever
+      // it is handed.
+      const entry = createEntryWithNotice([
+        { code: 'rule.tormentor.dash.risk', severity: 'notice', params: { allowance: 7 } }
+      ]);
+      const { container } = render(PanelRenderer, {
+        props: { entry, editable: true, facts: {}, summary: false }
+      });
+      const notes = container.querySelectorAll('.panel-renderer__annotation');
+      expect(notes.length).toBe(1);
+      expect(notes[0]!.textContent).toContain('Dash 7 times');
+      expect(notes[0]!.textContent).not.toContain('{{allowance}}');
     });
   });
 });

@@ -178,7 +178,7 @@
   );
   const warningMessage = $derived(
     hasWarning && entry.diagnostics?.length
-      ? entry.diagnostics.map((d) => $t(d.code)).join('\n')
+      ? entry.diagnostics.map((d) => $t(d.code, d.params)).join('\n')
       : undefined
   );
 
@@ -474,7 +474,7 @@
                 {@const altDescriptor = extractPanelDescriptor(alt.rule)}
                 {@const altName = altDescriptor.name ? $t(altDescriptor.name) : alt.rule.id}
                 {@const altIllegalMsg = !alt.legal
-                  ? alt.diagnostics.map((d) => $t(d.code)).join('\n')
+                  ? alt.diagnostics.map((d) => $t(d.code, d.params)).join('\n')
                   : ''}
                 <button
                   type="button"
@@ -509,7 +509,7 @@
         <span class="plan-row__alt-tooltip" style={tooltipStyle}>
           {(() => {
             const alt = alternatives.find((a) => a.rule.id === openTooltipAltId);
-            return alt ? alt.diagnostics.map((d) => $t(d.code)).join('\n') : '';
+            return alt ? alt.diagnostics.map((d) => $t(d.code, d.params)).join('\n') : '';
           })()}
         </span>
       {/if}
@@ -662,7 +662,9 @@
   /* Collapsed strip: three stacked lines — cost pills (this own line), then
      PanelRenderer's own header (name, with the warning indicator overlaid on
      it exactly as in the expanded row — see `.panel-renderer
-     :global(.warning-indicator)`) and its short-form control line, both
+     :global(.warning-indicator)`) and its short-form control line, plus a
+     note line when the row carries notice diagnostics (PanelRenderer renders
+     it below the control line; a legal row gives no signal to expand), both
      rendered by `.plan-row__content`'s `<PanelRenderer summary>` from the
      SAME header markup the expanded row uses (no separate PlanRow-owned
      copy). `.plan-row__right` is already `display:flex; flex-direction:
