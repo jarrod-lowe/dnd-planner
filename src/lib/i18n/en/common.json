@@ -661,6 +661,20 @@
           "invalid_slot": "Invalid hit die slot"
         }
       },
+      "cover": {
+        "record.name": "Cover",
+        "record.description": "Record the degree of cover you are behind",
+        "degree.none": "None",
+        "degree.half": "Half",
+        "degree.three-quarters": "Three-Quarters",
+        "degree.total": "Total",
+        "effect.name": "Cover",
+        "notice": "Cover",
+        "notice.body.half": "Half cover grants a +{{bonus}} bonus to AC and Dexterity saving throws.",
+        "notice.body.three-quarters": "Three-quarters cover grants a +{{bonus}} bonus to AC and Dexterity saving throws.",
+        "notice.body.total": "Total cover: you can't be targeted directly.",
+        "rider": "Cover"
+      },
       "proficiency": {},
       "movement": {
         "move-walk": {
@@ -2002,6 +2016,9 @@
         "mode": "Mode",
         "fuel": "Fuel",
         "boost": "Boost"
+      },
+      "cover": {
+        "degree": "Cover"
       }
     },
     "plan": {
@@ -2258,7 +2275,8 @@
       "DEFEND": {
         "default": "Other",
         "evade": "Evade",
-        "ward": "Ward"
+        "ward": "Ward",
+        "cover": "Cover"
       },
       "MOVE": {
         "default": "Other",

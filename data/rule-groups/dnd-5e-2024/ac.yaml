@@ -1,5 +1,13 @@
 ruleGroups:
   - id: ac
+    # Cover is core (user ruling 2026-10-28): every character has it by
+    # default. The requires self-heal auto-assigns a group's deps to every
+    # character holding this group (existing characters at their next load;
+    # new characters at their first load), and locks the dep in the picker —
+    # the always-on mechanism, per the universal-group precedent (terraform
+    # SEED#CHAR + yaml requires). ac's derive reads cover.bonus.
+    requires:
+      - cover
     translations:
       en:
         name: Armor Class
