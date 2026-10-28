@@ -15,7 +15,7 @@ ruleGroups:
           Speed, cargo capacity, and STR/DEX/CON while you ride.
         keywords:
           - vehicle
-          - demon grinder
+          - grinder
           - acquire
           - abandon
           - mount
@@ -25,7 +25,7 @@ ruleGroups:
           'ej laH Duj Daj yIlegh.
         keywords:
           - vehicle
-          - demon grinder
+          - grinder
           - acquire
           - abandon
           - mount
@@ -81,7 +81,7 @@ ruleGroups:
         description: Detail text for the Demon Grinder's fallen-prone condition
         keywords:
           - prone
-          - demon grinder
+          - grinder
           - vehicle
           - fallen
           - flip upright
@@ -92,7 +92,7 @@ ruleGroups:
         description: Detail text for the Demon Grinder's fallen-prone condition
         keywords:
           - prone
-          - demon grinder
+          - grinder
           - vehicle
           - fallen
           - flip upright
@@ -132,7 +132,7 @@ ruleGroups:
         description: Detail text for recording damage against the Demon Grinder
         keywords:
           - damage
-          - demon grinder
+          - grinder
           - vehicle
           - threshold
           - immunity
@@ -143,7 +143,7 @@ ruleGroups:
         description: Detail text for recording damage against the Demon Grinder
         keywords:
           - damage
-          - demon grinder
+          - grinder
           - vehicle
           - threshold
           - immunity
