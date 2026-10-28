@@ -6,16 +6,21 @@ description: >-
   plan-row ACTION attack filed like one: ATTACK 'weapons', action cost, a
   dice-line reading the module derives (d20 + 9 to hit, 8d8+4 bludgeoning —
   the ball's weight behind every swing). Reach 15 ft. and one target are
-  offer copy and detail text, not range machinery, and the doubled damage
-  against objects and structures rides the same copy — the GM adjudicates,
-  no mechanic doubles anything. The ECONOMY is the generic action spend (the
-  flinger's ruling): swinging consumes the player's full ACTION and nothing
-  else, the seat stays taken, and on a wreck the shared wrecked leg composes.
+  offer copy and detail text, not range machinery. The stat block's one
+  rider — the damage doubled against objects and structures — rides EVERY
+  swing row as an unconditional 'notice' diagnostic (the dash-risk idiom,
+  PR-6's user correction amending this station's copy-only landing:
+  informational only, never the error path — the row stays legal — and
+  never a mechanic; the GM adjudicates what counts). The ECONOMY is the
+  generic action spend (the flinger's ruling): swinging consumes the
+  player's full ACTION and nothing else, the seat stays taken, and on a
+  wreck the shared wrecked leg composes with the note beside it.
 ruleGroups:
   - vehicles/demon-grinder
   - dnd-5e-2024/action-economy
 steps:
-  # Acquired but unseated: no swing offer — the attack is the station's.
+  # Acquired but unseated: no swing offer — the attack is the station's, and
+  # with no swing row there is no note anywhere.
   - addOffer:
       id: acquire-demon-grinder
   - evaluate:
@@ -92,7 +97,9 @@ steps:
           companion.demonGrinder.wrecking-ball.hitBonus: 9
           companion.demonGrinder.wrecking-ball.damageBonus: 4
   # Swing: the generic action spend alone — the player's ACTION, never attack
-  # accounting — and nothing else moves (the seat stays taken).
+  # accounting — and nothing else moves (the seat stays taken). The rider
+  # rides the row unconditionally and the row stays LEGAL (a notice is
+  # informational, never the error path).
   - addOffer:
       id: fire-demon-grinder-wrecking-ball
       assert:
@@ -102,9 +109,13 @@ steps:
         planErrors:
           - id: fire-demon-grinder-wrecking-ball
             index: 0
-            errors: []
+            errors:
+              - rule.demon-grinder.fire-wrecking-ball.rider
+        status:
+          legal: true
   # A second swing the same turn is ILLEGAL-but-COMMITTABLE: the offer stays
-  # with its no-action diagnostic and the row still spends.
+  # with its no-action diagnostic and the row still spends — the note beside
+  # the error, the dash risk's order.
   - addOffer:
       id: fire-demon-grinder-wrecking-ball
       assert:
@@ -113,6 +124,7 @@ steps:
             index: 1
             errors:
               - rule.demon-grinder.fire-wrecking-ball.no_action
+              - rule.demon-grinder.fire-wrecking-ball.rider
   # End of turn: the spend ages away, the seat stands.
   - endTurn:
       assert:
@@ -121,7 +133,8 @@ steps:
           companion.demonGrinder.seats.wrecking-ball: 1
   # Wrecked: destroy the vehicle while seated at the ball (one pool-emptying
   # blow); the swing goes illegal on the shared wrecked leg, and a
-  # planned-anyway row still spends carrying the diagnostic.
+  # planned-anyway row still spends carrying the diagnostic with the note
+  # beside it.
   - addOffer:
       id: record-demon-grinder-damage
       selections:
@@ -142,6 +155,7 @@ steps:
             index: 0
             errors:
               - rule.demon-grinder.wrecked
+              - rule.demon-grinder.fire-wrecking-ball.rider
   - endTurn:
       assert:
         facts:

@@ -660,6 +660,23 @@
       "seat-helm-effect": {
         "name": "Helm Seat"
       },
+      "take-chomper-seat": {
+        "name": "Take the Chomper seat",
+        "description": "Crew the Demon Grinder's Chomper station"
+      },
+      "leave-chomper-seat": {
+        "name": "Leave the Chomper seat",
+        "description": "Step away from the Chomper, freeing the seat"
+      },
+      "seat-chomper-effect": {
+        "name": "Chomper Seat"
+      },
+      "fire-chomper": {
+        "name": "Bite with Chomper",
+        "description": "Melee weapon attack: +9 to hit, reach 5 ft., one target, 6d6+4 piercing damage (average 25).",
+        "no_action": "No action available",
+        "rider": "A target reduced to 0 hit points by this damage is destroyed beyond normal recovery, and any nonmagical items it held or carried are destroyed with it."
+      },
       "take-wrecking-ball-seat": {
         "name": "Take the Wrecking Ball seat",
         "description": "Crew the Demon Grinder's Wrecking Ball station"
@@ -673,8 +690,9 @@
       },
       "fire-wrecking-ball": {
         "name": "Swing Wrecking Ball",
-        "description": "Melee weapon attack: +9 to hit, reach 15 ft., one target, 8d8+4 bludgeoning damage (average 40). Against objects and structures, the damage is doubled.",
-        "no_action": "No action available"
+        "description": "Melee weapon attack: +9 to hit, reach 15 ft., one target, 8d8+4 bludgeoning damage (average 40).",
+        "no_action": "No action available",
+        "rider": "The damage is doubled against objects and structures — never against creatures."
       },
       "take-harpoon-seat": {
         "name": "Take the Harpoon Flinger seat",

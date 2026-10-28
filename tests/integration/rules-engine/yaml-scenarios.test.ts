@@ -409,6 +409,15 @@ const EXPECTED_RUNNABLE = [
   // objects and structures is copy only — the GM adjudicates).
   'demon-grinder-wrecking-ball-seat',
   'demon-grinder-wrecking-ball-fire',
+  // …Demon Grinder PR-6 — the Chomper station: the take/leave pair on the
+  // shared helper (capacity counting toward the 8, one-seat-per-player within
+  // the vehicle AND globally across vehicles, the leave closing the bite
+  // offer, the abandon lifecycle eviction) and the station's attack through
+  // the weapon-station machinery (+9 to hit, 6d6+4 piercing, the generic
+  // action spend, the wrecked leg; the ground-to-bits-and-spat-through-the-
+  // pipes rider is copy only — the GM adjudicates).
+  'demon-grinder-chomper-seat',
+  'demon-grinder-chomper-fire',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

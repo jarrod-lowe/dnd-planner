@@ -7,9 +7,10 @@ ruleGroups:
     # seat per player holds globally across every vehicle). PR-3 landed the
     # SEAT-FREE base (acquire/abandon, occupancy, the HP recorders, the prone
     # pair, checks/saves and the derives); PR-4 added the Helm and one
-    # Harpoon Flinger; PR-5 adds the Wrecking Ball. The Chomper follows.
-    # Ungated: available to every character (acquire legality is not checked —
-    # multiple acquisitions are illegal-but-possible).
+    # Harpoon Flinger, PR-5 the Wrecking Ball, PR-6 the Chomper — the stat
+    # block's four stations stand (the second flinger follows in its own
+    # pass). Ungated: available to every character (acquire legality is not
+    # checked — multiple acquisitions are illegal-but-possible).
     translations:
       en:
         name: Demon Grinder
@@ -35,8 +36,9 @@ ruleGroups:
     # numbers and short factual phrases only, never trait prose. It reads
     # in-world (the vehicle and its numbers); nothing about the app. The AC is
     # FLAT (the stat block carries no motionless rider). PR-4 added the
-    # Stations and Dash paragraphs; PR-5 adds the Wrecking Ball to the
-    # Stations paragraph (the Chomper joins in its own pass).
+    # Stations and Dash paragraphs; PR-5 added the Wrecking Ball and PR-6 the
+    # Chomper to the Stations paragraph (stat-block order: Helm, Chomper,
+    # Wrecking Ball, Harpoon Flinger).
     detail:
       key: vehicle/demon-grinder
       source: custom
@@ -59,9 +61,12 @@ ruleGroups:
             shrugs off fire, poison, and psychic damage.
 
             **Stations.** The Helm drives and steers the Demon Grinder. The
-            Wrecking Ball swings at +9 to hit, reach 15 ft., for 8d8+4
-            bludgeoning damage, doubled against objects and structures. The
-            Harpoon Flinger fires its 10 harpoons at +5 to hit, range
+            Chomper bites at +9 to hit, reach 5 ft., for 6d6+4 piercing
+            damage; a target reduced to 0 hit points by this damage is
+            destroyed beyond normal recovery, its nonmagical items destroyed
+            with it. The Wrecking Ball swings at +9 to hit, reach 15 ft., for
+            8d8+4 bludgeoning damage, doubled against objects and structures.
+            The Harpoon Flinger fires its 10 harpoons at +5 to hit, range
             120 ft., for 2d8 piercing damage.
 
             **Dash.** The driver can spend a bonus action to push the Demon
@@ -292,15 +297,17 @@ ruleGroups:
   # The WRECKING BALL's flip detail — linked from the swing offer (PR-5). A
   # catalog-only entry like the flinger's: our own wording (the Demon Grinder
   # is not SRD), in-world voice for the numbers, plus the station's one RIDER
-  # — the damage doubled against objects and structures — as COPY ONLY. No
-  # mechanic doubles anything: what counts as an object or a structure is the
-  # GM's call at the table, so the rule is stated here and on the offer row
-  # and nothing is wired (the Tormentor "magical + 10 harpoons" precedent).
-  # Reach 15 ft. and one target live here and in the offer copy, not in range
-  # machinery; half cover stays out like every station's (cover is the
-  # table's business here). The average damage (40) rides the prose beside
-  # the dice. Keywords carry the whole name AND its distinct words: the
-  # search index is prefix-based over whole standardized terms, so
+  # — the damage doubled against objects and structures — stated here AND as
+  # the unconditional per-row note on every swing row (the dash-risk idiom —
+  # PR-6's user correction amending this station's copy-only landing:
+  # informational only, never a mechanic). No mechanic doubles anything: what
+  # counts as an object or a structure is the GM's call at the table, so the
+  # rule is copy and nothing is wired (the Tormentor "magical + 10 harpoons"
+  # precedent). Reach 15 ft. and one target live here and in the offer copy,
+  # not in range machinery; half cover stays out like every station's (cover
+  # is the table's business here). The average damage (40) rides the prose
+  # beside the dice. Keywords carry the whole name AND its distinct words:
+  # the search index is prefix-based over whole standardized terms, so
   # 'wrecking ball' alone would index only wrec-onwards of 'wreckingball' —
   # 'wrecking' and 'ball' are what 'bal'-style queries hit (the PR-3
   # 'grinder' lesson).
@@ -356,6 +363,76 @@ ruleGroups:
             a creature never does.
 
             **Magic Weapons.** The ball's attack is magical.
+  # The CHOMPER's flip detail — linked from the bite offer (PR-6). A
+  # catalog-only entry like the ball's: our own wording (the Demon Grinder is
+  # not SRD), in-world voice for the numbers, plus the station's one RIDER —
+  # a target reduced to 0 hit points by this damage is destroyed beyond
+  # normal recovery, its nonmagical items destroyed with it — stated here
+  # AND as the unconditional per-row notice on every bite row (the dash-risk
+  # idiom, PR-6's user correction: informational only, never a mechanic).
+  # Nothing in the engine models the kill or the wreckage of gear: what was
+  # held or carried is the GM's call at the table, so the rule is copy and
+  # nothing is wired (the Tormentor "magical + 10 harpoons" precedent).
+  # Reach 5 ft. and one target live here and in the offer copy, not in range
+  # machinery; half cover stays out like every station's (cover is the
+  # table's business here). The average damage (25) rides the prose beside
+  # the dice. The stat block never mentions a wish clause or an AC qualifier
+  # for the destruction, so neither does this. Keywords carry the station's
+  # distinct words: 'chomper' is a whole word of its own (no 'wrecking
+  # ball'-style split needed), 'bite' is its verb, and 'nonmagical'/
+  # 'destroyed' are the rider's searchable terms (the PR-3 grinder keyword
+  # lesson).
+  - id: demon-grinder-chomper-detail
+    translations:
+      en:
+        name: Chomper (Demon Grinder)
+        description: Detail text for biting with the Demon Grinder's Chomper
+        keywords:
+          - chomper
+          - bite
+          - grinder
+          - vehicle
+          - attack
+          - piercing
+          - melee
+          - nonmagical
+          - destroyed
+      en-x-tlh:
+        name: Chomper (Demon Grinder)
+        description: Detail text for biting with the Demon Grinder's Chomper
+        keywords:
+          - chomper
+          - bite
+          - grinder
+          - vehicle
+          - attack
+          - piercing
+          - melee
+          - nonmagical
+          - destroyed
+    detail:
+      key: vehicle/demon-grinder-chomper
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Weapon
+          fields:
+            - labelKey: rules.field.range
+              value: 5 ft. reach
+            - labelKey: rules.field.damage
+              value: 6d6+4 piercing
+          body: |
+            **Chomper.** A melee weapon attack: +9 to hit, reach 5 ft., one
+            target, 25 (6d6+4) piercing damage on a hit. The bite is made
+            with an action while you crew the Chomper.
+
+            **Destroyed Beyond Recovery.** A target reduced to 0 hit points
+            by the chomper's damage is destroyed beyond normal recovery, and
+            any nonmagical items the target held or carried are destroyed
+            with it. What counts as held or carried is the GM's call at the
+            table.
+
+            **Magic Weapons.** The chomper's attack is magical.
   # The FUEL and BOOST records' flip detail — linked from both helm-gated
   # record offers (the Tormentor pattern). A catalog-only entry like the
   # helm's: our own wording (the Demon Grinder is not SRD), in-world voice

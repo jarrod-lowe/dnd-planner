@@ -660,6 +660,23 @@
       "seat-helm-effect": {
         "name": "SeHyaH Sep"
       },
+      "take-chomper-seat": {
+        "name": "nuj mIqta' Sep yIchol",
+        "description": "Duj Qaw' nuj mIqta' Sep yIchol 'ej Dochmey yISop"
+      },
+      "leave-chomper-seat": {
+        "name": "nuj mIqta' Sepvo' yImej",
+        "description": "nuj mIqta' Sepvo' yImej 'ej Sep yIchImmoH"
+      },
+      "seat-chomper-effect": {
+        "name": "nuj mIqta' Sep"
+      },
+      "fire-chomper": {
+        "name": "nuj mIqta' yISop",
+        "description": "cham nuH HIj: HIch 9, chuq 5, wa' jav, 6d6 qIp 'ej 4 chel (25 law').",
+        "no_action": "DIvI' tu'lu'be'",
+        "rider": "Dotlh pagh povDI' qaS Qaw'lu'chu' 'ej qaS laHqa'moHlaHbe' pagh; chamHa' Dochmey ghajbogh qaS Qaw'lu' je."
+      },
       "take-wrecking-ball-seat": {
         "name": "qaw' mIqta' Sep yIchol",
         "description": "Duj Qaw' qaw' mIqta' Sep yIchol 'ej Duj qaw' yIlo'"
@@ -673,8 +690,9 @@
       },
       "fire-wrecking-ball": {
         "name": "qaw' mIqta' yIqIp",
-        "description": "cham nuH HIj: HIch 9, chuq 15, wa' jav, 8d8 qIp 'ej 4 chel (40 law'). Dochmey 'ej chenmoHmey qIpDI' cha'logh qIp.",
-        "no_action": "DIvI' tu'lu'be'"
+        "description": "cham nuH HIj: HIch 9, chuq 15, wa' jav, 8d8 qIp 'ej 4 chel (40 law').",
+        "no_action": "DIvI' tu'lu'be'",
+        "rider": "Dochmey 'ej chenmoHmey qIpDI' cha'logh qIp; ghewmey qIpDI' pagh qIp."
       },
       "take-harpoon-seat": {
         "name": "ghoch nuH Sep yIchol",
