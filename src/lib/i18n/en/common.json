@@ -555,7 +555,8 @@
         "name": "Drive",
         "description": "Spend your action at the Helm, driving the Tormentor up to its movement for the turn",
         "no_action": "No action available",
-        "out_of_movement": "No movement remaining"
+        "out_of_movement": "No movement remaining",
+        "crushing_wheels": "The Tormentor rolls through the space of Medium or smaller creatures. Each creature it passes over must make a DC {{dc}} Dexterity saving throw, taking {{damage}} bludgeoning damage and being knocked prone on a failure. A creature the wheels have already knocked prone takes the {{damage}} damage again when they roll over it once more, and the wheels can catch the same creature only once on a turn."
       },
       "dash": {
         "name": "Dash",
@@ -750,7 +751,8 @@
         "name": "Drive",
         "description": "Spend your action at the Helm, driving the Demon Grinder up to its movement for the turn",
         "no_action": "No action available",
-        "out_of_movement": "No movement remaining"
+        "out_of_movement": "No movement remaining",
+        "crushing_wheels": "The Demon Grinder rolls through the space of Large or smaller creatures. Each creature it passes over must make a DC {{dc}} Dexterity saving throw, taking {{damage}} bludgeoning damage and being knocked prone on a failure. A creature the wheels have already knocked prone takes the {{damage}} damage again when they roll over it once more, and the wheels can catch the same creature only once on a turn."
       },
       "dash": {
         "name": "Dash",

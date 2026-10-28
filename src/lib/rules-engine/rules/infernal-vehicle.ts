@@ -68,6 +68,38 @@ export interface SeatWeaponSpec {
 }
 
 /**
+ * One MOVE TRAIT the stat block carries — a rule that fires on the vehicle's
+ * OWN movement (the Crushing Wheels both infernal vehicles roll on; later the
+ * Tormentor's Raking Scythes), as authored data. The factory turns each entry
+ * into ONE unconditional 'notice' diagnostic on EVERY planned Drive row (the
+ * dash-risk idiom exactly — see DASH_RISK): the note states the WHOLE rule in
+ * the locale's own words, nothing is gated, recorded or counted behind it, and
+ * the plan fold attaches it to that row alone. The save DC and the damage
+ * travel as diagnostic `params` ({{dc}}/{{damage}} slots) COMPUTED from the
+ * entry's data — the damage the dice AVERAGE plus the bonus, so a re-authored
+ * stat block moves the number with no other edit. The trait's non-numeric
+ * shape (which creatures it reaches, what a repeat pass does) lives in the
+ * note COPY, not in data — it is translated text either way.
+ */
+export interface MoveTraitSpec {
+  /**
+   * i18n key of the trait's per-row note — an authored LITERAL per vehicle,
+   * per trait (the SeatWeaponSpec.rider precedent), so the static
+   * module-i18n-coverage scan sees it in the spec's source.
+   */
+  note: string;
+  /** The Dexterity save DC the trait's rule calls for (the {{dc}} param). */
+  saveDc: number;
+  /**
+   * The trait's damage dice: {{damage}} = the dice average plus the bonus,
+   * computed from these three numbers (never hardcoded in the copy).
+   */
+  damageCount: number;
+  damageDie: number;
+  damageBonus: number;
+}
+
+/**
  * One station's seat, as authored data. The per-station i18n keys arrive as
  * LITERALS per station (module-i18n-coverage scans the source for
  * `${PREFIX}.suffix` templates — a key the helper built from the station string
@@ -151,6 +183,16 @@ export interface InfernalVehicleSpec {
    * does not exist.
    */
   juke?: boolean;
+  /**
+   * The stat block's MOVE TRAITS — rules that fire on the vehicle's own
+   * movement (Crushing Wheels, Raking Scythes), each an entry in
+   * MoveTraitSpec. When set, the drive offer's apply pushes one unconditional
+   * 'notice' diagnostic per entry on EVERY drive row (the dash-risk idiom);
+   * OMIT it for a vehicle whose stat block carries none — its drive rows
+   * carry no note (what a stat block does not carry does not exist, the
+   * juke/acMode optionality precedent), and a later trait joins as data.
+   */
+  moveTraits?: readonly MoveTraitSpec[];
   /** Rules-mode detail keys (the flip targets). */
   details: {
     statBlock: string;
@@ -1204,6 +1246,35 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
   const DASH_RISK = `${T}.dash.risk`;
 
   /**
+   * The MOVE-TRAIT notes — the informational diagnostics EVERY planned Drive
+   * row carries when the spec lists move traits (Crushing Wheels today; the
+   * Tormentor's Raking Scythes will join the same way as data). Exactly the
+   * dash-risk idiom, on the rows that do the moving: the engine models
+   * nothing behind a move trait — no pass, no save, no once-per-turn count
+   * (none of it is trackable without a battle grid, and the trait's terms
+   * are the GM's call at the table) — so each entry states its whole rule
+   * as ONE unconditional 'notice' beside the spend, informational only,
+   * never a legality leg, never a standing annotation. The save DC and the
+   * damage travel as `params` COMPUTED from the entry ({{dc}}/{{damage}}
+   * slots — the damage the dice AVERAGE plus the bonus, never a total the
+   * copy hardcodes), so a re-authored stat block moves the numbers with no
+   * other edit; the trait's non-numeric shape (which creatures it reaches,
+   * what a repeat pass does) lives in the per-vehicle COPY. Entries ride in
+   * spec order after any error legs. A spec with no entries emits NOTHING
+   * (the juke/acMode optionality precedent: what a stat block does not
+   * carry does not exist).
+   */
+  const moveTraitNotes = (): Diagnostic[] =>
+    (spec.moveTraits ?? []).map((trait) => ({
+      code: trait.note,
+      severity: 'notice',
+      params: {
+        dc: trait.saveDc,
+        damage: Math.floor((trait.damageCount * (trait.damageDie + 1)) / 2) + trait.damageBonus
+      }
+    }));
+
+  /**
    * Drive's distance slider — the steed's STEED_MOVE_CONTROL/STEED_MOVE_VARS
    * shape exactly (find-steed): record the actual feet driven rather than a
    * fixed chunk, bounded by the (Dash-doubled) total, so a short roll of the
@@ -1855,7 +1926,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         // Apply re-checks both (the dash idiom), the distance re-check
         // validating the SELECTED distance — an over-distance row carries the
         // steed's out-of-movement diagnostic while its spend still lands (the
-        // over-commit projection, unfloored like the steed's).
+        // over-commit projection, unfloored like the steed's). BESIDE the
+        // re-checks, LAST, the spec's MOVE TRAITS state their whole rules as
+        // unconditional 'notice' diagnostics (moveTraitNotes above — the
+        // dash-risk idiom): the row informs, the GM adjudicates the pass.
         id: `drive-${id}`,
         when: (f: FactReader): boolean => acquired(f) && atHelm(f),
         legalWhen: [
@@ -1887,6 +1961,7 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
           if (f.num(`${F}.movement.remaining`) < driveDistance(f, selections))
             diagnostics.push({ code: DRIVE_OUT_OF_MOVEMENT, severity: 'error' });
           if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
+          diagnostics.push(...moveTraitNotes());
           return {
             advertise: [
               {

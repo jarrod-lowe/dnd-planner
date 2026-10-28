@@ -555,7 +555,8 @@
         "name": "Duj yInab",
         "description": "SeHyaH Sep yIvI' 'ej Duj Sep yInab — leng Duj yIlo'",
         "no_action": "DIvI' tu'lu'be'",
-        "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'"
+        "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'",
+        "crushing_wheels": "Duj Sep machbogh ghewmey Daq vIHlaH 'ej chaH ghoSlaH. Duj Sep ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh {{damage}} qIp 'ej pum. ghomey pummoHbogh ghew ghoSqa'DI', {{damage}} qIpqa' — 'ej wa' DIj wa'logh neH ghew qIplaH Duj Sep."
       },
       "dash": {
         "name": "Duj Do'choH",
@@ -750,7 +751,8 @@
         "name": "Duj yInab",
         "description": "SeHyaH Sep yIvI' 'ej Duj Qaw' yInab — leng Duj yIlo'",
         "no_action": "DIvI' tu'lu'be'",
-        "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'"
+        "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'",
+        "crushing_wheels": "Duj Qaw' tInbogh machbogh ghap ghewmey Daq vIHlaH 'ej chaH ghoSlaH. Duj Qaw' ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh {{damage}} qIp 'ej pum. ghomey pummoHbogh ghew ghoSqa'DI', {{damage}} qIpqa' — 'ej wa' DIj wa'logh neH ghew qIplaH Duj Qaw'."
       },
       "dash": {
         "name": "Duj Do'choH",

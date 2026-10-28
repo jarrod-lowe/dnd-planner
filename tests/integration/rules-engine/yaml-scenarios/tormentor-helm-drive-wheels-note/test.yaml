@@ -1,0 +1,84 @@
+name: 'Tormentor - Crushing Wheels Note Rides Every Drive Row'
+description: >-
+  The stat block's Crushing Wheels trait: the Tormentor rolls through the
+  space of Medium or smaller creatures, and every creature it passes over
+  must make a DC 13 Dexterity saving throw or take 11 (2d10) bludgeoning
+  damage and be knocked prone (an already-prone creature takes the damage
+  again on a later pass; once per creature per turn). Nothing in the engine
+  models the pass, the save or the once-per-turn limit — the GM adjudicates
+  at the table — so the rule states itself as an UNCONDITIONAL per-row note
+  on EVERY planned Drive row (the dash-risk idiom): a 'notice' diagnostic
+  that is informational only (never the error path, so the row and the plan
+  stay LEGAL), rendered collapsed on its own row alone (no other row sees
+  it, nothing commits — only the action and the distance age away at end of
+  turn). No drive row — nobody at the Helm — no note anywhere.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  # The pool is the FUEL's — a soul coin in the burner (the Helm's
+  # bonus-action record, committed here so the row below is legal).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  # The very first Drive row carries the note: the row informs, the GM
+  # adjudicates. (The yaml harness asserts diagnostic CODES — the note's
+  # {{dc}}/{{damage}} params are pinned at unit level, as #498 did for the
+  # dash {{allowance}}.)
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 40
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.drive.crushing_wheels
+        status:
+          legal: true
+  # A free record row planned beside it carries NOTHING (a per-row note is
+  # not a panel truth).
+  - addOffer:
+      id: set-tormentor-ac-mode
+      assert:
+        planErrors:
+          - id: set-tormentor-ac-mode
+            index: 0
+            errors: []
+  # End of turn: the note commits nothing — only the action and the distance
+  # age away; the seat, the acquire and the fuel are what stand.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+          companion.tormentor.seats.helm: 1
+  # Turn 2: a fresh, LEGAL Drive carries the note ALONE, exactly as the
+  # first did — informational, never the error path.
+  - addOffer:
+      id: drive-tormentor
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.drive.crushing_wheels
+        status:
+          legal: true
+  # Leave the Helm: the drive offer goes with the seat — with no drive row,
+  # the trait is nowhere (the note is per-row, never standing).
+  - addOffer:
+      id: leave-tormentor-helm-seat
+      assert:
+        offers:
+          notExists:
+            - drive-tormentor

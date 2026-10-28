@@ -1672,7 +1672,9 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       'actions.spent': 1,
       'companion.vehicle.movement.spent': 30
     });
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+    ]);
     expect(out.facts['actions.remaining']).toBe(0);
     expect(out.facts[`${F}.movement.remaining`]).toBe(70);
     // The seat stays taken and the capacity counts it still — moving writes
@@ -1712,7 +1714,8 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     });
     expect(out.facts[`${F}.movement.remaining`]).toBe(-50);
     expect(out.planDiagnostics['i0']).toEqual([
-      { code: `${T}.drive.out_of_movement`, severity: 'error' }
+      { code: `${T}.drive.out_of_movement`, severity: 'error' },
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
     ]);
   });
 
@@ -1729,10 +1732,13 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     // The second row over-commits the ACTION (the first row spent it) with 70
     // ft still in the pool, so the out-of-movement gate passes and the failing
     // leg is the action alone — the row carries exactly its own diagnostic
-    // while its default distance (all remaining) still lands.
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // (the trait note after it) while its default distance still lands.
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+    ]);
     expect(out.planDiagnostics['i1']).toEqual([
-      { code: `${T}.drive.no_action`, severity: 'error' }
+      { code: `${T}.drive.no_action`, severity: 'error' },
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
     ]);
     expect(out.facts[`${F}.movement.remaining`]).toBe(0);
   });
@@ -1749,6 +1755,49 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(offer, 'drive stays offered while prone').toBeDefined();
     expect(offer!.legal, 'drive is legal while prone').toBe(true);
     expect(offer!.diagnostics).toEqual([]);
+  });
+
+  it('the crushing wheels note rides every drive row: DC 13, damage 11 (2d10) as COMPUTED params', () => {
+    // The stat block's Crushing Wheels trait — the Tormentor rolls through
+    // the space of Medium or smaller creatures; every creature it passes over
+    // must save (DC 13 Dex) or take 11 (2d10) bludgeoning and be knocked
+    // prone; an already-prone creature takes the damage again on a later
+    // pass; once per creature per turn — is PR-7's move-trait machinery: ONE
+    // unconditional 'notice' on EVERY planned drive row (the dash-risk
+    // idiom), never a mechanic. The params are COMPUTED from the spec entry
+    // (2d10 → 11), and the size qualifier lives in the COPY.
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [module(), economy],
+      committed: helmFuelled(),
+      planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+    ]);
+    // The note commits nothing: the row's one spend is the drive's own.
+    expect(out.effects).toHaveLength(1);
+  });
+
+  it('the wheels note interpolates {{dc}} and {{damage}} in BOTH locales (Medium or smaller in copy)', () => {
+    // Dot-path reads with a cast: the key does not exist at RED, and a typed
+    // property access would not compile there (the DG file's i18nAt note).
+    const at = (dict: unknown): string | undefined =>
+      (
+        dict as {
+          rule?: { tormentor?: { drive?: Record<string, string | undefined> } };
+        }
+      ).rule?.tormentor?.drive?.['crushing_wheels'];
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      const value = at(dict);
+      expect(value, `${locale} wheels note exists`).toEqual(expect.any(String));
+      expect(value, `${locale} interpolates {{dc}}`).toContain('{{dc}}');
+      expect(value, `${locale} interpolates {{damage}}`).toContain('{{damage}}');
+    }
+    expect(at(en), 'the size qualifier lives in the en copy').toContain('Medium or smaller');
   });
 });
 

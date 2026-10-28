@@ -295,6 +295,70 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
       expect(value, `${locale} interpolates {{allowance}}`).toContain('{{allowance}}');
     }
   });
+
+  /** A committed fuelled Helm — the legal-drive state the wheels note tests fold. */
+  function fuelledHelm(): EffectInstance[] {
+    return [
+      ...acquired(),
+      {
+        id: `effect-${ID}-seat-helm`,
+        key: `${ID}-seat-helm`,
+        state: { [`${F}.seats.helm`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance,
+      {
+        id: `effect-${ID}-fuel`,
+        key: `${ID}-fuel`,
+        state: { [`${F}.fuel.recorded`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance
+    ];
+  }
+
+  it('the crushing wheels note rides every drive row: DC 11, damage 22 (4d10) as COMPUTED params', () => {
+    // The stat block's Crushing Wheels trait — the Grinder rolls through the
+    // space of Large or smaller creatures; every creature it passes over must
+    // save (DC 11 Dex) or take 22 (4d10) bludgeoning and be knocked prone; an
+    // already-prone creature takes the damage again on a later pass; once per
+    // creature per turn — is PR-7's move-trait machinery: ONE unconditional
+    // 'notice' on EVERY planned drive row (the dash-risk idiom), informational
+    // only, never a mechanic. The DC and the damage AVERAGE travel as params
+    // COMPUTED from the spec entry (4d10 → 22), never hardcoded in the copy.
+    const out = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: fuelledHelm(),
+      planned: [{ instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 11, damage: 22 } }
+    ]);
+    // The row is otherwise unchanged: the one endOfTurn spend, the pool paying
+    // exactly the captured distance — the note commits nothing.
+    expect(out.effects).toHaveLength(1);
+    expect(out.facts['companion.vehicle.movement.spent']).toBe(30);
+  });
+
+  it('the wheels note interpolates {{dc}} and {{damage}} in BOTH locales, own wording', () => {
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      const value = i18nAt(dict, `rule.${ID}.drive.crushing_wheels`);
+      expect(value, `${locale} wheels note exists`).toEqual(expect.any(String));
+      expect(value, `${locale} interpolates {{dc}}`).toContain('{{dc}}');
+      expect(value, `${locale} interpolates {{damage}}`).toContain('{{damage}}');
+    }
+    // The SIZE QUALIFIER (Large or smaller) lives in the per-vehicle copy —
+    // translated text either way, never a param.
+    expect(i18nAt(en, `rule.${ID}.drive.crushing_wheels`)).toContain('Large or smaller');
+  });
+
+  it('no drive row, no note: unseated, the trait is nowhere (not an annotation, not a fact)', () => {
+    const out = evaluate({ modules: [module()], committed: acquired() });
+    expect(out.availableRules.some((r) => r.rule.id === `drive-${ID}`)).toBe(false);
+    expect(out.annotations.some((a) => a.key === `${T}.drive.crushing_wheels`)).toBe(false);
+    expect(Object.keys(out.facts).some((k) => k.includes('crushing'))).toBe(false);
+  });
 });
 
 describe('seats — the Helm, the Chomper, the Wrecking Ball and the Harpoon Flinger', () => {
