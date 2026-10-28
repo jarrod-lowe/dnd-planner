@@ -139,6 +139,31 @@ export interface InfernalVehicleSpec {
  */
 const HELM_STATION = 'helm';
 
+/**
+ * The SHARED movement spend — the ONE player-level fact every infernal
+ * vehicle's Drive writes and every vehicle's `movement.remaining` reads. The
+ * stem is `companion.vehicle.*` (the codebase's stem choice, documented here):
+ * it sits in the companion namespace BESIDE the per-vehicle stems
+ * (`companion.tormentor.*`, …) without being owned by any one vehicle's
+ * `factStem`, so the spend belongs to the PLAYER's turn rather than to a
+ * vehicle — no vehicle's acquire/abandon lifecycle lists the keyless spend
+ * among its dependents, and none ever could. Consequences, all intended:
+ *
+ * - Same-turn driving across vehicles draws ONE pool (keyless endOfTurn
+ *   effects writing one fact accumulate, so every driven foot lands in the
+ *   same ledger) while each vehicle caps at its OWN total — remaining is
+ *   always `<its own total> − <the shared spend>`, the cross-vehicle
+ *   same-turn cap recorded as the Tormentor seats job's goal.
+ * - The Dash doubling stays PER-VEHICLE (the `dashed` flag lives under the
+ *   vehicle's stem), so dashing one machine never doubles another's pool.
+ * - A LEGACY persisted spend under a per-vehicle stem
+ *   (`<stem>.movement.spent`, the pre-shared shape Drive used to advertise)
+ *   is tolerated: nothing derives or reads that name any more, so the old
+ *   keyless effect is an inert fact that still expires at end of turn (the
+ *   flat `ac.value`/`speed` bake precedent) — never a two-writer conflict.
+ */
+const VEHICLE_MOVEMENT_SPENT = 'companion.vehicle.movement.spent';
+
 /** The stat block acquiring bakes, from the spec (HP bakes its BASE — the pool
  * derives from it, the steed shape — plus the damage/mishap thresholds as DATA
  * the recorder gates on; everything else is display-only). AC bakes NO value
@@ -1257,11 +1282,14 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         }
       },
       // The MOVEMENT ECONOMY, the steed's derives copied exactly (find-steed's
-      // movement block): total doubling while Dashed, remaining = total − spent,
-      // every spend endOfTurn so the pool resets with the turn. base is a
-      // DERIVATION of the effective speed, never a copy of a number: the pool
-      // is the FUEL's, and an unfuelled vehicle stands still (0 ft.) until the
-      // Helm feeds it.
+      // movement block) with ONE cross-vehicle difference: total doubling while
+      // Dashed, remaining = the vehicle's OWN total − the SHARED player-level
+      // spend (VEHICLE_MOVEMENT_SPENT — every vehicle's Drive writes that one
+      // fact, so same-turn driving across vehicles draws a single pool capped
+      // at whichever vehicle you are currently driving), every spend endOfTurn
+      // so the pool resets with the turn. base is a DERIVATION of the effective
+      // speed, never a copy of a number: the pool is the FUEL's, and an
+      // unfuelled vehicle stands still (0 ft.) until the Helm feeds it.
       {
         fact: `${F}.movement.base`,
         value: (f) => f.num(`${F}.speed.effective`)
@@ -1272,7 +1300,7 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
       },
       {
         fact: `${F}.movement.remaining`,
-        value: (f) => f.num(`${F}.movement.total`) - f.num(`${F}.movement.spent`)
+        value: (f) => f.num(`${F}.movement.total`) - f.num(VEHICLE_MOVEMENT_SPENT)
       }
     ],
     offer: () => [
@@ -1615,7 +1643,9 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         // spend, never the weapon attacks' pool (Extra Attack neither applies
         // nor is granted). Apply spends the action AND the distance against the
         // pool in ONE endOfTurn effect (the steed-dash two-facts-one-spend
-        // idiom), so the pool resets with the turn. `when` is the acquire AND
+        // idiom), the distance landing on the SHARED player-level spend every
+        // vehicle's remaining reads, so the pool resets with the turn. `when` is
+        // the acquire AND
         // the helm seat (the seat fact is the gate the leave offer's eviction
         // closes); legality is the action pool PLUS the steed's
         // out-of-movement leg (remaining >= 5 — a machine with under 5 ft left
@@ -1661,7 +1691,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
                 id: 'cost',
                 state: {
                   'actions.spent': 1,
-                  [`${F}.movement.spent`]: driveDistance(f, selections)
+                  // The distance lands on the SHARED player-level spend
+                  // (VEHICLE_MOVEMENT_SPENT) — the one fact every vehicle's
+                  // remaining reads, never this vehicle's own stem.
+                  [VEHICLE_MOVEMENT_SPENT]: driveDistance(f, selections)
                 },
                 expiry: { kind: 'endOfTurn' }
               }

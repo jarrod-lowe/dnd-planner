@@ -98,6 +98,35 @@ const legacyTormentorBoard = (): EffectInstance => ({
   expiry: permanent
 });
 
+/** The Tormentor's helm seat, as the take offer commits it. */
+const helmSeat = (): EffectInstance => ({
+  id: 'effect-tormentor-seat-helm',
+  key: 'tormentor-seat-helm',
+  state: { 'companion.tormentor.seats.helm': 1 },
+  expiry: permanent
+});
+
+/** The Tormentor's fuel record, as the Helm's refuelling row commits it. */
+const fuelRecord = (ordinal: number): EffectInstance => ({
+  id: 'effect-tormentor-fuel',
+  key: 'tormentor-fuel',
+  state: { 'companion.tormentor.fuel.recorded': ordinal },
+  expiry: permanent
+});
+
+/**
+ * A persisted LEGACY movement spend — the keyless endOfTurn effect the Helm's
+ * Drive advertised BEFORE the shared-pool pass, writing the per-vehicle
+ * `companion.tormentor.movement.spent`. Nothing derives or reads that name any
+ * more, so the effect is tolerated as an inert spend that still expires at
+ * end of turn (the flat ac.value/speed bake precedent).
+ */
+const legacyTormentorSpend = (feet: number): EffectInstance => ({
+  id: 'effect-drive-cost',
+  state: { 'companion.tormentor.movement.spent': feet },
+  expiry: { kind: 'endOfTurn' }
+});
+
 /**
  * Heroic Inspiration already granted — the keyed permanent effect `grant-hi`
  * advertises. The key matches so a planned `use-hi` (or a long-rest grant)
@@ -283,6 +312,21 @@ export const INITIAL_EFFECTS: Record<string, EffectInstance[]> = {
   // (inert, the ac.value precedent), so it never two-writer-conflicts with
   // the derived speed.effective, and the missing fuel facts read as unfuelled.
   'tormentor-fuel-legacy': [legacyTormentorBoard()],
+
+  // === Tormentor — the LEGACY per-vehicle movement spend, pinning the
+  // shared-pool tolerance contract ===
+  // A mid-turn deploy picture: the legacy board acquired, the helm held, a
+  // soul coin in the burner, and 30 ft already driven under the OLD per-vehicle
+  // spend fact. That fact is an input no module derives or reads any more
+  // (inert, the ac.value/speed precedent), the fresh Drive row spends the
+  // SHARED companion.vehicle.movement.spent alone, and the legacy effect still
+  // expires at end of turn.
+  'tormentor-movement-legacy-spend': [
+    legacyTormentorBoard(),
+    helmSeat(),
+    fuelRecord(1),
+    legacyTormentorSpend(30)
+  ],
 
   // === HP-recorder threshold adaptation (a threshold fact seeded as a bake) ===
   // The player/steed recorders consult the builder's generic threshold gate on

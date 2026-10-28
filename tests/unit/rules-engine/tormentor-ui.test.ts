@@ -1662,13 +1662,15 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
     });
     // Exactly ONE advertised effect — the action spend and the movement spend
-    // together (the steed-dash idiom: two facts, one per-turn effect).
+    // together (the steed-dash idiom: two facts, one per-turn effect). The
+    // distance lands on the SHARED player-level spend every vehicle's
+    // remaining reads, never the per-vehicle stem.
     expect(out.effects).toHaveLength(1);
     expect(out.effects[0]!.key).toBeUndefined();
     expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
     expect(out.effects[0]!.state).toEqual({
       'actions.spent': 1,
-      [`${F}.movement.spent`]: 30
+      'companion.vehicle.movement.spent': 30
     });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
     expect(out.facts['actions.remaining']).toBe(0);
@@ -1688,7 +1690,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     });
     expect(out.effects[0]!.state).toEqual({
       'actions.spent': 1,
-      [`${F}.movement.spent`]: 100
+      'companion.vehicle.movement.spent': 100
     });
     expect(out.facts[`${F}.movement.remaining`]).toBe(0);
   });
@@ -1706,7 +1708,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     });
     expect(out.effects[0]!.state).toEqual({
       'actions.spent': 1,
-      [`${F}.movement.spent`]: 150
+      'companion.vehicle.movement.spent': 150
     });
     expect(out.facts[`${F}.movement.remaining`]).toBe(-50);
     expect(out.planDiagnostics['i0']).toEqual([
