@@ -400,6 +400,15 @@ const EXPECTED_RUNNABLE = [
   'demon-grinder-seat-global-exclusivity',
   'demon-grinder-cover-seat',
   'demon-grinder-wrecked-legality',
+  // …Demon Grinder PR-5 — the Wrecking Ball station: the take/leave pair on
+  // the shared helper (capacity counting toward the 8, one-seat-per-player
+  // within the vehicle AND globally across vehicles, the leave closing the
+  // swing offer, the abandon lifecycle eviction) and the station's attack
+  // through the weapon-station machinery (+9 to hit, 8d8+4 bludgeoning, the
+  // generic action spend, the wrecked leg; the doubled damage against
+  // objects and structures is copy only — the GM adjudicates).
+  'demon-grinder-wrecking-ball-seat',
+  'demon-grinder-wrecking-ball-fire',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

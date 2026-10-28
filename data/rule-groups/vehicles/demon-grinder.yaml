@@ -6,10 +6,10 @@ ruleGroups:
     # Tormentor's, and owning one of EACH vehicle group is legal (while ONE
     # seat per player holds globally across every vehicle). PR-3 landed the
     # SEAT-FREE base (acquire/abandon, occupancy, the HP recorders, the prone
-    # pair, checks/saves and the derives); PR-4 adds the STATIONS — the Helm
-    # and one Harpoon Flinger. The Chomper and Wrecking Ball follow. Ungated:
-    # available to every character (acquire legality is not checked — multiple
-    # acquisitions are illegal-but-possible).
+    # pair, checks/saves and the derives); PR-4 added the Helm and one
+    # Harpoon Flinger; PR-5 adds the Wrecking Ball. The Chomper follows.
+    # Ungated: available to every character (acquire legality is not checked —
+    # multiple acquisitions are illegal-but-possible).
     translations:
       en:
         name: Demon Grinder
@@ -34,9 +34,9 @@ ruleGroups:
     # The Demon Grinder is not SRD content: this detail is our own wording —
     # numbers and short factual phrases only, never trait prose. It reads
     # in-world (the vehicle and its numbers); nothing about the app. The AC is
-    # FLAT (the stat block carries no motionless rider). PR-4 adds the
-    # Stations and Dash paragraphs; the Chomper and Wrecking Ball join theirs
-    # in the passes that add them.
+    # FLAT (the stat block carries no motionless rider). PR-4 added the
+    # Stations and Dash paragraphs; PR-5 adds the Wrecking Ball to the
+    # Stations paragraph (the Chomper joins in its own pass).
     detail:
       key: vehicle/demon-grinder
       source: custom
@@ -59,6 +59,8 @@ ruleGroups:
             shrugs off fire, poison, and psychic damage.
 
             **Stations.** The Helm drives and steers the Demon Grinder. The
+            Wrecking Ball swings at +9 to hit, reach 15 ft., for 8d8+4
+            bludgeoning damage, doubled against objects and structures. The
             Harpoon Flinger fires its 10 harpoons at +5 to hit, range
             120 ft., for 2d8 piercing damage.
 
@@ -287,6 +289,73 @@ ruleGroups:
             **Ammunition.** The flinger's rack carries 10 harpoons. The app
             does not track how many have been fired — spent harpoons and
             reloads are the crew's bookkeeping.
+  # The WRECKING BALL's flip detail — linked from the swing offer (PR-5). A
+  # catalog-only entry like the flinger's: our own wording (the Demon Grinder
+  # is not SRD), in-world voice for the numbers, plus the station's one RIDER
+  # — the damage doubled against objects and structures — as COPY ONLY. No
+  # mechanic doubles anything: what counts as an object or a structure is the
+  # GM's call at the table, so the rule is stated here and on the offer row
+  # and nothing is wired (the Tormentor "magical + 10 harpoons" precedent).
+  # Reach 15 ft. and one target live here and in the offer copy, not in range
+  # machinery; half cover stays out like every station's (cover is the
+  # table's business here). The average damage (40) rides the prose beside
+  # the dice. Keywords carry the whole name AND its distinct words: the
+  # search index is prefix-based over whole standardized terms, so
+  # 'wrecking ball' alone would index only wrec-onwards of 'wreckingball' —
+  # 'wrecking' and 'ball' are what 'bal'-style queries hit (the PR-3
+  # 'grinder' lesson).
+  - id: demon-grinder-wrecking-ball-detail
+    translations:
+      en:
+        name: Wrecking Ball (Demon Grinder)
+        description: Detail text for swinging the Demon Grinder's Wrecking Ball
+        keywords:
+          - wrecking ball
+          - wrecking
+          - ball
+          - grinder
+          - vehicle
+          - attack
+          - bludgeoning
+          - melee
+          - structure
+          - object
+      en-x-tlh:
+        name: Wrecking Ball (Demon Grinder)
+        description: Detail text for swinging the Demon Grinder's Wrecking Ball
+        keywords:
+          - wrecking ball
+          - wrecking
+          - ball
+          - grinder
+          - vehicle
+          - attack
+          - bludgeoning
+          - melee
+          - structure
+          - object
+    detail:
+      key: vehicle/demon-grinder-wrecking-ball
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Weapon
+          fields:
+            - labelKey: rules.field.range
+              value: 15 ft. reach
+            - labelKey: rules.field.damage
+              value: 8d8+4 bludgeoning
+          body: |
+            **Wrecking Ball.** A melee weapon attack: +9 to hit, reach
+            15 ft., one target, 40 (8d8+4) bludgeoning damage on a hit. The
+            swing is made with an action while you crew the Wrecking Ball.
+
+            **Against Objects and Structures.** The ball's damage is doubled
+            against objects and structures. What counts is the GM's call at
+            the table — a wall, a gate or a siege tower falls twice as fast;
+            a creature never does.
+
+            **Magic Weapons.** The ball's attack is magical.
   # The FUEL and BOOST records' flip detail — linked from both helm-gated
   # record offers (the Tormentor pattern). A catalog-only entry like the
   # helm's: our own wording (the Demon Grinder is not SRD), in-world voice

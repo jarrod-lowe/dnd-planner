@@ -1,0 +1,148 @@
+name: 'Demon Grinder - Swing The Wrecking Ball'
+description: >-
+  The Wrecking Ball's attack offer exists only while the wrecking-ball seat
+  is held (the `when` gate is the acquire AND the station's seat fact — a
+  driver at the Helm does not swing the ball), and while it exists it is a
+  plan-row ACTION attack filed like one: ATTACK 'weapons', action cost, a
+  dice-line reading the module derives (d20 + 9 to hit, 8d8+4 bludgeoning —
+  the ball's weight behind every swing). Reach 15 ft. and one target are
+  offer copy and detail text, not range machinery, and the doubled damage
+  against objects and structures rides the same copy — the GM adjudicates,
+  no mechanic doubles anything. The ECONOMY is the generic action spend (the
+  flinger's ruling): swinging consumes the player's full ACTION and nothing
+  else, the seat stays taken, and on a wreck the shared wrecked leg composes.
+ruleGroups:
+  - vehicles/demon-grinder
+  - dnd-5e-2024/action-economy
+steps:
+  # Acquired but unseated: no swing offer — the attack is the station's.
+  - addOffer:
+      id: acquire-demon-grinder
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - fire-demon-grinder-wrecking-ball
+  # A driver at the Helm does not swing the ball either.
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - fire-demon-grinder-wrecking-ball
+  # Seated at the ball: the offer exists with the full attack shape.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+  - addOffer:
+      id: take-demon-grinder-wrecking-ball-seat
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - fire-demon-grinder-wrecking-ball
+          legal:
+            - fire-demon-grinder-wrecking-ball
+        offerUi:
+          - id: fire-demon-grinder-wrecking-ball
+            ui:
+              section: action-attack
+              subject: demon-grinder
+              name: rule.demon-grinder.fire-wrecking-ball.name
+              description: rule.demon-grinder.fire-wrecking-ball.description
+              detailKey: vehicle/demon-grinder-wrecking-ball
+              actionCost:
+                - action
+              annotationLabels:
+                - dice.any.companion
+              intents:
+                ATTACK: weapons
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: hitBonus
+                    purpose: to-hit
+                  - sides: 8
+                    count: 8
+                    bonus:
+                      var: damageBonus
+                    purpose: damage
+                    damageType:
+                      string: bludgeoning
+        offerVars:
+          - id: fire-demon-grinder-wrecking-ball
+            vars:
+              hitBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.wrecking-ball.hitBonus
+              damageDie:
+                default:
+                  number: 8
+              damageBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.wrecking-ball.damageBonus
+  # The derives the dice-line reads: +9 to hit, +4 damage, while acquired.
+  - evaluate:
+      assert:
+        facts:
+          companion.demonGrinder.wrecking-ball.hitBonus: 9
+          companion.demonGrinder.wrecking-ball.damageBonus: 4
+  # Swing: the generic action spend alone — the player's ACTION, never attack
+  # accounting — and nothing else moves (the seat stays taken).
+  - addOffer:
+      id: fire-demon-grinder-wrecking-ball
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.demonGrinder.seats.wrecking-ball: 1
+        planErrors:
+          - id: fire-demon-grinder-wrecking-ball
+            index: 0
+            errors: []
+  # A second swing the same turn is ILLEGAL-but-COMMITTABLE: the offer stays
+  # with its no-action diagnostic and the row still spends.
+  - addOffer:
+      id: fire-demon-grinder-wrecking-ball
+      assert:
+        planErrors:
+          - id: fire-demon-grinder-wrecking-ball
+            index: 1
+            errors:
+              - rule.demon-grinder.fire-wrecking-ball.no_action
+  # End of turn: the spend ages away, the seat stands.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.demonGrinder.seats.wrecking-ball: 1
+  # Wrecked: destroy the vehicle while seated at the ball (one pool-emptying
+  # blow); the swing goes illegal on the shared wrecked leg, and a
+  # planned-anyway row still spends carrying the diagnostic.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 200
+      assert:
+        facts:
+          companion.demonGrinder.destroyed: 1
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - fire-demon-grinder-wrecking-ball
+  - addOffer:
+      id: fire-demon-grinder-wrecking-ball
+      assert:
+        planErrors:
+          - id: fire-demon-grinder-wrecking-ball
+            index: 0
+            errors:
+              - rule.demon-grinder.wrecked
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.seats.wrecking-ball: 1

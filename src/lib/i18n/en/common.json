@@ -660,6 +660,22 @@
       "seat-helm-effect": {
         "name": "Helm Seat"
       },
+      "take-wrecking-ball-seat": {
+        "name": "Take the Wrecking Ball seat",
+        "description": "Crew the Demon Grinder's Wrecking Ball station"
+      },
+      "leave-wrecking-ball-seat": {
+        "name": "Leave the Wrecking Ball seat",
+        "description": "Step away from the Wrecking Ball, freeing the seat"
+      },
+      "seat-wrecking-ball-effect": {
+        "name": "Wrecking Ball Seat"
+      },
+      "fire-wrecking-ball": {
+        "name": "Swing Wrecking Ball",
+        "description": "Melee weapon attack: +9 to hit, reach 15 ft., one target, 8d8+4 bludgeoning damage (average 40). Against objects and structures, the damage is doubled.",
+        "no_action": "No action available"
+      },
       "take-harpoon-seat": {
         "name": "Take the Harpoon Flinger seat",
         "description": "Man the Demon Grinder's Harpoon Flinger station"

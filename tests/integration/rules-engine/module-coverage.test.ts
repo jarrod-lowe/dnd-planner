@@ -61,6 +61,7 @@ const CATALOG_ONLY = new Set([
   'demon-grinder-damage-detail',
   'demon-grinder-helm-detail',
   'demon-grinder-harpoon-detail',
+  'demon-grinder-wrecking-ball-detail',
   'demon-grinder-fuel-detail'
 ]);
 

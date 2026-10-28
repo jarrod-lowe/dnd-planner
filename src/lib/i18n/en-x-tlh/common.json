@@ -660,6 +660,22 @@
       "seat-helm-effect": {
         "name": "SeHyaH Sep"
       },
+      "take-wrecking-ball-seat": {
+        "name": "qaw' mIqta' Sep yIchol",
+        "description": "Duj Qaw' qaw' mIqta' Sep yIchol 'ej Duj qaw' yIlo'"
+      },
+      "leave-wrecking-ball-seat": {
+        "name": "qaw' mIqta' Sepvo' yImej",
+        "description": "qaw' mIqta' Sepvo' yImej 'ej Sep yIchImmoH"
+      },
+      "seat-wrecking-ball-effect": {
+        "name": "qaw' mIqta' Sep"
+      },
+      "fire-wrecking-ball": {
+        "name": "qaw' mIqta' yIqIp",
+        "description": "cham nuH HIj: HIch 9, chuq 15, wa' jav, 8d8 qIp 'ej 4 chel (40 law'). Dochmey 'ej chenmoHmey qIpDI' cha'logh qIp.",
+        "no_action": "DIvI' tu'lu'be'"
+      },
       "take-harpoon-seat": {
         "name": "ghoch nuH Sep yIchol",
         "description": "Duj Qaw' ghoch nuH Sep yIlo'taHmeH Sep yIchol"

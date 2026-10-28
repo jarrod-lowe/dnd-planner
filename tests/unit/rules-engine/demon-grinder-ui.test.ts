@@ -7,18 +7,21 @@ import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
 
 /**
- * Demon Grinder — PR-3's seat-free base, extended by PR-4's SEATS. The second
- * vehicle on the shared infernal-vehicle factory
+ * Demon Grinder — PR-3's seat-free base, extended by PR-4's SEATS and PR-5's
+ * Wrecking Ball. The second vehicle on the shared infernal-vehicle factory
  * (rules/infernal-vehicle.ts): everything here pins what is DATA — the spec's
  * identity strings and its STAT BLOCK (HP 200, thresholds 10/20, capacity 8,
  * cargo 2,000 lb., STR/DEX/CON 18/10/18, the FLAT AC 19 with NO AC-mode
- * machinery anywhere) — plus the stations PR-4 adds as pure spec entries: the
- * HELM (one crew, three-quarters cover, the gate behind drive/dash/fuel/
- * boost) and ONE HARPOON FLINGER (one crew, half cover, +5 to hit, 2d8
- * piercing with no damage bonus). NO passenger, NO clinger, and NO Juke (the
- * stat block carries no Reaction — the spec omits `juke`, so the factory
- * never emits the offer at all). The factory's own behaviour is pinned by
- * infernal-vehicle.test.ts; the Tormentor's corpus stays green untouched.
+ * machinery anywhere) — plus the stations as pure spec entries: the HELM
+ * (PR-4: one crew, three-quarters cover, the gate behind drive/dash/fuel/
+ * boost), ONE HARPOON FLINGER (PR-4: one crew, half cover, +5 to hit, 2d8
+ * piercing with no damage bonus) and the WRECKING BALL (PR-5: one crew, half
+ * cover, +9 to hit, 8d8+4 bludgeoning — the doubled damage against objects
+ * and structures is copy only, GM adjudicates). NO passenger, NO clinger, and
+ * NO Juke (the stat block carries no Reaction — the spec omits `juke`, so the
+ * factory never emits the offer at all). The factory's own behaviour is
+ * pinned by infernal-vehicle.test.ts; the Tormentor's corpus stays green
+ * untouched.
  */
 
 const ID = 'demon-grinder';
@@ -95,12 +98,17 @@ describe('acquire offer ui', () => {
       `record-${ID}-heal`,
       `knock-${ID}-prone`,
       `flip-${ID}-upright`,
-      // The stations in +ADD order (stat-block order): the Helm, then the
-      // Harpoon Flinger — each a take/leave pair, then the weapon's fire.
+      // The stations in +ADD order (stat-block order): the Helm, the Wrecking
+      // Ball (PR-5, ahead of the flinger — the Chomper slots between the Helm
+      // and the ball when its pass lands), then the Harpoon Flinger — each a
+      // take/leave pair first, then every weapon station's fire offer.
       `take-${ID}-helm-seat`,
       `leave-${ID}-helm-seat`,
+      `take-${ID}-wrecking-ball-seat`,
+      `leave-${ID}-wrecking-ball-seat`,
       `take-${ID}-harpoon-seat`,
       `leave-${ID}-harpoon-seat`,
+      `fire-${ID}-wrecking-ball`,
       `fire-${ID}-harpoon`,
       `drive-${ID}`,
       `dash-${ID}`,
@@ -161,7 +169,7 @@ describe('acquire effect', () => {
     expect(Object.keys(e.state!).some((k) => k.includes('acMotionless'))).toBe(false);
   });
 
-  it('owns every vehicle record as a dependent — no ac-mode, the two seats', () => {
+  it('owns every vehicle record as a dependent — no ac-mode, the three seats', () => {
     expect(acquireEffect().dependents).toEqual([
       `${ID}-occupancy`,
       `${ID}-fuel`,
@@ -171,6 +179,7 @@ describe('acquire effect', () => {
       `${ID}-hp-heal`,
       `${ID}-destroyed`,
       `${ID}-seat-helm`,
+      `${ID}-seat-wrecking-ball`,
       `${ID}-seat-harpoon`
     ]);
   });
@@ -280,7 +289,7 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
   });
 });
 
-describe('seats — the Helm and the Harpoon Flinger', () => {
+describe('seats — the Helm, the Wrecking Ball and the Harpoon Flinger', () => {
   /** A committed seat effect for a station (the take's advertise shape). */
   function seatAt(station: string): EffectInstance {
     return {
@@ -311,13 +320,20 @@ describe('seats — the Helm and the Harpoon Flinger', () => {
   it('the capacity derive counts each held seat toward the 8: helm alone reads 1/8', () => {
     const helm = evaluate({ modules: [module()], committed: [...acquired(), seatAt('helm')] });
     expect(helm.facts[`${F}.creatureCapacity.used`]).toBe(1);
-    // Both seats held is the planned-anyway state (one seat per player): the
-    // derive still counts every held fact — 2 of 8.
+    // The Wrecking Ball is a seat-CONSUMING station like every Grinder
+    // station: its held fact counts the same way.
+    const ball = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('wrecking-ball')]
+    });
+    expect(ball.facts[`${F}.creatureCapacity.used`]).toBe(1);
+    // All three seats held is the planned-anyway state (one seat per player):
+    // the derive still counts every held fact — 3 of 8.
     const both = evaluate({
       modules: [module()],
-      committed: [...acquired(), seatAt('helm'), seatAt('harpoon')]
+      committed: [...acquired(), seatAt('helm'), seatAt('harpoon'), seatAt('wrecking-ball')]
     });
-    expect(both.facts[`${F}.creatureCapacity.used`]).toBe(2);
+    expect(both.facts[`${F}.creatureCapacity.used`]).toBe(3);
   });
 
   it('leave is illegal while the seat is unheld; take carries the two legs with the DG keys', () => {
@@ -355,20 +371,26 @@ describe('seats — the Helm and the Harpoon Flinger', () => {
     expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
   });
 
-  it('the seat-cover contribution: the Helm grants ¾ (2), the Harpoon Flinger ½ (1)', () => {
+  it('the seat-cover contribution: the Helm grants ¾ (2), the Wrecking Ball and the Harpoon Flinger ½ (1)', () => {
     // The #497 seam: the factory derives the best HELD seat onto the shared
     // player-level cover.seat fact (combine max) — DG seats are data-only.
     const helm = evaluate({ modules: [module()], committed: [...acquired(), seatAt('helm')] });
     expect(helm.facts['cover.seat']).toBe(2);
+    const ball = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('wrecking-ball')]
+    });
+    expect(ball.facts['cover.seat']).toBe(1);
     const harpoon = evaluate({
       modules: [module()],
       committed: [...acquired(), seatAt('harpoon')]
     });
     expect(harpoon.facts['cover.seat']).toBe(1);
-    // Both held (planned-anyway): the more protective degree wins, never a sum.
+    // Helm-and-ball held (planned-anyway): the more protective degree wins,
+    // never a sum.
     const both = evaluate({
       modules: [module()],
-      committed: [...acquired(), seatAt('helm'), seatAt('harpoon')]
+      committed: [...acquired(), seatAt('helm'), seatAt('wrecking-ball')]
     });
     expect(both.facts['cover.seat']).toBe(2);
   });
@@ -380,6 +402,11 @@ describe('seats — the Helm and the Harpoon Flinger', () => {
       `rule.${ID}.leave-helm-seat.name`,
       `rule.${ID}.leave-helm-seat.description`,
       `rule.${ID}.seat-helm-effect.name`,
+      `rule.${ID}.take-wrecking-ball-seat.name`,
+      `rule.${ID}.take-wrecking-ball-seat.description`,
+      `rule.${ID}.leave-wrecking-ball-seat.name`,
+      `rule.${ID}.leave-wrecking-ball-seat.description`,
+      `rule.${ID}.seat-wrecking-ball-effect.name`,
       `rule.${ID}.take-harpoon-seat.name`,
       `rule.${ID}.take-harpoon-seat.description`,
       `rule.${ID}.leave-harpoon-seat.name`,
@@ -484,6 +511,108 @@ describe('the Harpoon Flinger fire offer (the weapon-station machinery)', () => 
     expect(out.facts['attackAction.extraRemaining']).toBeUndefined();
     // The seat stays taken; the vehicle's state is untouched.
     expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
+  });
+});
+
+describe('the Wrecking Ball swing offer (PR-5, the same machinery)', () => {
+  /** A committed wrecking-ball seat beside the acquire. */
+  function atTheBall(): EffectInstance[] {
+    return [
+      ...acquired(),
+      {
+        id: `effect-${ID}-seat-wrecking-ball`,
+        key: `${ID}-seat-wrecking-ball`,
+        state: { [`${F}.seats.wrecking-ball`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance
+    ];
+  }
+
+  it('gated on the wrecking-ball seat: dice line +9 to hit, 8d8+4 bludgeoning', () => {
+    const seated = evaluate({ modules: [module()], committed: atTheBall() });
+    const swing = seated.availableRules.find((r) => r.rule.id === `fire-${ID}-wrecking-ball`)!;
+    expect(swing, 'seated at the ball, the swing offer exists').toBeDefined();
+    expect(swing.rule.ui).toEqual({
+      section: 'action-attack',
+      subject: SUBJECT,
+      name: `${T}.fire-wrecking-ball.name`,
+      description: `${T}.fire-wrecking-ball.description`,
+      detailKey: 'vehicle/demon-grinder-wrecking-ball',
+      intents: { ATTACK: 'weapons' },
+      actionCost: ['action'],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+          {
+            sides: 8,
+            count: 8,
+            bonus: { var: 'damageBonus' },
+            purpose: 'damage',
+            damageType: { string: 'bludgeoning' }
+          }
+        ]
+      }
+    });
+    expect(swing.rule.vars).toEqual({
+      hitBonus: { capture: true, default: { fact: `${F}.wrecking-ball.hitBonus` } },
+      damageDie: { default: { number: 8 } },
+      damageBonus: { capture: true, default: { fact: `${F}.wrecking-ball.damageBonus` } }
+    });
+    // The derives the dice line reads: +9 to hit, +4 damage (8d8 PLUS the
+    // ball's weight — not the flinger's zero-bonus shape).
+    expect(seated.facts[`${F}.wrecking-ball.hitBonus`]).toBe(9);
+    expect(seated.facts[`${F}.wrecking-ball.damageBonus`]).toBe(4);
+  });
+
+  it('nobody at the ball (even at the Helm): no swing offer; the fire i18n keys exist', () => {
+    const atHelm = evaluate({
+      modules: [module()],
+      committed: [
+        ...acquired(),
+        {
+          id: `effect-${ID}-seat-helm`,
+          key: `${ID}-seat-helm`,
+          state: { [`${F}.seats.helm`]: 1 },
+          expiry: { kind: 'permanent' }
+        } satisfies EffectInstance
+      ]
+    });
+    expect(atHelm.availableRules.some((r) => r.rule.id === `fire-${ID}-wrecking-ball`)).toBe(false);
+    expectStringInBothLocales([
+      `rule.${ID}.fire-wrecking-ball.name`,
+      `rule.${ID}.fire-wrecking-ball.description`,
+      `rule.${ID}.fire-wrecking-ball.no_action`
+    ]);
+  });
+
+  it('the doubled-damage rider rides the OFFER COPY in BOTH locales', () => {
+    // The stat block's one Wrecking Ball rider — damage doubled against
+    // objects and structures — is copy only (the GM adjudicates what counts;
+    // no mechanic doubles anything): the swing description must state it in
+    // every locale. tlh carries the rider in its own words (cha'logh qIp —
+    // the damage strikes twice) rather than English.
+    const english = i18nAt(en, `rule.${ID}.fire-wrecking-ball.description`);
+    expect(english, 'en swing description exists').toEqual(expect.any(String));
+    expect(english, 'en states the doubled-damage rider').toMatch(/doubl/i);
+    expect(english, 'en names what the doubling hits').toContain('objects and structures');
+    const klingon = i18nAt(tlh, `rule.${ID}.fire-wrecking-ball.description`);
+    expect(klingon, 'en-x-tlh swing description exists').toEqual(expect.any(String));
+    expect(klingon, 'en-x-tlh states the doubled-damage rider').toContain("cha'logh qIp");
+  });
+
+  it('swinging spends the GENERIC action — no attack-pool facts of any kind', () => {
+    const out = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: atTheBall(),
+      planned: [{ instanceId: 'i0', ruleId: `fire-${ID}-wrecking-ball` }]
+    });
+    expect(out.facts['actions.spent']).toBe(1);
+    expect(out.facts['attacks.spent']).toBeUndefined();
+    expect(out.facts['attackAction.extraRemaining']).toBeUndefined();
+    // The seat stays taken; the vehicle's state is untouched.
+    expect(out.facts[`${F}.seats.wrecking-ball`]).toBe(1);
   });
 });
 
@@ -880,6 +1009,7 @@ describe('abandon evicts every child record', () => {
       `${ID}-hp-heal`,
       `${ID}-destroyed`,
       `${ID}-seat-helm`,
+      `${ID}-seat-wrecking-ball`,
       `${ID}-seat-harpoon`
     ]) {
       const evict = out.effects.find((e) => e.key === key);
