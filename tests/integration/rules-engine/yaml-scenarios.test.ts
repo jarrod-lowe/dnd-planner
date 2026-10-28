@@ -327,6 +327,13 @@ const EXPECTED_RUNNABLE = [
   'tormentor-helm-dash-count',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',
+  // …Demon Grinder PR-2: the movement SPEND becomes ONE shared player-level
+  // fact (companion.vehicle.movement.spent) — every vehicle's Drive writes it,
+  // every vehicle's remaining = its OWN total − the shared spend (the
+  // cross-vehicle same-turn cap) — and a LEGACY per-vehicle spend effect is
+  // tolerated as an inert fact that still expires at end of turn
+  'tormentor-movement-shared-spend',
+  'tormentor-movement-legacy-spend',
   // …PR 11 — PR-D: Fuel + Boost — the Helm's bonus-action segmented records
   // (keyed writes on the DISTINCT recorded facts, the AC-mode pattern), the
   // derived speed.effective (0/100/80 by fuel, +30 boosted) that the whole

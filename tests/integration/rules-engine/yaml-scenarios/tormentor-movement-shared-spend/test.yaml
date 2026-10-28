@@ -1,0 +1,77 @@
+name: 'Tormentor - Movement Spend Is The Shared Vehicle Pool'
+description: >-
+  The movement SPEND is ONE shared player-level fact,
+  companion.vehicle.movement.spent — every infernal vehicle's Drive writes it
+  and every vehicle's remaining reads its OWN total minus that shared spend
+  (the cross-vehicle same-turn cap: driving two vehicles in one turn draws
+  one pool, capped at whichever vehicle you are currently driving). The Dash
+  doubling stays PER-VEHICLE (the dashed flag is the vehicle's own), so a
+  dashed total rises while the shared spend does not, and the spend's keyless
+  endOfTurn shape is unchanged — the pool resets with the turn as always.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 1
+  # The pool is the FUEL's — a soul coin in the burner (the Helm's
+  # bonus-action record, committed here so the bonus reopens below).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  # The pool opens at 100 with NOTHING spent — the spend now lives in the ONE
+  # shared fact, which reads 0 beside the untouched per-vehicle economy.
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+          companion.vehicle.movement.spent: 0
+  # Drive 40 ft: the row's one endOfTurn effect carries the action spend and
+  # the distance against the SHARED fact (never the per-vehicle stem), and
+  # remaining = total − shared spent.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 40
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.vehicle.movement.spent: 40
+          companion.tormentor.movement.spent: 0
+          companion.tormentor.movement.remaining: 60
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+  # Dash doubles THIS vehicle's total only (the dashed flag stays
+  # per-vehicle): the shared spend is untouched, so remaining reads the
+  # doubled total minus the same 40.
+  - addOffer:
+      id: dash-tormentor
+      assert:
+        facts:
+          companion.tormentor.movement.total: 200
+          companion.tormentor.movement.remaining: 160
+          companion.vehicle.movement.spent: 40
+        planErrors:
+          - id: dash-tormentor
+            index: 0
+            errors:
+              - rule.tormentor.dash.risk
+  # The turn ends: the shared spend ages away with the turn (the keyless
+  # endOfTurn shape, unchanged) and the pool resets full.
+  - endTurn:
+      assert:
+        facts:
+          companion.vehicle.movement.spent: 0
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100

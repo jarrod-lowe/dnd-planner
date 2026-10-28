@@ -1,0 +1,50 @@
+name: 'Tormentor - Legacy Per-Vehicle Movement Spend Tolerated'
+description: >-
+  A LEGACY persisted spend — the keyless endOfTurn effect Drive advertised
+  before the shared-pool pass, writing the per-vehicle
+  companion.tormentor.movement.spent — must not break evaluation: nothing
+  derives or reads that name any more, so the old effect is an inert fact
+  (never a two-writer conflict, the flat ac.value/speed bake precedent) that
+  still expires at end of turn. The fresh Drive row spends the SHARED fact
+  alone; remaining = total − the shared spend, never the legacy figure.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  # The mid-turn deploy picture: the board was acquired under the old code,
+  # the player drove 30 ft this turn (the per-vehicle spend effect still
+  # standing), and the burner holds a soul coin.
+  - evaluate:
+      assert:
+        facts:
+          companion.tormentor.movement.total: 100
+          # The legacy 30 ft is INERT — remaining reads total − the SHARED
+          # spend (0), never the old per-vehicle fact.
+          companion.tormentor.movement.remaining: 100
+          companion.tormentor.movement.spent: 30
+          companion.vehicle.movement.spent: 0
+        offers:
+          legal:
+            - drive-tormentor
+  # A fresh Drive row spends the SHARED fact alone: 25 ft against the pool,
+  # remaining 75 — the legacy 30 never joins the arithmetic.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 25
+      assert:
+        facts:
+          companion.vehicle.movement.spent: 25
+          companion.tormentor.movement.remaining: 75
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+  # End of turn: BOTH spends age away — the legacy effect expires with the
+  # turn exactly as it always did, and the pool resets full.
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.movement.spent: 0
+          companion.vehicle.movement.spent: 0
+          companion.tormentor.movement.remaining: 100

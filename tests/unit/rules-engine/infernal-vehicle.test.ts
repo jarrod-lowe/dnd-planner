@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { evaluate, type FactReader, type Offer } from '$lib/rules-engine';
-import { getModule } from '$lib/rules-engine/registry';
+import {
+  endTurn,
+  evaluate,
+  type EffectInstance,
+  type FactReader,
+  type Offer
+} from '$lib/rules-engine';
+import { getModule, isRegistered } from '$lib/rules-engine/registry';
+import { lazyRuleGroupIds } from '$lib/rules-engine/lazy';
 import {
   buildInfernalVehicle,
   infernalAcquireEffect,
@@ -110,6 +117,58 @@ const TEST_SPEC: InfernalVehicleSpec = {
 /** The same vehicle with NO acMode — the flat-AC optionality (a spec that sets
  *  no mode gets no mode machinery). */
 const FLAT_SPEC: InfernalVehicleSpec = { ...TEST_SPEC, acMode: undefined };
+
+/**
+ * A SECOND vehicle — different id, subject, stem AND speeds (a soul coin opens
+ * 90 ft., not the first spec's 60), so the shared spend's cross-vehicle
+ * arithmetic cannot pass on any per-vehicle fact. TEST-ONLY: it is built and
+ * evaluated directly and never registered (pinned in the shared-spend describe
+ * below) — a real second vehicle is its own merged rule group with its own
+ * yaml corpus, not a fixture here.
+ */
+const SECOND_ID = 'infernal-second';
+const SECOND_SPEC: InfernalVehicleSpec = {
+  id: SECOND_ID,
+  subject: SECOND_ID,
+  factStem: 'companion.infernalSecond',
+  statBlock: {
+    hpBase: 100,
+    damageThreshold: 5,
+    mishapThreshold: 15,
+    cargo: 1000,
+    creatureCapacity: 6,
+    abilities: [
+      { ability: 'str', score: 20, modifier: 5, checkName: 'rule.infernal-second.check-str.name' },
+      { ability: 'dex', score: 12, modifier: 1, checkName: 'rule.infernal-second.check-dex.name' },
+      { ability: 'con', score: 16, modifier: 3, checkName: 'rule.infernal-second.check-con.name' }
+    ]
+  },
+  fuelSpeeds: [0, 90, 70],
+  boostBonus: 20,
+  dashAllowanceBase: 2,
+  details: {
+    statBlock: 'vehicle/infernal-second',
+    damage: 'vehicle/infernal-second-damage',
+    prone: 'vehicle/infernal-second-prone',
+    helm: 'vehicle/infernal-second-helm',
+    fuel: 'vehicle/infernal-second-fuel'
+  },
+  seats: [
+    {
+      station: 'helm',
+      take: {
+        name: 'rule.infernal-second.take-helm-seat.name',
+        description: 'rule.infernal-second.take-helm-seat.description'
+      },
+      leave: {
+        name: 'rule.infernal-second.leave-helm-seat.name',
+        description: 'rule.infernal-second.leave-helm-seat.description'
+      },
+      effectName: 'rule.infernal-second.seat-helm-effect.name',
+      consumesSeat: true
+    }
+  ]
+};
 
 /** The built module's offer catalog (empty while the factory is a stub). */
 function offers(spec: InfernalVehicleSpec = TEST_SPEC): Offer[] {
@@ -351,6 +410,101 @@ describe('factory: the flat-AC optionality (a spec that sets no acMode)', () => 
     expect(acquire, 'the flat vehicle is still acquirable').toBeDefined();
     expect((acquire!.ui as Record<string, unknown>).secondaryControl).toBeUndefined();
     expect(offers(FLAT_SPEC).some((o) => o.id === `set-${SPEC_ID}-ac-mode`)).toBe(false);
+  });
+});
+
+/**
+ * The SHARED movement spend — Demon Grinder PR-2. ONE player-level fact
+ * (`companion.vehicle.movement.spent`, the stem chosen because it sits in the
+ * companion namespace BESIDE the per-vehicle stems without being owned by any
+ * one vehicle's factStem or lifecycle) carries every infernal vehicle's
+ * driven feet: each vehicle's Drive writes it, each vehicle's remaining reads
+ * its OWN total minus it. Same-turn driving across vehicles therefore draws
+ * ONE pool, capped at whichever vehicle you are currently driving — the
+ * cross-vehicle cap the Tormentor seats job recorded as the goal.
+ */
+describe('factory: the movement spend is ONE shared player-level pool', () => {
+  const SHARED = 'companion.vehicle.movement.spent';
+  const SECOND_F = SECOND_SPEC.factStem;
+
+  /** A committed acquire + helm seat + soul-coin fuel record for one spec. */
+  const fuelledHelm = (spec: InfernalVehicleSpec): EffectInstance[] => [
+    infernalAcquireEffect(spec),
+    {
+      id: `effect-${spec.id}-seat-helm`,
+      key: `${spec.id}-seat-helm`,
+      state: { [`${spec.factStem}.seats.helm`]: 1 },
+      expiry: { kind: 'permanent' }
+    },
+    {
+      id: `effect-${spec.id}-fuel`,
+      key: `${spec.id}-fuel`,
+      state: { [`${spec.factStem}.fuel.recorded`]: 1 },
+      expiry: { kind: 'permanent' }
+    }
+  ];
+
+  it("Drive writes the SHARED fact — never the vehicle's own stem", () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), economy],
+      committed: fuelledHelm(TEST_SPEC),
+      planned: [{ instanceId: 'i0', ruleId: `drive-${SPEC_ID}`, selections: { distance: 25 } }]
+    });
+    // The one keyless endOfTurn spend (shape unchanged) carries the distance
+    // against the SHARED stem; remaining = the vehicle's own total − shared.
+    expect(out.facts[SHARED]).toBe(25);
+    expect(out.facts[`${F}.movement.spent`]).toBeUndefined();
+    expect(out.facts[`${F}.movement.total`]).toBe(60);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(35);
+  });
+
+  it('same-turn driving across vehicles draws ONE pool: each vehicle caps at its OWN total', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), buildInfernalVehicle(SECOND_SPEC), economy],
+      committed: [...fuelledHelm(TEST_SPEC), ...fuelledHelm(SECOND_SPEC)],
+      // 25 ft driven at the FIRST vehicle's helm…
+      planned: [{ instanceId: 'i0', ruleId: `drive-${SPEC_ID}`, selections: { distance: 25 } }]
+    });
+    expect(out.facts[SHARED]).toBe(25);
+    // …and BOTH pools pay for it: each remaining = its OWN total − the shared
+    // spend (60 − 25 and 90 − 25), never its own private ledger.
+    expect(out.facts[`${F}.movement.remaining`]).toBe(35);
+    expect(out.facts[`${SECOND_F}.movement.total`]).toBe(90);
+    expect(out.facts[`${SECOND_F}.movement.remaining`]).toBe(65);
+  });
+
+  it('a LEGACY per-vehicle spend effect is inert, tolerated, and still expires', () => {
+    const economy = getModule('action-economy')!;
+    // The pre-shared shape: a persisted keyless endOfTurn Drive spend under
+    // the per-vehicle stem. Nothing derives or reads that name any more, so
+    // evaluation must not break and the fact must not reach the arithmetic.
+    const legacy: EffectInstance = {
+      id: 'effect-drive-cost',
+      state: { [`${F}.movement.spent`]: 30 },
+      expiry: { kind: 'endOfTurn' }
+    };
+    const committed = [...fuelledHelm(TEST_SPEC), legacy];
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), economy],
+      committed
+    });
+    expect(out.facts[`${F}.movement.total`]).toBe(60);
+    expect(out.facts[`${F}.movement.remaining`]).toBe(60); // NOT 30 — unread
+    // The old effect still ages away with the turn, exactly as it did before.
+    const aged = endTurn(committed, out.effects, {});
+    expect(aged.some((e) => e.id === 'effect-drive-cost')).toBe(false);
+    const after = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), economy],
+      committed: aged
+    });
+    expect(after.facts[`${F}.movement.remaining`]).toBe(60);
+  });
+
+  it('the second vehicle is a TEST-ONLY fixture: never registered, never lazy-loaded', () => {
+    expect(isRegistered(SECOND_ID)).toBe(false);
+    expect(lazyRuleGroupIds()).not.toContain(SECOND_ID);
   });
 });
 
