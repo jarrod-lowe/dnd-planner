@@ -12,16 +12,24 @@
 // this as "chunks are shipped"; the real shipping check is the SvelteKit build
 // output. Runs anywhere Vite runs — no AWS, no deploy.
 import { build } from 'vite';
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
 const RULES_DIR = 'src/lib/rules-engine/rules';
+const LAZY = 'src/lib/rules-engine/lazy.ts';
 const OUT = join(tmpdir(), 'rev2-chunk-verify');
 
-const expected = readdirSync(RULES_DIR)
-  .filter((f) => f.endsWith('.ts'))
-  .map((f) => f.replace(/\.ts$/, ''));
+// The expected chunks are the modules the LAZY LOADER dynamically imports —
+// the registered rule groups — not every .ts file under rules/: the directory
+// also holds shared authoring code (the infernal-vehicle factory) that rule
+// modules import statically, so Rollup bundles it into its importers' chunks
+// instead of splitting it out on its own.
+const lazySource = readFileSync(LAZY, 'utf8');
+const expected = [...lazySource.matchAll(/import\('\.\/rules\/([a-zA-Z0-9-]+)'\)/g)].map(
+  (m) => m[1]
+);
+if (expected.length === 0) throw new Error(`no loaders found in ${LAZY} — parse broken`);
 
 await build({
   configFile: false,
