@@ -19,13 +19,17 @@ import {
  * crew, three-quarters cover — the gate behind Drive/Dash/Fuel/Boost) and ONE
  * Harpoon Flinger (one crew, half cover, +5 to hit, 2d8 piercing with no
  * damage bonus — 10 harpoons untracked, copy only). PR-5 added the WRECKING
- * BALL (one crew, half cover, +9 to hit, 8d8+4 bludgeoning — the doubled
- * damage against objects and structures is copy only, the GM adjudicates)
- * and PR-6 the CHOMPER (one crew, half cover, +9 to hit, 6d6+4 piercing —
- * the ground-to-bits-and-spat-through-the-pipes rider is copy only, the GM
- * adjudicates). The second flinger (multi-harpoonist) follows in its own
- * pass. NO passenger or clinger station exists on this vehicle, and the
- * derived creature capacity counts each held seat toward the 8.
+ * BALL (one crew, half cover, +9 to hit, 8d8+4 bludgeoning — its rider, the
+ * damage doubled against objects and structures, rides every swing row as
+ * an unconditional notice) and PR-6 the CHOMPER (one crew, half cover,
+ * +9 to hit, 6d6+4 piercing — its rider, a target reduced to 0 hit points
+ * destroyed beyond normal recovery with its nonmagical items, rides every
+ * bite row the same way). Both riders are the DASH-RISK idiom (the PR-6 user
+ * correction): per-row informational notes stating the whole rule in our own
+ * words — never a mechanic, the GM adjudicates. The second flinger
+ * (multi-harpoonist) follows in its own pass. NO passenger or clinger
+ * station exists on this vehicle, and the derived creature capacity counts
+ * each held seat toward the 8.
  *
  * The stat block's two deliberate divergences from the Tormentor, both as
  * DATA: the AC is FLAT 19 (no motionless rider — `flatAc`, never `acMode`,
@@ -122,12 +126,14 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
      * the derives the dice-line reads (+9 to hit, 6d6+4 piercing — the
      * machine's grinding force behind every bite, the ball's bonus shape).
      * The station's one RIDER — a target reduced to 0 hit points by the
-     * damage is ground to bits and spat out through the vehicle's pipes, and
-     * any nonmagical items the target held or carried are destroyed — is
-     * DETAIL and offer COPY only: nothing in the engine models the kill or
-     * the wrecked gear (what was held or carried is the GM's call at the
-     * table — the Tormentor "magical + 10 harpoons" precedent). The mount
-     * grants HALF cover: spec data on the seat (cover.md PR-2).
+     * damage is destroyed beyond normal recovery, and any nonmagical items
+     * it held or carried are destroyed with it — rides EVERY bite row as an
+     * unconditional 'notice' (the dash-risk idiom, PR-6's user correction):
+     * stated in our own words, never the book's phrasing, and NOTHING in the
+     * engine models the kill or the wrecked gear (what was held or carried
+     * is the GM's call at the table — the Tormentor "magical + 10 harpoons"
+     * precedent). The mount grants HALF cover: spec data on the seat
+     * (cover.md PR-2).
      */
     {
       station: 'chomper',
@@ -148,6 +154,7 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
           description: `${T}.fire-chomper.description`
         },
         noAction: `${T}.fire-chomper.no_action`,
+        rider: `${T}.fire-chomper.rider`,
         detailKey: 'vehicle/demon-grinder-chomper',
         hitBonus: 9,
         damageBonus: 4,
@@ -163,10 +170,12 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
      * the derives the dice-line reads (+9 to hit, 8d8+4 bludgeoning — the
      * ball's weight behind every swing, unlike the flinger's zero-bonus
      * shape). The station's one RIDER — the damage is doubled against objects
-     * and structures — is DETAIL and offer COPY only: nothing in the engine
-     * doubles anything (what counts as an object or a structure is the GM's
-     * call at the table — the Tormentor "magical + 10 harpoons" precedent).
-     * The mount grants HALF cover: spec data on the seat (cover.md PR-2).
+     * and structures — rides EVERY swing row as an unconditional 'notice'
+     * (the dash-risk idiom — PR-6's user correction amending this station's
+     * copy-only landing): nothing in the engine doubles anything, and what
+     * counts as an object or a structure is the GM's call at the table (the
+     * Tormentor "magical + 10 harpoons" precedent). The mount grants HALF
+     * cover: spec data on the seat (cover.md PR-2).
      */
     {
       station: 'wrecking-ball',
@@ -187,6 +196,7 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
           description: `${T}.fire-wrecking-ball.description`
         },
         noAction: `${T}.fire-wrecking-ball.no_action`,
+        rider: `${T}.fire-wrecking-ball.rider`,
         detailKey: 'vehicle/demon-grinder-wrecking-ball',
         hitBonus: 9,
         damageBonus: 4,

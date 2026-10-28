@@ -46,6 +46,17 @@ export interface SeatWeaponSpec {
   fire: { name: string; description: string };
   /** The fire offer's own no-action diagnostic key. */
   noAction: string;
+  /**
+   * The weapon's one RIDER rule, when its stat block carries one — the i18n
+   * key of an UNCONDITIONAL per-row note on EVERY fire row (the dash-risk
+   * idiom: ONE 'notice' diagnostic beside the spend, informational only,
+   * never the error path — the row stays legal). The note states the whole
+   * rule in the locale's own words and the engine wires NOTHING behind it:
+   * what the rule's terms mean at the table is the GM's call. OMIT for a
+   * weapon with no rider — its rows carry no note (the flinger's riders
+   * stay detail copy).
+   */
+  rider?: string;
   /** Rules-mode detail the fire offer links. */
   detailKey: string;
   /** The station's attack numbers — the derives the dice-line vars read. */
@@ -707,7 +718,11 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
    * else — no attack-pool facts, no facts of its own: the seat stays taken, no
    * ammunition is counted (that is detail text), and the vehicle's state is
    * untouched. The dice line reads the module derives; range and targets live
-   * in the copy and the detail, not in range machinery.
+   * in the copy and the detail, not in range machinery. A weapon whose spec
+   * carries a RIDER also emits it on EVERY fire row as an unconditional
+   * 'notice' diagnostic after the error legs — the DASH_RISK idiom exactly:
+   * the note states the whole rule, nothing is gated, recorded or counted
+   * behind it, and the plan fold attaches it to that row alone.
    */
   const fireOffer = (seat: SeatSpec): Offer => {
     const weapon = seat.weapon!;
@@ -771,11 +786,15 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         // keyless endOfTurn effect writing the action and nothing else, with
         // the legality re-checked so a planned-anyway row carries its own
         // diagnostic from the fold (the row still fires). Both legs, in leg
-        // order.
+        // order — and BESIDE them, LAST, the weapon's RIDER rule when the
+        // spec carries one (the dash-risk idiom): an unconditional 'notice'
+        // stating the whole rule, informational only, never gated and never
+        // a mechanic — the row informs, the GM adjudicates.
         const diagnostics: Diagnostic[] = [];
         if (f.num('actions.remaining') <= 0)
           diagnostics.push({ code: weapon.noAction, severity: 'error' });
         if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
+        if (weapon.rider) diagnostics.push({ code: weapon.rider, severity: 'notice' });
         return {
           advertise: [{ id: 'cost', state: { 'actions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
           diagnostics

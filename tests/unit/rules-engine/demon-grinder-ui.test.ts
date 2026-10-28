@@ -15,12 +15,14 @@ import tlh from '$lib/i18n/en-x-tlh/common.json';
  * FLAT AC 19 with NO AC-mode machinery anywhere) — plus the stations as pure
  * spec entries: the HELM (PR-4: one crew, three-quarters cover, the gate
  * behind drive/dash/fuel/boost), the CHOMPER (PR-6: one crew, half cover,
- * +9 to hit, 6d6+4 piercing — the ground-to-bits-and-spat-through-the-pipes
- * rider is copy only, GM adjudicates), the WRECKING BALL (PR-5: one crew,
- * half cover, +9 to hit, 8d8+4 bludgeoning — the doubled damage against
- * objects and structures is copy only, GM adjudicates) and ONE HARPOON
- * FLINGER (PR-4: one crew, half cover, +5 to hit, 2d8 piercing with no
- * damage bonus). NO passenger, NO clinger, and NO Juke (the stat block
+ * +9 to hit, 6d6+4 piercing — its rider, a 0-HP target destroyed beyond
+ * normal recovery with its nonmagical items, rides every bite row as an
+ * unconditional notice), the WRECKING BALL (PR-5: one crew, half cover,
+ * +9 to hit, 8d8+4 bludgeoning — its rider, damage doubled against objects
+ * and structures, rides every swing row as an unconditional notice — the
+ * PR-6 user correction) and ONE HARPOON FLINGER (PR-4: one crew, half
+ * cover, +5 to hit, 2d8 piercing with no damage bonus, NO rider note).
+ * NO passenger, NO clinger, and NO Juke (the stat block
  * carries no Reaction — the spec omits `juke`, so the factory never emits the
  * offer at all). The factory's own behaviour is pinned by
  * infernal-vehicle.test.ts; the Tormentor's corpus stays green untouched.
@@ -614,22 +616,81 @@ describe('the Chomper bite offer (PR-6, the same machinery)', () => {
     ]);
   });
 
-  it('the ground-to-bits rider rides the OFFER COPY in BOTH locales', () => {
+  it('the destroyed-beyond-recovery rider rides every bite row as an unconditional NOTICE', () => {
     // The stat block's one Chomper rider — a target reduced to 0 hit points
-    // is ground to bits and spat out through the vehicle's pipes, its
-    // nonmagical items destroyed — is copy only (the GM adjudicates what was
-    // held or carried; nothing in the engine models the kill): the bite
-    // description must state it in every locale. tlh carries the rider in its
-    // own words (tlhIchvo' ngeHlu' — sent out through the pipes) rather than
-    // English.
-    const english = i18nAt(en, `rule.${ID}.fire-chomper.description`);
-    expect(english, 'en bite description exists').toEqual(expect.any(String));
+    // by this damage is destroyed beyond normal recovery, its nonmagical
+    // items destroyed with it — is the DASH-RISK idiom: ONE 'notice'
+    // diagnostic on EVERY planned bite row (informational only, never the
+    // error path — the row stays legal), never a mechanic (the GM
+    // adjudicates what was held or carried). The legal row carries it
+    // ALONE (the action pool loaded, so the no-action leg stays closed)…
+    const out = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: atTheChomper(),
+      planned: [{ instanceId: 'i0', ruleId: `fire-${ID}-chomper` }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.fire-chomper.rider`, severity: 'notice' }
+    ]);
+    // …and BESIDE the no-action error on an over-committed second bite, in
+    // the dash risk's error-then-notice order.
+    const over = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: atTheChomper(),
+      planned: [
+        { instanceId: 'i0', ruleId: `fire-${ID}-chomper` },
+        { instanceId: 'i1', ruleId: `fire-${ID}-chomper` }
+      ]
+    });
+    expect(over.planDiagnostics['i1']).toEqual([
+      { code: `${T}.fire-chomper.no_action`, severity: 'error' },
+      { code: `${T}.fire-chomper.rider`, severity: 'notice' }
+    ]);
+  });
+
+  it('the rider note exists in BOTH locales, own wording, restating no attack numbers', () => {
+    // Our own words, never the book's phrasing: en states the 0-hit-points
+    // trigger, the beyond-recovery destruction and the nonmagical item
+    // destruction; tlh carries the rider in its own vocabulary
+    // (Qaw'lu'chu' — utterly destroyed) rather than English. The DICE LINE
+    // states the attack's numbers, so the note restates none of them (the
+    // dash note's discipline — only its live {{allowance}} rides as params).
+    const english = i18nAt(en, `rule.${ID}.fire-chomper.rider`);
+    expect(english, 'en rider note exists').toEqual(expect.any(String));
     expect(english, 'en states the 0-hit-points trigger').toContain('0 hit points');
-    expect(english, 'en states the pipes').toContain('pipes');
-    expect(english, 'en states the item destruction').toMatch(/nonmagical items .*destroyed/i);
-    const klingon = i18nAt(tlh, `rule.${ID}.fire-chomper.description`);
-    expect(klingon, 'en-x-tlh bite description exists').toEqual(expect.any(String));
-    expect(klingon, 'en-x-tlh states the ground-to-bits rider').toContain("tlhIchvo' ngeHlu'");
+    expect(english, 'en states the beyond-recovery destruction').toContain(
+      'beyond normal recovery'
+    );
+    expect(english, 'en states the item destruction').toContain('nonmagical');
+    const klingon = i18nAt(tlh, `rule.${ID}.fire-chomper.rider`);
+    expect(klingon, 'en-x-tlh rider note exists').toEqual(expect.any(String));
+    expect(klingon, 'en-x-tlh states the destruction in its own words').toContain("Qaw'lu'chu'");
+    for (const [locale, value] of [
+      ['en', english],
+      ['en-x-tlh', klingon]
+    ] as const)
+      expect(
+        String(value).match(/6d6|\+9|\b25\b/),
+        `${locale} rider restates no attack numbers`
+      ).toBe(null);
+  });
+
+  it('the trimmed bite description keeps the attack shape only', () => {
+    // The rider now rides every row, so the description sheds it (the trim
+    // the dash description never needed — its note interpolates a live
+    // number, ours has nothing dynamic to say): both locales keep the
+    // melee-attack shape and nothing of the rider.
+    for (const [locale, dict, riderism] of [
+      ['en', en, /beyond normal recovery|nonmagical/],
+      ['en-x-tlh', tlh, /Qaw'lu'chu'|chamHa'/]
+    ] as const) {
+      const d = i18nAt(dict, `rule.${ID}.fire-chomper.description`);
+      expect(d, `${locale} bite description exists`).toEqual(expect.any(String));
+      expect(
+        String(d).match(riderism),
+        `${locale} description no longer duplicates the rider`
+      ).toBe(null);
+    }
   });
 
   it('biting spends the GENERIC action — no attack-pool facts of any kind', () => {
@@ -719,19 +780,75 @@ describe('the Wrecking Ball swing offer (PR-5, the same machinery)', () => {
     ]);
   });
 
-  it('the doubled-damage rider rides the OFFER COPY in BOTH locales', () => {
-    // The stat block's one Wrecking Ball rider — damage doubled against
-    // objects and structures — is copy only (the GM adjudicates what counts;
-    // no mechanic doubles anything): the swing description must state it in
-    // every locale. tlh carries the rider in its own words (cha'logh qIp —
-    // the damage strikes twice) rather than English.
-    const english = i18nAt(en, `rule.${ID}.fire-wrecking-ball.description`);
-    expect(english, 'en swing description exists').toEqual(expect.any(String));
+  it('the doubled-damage rider rides every swing row as an unconditional NOTICE', () => {
+    // The stat block's one Wrecking Ball rider — the damage is doubled
+    // against objects and structures — is the DASH-RISK idiom (PR-6's user
+    // correction, amending #499's copy-only landing): ONE 'notice'
+    // diagnostic on EVERY planned swing row, informational only, never the
+    // error path, never a mechanic (what counts as an object or a structure
+    // is the GM's call at the table). The legal row carries it ALONE (the
+    // action pool loaded, so the no-action leg stays closed)…
+    const out = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: atTheBall(),
+      planned: [{ instanceId: 'i0', ruleId: `fire-${ID}-wrecking-ball` }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.fire-wrecking-ball.rider`, severity: 'notice' }
+    ]);
+    // …and BESIDE the no-action error on an over-committed second swing, in
+    // the dash risk's error-then-notice order.
+    const over = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: atTheBall(),
+      planned: [
+        { instanceId: 'i0', ruleId: `fire-${ID}-wrecking-ball` },
+        { instanceId: 'i1', ruleId: `fire-${ID}-wrecking-ball` }
+      ]
+    });
+    expect(over.planDiagnostics['i1']).toEqual([
+      { code: `${T}.fire-wrecking-ball.no_action`, severity: 'error' },
+      { code: `${T}.fire-wrecking-ball.rider`, severity: 'notice' }
+    ]);
+  });
+
+  it('the rider note exists in BOTH locales, own wording, restating no attack numbers', () => {
+    // en states the doubling and what it never touches; tlh carries the
+    // rider in its own words (cha'logh qIp — the damage strikes twice). The
+    // DICE LINE states the attack's numbers, so the note restates none.
+    const english = i18nAt(en, `rule.${ID}.fire-wrecking-ball.rider`);
+    expect(english, 'en rider note exists').toEqual(expect.any(String));
     expect(english, 'en states the doubled-damage rider').toMatch(/doubl/i);
     expect(english, 'en names what the doubling hits').toContain('objects and structures');
-    const klingon = i18nAt(tlh, `rule.${ID}.fire-wrecking-ball.description`);
-    expect(klingon, 'en-x-tlh swing description exists').toEqual(expect.any(String));
+    const klingon = i18nAt(tlh, `rule.${ID}.fire-wrecking-ball.rider`);
+    expect(klingon, 'en-x-tlh rider note exists').toEqual(expect.any(String));
     expect(klingon, 'en-x-tlh states the doubled-damage rider').toContain("cha'logh qIp");
+    for (const [locale, value] of [
+      ['en', english],
+      ['en-x-tlh', klingon]
+    ] as const)
+      expect(
+        String(value).match(/8d8|\+9|\b40\b/),
+        `${locale} rider restates no attack numbers`
+      ).toBe(null);
+  });
+
+  it('the trimmed swing description keeps the attack shape only', () => {
+    // The rider now rides every row, so the description sheds it (the trim
+    // the dash description never needed — its note interpolates a live
+    // number, ours has nothing dynamic to say): both locales keep the
+    // melee-attack shape and nothing of the rider.
+    for (const [locale, dict, riderism] of [
+      ['en', en, /doubl/i],
+      ['en-x-tlh', tlh, /cha'logh/]
+    ] as const) {
+      const d = i18nAt(dict, `rule.${ID}.fire-wrecking-ball.description`);
+      expect(d, `${locale} swing description exists`).toEqual(expect.any(String));
+      expect(
+        String(d).match(riderism),
+        `${locale} description no longer duplicates the rider`
+      ).toBe(null);
+    }
   });
 
   it('swinging spends the GENERIC action — no attack-pool facts of any kind', () => {

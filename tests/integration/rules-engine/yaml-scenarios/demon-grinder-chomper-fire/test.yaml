@@ -6,18 +6,22 @@ description: >-
   attack filed like one: ATTACK 'weapons', action cost, a dice-line reading
   the module derives (d20 + 9 to hit, 6d6+4 piercing — the grinding teeth
   behind every bite). Reach 5 ft. and one target are offer copy and detail
-  text, not range machinery, and the stat block's gruesome rider — a target
-  reduced to 0 hit points is ground to bits and spat out through the pipes,
-  its nonmagical items destroyed — rides the same copy: the GM adjudicates,
-  nothing in the engine models a kill. The ECONOMY is the generic action
-  spend (the flinger's ruling): biting consumes the player's full ACTION and
-  nothing else, the seat stays taken, and on a wreck the shared wrecked leg
-  composes.
+  text, not range machinery. The stat block's one rider — a target reduced
+  to 0 hit points by this damage is destroyed beyond normal recovery, its
+  nonmagical items destroyed with it — rides EVERY bite row as an
+  unconditional 'notice' diagnostic (the dash-risk idiom: informational
+  only, never the error path — the row stays legal — and never a mechanic;
+  the GM adjudicates), while a free record row planned beside it carries
+  nothing. The ECONOMY is the generic action spend (the flinger's ruling):
+  biting consumes the player's full ACTION and nothing else, the seat stays
+  taken, and on a wreck the shared wrecked leg composes with the note beside
+  it.
 ruleGroups:
   - vehicles/demon-grinder
   - dnd-5e-2024/action-economy
 steps:
-  # Acquired but unseated: no bite offer — the attack is the station's.
+  # Acquired but unseated: no bite offer — the attack is the station's, and
+  # with no bite row there is no note anywhere.
   - addOffer:
       id: acquire-demon-grinder
   - evaluate:
@@ -94,7 +98,9 @@ steps:
           companion.demonGrinder.chomper.hitBonus: 9
           companion.demonGrinder.chomper.damageBonus: 4
   # Bite: the generic action spend alone — the player's ACTION, never attack
-  # accounting — and nothing else moves (the seat stays taken).
+  # accounting — and nothing else moves (the seat stays taken). The rider
+  # rides the row unconditionally and the row stays LEGAL (a notice is
+  # informational, never the error path).
   - addOffer:
       id: fire-demon-grinder-chomper
       assert:
@@ -104,9 +110,24 @@ steps:
         planErrors:
           - id: fire-demon-grinder-chomper
             index: 0
+            errors:
+              - rule.demon-grinder.fire-chomper.rider
+        status:
+          legal: true
+  # A free record row planned beside the bite carries NOTHING (a per-row
+  # note is not a panel truth).
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        planErrors:
+          - id: set-demon-grinder-occupancy
+            index: 0
             errors: []
   # A second bite the same turn is ILLEGAL-but-COMMITTABLE: the offer stays
-  # with its no-action diagnostic and the row still spends.
+  # with its no-action diagnostic and the row still spends — the note beside
+  # the error, the dash risk's order.
   - addOffer:
       id: fire-demon-grinder-chomper
       assert:
@@ -115,6 +136,7 @@ steps:
             index: 1
             errors:
               - rule.demon-grinder.fire-chomper.no_action
+              - rule.demon-grinder.fire-chomper.rider
   # End of turn: the spend ages away, the seat stands.
   - endTurn:
       assert:
@@ -123,7 +145,8 @@ steps:
           companion.demonGrinder.seats.chomper: 1
   # Wrecked: destroy the vehicle while seated at the chomper (one
   # pool-emptying blow); the bite goes illegal on the shared wrecked leg, and
-  # a planned-anyway row still spends carrying the diagnostic.
+  # a planned-anyway row still spends carrying the diagnostic with the note
+  # beside it.
   - addOffer:
       id: record-demon-grinder-damage
       selections:
@@ -144,6 +167,7 @@ steps:
             index: 0
             errors:
               - rule.demon-grinder.wrecked
+              - rule.demon-grinder.fire-chomper.rider
   - endTurn:
       assert:
         facts:

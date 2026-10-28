@@ -558,12 +558,13 @@ describe('demon grinder wrecking ball detail body', () => {
 describe('demon grinder chomper detail body', () => {
   // PR-6's station detail (linked from the bite offer): the chomper's numbers
   // in our own words, plus the station's one RIDER — a target reduced to 0
-  // hit points is ground to bits and spat out through the vehicle's pipes,
-  // its nonmagical items destroyed — as COPY ONLY. Nothing in the engine
-  // models the kill or the wreckage of gear: what is held or carried and what
-  // survives is the GM's call at the table, so the rule is stated (detail +
-  // offer copy) and nothing is wired. Same discipline as every station
-  // detail: our own words, in-world voice, no app meta.
+  // hit points by this damage is destroyed beyond normal recovery, its
+  // nonmagical items destroyed with it — stated here and as the unconditional
+  // per-row notice on every bite row (the dash-risk idiom). NOTHING in the
+  // engine models the kill or the wreckage of gear: what is held or carried
+  // and what survives is the GM's call at the table, so the rule is copy and
+  // nothing is wired. Our own words throughout — never the book's phrasing.
+  // Same discipline as every station detail: in-world voice, no app meta.
   const body = demonGrinderDetailBody('vehicle/demon-grinder-chomper');
 
   it('exists as a detail block in demon-grinder.yaml', () => {
@@ -578,7 +579,7 @@ describe('demon grinder chomper detail body', () => {
     expect(found, `app-meta phrases in the chomper detail body: ${found.join(', ')}`).toEqual([]);
   });
 
-  it('states the attack numbers and the ground-to-bits rider', () => {
+  it('states the attack numbers and the destroyed-beyond-recovery rider', () => {
     for (const notion of [
       'Chomper',
       '+9',
@@ -586,9 +587,9 @@ describe('demon grinder chomper detail body', () => {
       '6d6+4',
       'piercing',
       '0 hit points',
-      'ground to bits',
-      'pipes',
-      'nonmagical'
+      'beyond normal recovery',
+      'nonmagical',
+      'destroyed'
     ]) {
       expect(body, `the chomper detail body states "${notion}"`).toContain(notion);
     }
