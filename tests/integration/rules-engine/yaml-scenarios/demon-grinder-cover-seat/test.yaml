@@ -1,0 +1,82 @@
+name: 'Cover - Demon Grinder Seat Cover By Station'
+description: >-
+  The Grinder's stations grant cover through the shared seat-cover seam
+  (cover PR-2): the Helm's cockpit grants THREE-QUARTERS cover (cover.seat
+  2 — AC 15, the three-quarters notice body, the +5 Dex-save rider) and the
+  Harpoon Flinger's mount grants HALF (cover.seat 1 — AC 12, +2 rider).
+  The degrees arrive per seat through the one effective derive
+  (max(manual, seat), never a sum), and leaving the seat drops the
+  contribution with the seat fact — no cover wiring of its own anywhere.
+ruleGroups:
+  - dnd-5e-2024/cover
+  - dnd-5e-2024/ac
+  - vehicles/demon-grinder
+steps:
+  - addOffer:
+      id: acquire-demon-grinder
+  # The Helm: THREE-QUARTERS cover from the seat — AC 15, rider +5.
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+      assert:
+        facts:
+          cover.current: 0
+          cover.seat: 2
+          cover.effective: 2
+          cover.bonus: 5
+          ac.value: 15
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+          riders:
+            - key: rule.dnd-5e-2024.cover.rider
+              rider:
+                value:
+                  kind: flat
+                  bonus: 5
+        planErrors:
+          - id: take-demon-grinder-helm-seat
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        facts:
+          cover.seat: 2
+          cover.effective: 2
+  # Leave it: the contribution drops with the seat fact.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+      assert:
+        facts:
+          cover.seat: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  - endTurn:
+      assert:
+        facts:
+          cover.seat: 0
+  # The Harpoon Flinger: HALF cover from the seat — AC 12, rider +2.
+  - addOffer:
+      id: take-demon-grinder-harpoon-seat
+      assert:
+        facts:
+          companion.demonGrinder.seats.harpoon: 1
+          cover.seat: 1
+          cover.effective: 1
+          cover.bonus: 2
+          ac.value: 12
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+          riders:
+            - key: rule.dnd-5e-2024.cover.rider
+              rider:
+                value:
+                  kind: flat
+                  bonus: 2

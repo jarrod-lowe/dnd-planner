@@ -13,12 +13,14 @@ ruleGroups:
 steps:
   - addOffer:
       id: acquire-demon-grinder
-  # Build up state: occupancy 3, prone, and a wreck (one pool-emptying blow of
-  # 200 against HP 200).
+  # Build up state: occupancy 3, a held Helm seat, prone, and a wreck (one
+  # pool-emptying blow of 200 against HP 200).
   - addOffer:
       id: set-demon-grinder-occupancy
       selections:
         occupancy: 3
+  - addOffer:
+      id: take-demon-grinder-helm-seat
   - addOffer:
       id: knock-demon-grinder-prone
   - addOffer:
@@ -35,11 +37,15 @@ steps:
           exists:
             - effect-demon-grinder-acquire
             - effect-demon-grinder-occupancy
+            - effect-demon-grinder-seat-helm
             - effect-demon-grinder-prone
             - effect-demon-grinder-hp-damage
             - effect-demon-grinder-destroyed
+        facts:
+          companion.demonGrinder.seats.helm: 1
+          companion.demonGrinder.creatureCapacity.used: 4
   # A RE-ACQUIRE evicts every record with the keyed replacement: a fresh
-  # vehicle starts whole, upright and unoccupied.
+  # vehicle starts whole, upright, unoccupied — and SEAT-FREE.
   - addOffer:
       id: acquire-demon-grinder
       assert:
@@ -50,6 +56,10 @@ steps:
           companion.demonGrinder.destroyed: 0
           companion.demonGrinder.prone: 0
           companion.demonGrinder.creatureCapacity.used: 0
+          companion.demonGrinder.seats.helm: 0
+      offers:
+        notExists:
+          - drive-demon-grinder
   - endTurn:
       assert:
         effects:
@@ -57,15 +67,19 @@ steps:
             - effect-demon-grinder-acquire
           notExists:
             - effect-demon-grinder-occupancy
+            - effect-demon-grinder-seat-helm
             - effect-demon-grinder-prone
             - effect-demon-grinder-hp-damage
             - effect-demon-grinder-hp-heal
             - effect-demon-grinder-destroyed
         facts:
           companion.demonGrinder.hp.current: 200
-  # Wreck it again, commit, then ABANDON: the keyed replacement clears every
-  # baked fact INCLUDING the records and the wreck, and the vehicle offers'
-  # gates close with the panel.
+          companion.demonGrinder.seats.helm: 0
+  # Wreck it again (and re-take the Helm), commit, then ABANDON: the keyed
+  # replacement clears every baked fact INCLUDING the records, the wreck and
+  # the seat, and the vehicle offers' gates close with the panel.
+  - addOffer:
+      id: take-demon-grinder-helm-seat
   - addOffer:
       id: record-demon-grinder-damage
       selections:
@@ -77,6 +91,7 @@ steps:
         facts:
           companion.demonGrinder.destroyed: 1
           companion.demonGrinder.prone: 1
+          companion.demonGrinder.seats.helm: 1
   - addOffer:
       id: abandon-demon-grinder
       assert:
@@ -90,6 +105,8 @@ steps:
           companion.demonGrinder.str.modifier: 0
           companion.demonGrinder.prone: 0
           companion.demonGrinder.destroyed: 0
+          companion.demonGrinder.seats.helm: 0
+          companion.demonGrinder.creatureCapacity.used: 0
         planErrors:
           - id: abandon-demon-grinder
             index: 0
@@ -102,16 +119,19 @@ steps:
           notExists:
             - effect-demon-grinder-acquire
             - effect-demon-grinder-occupancy
+            - effect-demon-grinder-seat-helm
             - effect-demon-grinder-prone
             - effect-demon-grinder-hp-damage
             - effect-demon-grinder-destroyed
         facts:
           companion.demonGrinder.active: 0
+          companion.demonGrinder.seats.helm: 0
         offers:
           exists:
             - acquire-demon-grinder
           notExists:
             - abandon-demon-grinder
+            - take-demon-grinder-helm-seat
   # Re-acquiring after abandoning bakes the stats afresh.
   - addOffer:
       id: acquire-demon-grinder

@@ -207,6 +207,31 @@ const VEHICLE_MOVEMENT_SPENT = 'companion.vehicle.movement.spent';
  */
 const COVER_SEAT = 'cover.seat';
 
+/**
+ * Every infernal-vehicle spec BUILT so far — the REGISTRY behind the one-seat-
+ * per-player rule. `buildInfernalVehicle` is every vehicle module's entry
+ * point (each rule group calls it at its module top level), so a spec joins
+ * this map the moment its module loads, and the seat-exclusivity leg reads
+ * the WHOLE map rather than the one spec behind the offer: a player holding
+ * ANY station of ANY loaded vehicle cannot take a seat on another — the
+ * GLOBAL one-seat rule the Demon Grinder plan settled beside per-vehicle
+ * ownership (owning one of EACH vehicle rule group is legal). A later
+ * vehicle is DATA-ONLY here: its spec registers itself, and no vehicle list
+ * exists anywhere to update.
+ *
+ * Code-split note: Rollup emits this factory as ONE shared chunk every
+ * vehicle chunk imports (see scripts/verify-chunks.mjs output), so the map is
+ * a single instance per session however many vehicles load; a vehicle whose
+ * chunk has not loaded contributes no seat facts to read, so an unloaded
+ * vehicle is invisible to the leg by construction (and a character cannot
+ * hold a seat on a vehicle whose group is not assigned).
+ */
+const VEHICLE_SPECS = new Map<string, InfernalVehicleSpec>();
+
+/** The seat fact a station's effect writes on a given vehicle's stem. */
+const seatFactOn = (spec: InfernalVehicleSpec, station: string): string =>
+  `${spec.factStem}.seats.${station}`;
+
 /** The stat block acquiring bakes, from the spec (HP bakes its BASE — the pool
  * derives from it, the steed shape — plus the damage/mishap thresholds as DATA
  * the recorder gates on; everything else is display-only). AC bakes NO value
@@ -312,6 +337,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
   if (spec.acMode && spec.flatAc !== undefined)
     throw new Error(`${id}: a spec sets acMode AND flatAc — pick one AC shape`);
 
+  // The spec joins the registry only once it has proven buildable (see
+  // VEHICLE_SPECS) — re-building the same id replaces, never doubles up.
+  VEHICLE_SPECS.set(spec.id, spec);
+
   // ── Effect ids and replacement keys (ONE live record each) ──
   const OCCUPANCY_EFFECT_ID = `effect-${id}-occupancy`;
   const OCCUPANCY_KEY = `${id}-occupancy`;
@@ -333,17 +362,22 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
   const CHILD_KEYS = childKeys(spec);
 
   /** The seat fact a station's effect writes (`<stem>.seats.<station>`). */
-  const seatFact = (station: string): string => `${F}.seats.${station}`;
+  const seatFact = (station: string): string => seatFactOn(spec, station);
 
   /**
-   * True while the player holds ANY station's seat. One seat per player
-   * GLOBALLY (any station — and, future-proof, any vehicle): re-taking the seat
-   * you hold is the same illegal-but-committable path as holding another
-   * station's. A capacity-free station is exclusive like every station —
-   * capacity-free is not seat-free.
+   * True while the player holds ANY station's seat — on ANY loaded vehicle.
+   * One seat per player GLOBALLY: the reader enumerates the REGISTRY's every
+   * built spec (VEHICLE_SPECS — DG seats, and any later vehicle, are data-only
+   * joins), so a seat held on the Tormentor makes the Demon Grinder's takes
+   * illegal exactly like a seat held at another station of the same vehicle.
+   * Re-taking the seat you hold is the same illegal-but-committable path. A
+   * capacity-free station is exclusive like every station — capacity-free is
+   * not seat-free.
    */
   const seatedAnywhere = (f: FactReader): boolean =>
-    spec.seats.some((seat) => f.num(seatFact(seat.station)) > 0);
+    [...VEHICLE_SPECS.values()].some((s) =>
+      s.seats.some((seat) => f.num(seatFactOn(s, seat.station)) > 0)
+    );
 
   /**
    * How many SEAT-CONSUMING seats the player holds — the capacity derive's seat

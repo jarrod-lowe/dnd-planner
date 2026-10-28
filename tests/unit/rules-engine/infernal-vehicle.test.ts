@@ -552,6 +552,133 @@ describe('factory: the movement spend is ONE shared player-level pool', () => {
 });
 
 /**
+ * ONE SEAT PER PLAYER, ACROSS ALL VEHICLES — Demon Grinder PR-4. The
+ * exclusivity leg's reader is the factory's REGISTRY of every built spec
+ * (`VEHICLE_SPECS` in infernal-vehicle.ts), never the one spec behind the
+ * offer: `buildInfernalVehicle` is every vehicle module's entry point (each
+ * rule group calls it at its module top level), so a spec joins the registry
+ * the moment its module loads, and a player holding ANY station of ANY loaded
+ * vehicle cannot take a seat on another — the GLOBAL one-seat rule the plan
+ * settled beside per-vehicle ownership (owning one of EACH vehicle is legal).
+ * A later vehicle is DATA-ONLY here: its spec registers itself, and no
+ * vehicle list exists anywhere to update. Both fixtures below are deliberately
+ * NOT the shipped vehicles (the shipped pair is pinned in
+ * demon-grinder-ui.test.ts with the real modules).
+ */
+describe('factory: one seat per player ACROSS vehicles (the spec registry)', () => {
+  /** A committed seat effect for a station on a spec (the take's advertise). */
+  const heldSeat = (spec: InfernalVehicleSpec, station: string): EffectInstance => ({
+    id: `effect-${spec.id}-seat-${station}`,
+    key: `${spec.id}-seat-${station}`,
+    state: { [`${spec.factStem}.seats.${station}`]: 1 },
+    expiry: { kind: 'permanent' }
+  });
+
+  it("a seat held on ANOTHER vehicle makes this one's take illegal — the OWN diagnostic", () => {
+    // Seated at the SECOND vehicle's helm…
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), buildInfernalVehicle(SECOND_SPEC)],
+      committed: [
+        infernalAcquireEffect(TEST_SPEC),
+        infernalAcquireEffect(SECOND_SPEC),
+        heldSeat(SECOND_SPEC, 'helm')
+      ]
+    });
+    // …the FIRST vehicle's helm take is illegal with ITS OWN already-seated
+    // leg (the offer's group is where the diagnostic lives — station-generic,
+    // vehicle-agnostic wording).
+    const take = out.availableRules.find((r) => r.rule.id === `take-${SPEC_ID}-helm-seat`);
+    expect(take, 'the cross-vehicle take is still offered (illegal, never hidden)').toBeDefined();
+    expect(take!.legal).toBe(false);
+    expect(take!.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    // The free-seat leg passes (capacity is per-vehicle): exclusivity alone
+    // makes the row illegal.
+    expect(out.facts[`${F}.creatureCapacity.used`]).toBe(0);
+  });
+
+  it('BOTH directions: seated on the first, the second vehicle’s take is illegal too', () => {
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), buildInfernalVehicle(SECOND_SPEC)],
+      committed: [
+        infernalAcquireEffect(TEST_SPEC),
+        heldSeat(TEST_SPEC, 'ballista'),
+        infernalAcquireEffect(SECOND_SPEC)
+      ]
+    });
+    const take = out.availableRules.find((r) => r.rule.id === `take-${SECOND_ID}-helm-seat`);
+    expect(take).toBeDefined();
+    expect(take!.legal).toBe(false);
+    expect(take!.diagnostics).toEqual([
+      { code: 'rule.infernal-second.take-seat.already_seated', severity: 'error' }
+    ]);
+  });
+
+  it('the leg is satisfied only by SEAT facts — a foreign vehicle with none held stays legal', () => {
+    // Both vehicles acquired, nobody seated anywhere: the take is legal (the
+    // registry enumerates stations, but an unheld seat contributes nothing).
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), buildInfernalVehicle(SECOND_SPEC)],
+      committed: [infernalAcquireEffect(TEST_SPEC), infernalAcquireEffect(SECOND_SPEC)]
+    });
+    const take = out.availableRules.find((r) => r.rule.id === `take-${SPEC_ID}-helm-seat`);
+    expect(take, 'the take is offered').toBeDefined();
+    expect(take!.legal).toBe(true);
+  });
+
+  it('the override path: a planned-anyway cross-vehicle take still executes, keyed', () => {
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), buildInfernalVehicle(SECOND_SPEC)],
+      committed: [
+        infernalAcquireEffect(TEST_SPEC),
+        infernalAcquireEffect(SECOND_SPEC),
+        heldSeat(SECOND_SPEC, 'helm')
+      ],
+      planned: [{ instanceId: 'i0', ruleId: `take-${SPEC_ID}-helm-seat` }]
+    });
+    // The row carries its own already-seated diagnostic AND still applies —
+    // the ONE keyed seat effect, nothing stacked.
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    const seat = out.effects.find((e) => e.id.endsWith(`effect-${SPEC_ID}-seat-helm`));
+    expect(seat).toBeDefined();
+    expect(out.facts[`${F}.seats.helm`]).toBe(1);
+    // The foreign seat still stands beside it (the projection shows the
+    // over-commit the rules would not have allowed).
+    expect(out.facts['companion.infernalSecond.seats.helm']).toBe(1);
+  });
+
+  it('a spec built LATER joins the enumeration data-only (no list to update)', () => {
+    // A third vehicle whose spec is built after the offers under test exist:
+    // its stations are enumerated the moment buildInfernalVehicle runs.
+    const THIRD: InfernalVehicleSpec = {
+      ...SECOND_SPEC,
+      id: 'infernal-third',
+      subject: 'infernal-third',
+      factStem: 'companion.infernalThird'
+    };
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), buildInfernalVehicle(THIRD)],
+      committed: [
+        infernalAcquireEffect(TEST_SPEC),
+        infernalAcquireEffect(THIRD),
+        {
+          id: 'effect-infernal-third-seat-helm',
+          key: 'infernal-third-seat-helm',
+          state: { 'companion.infernalThird.seats.helm': 1 },
+          expiry: { kind: 'permanent' }
+        }
+      ]
+    });
+    const take = out.availableRules.find((r) => r.rule.id === `take-${SPEC_ID}-helm-seat`);
+    expect(take, 'the take is offered').toBeDefined();
+    expect(take!.legal).toBe(false);
+  });
+});
+
+/**
  * The SEAT-COVER contribution — cover.md PR-2. The seam is generic at the
  * VEHICLE side: a seat's cover degree is SPEC DATA (`SeatSpec.cover`, the
  * cover module's 0-3 ordinal scale), and the factory emits ONE derive onto the
@@ -801,12 +928,12 @@ describe('factory: the registered Tormentor module emits only resolvable keys', 
 
 /**
  * The SAME emitted-surface i18n guard, for the registered Demon Grinder module
- * (PR-3, seat-free): the factory builds its keys from spec data the static
- * module-i18n-coverage scan cannot expand, so this walk restores the guard at
- * the EMITTED surface — offer ui (including the helm-gated offers the empty
- * seat list keeps from ever surfacing: their keys are still emitted, so they
- * must still resolve), legality diagnostics, advertised effect chips, plan-row
- * diagnostics (the bounce/mishap notes), annotations, panels.
+ * (PR-3 base, PR-4 seats): the factory builds its keys from spec data the
+ * static module-i18n-coverage scan cannot expand, so this walk restores the
+ * guard at the EMITTED surface — offer ui (the station take/leave pairs, the
+ * fire offer, and the helm-gated drive/dash/fuel/boost rows), legality
+ * diagnostics, advertised effect chips, plan-row diagnostics (the bounce/
+ * mishap notes, the dash risk), annotations, panels.
  */
 describe('factory: the registered Demon Grinder module emits only resolvable keys', () => {
   const DG = 'demon-grinder';
@@ -856,7 +983,18 @@ describe('factory: the registered Demon Grinder module emits only resolvable key
         { instanceId: 'd', ruleId: `knock-${DG}-prone` },
         { instanceId: 'e', ruleId: `record-${DG}-damage`, selections: { amount: 5 } },
         { instanceId: 'f', ruleId: `record-${DG}-damage`, selections: { amount: 200 } },
-        { instanceId: 'g', ruleId: `record-${DG}-heal`, selections: { amount: 10 } }
+        { instanceId: 'g', ruleId: `record-${DG}-heal`, selections: { amount: 10 } },
+        // PR-4: the stations — the seat chips, the fire row, and the Helm's
+        // gated activities (planned-anyway where exclusivity would refuse:
+        // the fold still executes every row, collecting its keys).
+        { instanceId: 'h', ruleId: `take-${DG}-helm-seat` },
+        { instanceId: 'i', ruleId: `take-${DG}-harpoon-seat` },
+        { instanceId: 'j', ruleId: `leave-${DG}-helm-seat` },
+        { instanceId: 'k', ruleId: `fire-${DG}-harpoon` },
+        { instanceId: 'l', ruleId: `drive-${DG}`, selections: { distance: 30 } },
+        { instanceId: 'm', ruleId: `dash-${DG}` },
+        { instanceId: 'n', ruleId: `set-${DG}-fuel`, selections: { fuel: 1 } },
+        { instanceId: 'o', ruleId: `set-${DG}-boost`, selections: { boost: 1 } }
       ]
     });
     for (const effect of out.effects) if (effect.display) dgI18nStrings(effect.display, keys);
@@ -875,6 +1013,26 @@ describe('factory: the registered Demon Grinder module emits only resolvable key
 
   it('collects a meaningful key set (the walk is not silently broken)', () => {
     expect(dgCollectedKeys().size).toBeGreaterThan(50);
+  });
+
+  it('collects the PR-4 station keys (the walk reaches the seats and their offers)', () => {
+    const keys = dgCollectedKeys();
+    for (const key of [
+      `rule.${DG}.take-helm-seat.name`,
+      `rule.${DG}.take-helm-seat.description`,
+      `rule.${DG}.leave-helm-seat.name`,
+      `rule.${DG}.take-harpoon-seat.description`,
+      `rule.${DG}.leave-harpoon-seat.name`,
+      `rule.${DG}.seat-helm-effect.name`,
+      `rule.${DG}.seat-harpoon-effect.name`,
+      `rule.${DG}.fire-harpoon.name`,
+      `rule.${DG}.fire-harpoon.description`,
+      `rule.${DG}.fire-harpoon.no_action`,
+      `rule.${DG}.take-seat.already_seated`,
+      `rule.${DG}.take-seat.full`,
+      `rule.${DG}.leave-seat.not_seated`
+    ])
+      expect(keys, `the walk collected ${key}`).toContain(key);
   });
 
   it('the flat spec walks no mode keys (the absent branch emits none)', () => {

@@ -1,0 +1,151 @@
+name: 'Demon Grinder - Take The Helm And Harpoon Seats'
+description: >-
+  PR-4's stations: the Helm (one crew, the gate behind every driving offer)
+  and ONE Harpoon Flinger (one crew, the weapon station), as the shared
+  take/leave pair in the vehicle's +ADD — free, gated structurally on the
+  acquire, filed with the acquire/abandon EQUIP 'vehicle' family. Taking a
+  seat advertises ONE permanent KEYED effect writing
+  companion.demonGrinder.seats.<station> = 1, and the derived creature
+  capacity counts each held seat toward the 8. One seat per player: seated
+  at the Helm, the harpoon take is ILLEGAL-but-COMMITTABLE (the keyed
+  replacement still applies — nothing stacks), and leaving is the legal way
+  out. The Helm's offers (Drive, Dash, Fuel, Boost) exist only while the
+  Helm seat is held; NO Juke exists anywhere (the stat block carries no
+  Reaction). NO passenger or clinger station exists on this vehicle.
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  # Unacquired: the seat offers and the station's actions do not exist at all.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - take-demon-grinder-helm-seat
+            - leave-demon-grinder-helm-seat
+            - take-demon-grinder-harpoon-seat
+            - leave-demon-grinder-harpoon-seat
+            - fire-demon-grinder-harpoon
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - juke-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+  # Acquire: fresh vehicle reads 0/8, and without the seat the Helm's offers
+  # do not exist either. The take offers exist and are legal; the leaves are
+  # illegal (nothing to leave yet).
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 0
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-demon-grinder-helm-seat
+            - take-demon-grinder-harpoon-seat
+          legal:
+            - take-demon-grinder-helm-seat
+            - take-demon-grinder-harpoon-seat
+          illegal:
+            - leave-demon-grinder-helm-seat
+            - leave-demon-grinder-harpoon-seat
+          notExists:
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - juke-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+            - fire-demon-grinder-harpoon
+        offerUi:
+          - id: take-demon-grinder-helm-seat
+            ui:
+              section: free
+              subject: demon-grinder
+              name: rule.demon-grinder.take-helm-seat.name
+              actionCost: []
+  # Take the Helm: the station fact lands, the capacity derive counts it
+  # (0 + 1 of 8), and the Helm's four offers now exist — still no Juke, and
+  # the flinger stays unmanned.
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+      assert:
+        facts:
+          companion.demonGrinder.seats.helm: 1
+          companion.demonGrinder.creatureCapacity.used: 1
+        planErrors:
+          - id: take-demon-grinder-helm-seat
+            index: 0
+            errors: []
+        offers:
+          exists:
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+          notExists:
+            - fire-demon-grinder-harpoon
+            - juke-demon-grinder
+  # Commit: the seat effect persists beside the acquire (the chip on the
+  # strip).
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+            - effect-demon-grinder-seat-helm
+        facts:
+          companion.demonGrinder.seats.helm: 1
+          companion.demonGrinder.creatureCapacity.used: 1
+  # One seat per player: seated at the Helm, the harpoon take is ILLEGAL with
+  # its diagnostic while LEAVE-helm is the legal way out. Committing the take
+  # anyway still applies — the keyed harpoon seat lands, the capacity counts
+  # both held facts (2 of 8).
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-demon-grinder-harpoon-seat
+          legal:
+            - leave-demon-grinder-helm-seat
+  - addOffer:
+      id: take-demon-grinder-harpoon-seat
+      assert:
+        facts:
+          companion.demonGrinder.seats.helm: 1
+          companion.demonGrinder.seats.harpoon: 1
+          companion.demonGrinder.creatureCapacity.used: 2
+        planErrors:
+          - id: take-demon-grinder-harpoon-seat
+            index: 0
+            errors:
+              - rule.demon-grinder.take-seat.already_seated
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-seat-helm
+            - effect-demon-grinder-seat-harpoon
+  # Leave the Helm: the eviction clears the fact the moment the row is merely
+  # planned, the capacity falls with it, and the Helm's offers go with the
+  # seat — the flinger seat (and its fire offer) stays.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+      assert:
+        facts:
+          companion.demonGrinder.seats.helm: 0
+          companion.demonGrinder.seats.harpoon: 1
+          companion.demonGrinder.creatureCapacity.used: 1
+        offers:
+          notExists:
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+          exists:
+            - fire-demon-grinder-harpoon
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.seats.helm: 0
+          companion.demonGrinder.creatureCapacity.used: 1

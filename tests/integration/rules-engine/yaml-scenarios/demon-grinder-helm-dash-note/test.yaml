@@ -1,0 +1,71 @@
+name: 'Demon Grinder - Helm Dash Risk Note Rides Every Dash Row'
+description: >-
+  The stat block's Ability Scores fine print: each encounter the Demon
+  Grinder can Dash 3 times plus its Constitution modifier (3 + 4 = 7,
+  interpolated from the facts — the allowance is never hardcoded), and each
+  Dash beyond that runs the risk of damaging the vehicle. The app has no
+  encounter tracking, so the note is UNCONDITIONAL on every planned Dash row
+  as a 'notice' diagnostic (informational only, never the error path), fresh
+  each turn; beside it the row doubles the vehicle's movement for the turn
+  (the pool is the fuel's — 100 ft. from a soul coin doubles to 200).
+ruleGroups:
+  - vehicles/demon-grinder
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-demon-grinder
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+  - addOffer:
+      id: set-demon-grinder-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  # The very first Dash of the encounter carries the note: the player counts,
+  # the row informs. The doubling lands at once (100 → 200).
+  - addOffer:
+      id: dash-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.movement.total: 200
+          companion.demonGrinder.movement.remaining: 200
+        planErrors:
+          - id: dash-demon-grinder
+            index: 0
+            errors:
+              - rule.demon-grinder.dash.risk
+        status:
+          legal: true
+  # A free record row planned beside it carries NOTHING (a per-row note is
+  # not a panel truth).
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        planErrors:
+          - id: set-demon-grinder-occupancy
+            index: 0
+            errors: []
+  # End of turn: the note commits nothing — only the bonus spend and the
+  # doubling age away; the seat, the fuel and the occupancy stand.
+  - endTurn:
+      assert:
+        facts:
+          bonusActions.remaining: 1
+          companion.demonGrinder.movement.total: 100
+          companion.demonGrinder.movement.remaining: 100
+          companion.demonGrinder.seats.helm: 1
+          companion.demonGrinder.fuel.current: 1
+  # Turn 2: a fresh, LEGAL Dash — bonus action open — carries the note ALONE,
+  # exactly as the first did.
+  - addOffer:
+      id: dash-demon-grinder
+      assert:
+        planErrors:
+          - id: dash-demon-grinder
+            index: 0
+            errors:
+              - rule.demon-grinder.dash.risk
+        status:
+          legal: true

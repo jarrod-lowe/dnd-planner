@@ -1,0 +1,100 @@
+name: 'Demon Grinder - One Seat Per Player Across All Vehicles'
+description: >-
+  One seat per player, GLOBALLY: the exclusivity leg enumerates every loaded
+  vehicle's stations (the factory's spec registry — a player seated at ANY
+  station of ANY vehicle cannot take a seat on another, while owning one of
+  EACH vehicle stays legal). Both directions are pinned here with BOTH
+  vehicle groups loaded: seated on the Tormentor, the Demon Grinder's takes
+  are ILLEGAL-but-COMMITTABLE (the offer stays visible with the Grinder's
+  own already-seated diagnostic, and a planned-anyway row still executes as
+  the ONE keyed replacement); seated on the Demon Grinder, the Tormentor's
+  takes are illegal the same way. Leaving the foreign seat reopens both.
+ruleGroups:
+  - vehicles/demon-grinder
+  - vehicles/tormentor
+steps:
+  # Own BOTH vehicles (legal — ownership is per-vehicle) and take the
+  # TORMENTOR's helm.
+  - addOffer:
+      id: acquire-demon-grinder
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-helm
+        facts:
+          companion.tormentor.seats.helm: 1
+          companion.demonGrinder.creatureCapacity.used: 0
+  # Direction 1 — seated on the TORMENTOR: BOTH of the Grinder's takes are
+  # illegal with the Grinder's own diagnostic; the Grinder's capacity is
+  # untouched (0 of 8 — the seat is elsewhere).
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-demon-grinder-helm-seat
+            - take-demon-grinder-harpoon-seat
+          legal:
+            - leave-tormentor-helm-seat
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 0
+  # The override path: committing the Grinder's helm take anyway still
+  # applies — the ONE keyed seat effect (nothing stacks) — and the row
+  # carries its already-seated diagnostic from the fold.
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+      assert:
+        facts:
+          companion.demonGrinder.seats.helm: 1
+          companion.demonGrinder.creatureCapacity.used: 1
+          companion.tormentor.seats.helm: 1
+        planErrors:
+          - id: take-demon-grinder-helm-seat
+            index: 0
+            errors:
+              - rule.demon-grinder.take-seat.already_seated
+  # Undo the override (leave the Grinder seat; the foreign seat stands), so
+  # direction 2 starts from the clean one-seat state.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.seats.helm: 0
+          companion.tormentor.seats.helm: 1
+  # Direction 2 — seated on the DEMON GRINDER (swap seats across vehicles):
+  # the Tormentor's takes are illegal with the TORMENTOR's diagnostic.
+  - addOffer:
+      id: leave-tormentor-helm-seat
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 0
+          companion.demonGrinder.seats.helm: 1
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-tormentor-helm-seat
+            - take-tormentor-harpoon-seat
+            - take-tormentor-passenger-seat
+          legal:
+            - leave-demon-grinder-helm-seat
+  # Leaving the Grinder seat reopens the Tormentor's takes: the leg reads
+  # live seat facts, nothing remembered.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - take-tormentor-helm-seat
+            - take-tormentor-harpoon-seat

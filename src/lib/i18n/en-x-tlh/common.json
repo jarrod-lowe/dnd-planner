@@ -642,6 +642,40 @@
         "name": "Duj Qaw' lo'wI' mI' yIcher",
         "description": "Duj Qaw' SuvwI' mI' yIjon"
       },
+      "take-seat": {
+        "already_seated": "Sep DaghojtaH — latlh Sep yIcholpa' Sep DachoHnIS",
+        "full": "Duj Qaw' Sep tlhIch rIn — Sep chIm pagh"
+      },
+      "leave-seat": {
+        "not_seated": "Sep Daghojbe' — Sep chIm Daghu'"
+      },
+      "take-helm-seat": {
+        "name": "SeHyaH Sep yIchol",
+        "description": "Duj Qaw' SeHyaH Sep yIchol 'ej SuvwI' Duj yISeH"
+      },
+      "leave-helm-seat": {
+        "name": "SeHyaH Sepvo' yImej",
+        "description": "SeHyaH Sepvo' yImej 'ej Sep yIchImmoH"
+      },
+      "seat-helm-effect": {
+        "name": "SeHyaH Sep"
+      },
+      "take-harpoon-seat": {
+        "name": "ghoch nuH Sep yIchol",
+        "description": "Duj Qaw' ghoch nuH Sep yIlo'taHmeH Sep yIchol"
+      },
+      "leave-harpoon-seat": {
+        "name": "ghoch nuH Sepvo' yImej",
+        "description": "ghoch nuH Sepvo' yImej 'ej Sep yIchImmoH"
+      },
+      "seat-harpoon-effect": {
+        "name": "ghoch nuH Sep"
+      },
+      "fire-harpoon": {
+        "name": "ghoch nuH yIbaH",
+        "description": "chuS nuH HIj: HIch 5, chuq 120, wa' jav, 2d8 qIp (9 law'). ghoch nuHmey maj; wa'maH ghoch nuH tu'lu'.",
+        "no_action": "DIvI' tu'lu'be'"
+      },
       "fuel": {
         "name": "nIn yIcher",
         "description": "SeHyaH Sep yIvI' 'ej meQchet yIlo' 'ej nIn yIcher: pagh (0), wa' qeng Sep (100), ghIch qIj (80)",
