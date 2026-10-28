@@ -6,12 +6,17 @@ import { join } from 'node:path';
  * M1 / W3 — confinement (belt-and-suspenders over the ESLint config).
  *
  * A source scan of every authored rule module asserting the security invariant
- * directly: modules import ONLY the builder API, and reference none of the banned
- * ambient globals. ESLint enforces this at author/CI time; this test makes the
+ * directly: modules import ONLY the builder API (plus the infernal-vehicle
+ * factory — shared authoring code inside rules/, bundled into its importers'
+ * chunks, never an engine internal), and reference none of the banned ambient
+ * globals. ESLint enforces this at author/CI time; this test makes the
  * invariant a hard, self-contained gate in `make test` too.
  */
 const RULES_DIR = join(process.cwd(), 'src/lib/rules-engine/rules');
 const files = readdirSync(RULES_DIR).filter((f) => f.endsWith('.ts'));
+
+/** The one non-builder import a rule module may make: the vehicle factory. */
+const ALLOWED_SPECIFIERS = new Set(['../builder', './infernal-vehicle']);
 
 // Compound forms avoid false positives on benign substrings (Math.min, etc.).
 const BANNED_TOKENS = [
@@ -46,7 +51,10 @@ describe('confinement (source scan)', () => {
       const src = readFileSync(join(RULES_DIR, file), 'utf8');
       const sources = [...src.matchAll(SPECIFIER)].map((m) => m[1]);
       for (const s of sources) {
-        expect(s, `${file} must import only ../builder, found ${s}`).toBe('../builder');
+        expect(
+          ALLOWED_SPECIFIERS.has(s),
+          `${file} must import only ../builder (or the infernal-vehicle factory), found ${s}`
+        ).toBe(true);
       }
     }
   });

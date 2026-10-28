@@ -1,11 +1,13 @@
 # yaml-language-server: $schema=../schema.json
 ruleGroups:
   - id: tormentor
-    # The ONE group for the whole vehicle: later vehicles join this group as
-    # their own subjects. Acquiring is equipping a vehicle, not manning a
-    # station (the Damage-Control seat fiction is retired). Ungated: available
-    # to every character (acquire legality is not checked — multiple
-    # acquisitions are illegal-but-possible).
+    # ONE rule group for the whole Tormentor; each later vehicle is its OWN
+    # rule group (the settled design — per-vehicle groups on the shared
+    # infernal-vehicle factory, not a shared group with per-vehicle subjects).
+    # Acquiring is equipping a vehicle, not manning a station (the
+    # Damage-Control seat fiction is retired). Ungated: available to every
+    # character (acquire legality is not checked — multiple acquisitions are
+    # illegal-but-possible).
     translations:
       en:
         name: Tormentor
