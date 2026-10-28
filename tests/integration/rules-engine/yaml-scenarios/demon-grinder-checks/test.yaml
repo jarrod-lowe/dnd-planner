@@ -1,0 +1,88 @@
+name: 'Demon Grinder - Vehicle Ability Checks'
+description: >-
+  The vehicle's Str/Dex/Con CHECK recorders (the steed skill-offer pattern,
+  PC-parity copy): a free-section vehicle row per ability while acquired —
+  d20 + the BAKED modifier fact (18/10/18 bakes +4/+0/+4), the companion dice
+  label, module-local name keys (no shared per-ability check label exists; the
+  saves reuse planner.record.save.*, the checks are this group's own text).
+  Absent while unacquired; free, ungated and — like the saves — deliberately NO
+  wrecked leg (recording a GM-called check is bookkeeping).
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  # Unacquired: no vehicle, no check rows.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - demon-grinder-check-str
+            - demon-grinder-check-dex
+            - demon-grinder-check-con
+  - addOffer:
+      id: acquire-demon-grinder
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.active: 1
+  # Acquired: all three check rows exist, legal, in the copied shape (the DEX
+  # row pins the full ui — a grinder's Dex check is its weakest roll).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - demon-grinder-check-str
+            - demon-grinder-check-dex
+            - demon-grinder-check-con
+          legal:
+            - demon-grinder-check-str
+            - demon-grinder-check-dex
+            - demon-grinder-check-con
+        offerUi:
+          - id: demon-grinder-check-dex
+            ui:
+              section: free
+              subject: demon-grinder
+              name: rule.demon-grinder.check-dex.name
+              annotationLabels:
+                - dice.any.companion
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: rollBonus
+                    purpose: check
+              intents:
+                CHECK: vehicle
+              actionCost: []
+        offerVars:
+          - id: demon-grinder-check-str
+            vars:
+              # The bonus READS the baked fact — no hardcoded +4 anywhere.
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.str.modifier
+          - id: demon-grinder-check-con
+            vars:
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.con.modifier
+  # Destroy the vehicle (one pool-emptying blow): the check recorders stay
+  # LEGAL — the bookkeeping boundary of the wrecked pass, pinned.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 200
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.destroyed: 1
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - demon-grinder-check-str
+            - demon-grinder-check-dex
+            - demon-grinder-check-con

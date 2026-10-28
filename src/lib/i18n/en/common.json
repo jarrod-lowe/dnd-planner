@@ -625,6 +625,110 @@
       "clinger-notice": "Clinging On",
       "clinger-notice.body": "Clinging to the Tormentor's outside: while in combat, a clinger must make Dexterity checks to stay attached."
     },
+    "demon-grinder": {
+      "name": "Demon Grinder",
+      "keywords": "vehicle demon grinder war machine acquire abandon mount ride",
+      "description": "The Demon Grinder war vehicle, acquired and abandoned as one vehicle",
+      "acquire": {
+        "name": "Acquire Demon Grinder",
+        "description": "Acquire the Demon Grinder and carry it as your vehicle",
+        "already_have": "You already have a Demon Grinder"
+      },
+      "abandon": {
+        "name": "Abandon Demon Grinder",
+        "description": "Abandon the vehicle and clear its records"
+      },
+      "occupancy": {
+        "name": "Set Occupancy",
+        "description": "Record how many creatures the Demon Grinder carries"
+      },
+      "fuel": {
+        "name": "Set Fuel",
+        "description": "Spend a bonus action at the Helm feeding the burner: none (0 ft.), a soul coin (100 ft.), or demon ichor (80 ft.)",
+        "no_bonus_action": "No bonus action available",
+        "none": "None",
+        "soul-coin": "Soul Coin",
+        "demon-ichor": "Demon Ichor"
+      },
+      "boost": {
+        "name": "Set Boost",
+        "description": "Spend a bonus action at the Helm pouring demon ichor into the boost tank: +30 ft. for 1 minute, only while running on a soul coin",
+        "no_bonus_action": "No bonus action available",
+        "without_soul_coin": "The Demon Grinder needs a soul coin in the burner before it can boost",
+        "none": "None",
+        "demon-ichor": "Demon Ichor"
+      },
+      "record-damage": {
+        "name": "Record Vehicle Damage",
+        "description": "Record damage dealt to the Demon Grinder",
+        "below_threshold": "Below the damage threshold (10) — the Demon Grinder takes no damage",
+        "mishap_threshold": "A single source dealt {{amount}} damage, meeting the mishap threshold ({{threshold}}) — consult the mishap table for what breaks loose"
+      },
+      "record-heal": {
+        "name": "Record Vehicle Repairs",
+        "description": "Record repairs made to the Demon Grinder"
+      },
+      "knocked-prone": {
+        "name": "Knocked Prone",
+        "description": "Record the Demon Grinder falling prone",
+        "already_prone": "The Demon Grinder is already prone"
+      },
+      "flip-upright": {
+        "name": "Flip Upright",
+        "description": "Right the Demon Grinder after it falls prone",
+        "not_prone": "The Demon Grinder is not prone — there is nothing to flip upright"
+      },
+      "drive": {
+        "name": "Drive",
+        "description": "Spend your action at the Helm, driving the Demon Grinder up to its movement for the turn",
+        "no_action": "No action available",
+        "out_of_movement": "No movement remaining"
+      },
+      "dash": {
+        "name": "Dash",
+        "description": "Spend a bonus action doubling the Demon Grinder's movement this turn. The vehicle can Dash 3 times plus its Constitution modifier each encounter — each Dash beyond that risks damaging it",
+        "no_bonus_action": "No bonus action available",
+        "risk": "Each encounter the vehicle can Dash {{allowance}} times (3 plus its Constitution modifier); each Dash beyond that runs the risk of damaging the vehicle"
+      },
+      "check-str": {
+        "name": "Strength Check"
+      },
+      "check-dex": {
+        "name": "Dexterity Check"
+      },
+      "check-con": {
+        "name": "Constitution Check"
+      },
+      "effect": {
+        "name": "Demon Grinder"
+      },
+      "occupancy-effect": {
+        "name": "Occupancy {{score}}"
+      },
+      "fuel-effect": {
+        "name": "Fuel {{score}}"
+      },
+      "boost-effect": {
+        "name": "Boost {{score}}"
+      },
+      "hp-damage-effect": {
+        "name": "Vehicle Damage {{score}}"
+      },
+      "hp-heal-effect": {
+        "name": "Vehicle Repairs {{score}}"
+      },
+      "prone-effect": {
+        "name": "Prone"
+      },
+      "destroyed-effect": {
+        "name": "Destroyed"
+      },
+      "notice": "Prone Deficiency",
+      "notice.body": "The Demon Grinder has fallen prone and cannot right itself. It stays prone and can do nothing until something flips it upright.",
+      "wrecked": "The Demon Grinder is wrecked",
+      "destroyed-notice": "Demon Grinder Destroyed",
+      "destroyed-notice.body": "The Demon Grinder is destroyed — a burning wreck. It can no longer act; abandon it when the crew scrambles."
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "armor-training": {
@@ -1876,6 +1980,15 @@
         "creatureCapacity": "Creature Capacity",
         "movement": "Movement"
       },
+      "demon-grinder": {
+        "hp": "HP",
+        "ac": "AC",
+        "speed": "SPD",
+        "fuel": "Fuel",
+        "cargo": "Cargo",
+        "creatureCapacity": "Creature Capacity",
+        "movement": "Movement"
+      },
       "sections": {
         "resources": "Resources",
         "stats": "Stats",
@@ -2014,6 +2127,10 @@
       },
       "tormentor": {
         "mode": "Mode",
+        "fuel": "Fuel",
+        "boost": "Boost"
+      },
+      "demon-grinder": {
         "fuel": "Fuel",
         "boost": "Boost"
       },
@@ -2201,12 +2318,17 @@
         "tormentor": {
           "creatureCapacity": "Creatures",
           "movement": "SPD"
+        },
+        "demon-grinder": {
+          "creatureCapacity": "Creatures",
+          "movement": "SPD"
         }
       }
     },
     "companion": {
       "steed": "🐴 Steed",
-      "tormentor": "🛞 Tormentor"
+      "tormentor": "🛞 Tormentor",
+      "demon-grinder": "🛞 Demon Grinder"
     },
     "topBar": {
       "hp": "HP",
@@ -2361,6 +2483,7 @@
       "label": "+ ADD",
       "steedSublabel": "Steed",
       "tormentorSublabel": "Tormentor",
+      "demon-grinderSublabel": "Demon Grinder",
       "planGroup": "plan →",
       "recordGroup": "record →",
       "buildGroup": "build →",

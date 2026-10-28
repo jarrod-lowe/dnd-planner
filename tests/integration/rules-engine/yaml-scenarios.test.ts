@@ -371,6 +371,19 @@ const EXPECTED_RUNNABLE = [
   // modifier fact, free and ungated (bookkeeping, legal on a wreck)
   'tormentor-saves',
   'tormentor-checks',
+  // Demon Grinder PR-3 — the SEAT-FREE base: the acquire bakes the stat
+  // block (flat AC 19 as a derive, no AC-mode machinery anywhere, no
+  // helm-gated offers), the occupancy slider, the HP recorders (threshold +
+  // mishap), the prone pair + notice, abandon's child evictions, and the
+  // checks/saves record rollers.
+  'demon-grinder-board-stats',
+  'demon-grinder-occupancy',
+  'demon-grinder-hp-threshold',
+  'demon-grinder-mishap-threshold',
+  'demon-grinder-prone-record',
+  'demon-grinder-unboard',
+  'demon-grinder-saves',
+  'demon-grinder-checks',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:

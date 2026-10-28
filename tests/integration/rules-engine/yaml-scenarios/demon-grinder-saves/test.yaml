@@ -1,0 +1,92 @@
+name: 'Demon Grinder - Vehicle Saving Throws'
+description: >-
+  The vehicle's Str/Dex/Con SAVE recorders (the steed save-offer pattern,
+  PC-parity copy): a free-section vehicle row per ability while acquired —
+  d20 + the BAKED modifier fact (companion.demonGrinder.<ability>.modifier,
+  never a hardcoded number: 18/10/18 bakes +4/+0/+4), the shared pass/fail
+  outcome segmented, and the companion-suffixed labels so self-only riders
+  cannot reach the vehicle's rolls. Absent while unacquired; no legality gates
+  and deliberately NO wrecked leg (recording a GM-called save is bookkeeping,
+  like damage recording — the wrecked leg belongs to activity offers and
+  repairs).
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  # Unacquired: no vehicle, no save rows.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - demon-grinder-save-str
+            - demon-grinder-save-dex
+            - demon-grinder-save-con
+  - addOffer:
+      id: acquire-demon-grinder
+  - endTurn:
+      assert:
+        facts:
+          # The baked modifiers the dice lines read (4/0/4 from the stat block).
+          companion.demonGrinder.str.modifier: 4
+          companion.demonGrinder.dex.modifier: 0
+          companion.demonGrinder.con.modifier: 4
+  # Acquired: all three save rows exist, legal, in the copied shape (the STR
+  # row pins the full ui; the unit test mirrors every ability).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - demon-grinder-save-str
+            - demon-grinder-save-dex
+            - demon-grinder-save-con
+          legal:
+            - demon-grinder-save-str
+            - demon-grinder-save-dex
+            - demon-grinder-save-con
+        offerUi:
+          - id: demon-grinder-save-str
+            ui:
+              section: free
+              subject: demon-grinder
+              name: planner.record.save.str
+              annotationLabels:
+                - save.any.companion
+                - save.str.companion
+                - dice.any.companion
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: rollBonus
+                    purpose: save
+              actionCost: []
+        offerVars:
+          - id: demon-grinder-save-str
+            vars:
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.str.modifier
+          - id: demon-grinder-save-dex
+            vars:
+              rollBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.dex.modifier
+  # Destroy the vehicle (one pool-emptying blow): the save recorders stay
+  # LEGAL — the bookkeeping boundary of the wrecked pass, pinned.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 200
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.destroyed: 1
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - demon-grinder-save-str
+            - demon-grinder-save-dex
+            - demon-grinder-save-con

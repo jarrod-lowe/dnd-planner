@@ -460,3 +460,116 @@ describe('tormentor fuel detail body', () => {
     }
   });
 });
+
+/** The en body of a detail block carried anywhere in vehicles/demon-grinder.yaml. */
+function demonGrinderDetailBody(detailKey: string): string | undefined {
+  const file = path.resolve(process.cwd(), 'data/rule-groups/vehicles/demon-grinder.yaml');
+  // Tolerant of the file's absence so the body pins FAIL on their assertions
+  // rather than on an ENOENT throw (the same red-first shape as every other
+  // guard this job extends).
+  if (!fs.existsSync(file)) return undefined;
+  const sharedDefs = loadSharedDefinitions(path.resolve(process.cwd(), 'data/rule-groups'));
+  const data = loadYamlFile(file, sharedDefs);
+  return data.ruleGroups!.find((rg) => rg.detail?.key === detailKey)?.detail?.translations.en?.body;
+}
+
+describe('demon grinder detail body', () => {
+  // The acquire-flip detail is the VEHICLE's stat block, in our own words (the
+  // Demon Grinder is not SRD: numbers and short factual phrases only, never
+  // trait prose). It must read in-world: no app meta, no stations (each
+  // station's detail lands with the pass that adds it).
+  const body = demonGrinderDetailBody('vehicle/demon-grinder');
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the demon grinder detail body: ${found.join(', ')}`).toEqual(
+      []
+    );
+  });
+
+  it('states the vehicle numbers a rider needs', () => {
+    for (const fact of [
+      'Gargantuan',
+      '12,000',
+      '8 Medium',
+      '1 ton',
+      '2,000',
+      '19',
+      '200',
+      '10',
+      '20',
+      '100 ft.',
+      '18',
+      '10',
+      '+4',
+      'DC 11',
+      '22 (4d10)',
+      'Crushing Wheels',
+      'Prone Deficiency',
+      'Magic Weapons',
+      'fire',
+      'poison',
+      'psychic'
+    ]) {
+      expect(body, `the detail body states "${fact}"`).toContain(fact);
+    }
+  });
+});
+
+describe('demon grinder prone detail body', () => {
+  // The prone flips (both offers + the chip) land on the vehicle's OWN
+  // condition text — the Tormentor prone-detail discipline, same numbers-free
+  // shape (the deficiency is the whole story).
+  const body = demonGrinderDetailBody('vehicle/demon-grinder-prone');
+
+  it('exists as a detail block in demon-grinder.yaml', () => {
+    expect(body, 'a catalog group in vehicles/demon-grinder.yaml carries the prone detail').toEqual(
+      expect.any(String)
+    );
+  });
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the prone detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the deficiency and the way clear of it', () => {
+    for (const notion of ['prone', 'Prone Deficiency', 'cannot right itself', 'upright']) {
+      expect(body, `the prone detail body states "${notion}"`).toContain(notion);
+    }
+  });
+});
+
+describe('demon grinder damage detail body', () => {
+  // The damage recorder carries the stat block's damage semantics — threshold,
+  // immunities, mishap — as its flip detail (the Tormentor damage-detail
+  // discipline, the Grinder's own numbers).
+  const body = demonGrinderDetailBody('vehicle/demon-grinder-damage');
+
+  it('exists as a detail block in demon-grinder.yaml', () => {
+    expect(
+      body,
+      'a catalog group in vehicles/demon-grinder.yaml carries the damage detail'
+    ).toEqual(expect.any(String));
+  });
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the damage detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the threshold, the immunities and the mishap trigger', () => {
+    for (const notion of [
+      'Damage Threshold 10',
+      'less than ten',
+      'Fire',
+      'poison',
+      'psychic',
+      'Mishap Threshold 20',
+      'twenty',
+      'mishap table'
+    ]) {
+      expect(body, `the damage detail body states "${notion}"`).toContain(notion);
+    }
+  });
+});

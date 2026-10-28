@@ -1,0 +1,146 @@
+name: 'Demon Grinder - Creature Capacity Occupancy'
+description: >-
+  Acquiring bakes the stat block's Creature Capacity (8 Medium creatures) as
+  creatureCapacity.max, with used reading 0 until something counts (no seats
+  exist yet, so only the recorded occupancy ever counts). The vehicle's +ADD
+  carries a free-section occupancy slider (0 to the baked max) whose apply
+  advertises ONE permanent KEYED effect recording the occupancy:
+  re-applying replaces rather than stacks, the derived used clamps to 0..max,
+  and the record never outlives the acquire (re-acquire and abandon both
+  evict it; the raw mount-chip removal path is unit-pinned via dependents).
+  No legality gates: over-capacity occupancy is illegal-but-possible
+  (diagnostics are deferred with acquiring's).
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  # Acquire: the capacity lands with the rest of the stat block; nothing
+  # counts by default, so used reads 0 before anyone touches the slider.
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.creatureCapacity.max: 8
+          companion.demonGrinder.creatureCapacity.used: 0
+  # The vehicle's +ADD carries the occupancy slider: free, under the vehicle
+  # subject, bounded 0..the baked capacity, opening at the current occupancy.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - set-demon-grinder-occupancy
+          legal:
+            - set-demon-grinder-occupancy
+        offerUi:
+          - id: set-demon-grinder-occupancy
+            ui:
+              section: free
+              subject: demon-grinder
+              actionCost: []
+              primaryControl:
+                type: slider
+                var: occupancy
+                min:
+                  number: 0
+                max:
+                  fact: companion.demonGrinder.creatureCapacity.max
+        offerVars:
+          - id: set-demon-grinder-occupancy
+            vars:
+              occupancy:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.creatureCapacity.occupancy
+  # Set 5 of 8: the keyed effect IS the stored value (used reads it at once).
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 5
+      assert:
+        facts:
+          companion.demonGrinder.creatureCapacity.occupancy: 5
+          companion.demonGrinder.creatureCapacity.used: 5
+          companion.demonGrinder.creatureCapacity.max: 8
+        planErrors:
+          - id: set-demon-grinder-occupancy
+            index: 0
+            errors: []
+  # Re-set to 2: the keyed effect REPLACES (used reads 2, never 5+2).
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 2
+  # Commit: one occupancy effect persists alongside the acquire effect.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+            - effect-demon-grinder-occupancy
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 2
+  # The store stays raw; the derived used CLAMPS to the capacity. The slider's
+  # own bound stops the UI here — this pins the derive, so a stale or foreign
+  # value can never read past 0..max.
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 99
+      assert:
+        facts:
+          companion.demonGrinder.creatureCapacity.occupancy: 99
+          companion.demonGrinder.creatureCapacity.used: 8
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: -1
+      assert:
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 0
+  # Commit the clamped re-set, then remove the occupancy chip: the stored
+  # value goes with it and used falls back to nothing.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-occupancy
+  - removeEffect:
+      id: effect-demon-grinder-occupancy
+      assert:
+        effects:
+          notExists:
+            - effect-demon-grinder-occupancy
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 0
+          companion.demonGrinder.creatureCapacity.max: 8
+          companion.demonGrinder.active: 1
+        offers:
+          exists:
+            - set-demon-grinder-occupancy
+  # Re-acquire evicts the record with the acquire effect: a fresh vehicle
+  # counts nobody.
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 3
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-occupancy
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+          notExists:
+            - effect-demon-grinder-occupancy
+        facts:
+          companion.demonGrinder.creatureCapacity.used: 0

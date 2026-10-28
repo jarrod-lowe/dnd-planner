@@ -64,6 +64,7 @@ const TEST_SPEC: InfernalVehicleSpec = {
   fuelSpeeds: [0, 60, 50],
   boostBonus: 25,
   dashAllowanceBase: 3,
+  juke: true,
   details: {
     statBlock: 'vehicle/infernal-test',
     damage: 'vehicle/infernal-test-damage',
@@ -114,9 +115,14 @@ const TEST_SPEC: InfernalVehicleSpec = {
   ]
 };
 
-/** The same vehicle with NO acMode — the flat-AC optionality (a spec that sets
- *  no mode gets no mode machinery). */
-const FLAT_SPEC: InfernalVehicleSpec = { ...TEST_SPEC, acMode: undefined };
+/** The same vehicle with NO acMode but a FLAT AC — the stat block that prints
+ *  "AC 19" with no rider (the Demon Grinder shape): the flat-AC branch, where
+ *  the spec's number becomes a derive + chip INSTEAD of the mode machinery. */
+const FLAT_SPEC: InfernalVehicleSpec = { ...TEST_SPEC, acMode: undefined, flatAc: 19 };
+
+/** A spec with NEITHER an acMode NOR a flat AC (a vehicle whose stat block
+ *  prints no AC line at all): no AC machinery of either kind. */
+const NO_AC_SPEC: InfernalVehicleSpec = { ...TEST_SPEC, acMode: undefined };
 
 /**
  * A SECOND vehicle — different id, subject, stem AND speeds (a soul coin opens
@@ -350,8 +356,45 @@ describe('factory: panels declared per subject', () => {
   it('the acMode spec adds the derived-AC chip; a flat spec has none', () => {
     const withMode = buildInfernalVehicle(TEST_SPEC).panels ?? [];
     expect(withMode.some((p) => JSON.stringify(p.entry).includes(`${F}.ac.effective`))).toBe(true);
-    const flat = buildInfernalVehicle(FLAT_SPEC).panels ?? [];
+    const flat = buildInfernalVehicle(NO_AC_SPEC).panels ?? [];
     expect(flat.some((p) => JSON.stringify(p.entry).includes(`${F}.ac.effective`))).toBe(false);
+  });
+});
+
+describe('factory: the flat-AC branch (a spec that sets flatAc, no acMode)', () => {
+  it('derives ac.effective at the spec number while acquired, 0 unacquired', () => {
+    const out = evaluate({
+      modules: [buildInfernalVehicle(FLAT_SPEC)],
+      planned: [{ instanceId: 'i0', ruleId: `acquire-${SPEC_ID}` }]
+    });
+    expect(out.facts[`${F}.ac.effective`]).toBe(19);
+    const unacquired = evaluate({ modules: [buildInfernalVehicle(FLAT_SPEC)] });
+    expect(unacquired.facts[`${F}.ac.effective`]).toBe(0);
+  });
+
+  it('adds the AC chip beside the pool, with no mode machinery anywhere', () => {
+    const panels = buildInfernalVehicle(FLAT_SPEC).panels ?? [];
+    expect(panels.some((p) => JSON.stringify(p.entry).includes(`${F}.ac.effective`))).toBe(true);
+    const acquire = offers(FLAT_SPEC).find((o) => o.id === `acquire-${SPEC_ID}`)!;
+    expect((acquire.ui as Record<string, unknown>).secondaryControl).toBeUndefined();
+    expect(offers(FLAT_SPEC).some((o) => o.id === `set-${SPEC_ID}-ac-mode`)).toBe(false);
+    expect(infernalAcquireEffect(FLAT_SPEC).state?.[`${F}.acMotionless`]).toBeUndefined();
+  });
+
+  it('a spec setting BOTH acMode and flatAc fails loud at build time', () => {
+    expect(() =>
+      buildInfernalVehicle({ ...TEST_SPEC, flatAc: 19 } satisfies InfernalVehicleSpec)
+    ).toThrow(/acMode.*flatAc|flatAc.*acMode/);
+  });
+});
+
+describe('factory: the Reaction optionality (a spec that sets no juke)', () => {
+  it('emits no Juke offer at all — a stat block with no Reaction gets none', () => {
+    // SECOND_SPEC sets no `juke`: nothing in its catalog, dormant or otherwise.
+    expect(offers(SECOND_SPEC).some((o) => o.id === `juke-${SECOND_ID}`)).toBe(false);
+    // TEST_SPEC sets one: the offer exists (helm-gated like every station
+    // action — the Tormentor corpus pins the surfaced behaviour).
+    expect(offers().some((o) => o.id === `juke-${SPEC_ID}`)).toBe(true);
   });
 });
 
@@ -600,6 +643,102 @@ describe('factory: the registered Tormentor module emits only resolvable keys', 
       const flat = new Set<string>();
       flatKeys(dict, '', flat);
       const missing = [...collectedKeys()].filter((key) => !flat.has(key));
+      expect(missing.sort(), `unresolved keys in ${locale}`).toEqual([]);
+    });
+  }
+});
+
+/**
+ * The SAME emitted-surface i18n guard, for the registered Demon Grinder module
+ * (PR-3, seat-free): the factory builds its keys from spec data the static
+ * module-i18n-coverage scan cannot expand, so this walk restores the guard at
+ * the EMITTED surface — offer ui (including the helm-gated offers the empty
+ * seat list keeps from ever surfacing: their keys are still emitted, so they
+ * must still resolve), legality diagnostics, advertised effect chips, plan-row
+ * diagnostics (the bounce/mishap notes), annotations, panels.
+ */
+describe('factory: the registered Demon Grinder module emits only resolvable keys', () => {
+  const DG = 'demon-grinder';
+  const DGF = 'companion.demonGrinder';
+
+  /** Flatten a locale dict exactly as sveltekit-i18n does (dot-joined leaves). */
+  function dgFlatKeys(locale: unknown, prefix: string, out: Set<string>): void {
+    if (typeof locale === 'string') {
+      out.add(prefix);
+      return;
+    }
+    if (locale && typeof locale === 'object' && !Array.isArray(locale)) {
+      for (const [k, v] of Object.entries(locale))
+        dgFlatKeys(v, prefix ? `${prefix}.${k}` : k, out);
+    }
+  }
+
+  /** Deep-walk a plain `ui`/effect payload for every i18n-shaped string it carries. */
+  function dgI18nStrings(node: unknown, out: Set<string>): void {
+    if (typeof node === 'string') {
+      if (/^(rule|play|planner)\.[a-zA-Z0-9._-]+$/.test(node)) out.add(node);
+    } else if (node && typeof node === 'object') {
+      for (const v of Object.values(node)) dgI18nStrings(v, out);
+    }
+  }
+
+  function dgCollectedKeys(): Set<string> {
+    const registered = getModule(DG);
+    if (!registered) throw new Error(`${DG} is not registered in the registry`);
+    const mod = registered;
+    const keys = new Set<string>();
+    // The offer catalog's ui (names, descriptions, control labels/prefixes —
+    // the dormant helm-gated offers included)… and every legality leg's code.
+    for (const offer of mod.offer!({ selections: {} })) {
+      dgI18nStrings(offer.ui, keys);
+      for (const leg of offer.legalWhen ?? [])
+        for (const d of leg.diagnostics) dgI18nStrings(d.code, keys);
+    }
+    // The plan fold: effect chips, per-row diagnostics (the re-checks, the
+    // bounce and mishap notes, the wrecked leg on a planned-anyway repair).
+    const out = evaluate({
+      modules: [mod],
+      planned: [
+        { instanceId: 'a', ruleId: `flip-${DG}-upright` },
+        { instanceId: 'b', ruleId: `acquire-${DG}` },
+        { instanceId: 'c', ruleId: `set-${DG}-occupancy`, selections: { occupancy: 3 } },
+        { instanceId: 'd', ruleId: `knock-${DG}-prone` },
+        { instanceId: 'e', ruleId: `record-${DG}-damage`, selections: { amount: 5 } },
+        { instanceId: 'f', ruleId: `record-${DG}-damage`, selections: { amount: 200 } },
+        { instanceId: 'g', ruleId: `record-${DG}-heal`, selections: { amount: 10 } }
+      ]
+    });
+    for (const effect of out.effects) if (effect.display) dgI18nStrings(effect.display, keys);
+    for (const diags of Object.values(out.planDiagnostics))
+      for (const d of diags) dgI18nStrings(d.code, keys);
+    // The annotate surface, with every standing-notice fact set directly.
+    const reader: FactReader = {
+      num: (n) => (n === `${DGF}.prone` || n === `${DGF}.destroyed` ? 1 : 0),
+      has: (n) => n === `${DGF}.prone` || n === `${DGF}.destroyed`
+    };
+    for (const a of mod.annotate!(reader, [])) dgI18nStrings([a.key, a.body, a.source], keys);
+    // The declared panels (the label surface the renderer translates).
+    for (const p of mod.panels ?? []) dgI18nStrings(p.entry, keys);
+    return keys;
+  }
+
+  it('collects a meaningful key set (the walk is not silently broken)', () => {
+    expect(dgCollectedKeys().size).toBeGreaterThan(50);
+  });
+
+  it('the flat spec walks no mode keys (the absent branch emits none)', () => {
+    const keys = dgCollectedKeys();
+    expect([...keys].some((k) => k.includes('acMotionless') || k.includes('ac-mode'))).toBe(false);
+  });
+
+  for (const [locale, dict] of [
+    ['en', en],
+    ['en-x-tlh', tlh]
+  ] as const) {
+    it(`every emitted key resolves in ${locale}`, () => {
+      const flat = new Set<string>();
+      dgFlatKeys(dict, '', flat);
+      const missing = [...dgCollectedKeys()].filter((key) => !flat.has(key));
       expect(missing.sort(), `unresolved keys in ${locale}`).toEqual([]);
     });
   }

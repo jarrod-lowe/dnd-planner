@@ -93,6 +93,7 @@ import searingSmite from './rules/searing-smite';
 import cureWounds from './rules/cure-wounds';
 import detectEvilAndGood from './rules/detect-evil-and-good';
 import vehicleTormentor from './rules/vehicle-tormentor';
+import vehicleDemonGrinder from './rules/vehicle-demon-grinder';
 
 /**
  * Static ruleGroupId -> module registry, keyed by each module's own `id` — which
@@ -200,7 +201,8 @@ const MODULES: RuleModule[] = [
   searingSmite,
   cureWounds,
   detectEvilAndGood,
-  vehicleTormentor
+  vehicleTormentor,
+  vehicleDemonGrinder
 ];
 
 const REGISTRY: Record<string, RuleModule> = Object.fromEntries(MODULES.map((m) => [m.id, m]));

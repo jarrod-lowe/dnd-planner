@@ -1110,6 +1110,16 @@ describe('resourceShortLabelKey', () => {
     );
   });
 
+  it('maps demon-grinder (vehicle) resources to short keys', async () => {
+    const { resourceShortLabelKey } = await import('$lib/play/extractTopBar');
+    expect(resourceShortLabelKey('play.stats.demon-grinder.creatureCapacity')).toBe(
+      'play.ledger.short.demon-grinder.creatureCapacity'
+    );
+    expect(resourceShortLabelKey('play.stats.demon-grinder.movement')).toBe(
+      'play.ledger.short.demon-grinder.movement'
+    );
+  });
+
   it('returns undefined for labels that have no short form', async () => {
     const { resourceShortLabelKey } = await import('$lib/play/extractTopBar');
     // Non-resource / top-bar stat labels must fall back to the long label.
