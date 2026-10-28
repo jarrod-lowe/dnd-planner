@@ -1,0 +1,136 @@
+name: 'Demon Grinder - Acquire Bakes The Stat Block'
+description: >-
+  Acquiring the Demon Grinder advertises ONE permanent keyed effect baking the
+  display-only stat block into facts: active, HP 200 with damage threshold 10
+  and mishap threshold 20, Creature Capacity 8, cargo 2,000 lb. (the stat
+  block's "1 ton"), STR/DEX/CON 18/10/18 with +4/+0/+4 modifiers, and the
+  FLAT AC 19 as a derive (the Demon Grinder's stat block carries no
+  motionless rider, so the spec sets no AC mode: NO acMotionless fact, no
+  mode control, no mode record offer anywhere). Speed bakes NOTHING (the
+  derived speed.effective reads the fuel), so a fresh unfuelled vehicle
+  stands at 0 ft. — and with no Helm station in the spec yet, every
+  helm-gated offer (drive, dash, juke, fuel, boost) is structurally absent.
+  The keyed effect replaces on re-acquire (facts never double), and end of
+  turn commits it so the stats persist on later turns. Acquiring also makes
+  the VEHICLE's +ADD panel available: the abandon offer appears under the
+  vehicle's subject, in the free section, gated on the acquire.
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  # Unacquired: the player-side acquire exists, the vehicle panel does not —
+  # and none of the helm-gated machinery offers exist either.
+  - evaluate:
+      assert:
+        facts:
+          companion.demonGrinder.active: 0
+        offers:
+          exists:
+            - acquire-demon-grinder
+          legal:
+            - acquire-demon-grinder
+          notExists:
+            - abandon-demon-grinder
+            - set-demon-grinder-ac-mode
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - juke-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+        offerUi:
+          - id: acquire-demon-grinder
+            ui:
+              section: free
+              detailKey: vehicle/demon-grinder
+              actionCost: []
+  # Acquire: the advertised effect's state is visible in the projection at
+  # once — the whole stat block, and the flat AC as its derive.
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.active: 1
+          companion.demonGrinder.ac.effective: 19
+          companion.demonGrinder.hp.max: 200
+          companion.demonGrinder.hp.current: 200
+          companion.demonGrinder.damageThreshold: 10
+          companion.demonGrinder.mishapThreshold: 20
+          companion.demonGrinder.creatureCapacity.max: 8
+          companion.demonGrinder.creatureCapacity.used: 0
+          companion.demonGrinder.cargo: 2000
+          companion.demonGrinder.speed.effective: 0
+          companion.demonGrinder.movement.total: 0
+          companion.demonGrinder.movement.remaining: 0
+          companion.demonGrinder.str: 18
+          companion.demonGrinder.dex: 10
+          companion.demonGrinder.con: 18
+          companion.demonGrinder.str.modifier: 4
+          companion.demonGrinder.dex.modifier: 0
+          companion.demonGrinder.con.modifier: 4
+          # No AC mode anywhere: the mode fact is never baked (an unset fact
+          # reads 0), and the mode record offer never exists (pinned above).
+          companion.demonGrinder.acMotionless: 0
+        planErrors:
+          - id: acquire-demon-grinder
+            index: 0
+            errors: []
+  # Acquired: the vehicle's +ADD panel now carries the abandon offer — and
+  # STILL none of the helm-gated offers (no Helm station exists to gate on).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - abandon-demon-grinder
+          legal:
+            - abandon-demon-grinder
+          notExists:
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - juke-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+            - set-demon-grinder-ac-mode
+        offerUi:
+          - id: abandon-demon-grinder
+            ui:
+              section: free
+              subject: demon-grinder
+              actionCost: []
+  # A second acquiring is illegal-but-possible this pass (the first row's
+  # advertised presence fact is live in the fold, so the SECOND row of the
+  # offer carries the diagnostic); the keyed effect REPLACES, so every fact
+  # stays single (no stacking, active stays 1).
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.active: 1
+          companion.demonGrinder.hp.base: 200
+          companion.demonGrinder.hp.max: 200
+        planErrors:
+          - id: acquire-demon-grinder
+            index: 1
+            errors:
+              - rule.demon-grinder.acquire.already_have
+  # End of turn commits the acquire effect; the stats persist.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+        facts:
+          companion.demonGrinder.active: 1
+          companion.demonGrinder.ac.effective: 19
+          companion.demonGrinder.hp.max: 200
+          companion.demonGrinder.speed.effective: 0
+          companion.demonGrinder.cargo: 2000
+  # A later turn still reads the committed stat block.
+  - evaluate:
+      assert:
+        facts:
+          companion.demonGrinder.str.modifier: 4
+        offers:
+          exists:
+            - acquire-demon-grinder
+            - abandon-demon-grinder
+          illegal:
+            - acquire-demon-grinder

@@ -625,6 +625,110 @@
       "clinger-notice": "ngIptaH",
       "clinger-notice.body": "Duj Sep mevyapDaq bIngIptaH: SuvtaHvIS ngIpwI' DIvI' chovangmey tongnIS 'ej ngIptaH."
     },
+    "demon-grinder": {
+      "name": "Duj Qaw'",
+      "keywords": "vehicle demon grinder war machine acquire abandon mount ride",
+      "description": "Duj Qaw' SuvwI' Duj. wa' Duj Qaw' yISuq 'ej Duj Daj yIghaj",
+      "acquire": {
+        "name": "Duj Qaw' Suq",
+        "description": "Duj Qaw' yISuq 'ej DujlIj yIghaj",
+        "already_have": "Duj Qaw' DaghojtaH — wa' Duj Qaw' neH ghajlaH"
+      },
+      "abandon": {
+        "name": "Duj Qaw' chagh",
+        "description": "Duj Daj tIchagh 'ej chImmoH"
+      },
+      "occupancy": {
+        "name": "Duj Qaw' lo'wI' mI' yIcher",
+        "description": "Duj Qaw' SuvwI' mI' yIjon"
+      },
+      "fuel": {
+        "name": "nIn yIcher",
+        "description": "SeHyaH Sep yIvI' 'ej meQchet yIlo' 'ej nIn yIcher: pagh (0), wa' qeng Sep (100), ghIch qIj (80)",
+        "no_bonus_action": "DIvI' cha' tu'lu'be'",
+        "none": "pagh",
+        "soul-coin": "qeng Sep",
+        "demon-ichor": "ghIch qIj"
+      },
+      "boost": {
+        "name": "nIn nIv yIcher",
+        "description": "SeHyaH Sep yIvI' 'ej ghIch qIj yIngeH 'ej nIn nIv yIcher: wa' tup 30 'ej qeng Sep neH",
+        "no_bonus_action": "DIvI' cha' tu'lu'be'",
+        "without_soul_coin": "qeng Sep meQchet pagh — nIn nIv laHbe' Duj Qaw'",
+        "none": "pagh",
+        "demon-ichor": "ghIch qIj"
+      },
+      "record-damage": {
+        "name": "Duj Qaw' qIp yIcher",
+        "description": "Duj Qaw' qIpmeH qIp yIcher",
+        "below_threshold": "qIp chuqHa' (10) — Duj Qaw' qIpbe' 'e' chaw'be'",
+        "mishap_threshold": "wa' Sep qIp {{amount}} qIp chuq nIv ({{threshold}}) SIplu' — qagh Dotlh yIlaD 'ej ghIq Dotlh qIp yIlegh"
+      },
+      "record-heal": {
+        "name": "Duj Qaw' tej yIcher",
+        "description": "Duj Qaw' tI'meH tej yIcher"
+      },
+      "knocked-prone": {
+        "name": "pummoH",
+        "description": "Duj Qaw' pum yIcher",
+        "already_prone": "Duj Qaw' pumtaH — pumqa' chIm"
+      },
+      "flip-upright": {
+        "name": "Duj yIngheSqa'moH",
+        "description": "pumbogh Duj Qaw' yIngheSqa'choHmoH",
+        "not_prone": "Duj Qaw' pumbe' — Duj Qaw' IngheSqa'moH chIm"
+      },
+      "drive": {
+        "name": "Duj yInab",
+        "description": "SeHyaH Sep yIvI' 'ej Duj Qaw' yInab — leng Duj yIlo'",
+        "no_action": "DIvI' tu'lu'be'",
+        "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'"
+      },
+      "dash": {
+        "name": "Duj Do'choH",
+        "description": "Duj Qaw' Do wa'DIch DIvI' yIlo'. wej Do chovmey Duj Qaw' — Do nIv qaS Duj Qaw' qIp",
+        "no_bonus_action": "DIvI' cha' tu'lu'be'",
+        "risk": "qaS Duj Qaw' {{allowance}} Do chovmey (wej 'ej 'et Duj Qaw'); Do nIv qaS Duj Qaw' qIp"
+      },
+      "check-str": {
+        "name": "qaS HoS"
+      },
+      "check-dex": {
+        "name": "qaS Do"
+      },
+      "check-con": {
+        "name": "qaS 'et"
+      },
+      "effect": {
+        "name": "Duj Qaw'"
+      },
+      "occupancy-effect": {
+        "name": "Lo'wI' mI' {{score}}"
+      },
+      "fuel-effect": {
+        "name": "nIn {{score}}"
+      },
+      "boost-effect": {
+        "name": "nIn nIv {{score}}"
+      },
+      "hp-damage-effect": {
+        "name": "Duj qIp {{score}}"
+      },
+      "hp-heal-effect": {
+        "name": "Duj tej {{score}}"
+      },
+      "prone-effect": {
+        "name": "pum"
+      },
+      "destroyed-effect": {
+        "name": "Qaw'lu'pu'"
+      },
+      "notice": "pum qay'",
+      "notice.body": "Pumpu' Duj Qaw' 'ej yIngheSqa'moHlaHbe'. PumtaH 'ej Sep yIngheSqa'choHmoH vay' qaSDI' pagh Daghu'laHbe'.",
+      "wrecked": "Duj Qaw' Qaw'lu'pu' — Daghu'laHbe' 'ej tI'laHbe'",
+      "destroyed-notice": "Duj Qaw' Qaw'lu'pu'",
+      "destroyed-notice.body": "Qaw'pu' Duj Qaw' — meQtaHbogh Duj. Paghtagh Daghu'laHbe'; chenmoHwI'pu' tlhutlhDI' Duj yIchagh."
+    },
     "dnd-5e-2024": {
       "action-economy": {},
       "armor-training": {
@@ -1896,6 +2000,15 @@
         "creatureCapacity": "SuvwI' Sep",
         "movement": "leng"
       },
+      "demon-grinder": {
+        "hp": "HP",
+        "ac": "DIch Jun",
+        "speed": "SPD",
+        "fuel": "nIn",
+        "cargo": "ngIS",
+        "creatureCapacity": "SuvwI' Sep",
+        "movement": "leng"
+      },
       "sections": {
         "resources": "DIvI' Duj",
         "stats": "DIvI'",
@@ -2014,6 +2127,10 @@
       },
       "tormentor": {
         "mode": "leng",
+        "fuel": "nIn",
+        "boost": "nIn nIv"
+      },
+      "demon-grinder": {
         "fuel": "nIn",
         "boost": "nIn nIv"
       },
@@ -2201,12 +2318,17 @@
         "tormentor": {
           "creatureCapacity": "SuvwI'",
           "movement": "SPD"
+        },
+        "demon-grinder": {
+          "creatureCapacity": "SuvwI'",
+          "movement": "SPD"
         }
       }
     },
     "companion": {
       "steed": "🐴 Sargh",
-      "tormentor": "🛞 Duj Sep"
+      "tormentor": "🛞 Duj Sep",
+      "demon-grinder": "🛞 Duj Qaw'"
     },
     "topBar": {
       "hp": "HP",
@@ -2361,6 +2483,7 @@
       "label": "+ ADD",
       "steedSublabel": "Steed",
       "tormentorSublabel": "Duj Sep",
+      "demon-grinderSublabel": "Duj Qaw'",
       "planGroup": "PLAN →",
       "recordGroup": "RECORD →",
       "buildGroup": "BUILD →",

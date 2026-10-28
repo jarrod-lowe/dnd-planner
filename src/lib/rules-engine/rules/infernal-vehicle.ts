@@ -109,16 +109,32 @@ export interface InfernalVehicleSpec {
    * The [Moving | Motionless] AC mode, when the stat block carries one: the
    * acquire/record segmented control and the derived `ac.effective` (moving
    * while upright, motionless while parked). OMIT for a vehicle with a flat AC
-   * — no mode control, no mode facts, no AC chip (a flat-AC derive is that
-   * vehicle's own concern, added when such a vehicle exists).
+   * — no mode control, no mode facts — and set `flatAc` instead.
    */
   acMode?: { moving: number; motionless: number };
+  /**
+   * The stat block's FLAT AC ("AC 19", no rider), when it carries no mode: the
+   * same `ac.effective` derive and top-bar chip the mode resolves to, at one
+   * fixed number — the flat-AC branch the mode machinery's absence leaves. A
+   * spec must set at most one of `acMode`/`flatAc` (the build throws on both:
+   * two writers to one derive); a vehicle with no AC line at all sets neither.
+   */
+  flatAc?: number;
   /** Speed by fuel ordinal (none / soul coin / demon ichor). */
   fuelSpeeds: readonly number[];
   /** What a standing boost adds to the effective speed. */
   boostBonus: number;
   /** The per-encounter Dash allowance base (the allowance is base + CON mod). */
   dashAllowanceBase: number;
+  /**
+   * The stat block's REACTION entry (the driver's Juke swerve), when it
+   * carries one: the factory emits the Juke offer ONLY for a spec that sets
+   * this — a vehicle whose stat block has no Reaction (the Demon Grinder)
+   * never gets one, not even dormant behind the Helm gate. Optional machinery
+   * for the same reason the AC shapes are: what a stat block does not carry
+   * does not exist.
+   */
+  juke?: boolean;
   /** Rules-mode detail keys (the flip targets). */
   details: {
     statBlock: string;
@@ -262,6 +278,12 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
   const { id, subject } = spec;
   const F = spec.factStem;
   const T = `rule.${id}`;
+
+  // The AC shapes are mutually exclusive: both would emit a second writer for
+  // the one `ac.effective` derive (a combine conflict at evaluation). Fail at
+  // build, where the spec is in hand, rather than at every evaluation.
+  if (spec.acMode && spec.flatAc !== undefined)
+    throw new Error(`${id}: a spec sets acMode AND flatAc — pick one AC shape`);
 
   // ── Effect ids and replacement keys (ONE live record each) ──
   const OCCUPANCY_EFFECT_ID = `effect-${id}-occupancy`;
@@ -792,13 +814,13 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         remaining: `${F}.hp.current`
       }
     },
-    ...(spec.acMode
+    // The DERIVED AC chip, for EITHER AC shape: the mode's resolve (moving
+    // while rolling, the motionless number while parked) or a flat spec's one
+    // fixed number — a flat AC read is retired with the bake either way (a
+    // legacy acquire's stale bake must never reach the chip).
+    ...(spec.acMode || spec.flatAc !== undefined
       ? [
           {
-            // The DERIVED AC (the mode resolve): moving while rolling, the
-            // motionless number while parked — a flat AC read is retired with
-            // the bake (a legacy acquire's stale bake must never reach the
-            // chip).
             subject,
             panel: 'topBar' as const,
             gate: `${F}.active`,
@@ -1158,6 +1180,62 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
     })
   });
 
+  /**
+   * The HELM's Juke — the driver's REACTION (the stat block's defensive
+   * swerve: advantage on Dexterity saving throws), built only for a spec that
+   * carries a Reaction row (`juke`). `when` is the acquire AND the helm seat
+   * like the station's actions; the economy is the reaction pool (the unarmed
+   * opportunity-attack spelling): the PLAYER's reaction, spent through the
+   * plain `reactions.spent` and NOTHING else — no facts of its own, because
+   * the advantage is applied at the table (the plan row records the intent;
+   * no dice are wired). TWO legality legs, both illegal-but-COMMITTABLE with
+   * their OWN keys: (a) the reaction pool; (b) the vehicle able to move — the
+   * derived speed AND the prone record together (out of fuel or fallen over,
+   * one shared diagnostic: a machine that cannot roll cannot swerve).
+   */
+  const jukeOffer = (): Offer => ({
+    id: `juke-${id}`,
+    when: (f: FactReader): boolean => acquired(f) && atHelm(f),
+    legalWhen: [
+      {
+        condition: (f: FactReader): boolean => f.num('reactions.remaining') > 0,
+        diagnostics: [{ code: JUKE_NO_REACTION, severity: 'error' }]
+      },
+      {
+        condition: (f: FactReader): boolean =>
+          f.num(`${F}.speed.effective`) > 0 && f.num(`${F}.prone`) === 0,
+        diagnostics: [{ code: JUKE_UNABLE_TO_MOVE, severity: 'error' }]
+      },
+      notWrecked
+    ],
+    ui: {
+      section: 'reaction',
+      subject,
+      name: `${T}.juke.name`,
+      description: `${T}.juke.description`,
+      detailKey: spec.details.helm,
+      intents: { REACT: 'ward' },
+      actionCost: ['reaction']
+    },
+    apply: (f: FactReader): ActionResult => {
+      // The reaction spend alone, with the legality re-checked (the dash
+      // idiom) so a planned-anyway row carries its own diagnostics from the
+      // fold — the row still spends the reaction. The able-to-move
+      // re-check mirrors the leg exactly: unfuelled or prone, the same one
+      // diagnostic.
+      const diagnostics: Diagnostic[] = [];
+      if (f.num('reactions.remaining') <= 0)
+        diagnostics.push({ code: JUKE_NO_REACTION, severity: 'error' });
+      if (f.num(`${F}.speed.effective`) <= 0 || f.num(`${F}.prone`) > 0)
+        diagnostics.push({ code: JUKE_UNABLE_TO_MOVE, severity: 'error' });
+      if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
+      return {
+        advertise: [{ id: 'cost', state: { 'reactions.spent': 1 }, expiry: { kind: 'endOfTurn' } }],
+        diagnostics
+      };
+    }
+  });
+
   const vehicle: RuleModule = {
     id,
     meta: {
@@ -1246,6 +1324,19 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
                     ? AC_MOTIONLESS
                     : AC_MOVING
                   : 0
+            }
+          ]
+        : []),
+      // The FLAT-AC branch (a spec that sets `flatAc`, no mode): the stat
+      // block's one number as the SAME derive the mode resolves to — the
+      // top-bar chip reads it identically, and no mode fact or control exists
+      // anywhere. Like the pool, gated on `active` so an unacquired vehicle
+      // reads 0 and the panel gate holds the chip back.
+      ...(spec.flatAc !== undefined
+        ? [
+            {
+              fact: `${F}.ac.effective`,
+              value: (f: FactReader): number => (acquired(f) ? spec.flatAc! : 0)
             }
           ]
         : []),
@@ -1768,61 +1859,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
           };
         }
       },
-      {
-        // The HELM's Juke — the driver's REACTION (the stat block's defensive
-        // swerve: advantage on Dexterity saving throws). `when` is the acquire
-        // AND the helm seat like the station's actions; the economy is the
-        // reaction pool (the unarmed opportunity-attack spelling): the PLAYER's
-        // reaction, spent through the plain `reactions.spent` and NOTHING else —
-        // no facts of its own, because the advantage is applied at the table
-        // (the plan row records the intent; no dice are wired). TWO legality
-        // legs, both illegal-but-COMMITTABLE with their OWN keys: (a) the
-        // reaction pool; (b) the vehicle able to move — the derived speed AND
-        // the prone record together (out of fuel or fallen over, one shared
-        // diagnostic: a machine that cannot roll cannot swerve).
-        id: `juke-${id}`,
-        when: (f: FactReader): boolean => acquired(f) && atHelm(f),
-        legalWhen: [
-          {
-            condition: (f: FactReader): boolean => f.num('reactions.remaining') > 0,
-            diagnostics: [{ code: JUKE_NO_REACTION, severity: 'error' }]
-          },
-          {
-            condition: (f: FactReader): boolean =>
-              f.num(`${F}.speed.effective`) > 0 && f.num(`${F}.prone`) === 0,
-            diagnostics: [{ code: JUKE_UNABLE_TO_MOVE, severity: 'error' }]
-          },
-          notWrecked
-        ],
-        ui: {
-          section: 'reaction',
-          subject,
-          name: `${T}.juke.name`,
-          description: `${T}.juke.description`,
-          detailKey: spec.details.helm,
-          intents: { REACT: 'ward' },
-          actionCost: ['reaction']
-        },
-        apply: (f: FactReader): ActionResult => {
-          // The reaction spend alone, with the legality re-checked (the dash
-          // idiom) so a planned-anyway row carries its own diagnostics from the
-          // fold — the row still spends the reaction. The able-to-move
-          // re-check mirrors the leg exactly: unfuelled or prone, the same one
-          // diagnostic.
-          const diagnostics: Diagnostic[] = [];
-          if (f.num('reactions.remaining') <= 0)
-            diagnostics.push({ code: JUKE_NO_REACTION, severity: 'error' });
-          if (f.num(`${F}.speed.effective`) <= 0 || f.num(`${F}.prone`) > 0)
-            diagnostics.push({ code: JUKE_UNABLE_TO_MOVE, severity: 'error' });
-          if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
-          return {
-            advertise: [
-              { id: 'cost', state: { 'reactions.spent': 1 }, expiry: { kind: 'endOfTurn' } }
-            ],
-            diagnostics
-          };
-        }
-      },
+      // The HELM's Juke — the driver's REACTION, emitted ONLY for a spec
+      // that carries one on its stat block (`juke`: the Tormentor yes, the
+      // Demon Grinder no — its stat block has no Reaction row at all).
+      ...(spec.juke ? [jukeOffer()] : []),
       // The vehicle's CHECKS and SAVES — the record rollers (the steed's
       // save/skill recorders, the PC-parity copy), each a d20 + the BAKED
       // modifier fact, free and UI-only, filed after the station actions and

@@ -1,0 +1,175 @@
+# yaml-language-server: $schema=../schema.json
+ruleGroups:
+  - id: demon-grinder
+    # The SECOND per-vehicle rule group on the shared infernal-vehicle factory
+    # (the settled design): the Demon Grinder is its OWN group, beside the
+    # Tormentor's, and owning one of EACH vehicle group is legal. PR-3 is the
+    # SEAT-FREE base — acquire/abandon, occupancy, the HP recorders, the prone
+    # pair, checks/saves and the derives; the stations and their offers land
+    # with the later passes. Ungated: available to every character (acquire
+    # legality is not checked — multiple acquisitions are illegal-but-possible).
+    translations:
+      en:
+        name: Demon Grinder
+        description: The Demon Grinder war vehicle. Acquire it to see its AC, HP,
+          Speed, cargo capacity, and STR/DEX/CON while you ride.
+        keywords:
+          - vehicle
+          - grinder
+          - acquire
+          - abandon
+          - mount
+      en-x-tlh:
+        name: Duj Qaw'
+        description: Duj Qaw' SuvwI' Duj. Duj Qaw' yISuq 'ej AC, HP, Do, ngIS
+          'ej laH Duj Daj yIlegh.
+        keywords:
+          - vehicle
+          - grinder
+          - acquire
+          - abandon
+          - mount
+    # The Demon Grinder is not SRD content: this detail is our own wording —
+    # numbers and short factual phrases only, never trait prose. It reads
+    # in-world (the vehicle and its numbers); nothing about the app. The AC is
+    # FLAT (the stat block carries no motionless rider), and the stations stay
+    # out until the passes that add them.
+    detail:
+      key: vehicle/demon-grinder
+      source: custom
+      translations:
+        en:
+          meta: Gargantuan Vehicle
+          fields:
+            - labelKey: rules.field.armorClass
+              value: '19'
+            - labelKey: rules.field.weight
+              value: 12,000 lb.
+          body: |
+            A Gargantuan infernal war vehicle, 12,000 lb., built to roll over
+            whatever stands in its path. It carries 8 Medium creatures and
+            1 ton of cargo (2,000 lb.).
+
+            Armor Class 19; 200 hit points (damage threshold 10, mishap
+            threshold 20); Speed 100 ft.; STR 18 (+4), DEX 10 (+0), CON 18
+            (+4). The vehicle has no Intelligence, Wisdom, or Charisma, and
+            shrugs off fire, poison, and psychic damage.
+
+            **Crushing Wheels.** The Demon Grinder can move through the space
+            of a Large or smaller creature. Each creature it moves through for
+            the first time on a turn must succeed on a DC 11 Dexterity saving
+            throw or take 22 (4d10) bludgeoning damage and be knocked prone. A
+            creature already prone takes an extra 22 (4d10) bludgeoning damage
+            instead of being knocked prone. The wheels can catch a creature
+            only once per turn.
+
+            **Magic Weapons.** The Demon Grinder's weapon attacks are magical.
+
+            **Prone Deficiency.** The Demon Grinder cannot right itself:
+            fallen over, it stays prone and can do nothing until something
+            flips it upright.
+  # The vehicle's OWN prone text — the flip target for both prone offers and
+  # the prone chip. A catalog-only entry (the find-steed `*-detail` pattern):
+  # it exists to publish the detail JSON and contributes nothing to play.
+  # Like the stat block above, our own wording in an in-world voice — the
+  # player's condition/prone prose would promise a war machine crawling and
+  # righting itself at the cost of movement.
+  - id: demon-grinder-prone-detail
+    translations:
+      en:
+        name: Prone (Demon Grinder)
+        description: Detail text for the Demon Grinder's fallen-prone condition
+        keywords:
+          - prone
+          - grinder
+          - vehicle
+          - fallen
+          - flip upright
+          - knocked down
+          - condition
+      en-x-tlh:
+        name: Prone (Demon Grinder)
+        description: Detail text for the Demon Grinder's fallen-prone condition
+        keywords:
+          - prone
+          - grinder
+          - vehicle
+          - fallen
+          - flip upright
+          - condition
+    detail:
+      key: vehicle/demon-grinder-prone
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Condition
+          body: |
+            **Fallen Prone.** Even a war machine can be knocked flat. Tipped
+            onto its side — by a crash, a collision, or a blow too heavy to
+            shrug off — the Demon Grinder has fallen prone, and its huge iron
+            wheels are off the ground.
+
+            **Prone Deficiency.** The Demon Grinder is a vehicle, not a
+            creature, and it cannot right itself. It cannot crawl, and no
+            amount of movement lifts it: fallen prone, it can do nothing. It
+            stays on its side through every turn and every rest, until
+            something flips it upright.
+
+            **The Way Clear.** Flipping the war machine upright is the one way
+            out of the condition — its crew hauling it over, or allies heaving
+            together. The moment its wheels are back under it, the Demon
+            Grinder is upright and ready to roll again.
+  # The DAMAGE recorder's flip detail — the settled home for the stat block's
+  # damage semantics (threshold, immunities, mishap): nothing here behaves
+  # differently beyond the threshold the recorder gates on, so the explanation
+  # rides the offer instead of standing notices. A catalog-only entry like the
+  # prone detail above: our own wording, in-world voice, numbers and short
+  # factual phrases only.
+  - id: demon-grinder-damage-detail
+    translations:
+      en:
+        name: Damage (Demon Grinder)
+        description: Detail text for recording damage against the Demon Grinder
+        keywords:
+          - damage
+          - grinder
+          - vehicle
+          - threshold
+          - immunity
+          - mishap
+          - repairs
+      en-x-tlh:
+        name: Damage (Demon Grinder)
+        description: Detail text for recording damage against the Demon Grinder
+        keywords:
+          - damage
+          - grinder
+          - vehicle
+          - threshold
+          - immunity
+          - mishap
+          - repairs
+    detail:
+      key: vehicle/demon-grinder-damage
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Damage
+          body: |
+            The Demon Grinder is a Gargantuan war machine of iron, and damage
+            against it does not land the way it does against flesh.
+
+            **Damage Threshold 10.** A blow that deals less than ten damage
+            leaves the Demon Grinder unmarked — record the blow as it is
+            called and nothing is taken; the swing simply bounces off the
+            armour plate. A blow of ten or more lands in full: the threshold
+            is a floor, not a cap, and never subtracts from what gets
+            through. To land a correction beneath the threshold, ignore it
+            for that one record.
+
+            **Immunities.** Fire, poison, and psychic damage cannot hurt the
+            vehicle at all. Record none of it, however heavy the blow.
+
+            **Mishap Threshold 20.** A single source that deals twenty or more
+            damage to the Demon Grinder triggers a mishap — consult the
+            mishap table for what breaks loose.

@@ -90,6 +90,10 @@ const TORMENTOR: InfernalVehicleSpec = {
   boostBonus: 30,
   // Each encounter: 3 Dashes plus the vehicle's Constitution modifier.
   dashAllowanceBase: 3,
+  // The stat block's Reaction row (the driver's Juke swerve) — a vehicle
+  // whose stat block carries no Reaction (the Demon Grinder) omits this and
+  // never gets the offer.
+  juke: true,
   details: {
     statBlock: 'vehicle/tormentor',
     damage: 'vehicle/tormentor-damage',

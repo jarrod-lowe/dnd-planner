@@ -1,0 +1,140 @@
+name: 'Demon Grinder - Abandon Evicts Every Record, Re-acquire Starts Fresh'
+description: >-
+  Abandoning is a vehicle-panel offer gated on the acquire: apply advertises a
+  keyed replacement (the steed dismiss pattern) that evicts the acquire effect
+  AND every vehicle record beside it — the occupancy record, the prone record,
+  the HP running totals and the destroyed wreck — so every baked fact clears
+  at once and the vehicle loses its surface once the turn commits. Re-acquiring
+  bakes the stats afresh (a fresh vehicle: whole, upright, unoccupied). Raw
+  mount-chip removal stays as the override path — the same facts clear without
+  the offer (the declared dependents are unit-pinned).
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  - addOffer:
+      id: acquire-demon-grinder
+  # Build up state: occupancy 3, prone, and a wreck (one pool-emptying blow of
+  # 200 against HP 200).
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 3
+  - addOffer:
+      id: knock-demon-grinder-prone
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 200
+      assert:
+        facts:
+          companion.demonGrinder.destroyed: 1
+          companion.demonGrinder.hp.current: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+            - effect-demon-grinder-occupancy
+            - effect-demon-grinder-prone
+            - effect-demon-grinder-hp-damage
+            - effect-demon-grinder-destroyed
+  # A RE-ACQUIRE evicts every record with the keyed replacement: a fresh
+  # vehicle starts whole, upright and unoccupied.
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.active: 1
+          companion.demonGrinder.hp.max: 200
+          companion.demonGrinder.hp.current: 200
+          companion.demonGrinder.destroyed: 0
+          companion.demonGrinder.prone: 0
+          companion.demonGrinder.creatureCapacity.used: 0
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+          notExists:
+            - effect-demon-grinder-occupancy
+            - effect-demon-grinder-prone
+            - effect-demon-grinder-hp-damage
+            - effect-demon-grinder-hp-heal
+            - effect-demon-grinder-destroyed
+        facts:
+          companion.demonGrinder.hp.current: 200
+  # Wreck it again, commit, then ABANDON: the keyed replacement clears every
+  # baked fact INCLUDING the records and the wreck, and the vehicle offers'
+  # gates close with the panel.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 200
+  - addOffer:
+      id: knock-demon-grinder-prone
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.destroyed: 1
+          companion.demonGrinder.prone: 1
+  - addOffer:
+      id: abandon-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.active: 0
+          companion.demonGrinder.ac.effective: 0
+          companion.demonGrinder.hp.max: 0
+          companion.demonGrinder.speed.effective: 0
+          companion.demonGrinder.cargo: 0
+          companion.demonGrinder.str: 0
+          companion.demonGrinder.str.modifier: 0
+          companion.demonGrinder.prone: 0
+          companion.demonGrinder.destroyed: 0
+        planErrors:
+          - id: abandon-demon-grinder
+            index: 0
+            errors: []
+  # Commit: the acquire effect is gone for good along with every record, and
+  # the abandon gate closed.
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-demon-grinder-acquire
+            - effect-demon-grinder-occupancy
+            - effect-demon-grinder-prone
+            - effect-demon-grinder-hp-damage
+            - effect-demon-grinder-destroyed
+        facts:
+          companion.demonGrinder.active: 0
+        offers:
+          exists:
+            - acquire-demon-grinder
+          notExists:
+            - abandon-demon-grinder
+  # Re-acquiring after abandoning bakes the stats afresh.
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.active: 1
+          companion.demonGrinder.ac.effective: 19
+          companion.demonGrinder.hp.max: 200
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-acquire
+  # Override path: raw mount-chip removal still clears every fact.
+  - removeEffect:
+      id: effect-demon-grinder-acquire
+      assert:
+        effects:
+          notExists:
+            - effect-demon-grinder-acquire
+        facts:
+          companion.demonGrinder.active: 0
+          companion.demonGrinder.ac.effective: 0
+        offers:
+          exists:
+            - acquire-demon-grinder

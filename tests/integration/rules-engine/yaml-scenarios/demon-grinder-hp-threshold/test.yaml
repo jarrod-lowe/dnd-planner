@@ -1,0 +1,132 @@
+name: 'Demon Grinder - Damage Threshold Bounces Sub-Threshold Blows'
+description: >-
+  Threshold model v2: sub-threshold damage is LEGAL to attempt — the GM tells
+  the player an amount and the player records it, the app is what knows it was
+  under the limit. The stat block's damage threshold 10 is a BAKED FACT the
+  shared recorder consults: the damage offer carries a [Use Threshold | Ignore
+  Threshold] segmented control (rendered only while the threshold fact is
+  positive), a Use-Threshold blow BELOW the fact records NOTHING and returns a
+  'notice' diagnostic that rides THAT planned row alone (planDiagnostics is
+  per-instance), and an Ignore-Threshold blow records the RAW amount in full
+  (the GM correction). At or above the threshold, Use mode records the FULL
+  amount as ever. Against 200 HP: 9 bounces, 10 lands (current 190), an
+  ignore-mode 9 records in full.
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        # The threshold is data on the acquire effect, not code in the module.
+        facts:
+          companion.demonGrinder.damageThreshold: 10
+          companion.demonGrinder.hp.current: 200
+  # The damage offer carries the threshold-mode segmented control, gated on the
+  # baked fact (generic factory data — the player/steed scenarios pin theirs).
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - record-demon-grinder-damage
+          legal:
+            - record-demon-grinder-damage
+        offerUi:
+          - id: record-demon-grinder-damage
+            ui:
+              secondaryControl:
+                type: segmented
+                var: thresholdMode
+                prefix: planner.record.threshold.prefix
+                options:
+                  - value: 0
+                    label: planner.record.threshold.use
+                  - value: 1
+                    label: planner.record.threshold.ignore
+                enabled:
+                  condition:
+                    fact: companion.demonGrinder.damageThreshold
+                    operator: greaterThan
+                    value: 0
+  # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
+  # records the RAW amount in full — no bounce note, no error.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 9
+        thresholdMode: 1
+      assert:
+        facts:
+          companion.demonGrinder.hp.damageRecorded: 9
+          companion.demonGrinder.hp.current: 191
+        planErrors:
+          - id: record-demon-grinder-damage
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-hp-damage
+  # THE USER REPRO SHAPE: TWO damage rows planned — one landing at the
+  # threshold, one sub-threshold in Use mode. The bounce note is a per-row
+  # 'notice' diagnostic: ONLY the bounced row carries it, the landing row never
+  # does, the plan stays legal, and no annotation exists (a per-commit bounce
+  # is not a standing panel truth).
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 10
+      assert:
+        planErrors:
+          - id: record-demon-grinder-damage
+            index: 0
+            errors: []
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 9
+      assert:
+        facts:
+          # 9 (committed ignore-mode) + 10 (the landing row): the bounced row
+          # adds nothing.
+          companion.demonGrinder.hp.damageRecorded: 19
+          companion.demonGrinder.hp.current: 181
+        planErrors:
+          - id: record-demon-grinder-damage
+            index: 0
+            errors: []
+          - id: record-demon-grinder-damage
+            index: 1
+            errors:
+              - rule.demon-grinder.record-damage.below_threshold
+        status:
+          legal: true
+  # The bounced row commits NOTHING at end of turn — no marker effect, no
+  # state, no record. The note lived on the planned row and leaves with it.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-hp-damage
+          notExists:
+            - effect-demon-grinder-hp-bounce
+        facts:
+          companion.demonGrinder.hp.current: 181
+  # A long rest clears the records (the pool returns to the full 200).
+  - endTurn:
+      longRest: true
+      assert:
+        effects:
+          notExists:
+            - effect-demon-grinder-hp-damage
+        facts:
+          companion.demonGrinder.hp.current: 200
+  # Above the threshold records in full too.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 50
+      assert:
+        facts:
+          companion.demonGrinder.hp.damageRecorded: 50
+          companion.demonGrinder.hp.current: 150
