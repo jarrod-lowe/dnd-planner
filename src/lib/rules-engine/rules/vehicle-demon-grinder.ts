@@ -18,12 +18,14 @@ import {
  * PR-3 was the SEAT-FREE base; PR-4 added the first STATIONS: the Helm (one
  * crew, three-quarters cover — the gate behind Drive/Dash/Fuel/Boost) and ONE
  * Harpoon Flinger (one crew, half cover, +5 to hit, 2d8 piercing with no
- * damage bonus — 10 harpoons untracked, copy only). PR-5 adds the WRECKING
+ * damage bonus — 10 harpoons untracked, copy only). PR-5 added the WRECKING
  * BALL (one crew, half cover, +9 to hit, 8d8+4 bludgeoning — the doubled
- * damage against objects and structures is copy only, the GM adjudicates).
- * The Chomper station follows in its own pass. NO passenger or clinger
- * station exists on this vehicle, and the derived creature capacity counts
- * each held seat toward the 8.
+ * damage against objects and structures is copy only, the GM adjudicates)
+ * and PR-6 the CHOMPER (one crew, half cover, +9 to hit, 6d6+4 piercing —
+ * the ground-to-bits-and-spat-through-the-pipes rider is copy only, the GM
+ * adjudicates). The second flinger (multi-harpoonist) follows in its own
+ * pass. NO passenger or clinger station exists on this vehicle, and the
+ * derived creature capacity counts each held seat toward the 8.
  *
  * The stat block's two deliberate divergences from the Tormentor, both as
  * DATA: the AC is FLAT 19 (no motionless rider — `flatAc`, never `acMode`,
@@ -90,11 +92,10 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
     helm: 'vehicle/demon-grinder-helm',
     fuel: 'vehicle/demon-grinder-fuel'
   },
-  // The stations in +ADD order (stat-block order). PR-4's base seats: the
-  // Helm and ONE Harpoon Flinger; PR-5 slots the Wrecking Ball between them
-  // (stat-block order — the Chomper lands ahead of it in its own pass, and
-  // the second flinger / multi-harpoonist after that). NO passenger or
-  // clinger station: the Grinder's stat block carries none.
+  // The stations in +ADD order (stat-block order): the Helm, the Chomper
+  // (PR-6), the Wrecking Ball (PR-5) and ONE Harpoon Flinger (PR-4 — the
+  // second flinger / multi-harpoonist follows in its own pass). NO passenger
+  // or clinger station: the Grinder's stat block carries none.
   seats: [
     /**
      * The HELM station (the stat block's Helm, one crew): the take/leave
@@ -113,6 +114,47 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
       effectName: `${T}.seat-helm-effect.name`,
       consumesSeat: true,
       cover: 2
+    },
+    /**
+     * The CHOMPER station (the stat block's, PR-6): one crew, HALF cover,
+     * and the station's ACTION through the factory's weapon-station
+     * machinery — the seat is the bite offer's `when` gate, the numbers are
+     * the derives the dice-line reads (+9 to hit, 6d6+4 piercing — the
+     * machine's grinding force behind every bite, the ball's bonus shape).
+     * The station's one RIDER — a target reduced to 0 hit points by the
+     * damage is ground to bits and spat out through the vehicle's pipes, and
+     * any nonmagical items the target held or carried are destroyed — is
+     * DETAIL and offer COPY only: nothing in the engine models the kill or
+     * the wrecked gear (what was held or carried is the GM's call at the
+     * table — the Tormentor "magical + 10 harpoons" precedent). The mount
+     * grants HALF cover: spec data on the seat (cover.md PR-2).
+     */
+    {
+      station: 'chomper',
+      take: {
+        name: `${T}.take-chomper-seat.name`,
+        description: `${T}.take-chomper-seat.description`
+      },
+      leave: {
+        name: `${T}.leave-chomper-seat.name`,
+        description: `${T}.leave-chomper-seat.description`
+      },
+      effectName: `${T}.seat-chomper-effect.name`,
+      consumesSeat: true,
+      cover: 1,
+      weapon: {
+        fire: {
+          name: `${T}.fire-chomper.name`,
+          description: `${T}.fire-chomper.description`
+        },
+        noAction: `${T}.fire-chomper.no_action`,
+        detailKey: 'vehicle/demon-grinder-chomper',
+        hitBonus: 9,
+        damageBonus: 4,
+        damageDie: 6,
+        damageCount: 6,
+        damageType: 'piercing'
+      }
     },
     /**
      * The WRECKING BALL station (the stat block's, PR-5): one crew, HALF

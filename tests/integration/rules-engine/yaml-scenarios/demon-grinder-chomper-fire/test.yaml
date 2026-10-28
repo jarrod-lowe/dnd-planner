@@ -1,0 +1,150 @@
+name: 'Demon Grinder - Bite With The Chomper'
+description: >-
+  The Chomper's attack offer exists only while the chomper seat is held (the
+  `when` gate is the acquire AND the station's seat fact — a driver at the
+  Helm does not work the jaws), and while it exists it is a plan-row ACTION
+  attack filed like one: ATTACK 'weapons', action cost, a dice-line reading
+  the module derives (d20 + 9 to hit, 6d6+4 piercing — the grinding teeth
+  behind every bite). Reach 5 ft. and one target are offer copy and detail
+  text, not range machinery, and the stat block's gruesome rider — a target
+  reduced to 0 hit points is ground to bits and spat out through the pipes,
+  its nonmagical items destroyed — rides the same copy: the GM adjudicates,
+  nothing in the engine models a kill. The ECONOMY is the generic action
+  spend (the flinger's ruling): biting consumes the player's full ACTION and
+  nothing else, the seat stays taken, and on a wreck the shared wrecked leg
+  composes.
+ruleGroups:
+  - vehicles/demon-grinder
+  - dnd-5e-2024/action-economy
+steps:
+  # Acquired but unseated: no bite offer — the attack is the station's.
+  - addOffer:
+      id: acquire-demon-grinder
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - fire-demon-grinder-chomper
+  # A driver at the Helm does not work the jaws either.
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - fire-demon-grinder-chomper
+  # Seated at the chomper: the offer exists with the full attack shape.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+  - addOffer:
+      id: take-demon-grinder-chomper-seat
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - fire-demon-grinder-chomper
+          legal:
+            - fire-demon-grinder-chomper
+        offerUi:
+          - id: fire-demon-grinder-chomper
+            ui:
+              section: action-attack
+              subject: demon-grinder
+              name: rule.demon-grinder.fire-chomper.name
+              description: rule.demon-grinder.fire-chomper.description
+              detailKey: vehicle/demon-grinder-chomper
+              actionCost:
+                - action
+              annotationLabels:
+                - dice.any.companion
+              intents:
+                ATTACK: weapons
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 20
+                    bonus:
+                      var: hitBonus
+                    purpose: to-hit
+                  - sides: 6
+                    count: 6
+                    bonus:
+                      var: damageBonus
+                    purpose: damage
+                    damageType:
+                      string: piercing
+        offerVars:
+          - id: fire-demon-grinder-chomper
+            vars:
+              hitBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.chomper.hitBonus
+              damageDie:
+                default:
+                  number: 6
+              damageBonus:
+                capture: true
+                default:
+                  fact: companion.demonGrinder.chomper.damageBonus
+  # The derives the dice-line reads: +9 to hit, +4 damage, while acquired.
+  - evaluate:
+      assert:
+        facts:
+          companion.demonGrinder.chomper.hitBonus: 9
+          companion.demonGrinder.chomper.damageBonus: 4
+  # Bite: the generic action spend alone — the player's ACTION, never attack
+  # accounting — and nothing else moves (the seat stays taken).
+  - addOffer:
+      id: fire-demon-grinder-chomper
+      assert:
+        facts:
+          actions.remaining: 0
+          companion.demonGrinder.seats.chomper: 1
+        planErrors:
+          - id: fire-demon-grinder-chomper
+            index: 0
+            errors: []
+  # A second bite the same turn is ILLEGAL-but-COMMITTABLE: the offer stays
+  # with its no-action diagnostic and the row still spends.
+  - addOffer:
+      id: fire-demon-grinder-chomper
+      assert:
+        planErrors:
+          - id: fire-demon-grinder-chomper
+            index: 1
+            errors:
+              - rule.demon-grinder.fire-chomper.no_action
+  # End of turn: the spend ages away, the seat stands.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.demonGrinder.seats.chomper: 1
+  # Wrecked: destroy the vehicle while seated at the chomper (one
+  # pool-emptying blow); the bite goes illegal on the shared wrecked leg, and
+  # a planned-anyway row still spends carrying the diagnostic.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 200
+      assert:
+        facts:
+          companion.demonGrinder.destroyed: 1
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - fire-demon-grinder-chomper
+  - addOffer:
+      id: fire-demon-grinder-chomper
+      assert:
+        planErrors:
+          - id: fire-demon-grinder-chomper
+            index: 0
+            errors:
+              - rule.demon-grinder.wrecked
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.seats.chomper: 1

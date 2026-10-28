@@ -928,12 +928,13 @@ describe('factory: the registered Tormentor module emits only resolvable keys', 
 
 /**
  * The SAME emitted-surface i18n guard, for the registered Demon Grinder module
- * (PR-3 base, PR-4 seats, PR-5 Wrecking Ball): the factory builds its keys
- * from spec data the static module-i18n-coverage scan cannot expand, so this
- * walk restores the guard at the EMITTED surface — offer ui (the station
- * take/leave pairs, the fire offers, and the helm-gated drive/dash/fuel/boost
- * rows), legality diagnostics, advertised effect chips, plan-row diagnostics
- * (the bounce/mishap notes, the dash risk), annotations, panels.
+ * (PR-3 base, PR-4 seats, PR-5 Wrecking Ball, PR-6 Chomper): the factory
+ * builds its keys from spec data the static module-i18n-coverage scan cannot
+ * expand, so this walk restores the guard at the EMITTED surface — offer ui
+ * (the station take/leave pairs, the fire offers, and the helm-gated
+ * drive/dash/fuel/boost rows), legality diagnostics, advertised effect chips,
+ * plan-row diagnostics (the bounce/mishap notes, the dash risk), annotations,
+ * panels.
  */
 describe('factory: the registered Demon Grinder module emits only resolvable keys', () => {
   const DG = 'demon-grinder';
@@ -987,7 +988,8 @@ describe('factory: the registered Demon Grinder module emits only resolvable key
         // PR-4: the stations — the seat chips, the fire row, and the Helm's
         // gated activities (planned-anyway where exclusivity would refuse:
         // the fold still executes every row, collecting its keys). PR-5 adds
-        // the Wrecking Ball's take/leave/fire rows the same way.
+        // the Wrecking Ball's and PR-6 the Chomper's take/leave/fire rows the
+        // same way.
         { instanceId: 'h', ruleId: `take-${DG}-helm-seat` },
         { instanceId: 'i', ruleId: `take-${DG}-harpoon-seat` },
         { instanceId: 'j', ruleId: `leave-${DG}-helm-seat` },
@@ -998,7 +1000,10 @@ describe('factory: the registered Demon Grinder module emits only resolvable key
         { instanceId: 'o', ruleId: `set-${DG}-boost`, selections: { boost: 1 } },
         { instanceId: 'p', ruleId: `take-${DG}-wrecking-ball-seat` },
         { instanceId: 'q', ruleId: `leave-${DG}-wrecking-ball-seat` },
-        { instanceId: 'r', ruleId: `fire-${DG}-wrecking-ball` }
+        { instanceId: 'r', ruleId: `fire-${DG}-wrecking-ball` },
+        { instanceId: 's', ruleId: `take-${DG}-chomper-seat` },
+        { instanceId: 't', ruleId: `leave-${DG}-chomper-seat` },
+        { instanceId: 'u', ruleId: `fire-${DG}-chomper` }
       ]
     });
     for (const effect of out.effects) if (effect.display) dgI18nStrings(effect.display, keys);
@@ -1019,7 +1024,7 @@ describe('factory: the registered Demon Grinder module emits only resolvable key
     expect(dgCollectedKeys().size).toBeGreaterThan(50);
   });
 
-  it('collects the station keys — PR-4 helm/flinger and PR-5 wrecking ball', () => {
+  it('collects the station keys — PR-4 helm/flinger, PR-5 wrecking ball, PR-6 chomper', () => {
     const keys = dgCollectedKeys();
     for (const key of [
       `rule.${DG}.take-helm-seat.name`,
@@ -1032,6 +1037,14 @@ describe('factory: the registered Demon Grinder module emits only resolvable key
       `rule.${DG}.fire-harpoon.name`,
       `rule.${DG}.fire-harpoon.description`,
       `rule.${DG}.fire-harpoon.no_action`,
+      `rule.${DG}.take-chomper-seat.name`,
+      `rule.${DG}.take-chomper-seat.description`,
+      `rule.${DG}.leave-chomper-seat.name`,
+      `rule.${DG}.leave-chomper-seat.description`,
+      `rule.${DG}.seat-chomper-effect.name`,
+      `rule.${DG}.fire-chomper.name`,
+      `rule.${DG}.fire-chomper.description`,
+      `rule.${DG}.fire-chomper.no_action`,
       `rule.${DG}.take-wrecking-ball-seat.name`,
       `rule.${DG}.take-wrecking-ball-seat.description`,
       `rule.${DG}.leave-wrecking-ball-seat.name`,

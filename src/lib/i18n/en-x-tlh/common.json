@@ -660,6 +660,22 @@
       "seat-helm-effect": {
         "name": "SeHyaH Sep"
       },
+      "take-chomper-seat": {
+        "name": "nuj mIqta' Sep yIchol",
+        "description": "Duj Qaw' nuj mIqta' Sep yIchol 'ej Dochmey yISop"
+      },
+      "leave-chomper-seat": {
+        "name": "nuj mIqta' Sepvo' yImej",
+        "description": "nuj mIqta' Sepvo' yImej 'ej Sep yIchImmoH"
+      },
+      "seat-chomper-effect": {
+        "name": "nuj mIqta' Sep"
+      },
+      "fire-chomper": {
+        "name": "nuj mIqta' yISop",
+        "description": "cham nuH HIj: HIch 9, chuq 5, wa' jav, 6d6 qIp 'ej 4 chel (25 law'). pagh povDI' qaS Qaw'lu' 'ej tlhIchvo' ngeHlu'; chamHa' Dochmey qaw'lu'.",
+        "no_action": "DIvI' tu'lu'be'"
+      },
       "take-wrecking-ball-seat": {
         "name": "qaw' mIqta' Sep yIchol",
         "description": "Duj Qaw' qaw' mIqta' Sep yIchol 'ej Duj qaw' yIlo'"

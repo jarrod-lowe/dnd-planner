@@ -555,6 +555,46 @@ describe('demon grinder wrecking ball detail body', () => {
   });
 });
 
+describe('demon grinder chomper detail body', () => {
+  // PR-6's station detail (linked from the bite offer): the chomper's numbers
+  // in our own words, plus the station's one RIDER — a target reduced to 0
+  // hit points is ground to bits and spat out through the vehicle's pipes,
+  // its nonmagical items destroyed — as COPY ONLY. Nothing in the engine
+  // models the kill or the wreckage of gear: what is held or carried and what
+  // survives is the GM's call at the table, so the rule is stated (detail +
+  // offer copy) and nothing is wired. Same discipline as every station
+  // detail: our own words, in-world voice, no app meta.
+  const body = demonGrinderDetailBody('vehicle/demon-grinder-chomper');
+
+  it('exists as a detail block in demon-grinder.yaml', () => {
+    expect(
+      body,
+      'a catalog group in vehicles/demon-grinder.yaml carries the chomper detail'
+    ).toEqual(expect.any(String));
+  });
+
+  it('carries no app-meta phrasing', () => {
+    const found = BANNED_APP_META.filter((phrase) => body?.toLowerCase().includes(phrase));
+    expect(found, `app-meta phrases in the chomper detail body: ${found.join(', ')}`).toEqual([]);
+  });
+
+  it('states the attack numbers and the ground-to-bits rider', () => {
+    for (const notion of [
+      'Chomper',
+      '+9',
+      '5 ft.',
+      '6d6+4',
+      'piercing',
+      '0 hit points',
+      'ground to bits',
+      'pipes',
+      'nonmagical'
+    ]) {
+      expect(body, `the chomper detail body states "${notion}"`).toContain(notion);
+    }
+  });
+});
+
 describe('demon grinder prone detail body', () => {
   // The prone flips (both offers + the chip) land on the vehicle's OWN
   // condition text — the Tormentor prone-detail discipline, same numbers-free

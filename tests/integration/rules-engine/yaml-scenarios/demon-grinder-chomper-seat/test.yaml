@@ -1,0 +1,133 @@
+name: 'Demon Grinder - Take The Chomper Seat'
+description: >-
+  PR-6's station: the Chomper (one crew, HALF cover — the cover seam's
+  contribution is pinned at unit level), as the shared take/leave pair in the
+  vehicle's +ADD — free, gated structurally on the acquire, filed with the
+  acquire/abandon EQUIP 'vehicle' family. Taking the seat advertises ONE
+  permanent KEYED effect writing companion.demonGrinder.seats.chomper = 1,
+  and the derived creature capacity counts the held seat toward the 8. One
+  seat per player still holds, both directions: WITHIN the vehicle (seated at
+  the chomper, the Helm, ball and flinger takes are ILLEGAL-but-COMMITTABLE
+  while LEAVE-chomper is the legal way out) and GLOBALLY across vehicles (the
+  Tormentor's takes close too, with their own diagnostic). Leaving clears the
+  fact the moment the row is merely planned and takes the bite offer with it;
+  the abandon lifecycle evicts the seat like every vehicle record.
+ruleGroups:
+  - vehicles/demon-grinder
+  - vehicles/tormentor
+steps:
+  # Unacquired: the seat offers and the station's bite do not exist at all.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - take-demon-grinder-chomper-seat
+            - leave-demon-grinder-chomper-seat
+            - fire-demon-grinder-chomper
+  # Own BOTH vehicles (legal — ownership is per-vehicle) so the cross-vehicle
+  # leg is exercisable; nobody seated, every take is legal.
+  - addOffer:
+      id: acquire-demon-grinder
+  - addOffer:
+      id: acquire-tormentor
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - take-demon-grinder-chomper-seat
+            - take-tormentor-helm-seat
+          legal:
+            - take-demon-grinder-chomper-seat
+            - take-tormentor-helm-seat
+          illegal:
+            - leave-demon-grinder-chomper-seat
+          notExists:
+            - fire-demon-grinder-chomper
+        offerUi:
+          - id: take-demon-grinder-chomper-seat
+            ui:
+              section: free
+              subject: demon-grinder
+              name: rule.demon-grinder.take-chomper-seat.name
+              actionCost: []
+  # Take the chomper: the station fact lands, the capacity derive counts it
+  # (1 of 8), and the bite offer surfaces with the seat.
+  - addOffer:
+      id: take-demon-grinder-chomper-seat
+      assert:
+        facts:
+          companion.demonGrinder.seats.chomper: 1
+          companion.demonGrinder.creatureCapacity.used: 1
+        planErrors:
+          - id: take-demon-grinder-chomper-seat
+            index: 0
+            errors: []
+        offers:
+          exists:
+            - fire-demon-grinder-chomper
+  # One seat per player, WITHIN the vehicle: seated at the chomper, the Helm,
+  # ball and flinger takes are illegal while LEAVE-chomper is the legal way
+  # out…
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-demon-grinder-helm-seat
+            - take-demon-grinder-wrecking-ball-seat
+            - take-demon-grinder-harpoon-seat
+          legal:
+            - leave-demon-grinder-chomper-seat
+  # …and GLOBALLY: the Tormentor's takes close the same way.
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - take-tormentor-helm-seat
+            - take-tormentor-harpoon-seat
+            - take-tormentor-passenger-seat
+  # Leave the chomper: the eviction clears the fact the moment the row is
+  # merely planned, the capacity falls with it, the bite offer goes with the
+  # seat — and the Tormentor's takes reopen (the leg reads live facts,
+  # nothing remembered).
+  - addOffer:
+      id: leave-demon-grinder-chomper-seat
+      assert:
+        facts:
+          companion.demonGrinder.seats.chomper: 0
+          companion.demonGrinder.creatureCapacity.used: 0
+        offers:
+          notExists:
+            - fire-demon-grinder-chomper
+          exists:
+            - take-tormentor-helm-seat
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - take-tormentor-helm-seat
+  - endTurn:
+      assert:
+        facts:
+          companion.demonGrinder.seats.chomper: 0
+  # The lifecycle: a held seat dies with the abandon — the eviction fires
+  # while the row is merely planned, and the capacity falls with the fact.
+  - addOffer:
+      id: take-demon-grinder-chomper-seat
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-seat-chomper
+        facts:
+          companion.demonGrinder.seats.chomper: 1
+          companion.demonGrinder.creatureCapacity.used: 1
+  - addOffer:
+      id: abandon-demon-grinder
+      assert:
+        facts:
+          companion.demonGrinder.seats.chomper: 0
+          companion.demonGrinder.creatureCapacity.used: 0
+        offers:
+          notExists:
+            - take-demon-grinder-chomper-seat
+            - fire-demon-grinder-chomper

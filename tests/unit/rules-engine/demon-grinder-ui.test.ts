@@ -7,21 +7,23 @@ import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
 
 /**
- * Demon Grinder — PR-3's seat-free base, extended by PR-4's SEATS and PR-5's
- * Wrecking Ball. The second vehicle on the shared infernal-vehicle factory
- * (rules/infernal-vehicle.ts): everything here pins what is DATA — the spec's
- * identity strings and its STAT BLOCK (HP 200, thresholds 10/20, capacity 8,
- * cargo 2,000 lb., STR/DEX/CON 18/10/18, the FLAT AC 19 with NO AC-mode
- * machinery anywhere) — plus the stations as pure spec entries: the HELM
- * (PR-4: one crew, three-quarters cover, the gate behind drive/dash/fuel/
- * boost), ONE HARPOON FLINGER (PR-4: one crew, half cover, +5 to hit, 2d8
- * piercing with no damage bonus) and the WRECKING BALL (PR-5: one crew, half
- * cover, +9 to hit, 8d8+4 bludgeoning — the doubled damage against objects
- * and structures is copy only, GM adjudicates). NO passenger, NO clinger, and
- * NO Juke (the stat block carries no Reaction — the spec omits `juke`, so the
- * factory never emits the offer at all). The factory's own behaviour is
- * pinned by infernal-vehicle.test.ts; the Tormentor's corpus stays green
- * untouched.
+ * Demon Grinder — PR-3's seat-free base, extended by PR-4's SEATS, PR-5's
+ * Wrecking Ball and PR-6's Chomper. The second vehicle on the shared
+ * infernal-vehicle factory (rules/infernal-vehicle.ts): everything here pins
+ * what is DATA — the spec's identity strings and its STAT BLOCK (HP 200,
+ * thresholds 10/20, capacity 8, cargo 2,000 lb., STR/DEX/CON 18/10/18, the
+ * FLAT AC 19 with NO AC-mode machinery anywhere) — plus the stations as pure
+ * spec entries: the HELM (PR-4: one crew, three-quarters cover, the gate
+ * behind drive/dash/fuel/boost), the CHOMPER (PR-6: one crew, half cover,
+ * +9 to hit, 6d6+4 piercing — the ground-to-bits-and-spat-through-the-pipes
+ * rider is copy only, GM adjudicates), the WRECKING BALL (PR-5: one crew,
+ * half cover, +9 to hit, 8d8+4 bludgeoning — the doubled damage against
+ * objects and structures is copy only, GM adjudicates) and ONE HARPOON
+ * FLINGER (PR-4: one crew, half cover, +5 to hit, 2d8 piercing with no
+ * damage bonus). NO passenger, NO clinger, and NO Juke (the stat block
+ * carries no Reaction — the spec omits `juke`, so the factory never emits the
+ * offer at all). The factory's own behaviour is pinned by
+ * infernal-vehicle.test.ts; the Tormentor's corpus stays green untouched.
  */
 
 const ID = 'demon-grinder';
@@ -98,16 +100,19 @@ describe('acquire offer ui', () => {
       `record-${ID}-heal`,
       `knock-${ID}-prone`,
       `flip-${ID}-upright`,
-      // The stations in +ADD order (stat-block order): the Helm, the Wrecking
-      // Ball (PR-5, ahead of the flinger — the Chomper slots between the Helm
-      // and the ball when its pass lands), then the Harpoon Flinger — each a
-      // take/leave pair first, then every weapon station's fire offer.
+      // The stations in +ADD order (stat-block order): the Helm, the Chomper
+      // (PR-6, slotted ahead of the ball exactly as PR-5 placed it), the
+      // Wrecking Ball, then the Harpoon Flinger — each a take/leave pair
+      // first, then every weapon station's fire offer.
       `take-${ID}-helm-seat`,
       `leave-${ID}-helm-seat`,
+      `take-${ID}-chomper-seat`,
+      `leave-${ID}-chomper-seat`,
       `take-${ID}-wrecking-ball-seat`,
       `leave-${ID}-wrecking-ball-seat`,
       `take-${ID}-harpoon-seat`,
       `leave-${ID}-harpoon-seat`,
+      `fire-${ID}-chomper`,
       `fire-${ID}-wrecking-ball`,
       `fire-${ID}-harpoon`,
       `drive-${ID}`,
@@ -169,7 +174,7 @@ describe('acquire effect', () => {
     expect(Object.keys(e.state!).some((k) => k.includes('acMotionless'))).toBe(false);
   });
 
-  it('owns every vehicle record as a dependent — no ac-mode, the three seats', () => {
+  it('owns every vehicle record as a dependent — no ac-mode, the four seats', () => {
     expect(acquireEffect().dependents).toEqual([
       `${ID}-occupancy`,
       `${ID}-fuel`,
@@ -179,6 +184,7 @@ describe('acquire effect', () => {
       `${ID}-hp-heal`,
       `${ID}-destroyed`,
       `${ID}-seat-helm`,
+      `${ID}-seat-chomper`,
       `${ID}-seat-wrecking-ball`,
       `${ID}-seat-harpoon`
     ]);
@@ -289,7 +295,7 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
   });
 });
 
-describe('seats — the Helm, the Wrecking Ball and the Harpoon Flinger', () => {
+describe('seats — the Helm, the Chomper, the Wrecking Ball and the Harpoon Flinger', () => {
   /** A committed seat effect for a station (the take's advertise shape). */
   function seatAt(station: string): EffectInstance {
     return {
@@ -320,20 +326,31 @@ describe('seats — the Helm, the Wrecking Ball and the Harpoon Flinger', () => 
   it('the capacity derive counts each held seat toward the 8: helm alone reads 1/8', () => {
     const helm = evaluate({ modules: [module()], committed: [...acquired(), seatAt('helm')] });
     expect(helm.facts[`${F}.creatureCapacity.used`]).toBe(1);
-    // The Wrecking Ball is a seat-CONSUMING station like every Grinder
-    // station: its held fact counts the same way.
+    // The Chomper and the Wrecking Ball are seat-CONSUMING stations like
+    // every Grinder station: their held facts count the same way.
+    const chomper = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('chomper')]
+    });
+    expect(chomper.facts[`${F}.creatureCapacity.used`]).toBe(1);
     const ball = evaluate({
       modules: [module()],
       committed: [...acquired(), seatAt('wrecking-ball')]
     });
     expect(ball.facts[`${F}.creatureCapacity.used`]).toBe(1);
-    // All three seats held is the planned-anyway state (one seat per player):
-    // the derive still counts every held fact — 3 of 8.
-    const both = evaluate({
+    // All four seats held is the planned-anyway state (one seat per player):
+    // the derive still counts every held fact — 4 of 8.
+    const all = evaluate({
       modules: [module()],
-      committed: [...acquired(), seatAt('helm'), seatAt('harpoon'), seatAt('wrecking-ball')]
+      committed: [
+        ...acquired(),
+        seatAt('helm'),
+        seatAt('chomper'),
+        seatAt('harpoon'),
+        seatAt('wrecking-ball')
+      ]
     });
-    expect(both.facts[`${F}.creatureCapacity.used`]).toBe(3);
+    expect(all.facts[`${F}.creatureCapacity.used`]).toBe(4);
   });
 
   it('leave is illegal while the seat is unheld; take carries the two legs with the DG keys', () => {
@@ -371,11 +388,16 @@ describe('seats — the Helm, the Wrecking Ball and the Harpoon Flinger', () => 
     expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
   });
 
-  it('the seat-cover contribution: the Helm grants ¾ (2), the Wrecking Ball and the Harpoon Flinger ½ (1)', () => {
+  it('the seat-cover contribution: the Helm grants ¾ (2), the Chomper, Wrecking Ball and Harpoon Flinger ½ (1)', () => {
     // The #497 seam: the factory derives the best HELD seat onto the shared
     // player-level cover.seat fact (combine max) — DG seats are data-only.
     const helm = evaluate({ modules: [module()], committed: [...acquired(), seatAt('helm')] });
     expect(helm.facts['cover.seat']).toBe(2);
+    const chomper = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('chomper')]
+    });
+    expect(chomper.facts['cover.seat']).toBe(1);
     const ball = evaluate({
       modules: [module()],
       committed: [...acquired(), seatAt('wrecking-ball')]
@@ -386,11 +408,11 @@ describe('seats — the Helm, the Wrecking Ball and the Harpoon Flinger', () => 
       committed: [...acquired(), seatAt('harpoon')]
     });
     expect(harpoon.facts['cover.seat']).toBe(1);
-    // Helm-and-ball held (planned-anyway): the more protective degree wins,
-    // never a sum.
+    // Helm-and-chomper held (planned-anyway): the more protective degree
+    // wins, never a sum.
     const both = evaluate({
       modules: [module()],
-      committed: [...acquired(), seatAt('helm'), seatAt('wrecking-ball')]
+      committed: [...acquired(), seatAt('helm'), seatAt('chomper')]
     });
     expect(both.facts['cover.seat']).toBe(2);
   });
@@ -402,6 +424,11 @@ describe('seats — the Helm, the Wrecking Ball and the Harpoon Flinger', () => 
       `rule.${ID}.leave-helm-seat.name`,
       `rule.${ID}.leave-helm-seat.description`,
       `rule.${ID}.seat-helm-effect.name`,
+      `rule.${ID}.take-chomper-seat.name`,
+      `rule.${ID}.take-chomper-seat.description`,
+      `rule.${ID}.leave-chomper-seat.name`,
+      `rule.${ID}.leave-chomper-seat.description`,
+      `rule.${ID}.seat-chomper-effect.name`,
       `rule.${ID}.take-wrecking-ball-seat.name`,
       `rule.${ID}.take-wrecking-ball-seat.description`,
       `rule.${ID}.leave-wrecking-ball-seat.name`,
@@ -511,6 +538,111 @@ describe('the Harpoon Flinger fire offer (the weapon-station machinery)', () => 
     expect(out.facts['attackAction.extraRemaining']).toBeUndefined();
     // The seat stays taken; the vehicle's state is untouched.
     expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
+  });
+});
+
+describe('the Chomper bite offer (PR-6, the same machinery)', () => {
+  /** A committed chomper seat beside the acquire. */
+  function atTheChomper(): EffectInstance[] {
+    return [
+      ...acquired(),
+      {
+        id: `effect-${ID}-seat-chomper`,
+        key: `${ID}-seat-chomper`,
+        state: { [`${F}.seats.chomper`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance
+    ];
+  }
+
+  it('gated on the chomper seat: dice line +9 to hit, 6d6+4 piercing', () => {
+    const seated = evaluate({ modules: [module()], committed: atTheChomper() });
+    const bite = seated.availableRules.find((r) => r.rule.id === `fire-${ID}-chomper`)!;
+    expect(bite, 'seated at the chomper, the bite offer exists').toBeDefined();
+    expect(bite.rule.ui).toEqual({
+      section: 'action-attack',
+      subject: SUBJECT,
+      name: `${T}.fire-chomper.name`,
+      description: `${T}.fire-chomper.description`,
+      detailKey: 'vehicle/demon-grinder-chomper',
+      intents: { ATTACK: 'weapons' },
+      actionCost: ['action'],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+          {
+            sides: 6,
+            count: 6,
+            bonus: { var: 'damageBonus' },
+            purpose: 'damage',
+            damageType: { string: 'piercing' }
+          }
+        ]
+      }
+    });
+    expect(bite.rule.vars).toEqual({
+      hitBonus: { capture: true, default: { fact: `${F}.chomper.hitBonus` } },
+      damageDie: { default: { number: 6 } },
+      damageBonus: { capture: true, default: { fact: `${F}.chomper.damageBonus` } }
+    });
+    // The derives the dice line reads: +9 to hit, +4 damage (6d6 PLUS the
+    // machine's grinding force — the ball's bonus shape, not the flinger's).
+    expect(seated.facts[`${F}.chomper.hitBonus`]).toBe(9);
+    expect(seated.facts[`${F}.chomper.damageBonus`]).toBe(4);
+  });
+
+  it('nobody at the chomper (even at the Helm): no bite offer; the fire i18n keys exist', () => {
+    const atHelm = evaluate({
+      modules: [module()],
+      committed: [
+        ...acquired(),
+        {
+          id: `effect-${ID}-seat-helm`,
+          key: `${ID}-seat-helm`,
+          state: { [`${F}.seats.helm`]: 1 },
+          expiry: { kind: 'permanent' }
+        } satisfies EffectInstance
+      ]
+    });
+    expect(atHelm.availableRules.some((r) => r.rule.id === `fire-${ID}-chomper`)).toBe(false);
+    expectStringInBothLocales([
+      `rule.${ID}.fire-chomper.name`,
+      `rule.${ID}.fire-chomper.description`,
+      `rule.${ID}.fire-chomper.no_action`
+    ]);
+  });
+
+  it('the ground-to-bits rider rides the OFFER COPY in BOTH locales', () => {
+    // The stat block's one Chomper rider — a target reduced to 0 hit points
+    // is ground to bits and spat out through the vehicle's pipes, its
+    // nonmagical items destroyed — is copy only (the GM adjudicates what was
+    // held or carried; nothing in the engine models the kill): the bite
+    // description must state it in every locale. tlh carries the rider in its
+    // own words (tlhIchvo' ngeHlu' — sent out through the pipes) rather than
+    // English.
+    const english = i18nAt(en, `rule.${ID}.fire-chomper.description`);
+    expect(english, 'en bite description exists').toEqual(expect.any(String));
+    expect(english, 'en states the 0-hit-points trigger').toContain('0 hit points');
+    expect(english, 'en states the pipes').toContain('pipes');
+    expect(english, 'en states the item destruction').toMatch(/nonmagical items .*destroyed/i);
+    const klingon = i18nAt(tlh, `rule.${ID}.fire-chomper.description`);
+    expect(klingon, 'en-x-tlh bite description exists').toEqual(expect.any(String));
+    expect(klingon, 'en-x-tlh states the ground-to-bits rider').toContain("tlhIchvo' ngeHlu'");
+  });
+
+  it('biting spends the GENERIC action — no attack-pool facts of any kind', () => {
+    const out = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: atTheChomper(),
+      planned: [{ instanceId: 'i0', ruleId: `fire-${ID}-chomper` }]
+    });
+    expect(out.facts['actions.spent']).toBe(1);
+    expect(out.facts['attacks.spent']).toBeUndefined();
+    expect(out.facts['attackAction.extraRemaining']).toBeUndefined();
+    // The seat stays taken; the vehicle's state is untouched.
+    expect(out.facts[`${F}.seats.chomper`]).toBe(1);
   });
 });
 
@@ -1009,6 +1141,7 @@ describe('abandon evicts every child record', () => {
       `${ID}-hp-heal`,
       `${ID}-destroyed`,
       `${ID}-seat-helm`,
+      `${ID}-seat-chomper`,
       `${ID}-seat-wrecking-ball`,
       `${ID}-seat-harpoon`
     ]) {
