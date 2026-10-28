@@ -105,7 +105,8 @@ const TORMENTOR: InfernalVehicleSpec = {
     /**
      * The PASSENGER station — the seat infrastructure's first (the stat
      * block's Passenger seat: a place to ride, nothing more — no passenger
-     * detail exists, there is nothing to say).
+     * detail exists, there is nothing to say). Riding in the open grants NO
+     * cover (tormentor2.png): the seat carries no cover ordinal.
      */
     {
       station: 'passenger',
@@ -121,7 +122,9 @@ const TORMENTOR: InfernalVehicleSpec = {
      * ACTION, the fire offer — the seat is the `when` gate, the numbers are
      * the derives the dice-line reads. The attack DETAIL (the 10 harpoons,
      * the magical weapons) hangs off the fire offer; the seat chip stays
-     * plain like the passenger's.
+     * plain like the passenger's. The station's mount grants HALF cover
+     * (tormentor2.png): spec data on the seat, contributed to the player's
+     * cover.seat fact by the factory (cover.md PR-2).
      */
     {
       station: 'harpoon',
@@ -135,6 +138,7 @@ const TORMENTOR: InfernalVehicleSpec = {
       },
       effectName: `${T}.seat-harpoon-effect.name`,
       consumesSeat: true,
+      cover: 1,
       weapon: {
         fire: { name: `${T}.fire-harpoon.name`, description: `${T}.fire-harpoon.description` },
         noAction: `${T}.fire-harpoon.no_action`,
@@ -152,14 +156,17 @@ const TORMENTOR: InfernalVehicleSpec = {
      * ECONOMY offers — Drive, Dash and Juke, the driver's handle on the war
      * machine (all factory machinery, gated on this station's seat). The chip
      * stays plain like the other seats'; the station's explanation hangs off
-     * its offers' DETAIL.
+     * its offers' DETAIL. The helm's cockpit grants THREE-QUARTERS cover
+     * (tormentor2.png): spec data on the seat, contributed to the player's
+     * cover.seat fact by the factory (cover.md PR-2).
      */
     {
       station: 'helm',
       take: { name: `${T}.take-helm-seat.name`, description: `${T}.take-helm-seat.description` },
       leave: { name: `${T}.leave-helm-seat.name`, description: `${T}.leave-helm-seat.description` },
       effectName: `${T}.seat-helm-effect.name`,
-      consumesSeat: true
+      consumesSeat: true,
+      cover: 2
     },
     /**
      * The CLINGER station (the stat block's Clinger: a rider holding on to
@@ -168,11 +175,13 @@ const TORMENTOR: InfernalVehicleSpec = {
      * station IS: `consumesSeat: false` — the take carries no free-seat leg
      * (clinging is legal at a full vehicle) and the capacity derive never
      * counts the fact. Everything else is seat-as-usual: one-seat-per-player
-     * exclusivity both directions, the chip, the lifecycle eviction. The
-     * station's rule (while in combat, a clinger must make Dexterity checks
-     * to stay attached — the stat block states no DC or frequency) rides as
-     * a STANDING NOTICE while the seat is held (the notice taxonomy: a
-     * condition to know BEFORE acting) and the take links the station detail.
+     * exclusivity both directions, the chip, the lifecycle eviction. Hanging
+     * off the OUTSIDE grants NO cover (open air — no cover ordinal, like the
+     * passenger). The station's rule (while in combat, a clinger must make
+     * Dexterity checks to stay attached — the stat block states no DC or
+     * frequency) rides as a STANDING NOTICE while the seat is held (the
+     * notice taxonomy: a condition to know BEFORE acting) and the take links
+     * the station detail.
      */
     {
       station: 'clinger',

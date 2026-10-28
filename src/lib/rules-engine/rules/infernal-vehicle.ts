@@ -69,6 +69,9 @@ export interface SeatWeaponSpec {
  * station whose rule is worth reading before taking it). `notice` optionally
  * states the station's one standing rule while the seat is held. `weapon`
  * optionally gives the station its attack (the fire offer + its derives).
+ * `cover` optionally grants the rider a cover DEGREE while seated, on the
+ * cover module's ordinal scale (0 none, 1 half, 2 three-quarters, 3 total) —
+ * spec data feeding the factory's seat-cover contribution (see COVER_SEAT).
  */
 export interface SeatSpec {
   station: string;
@@ -79,6 +82,8 @@ export interface SeatSpec {
   detailKey?: string;
   notice?: { key: string; body: string };
   weapon?: SeatWeaponSpec;
+  /** The cover degree a rider at this station benefits from (0-3 ordinal). */
+  cover?: number;
 }
 
 /** One infernal vehicle's whole rule group, as authored data. */
@@ -179,6 +184,28 @@ const HELM_STATION = 'helm';
  *   flat `ac.value`/`speed` bake precedent) — never a two-writer conflict.
  */
 const VEHICLE_MOVEMENT_SPENT = 'companion.vehicle.movement.spent';
+
+/**
+ * The SHARED seat-cover fact — the seam cover.md PR-2 settled. Seat-sourced
+ * cover is a CONTRIBUTION vehicles make to the PLAYER-level cover module, not
+ * a vehicle-side copy of it: the cover module's `cover.effective` derive is
+ * max(manual, seat) and reads THIS ONE FACT, and every cover-carrying vehicle
+ * contributes its best HELD seat degree to it with `combine: 'max'` — so the
+ * Tormentor, the Demon Grinder and any later vehicle co-write the fact with no
+ * vehicle list anywhere (the engine's max combine enumerates them, the same
+ * single-pool shape as VEHICLE_MOVEMENT_SPENT). The name lives in the COVER
+ * namespace because the cover module owns the contract (the degree scale and
+ * the effective derive); this constant and cover.ts spell it as literals on
+ * purpose — a rule module importing another's chunk would break code-splitting
+ * (the verify-chunks guard).
+ *
+ * The contribution is a DERIVATION of the seat facts alone (no acquire gate,
+ * no lifecycle wiring): the leave offer's eviction and the acquire/abandon
+ * lifecycle already clear the seat facts, and the contribution — reading only
+ * those — falls with them automatically. Unset (no cover-carrying vehicle
+ * loaded, or none seated) the fact simply reads 0 in the cover module.
+ */
+const COVER_SEAT = 'cover.seat';
 
 /** The stat block acquiring bakes, from the spec (HP bakes its BASE — the pool
  * derives from it, the steed shape — plus the damage/mishap thresholds as DATA
@@ -724,6 +751,14 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
   };
 
   const weaponSeats = spec.seats.filter((seat) => seat.weapon !== undefined);
+
+  /**
+   * The stations that grant their rider a cover degree — the spec data behind
+   * the seat-cover contribution. A spec with none (the Demon Grinder's
+   * seat-free base) emits NO contribution at all: what a stat block does not
+   * carry does not exist (the juke/acMode optionality precedent).
+   */
+  const coverSeats = spec.seats.filter((seat) => seat.cover !== undefined);
 
   // ── Prone and the wreck ──
 
@@ -1342,6 +1377,29 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         : []),
       // Every weapon station's numbers, station by station.
       ...weaponSeats.flatMap((seat) => weaponDerives(seat)),
+      // The SEAT-COVER contribution (COVER_SEAT above): the vehicle's best
+      // HELD cover seat, `combine: 'max'` so every cover-carrying vehicle
+      // co-writes the one player-level fact. Deliberately a derivation of the
+      // SEAT FACTS ALONE — no `active` gate, no lifecycle wiring: the seat
+      // facts only stand while their seat effects do (the leave eviction, the
+      // acquire lifecycle), so the contribution vanishes with the seat for
+      // free, and two standing seat facts (the planned-anyway exclusivity
+      // override) contribute the more protective degree — cover never stacks,
+      // the SRD's most-protective-degree rule, which the player-side
+      // cover.effective max applies again against the manual record.
+      ...(coverSeats.length > 0
+        ? [
+            {
+              fact: COVER_SEAT,
+              combine: 'max' as const,
+              value: (f: FactReader): number =>
+                Math.max(
+                  0,
+                  ...coverSeats.map((seat) => (f.num(seatFact(seat.station)) > 0 ? seat.cover! : 0))
+                )
+            }
+          ]
+        : []),
       // The FUEL and BOOST records, resolved (the AC-mode has-preference idiom
       // on DISTINCT recorded facts — the record writes `fuel.recorded`, NEVER
       // the derived current, so a keyed replacement can flip any value to any

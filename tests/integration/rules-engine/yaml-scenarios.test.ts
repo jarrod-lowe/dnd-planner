@@ -474,6 +474,17 @@ const EXPECTED_RUNNABLE = [
   // docs/plans/ideas/cover.md): segmented None/Half/Three-Quarters/Total,
   // keyed permanent effect, AC component, notice, Dex-save rider
   'cover-record',
+  // …PR-2 — seat-sourced cover: each station's degree is spec data feeding a
+  // factory-emitted best-held-seat derive on the shared player-level
+  // cover.seat fact (combine max, so later vehicles are data-only); the
+  // cover module's effective derive maxes manual with it (never a sum), the
+  // Helm's three-quarters rides the existing notice/AC/rider, the Harpoon
+  // Flinger's half and the Passenger/Clinger's none read per station, and
+  // leave/abandon drop the contribution with no wiring (it is derived from
+  // the seat fact alone)
+  'cover-seat-helm',
+  'cover-seat-stations',
+  'cover-seat-max',
   // Shield of Faith cast on an ally — full spend, concentration held, no self AC
   'shield-of-faith-ally-cast',
   // Searing Smite — L1 bonus-action on-hit smite (fire rider, no concentration)
