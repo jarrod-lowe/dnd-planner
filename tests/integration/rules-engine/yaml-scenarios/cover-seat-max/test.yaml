@@ -1,0 +1,115 @@
+name: 'Cover - Effective Is Max, Never A Sum'
+description: >-
+  Cover does NOT stack (the SRD's most-protective-degree rule): effective
+  cover = max(manual, seat-sourced), never a sum. A manual three-quarters
+  record (2) beside the Harpoon Flinger's half seat (1) reads effective 2 with
+  bonus 5 (a sum would read 7); a manual half record beside the Helm's
+  three-quarters seat reads effective 2; equal degrees stay put (half + half
+  is half, not three-quarters). The ONE standing notice follows effective in
+  both directions — whichever side is higher owns the body — and the AC
+  modifier and Dex-save rider ride the same derived bonus.
+ruleGroups:
+  - dnd-5e-2024/cover
+  - dnd-5e-2024/ac
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # Manual HIGHER: record three-quarters (2), then take the Harpoon Flinger's
+  # half seat (1) — effective stays 2, bonus 5, AC 15. A sum would read bonus
+  # 7 / AC 17; a seat override would read 1 / AC 12.
+  - addOffer:
+      id: set-cover
+      selections:
+        degree: 2
+      assert:
+        facts:
+          cover.current: 2
+          cover.effective: 2
+          cover.bonus: 5
+          ac.value: 15
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+      assert:
+        facts:
+          cover.current: 2
+          cover.seat: 1
+          cover.effective: 2
+          cover.bonus: 5
+          ac.value: 15
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+          riders:
+            - key: rule.dnd-5e-2024.cover.rider
+              rider:
+                value:
+                  kind: flat
+                  bonus: 5
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-cover
+            - effect-tormentor-seat-harpoon
+        facts:
+          cover.effective: 2
+  # Drop the manual record to NONE: the seat alone carries effective 1 — the
+  # two sides are independent contributions to one max.
+  - addOffer:
+      id: set-cover
+      selections:
+        degree: 0
+      assert:
+        facts:
+          cover.current: 0
+          cover.seat: 1
+          cover.effective: 1
+          cover.bonus: 2
+          ac.value: 12
+  # EQUAL degrees stay put: manual half (1) beside the half seat (1) is half
+  # (effective 1, bonus 2) — never a stacked three-quarters.
+  - addOffer:
+      id: set-cover
+      selections:
+        degree: 1
+      assert:
+        facts:
+          cover.current: 1
+          cover.seat: 1
+          cover.effective: 1
+          cover.bonus: 2
+          ac.value: 12
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  - endTurn:
+      assert:
+        facts:
+          cover.effective: 1
+  # Seat HIGHER: swap to the Helm (2) — manual half (1) beside the
+  # three-quarters seat reads effective 2, bonus 5, AC 15, and the notice
+  # rides the effective state (the three-quarters body).
+  - addOffer:
+      id: leave-tormentor-harpoon-seat
+  - addOffer:
+      id: take-tormentor-helm-seat
+      assert:
+        facts:
+          cover.current: 1
+          cover.seat: 2
+          cover.effective: 2
+          cover.bonus: 5
+          ac.value: 15
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+          riders:
+            - key: rule.dnd-5e-2024.cover.rider
+              rider:
+                value:
+                  kind: flat
+                  bonus: 5

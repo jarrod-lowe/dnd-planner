@@ -20,12 +20,16 @@ const C = 'rule.dnd-5e-2024.cover';
  * fact — re-applying replaces by key (never stacks), and dismissing the raw
  * chip reverts everything (the effect writes exactly that one fact).
  *
- * The derives are the whole mechanism, so PR-2's seat-sourced cover plugs in
- * here without touching anything downstream:
+ * The derives are the whole mechanism, and PR-2's seat-sourced cover plugs in
+ * at exactly one of them — nothing downstream changes:
  *  - `cover.current`   = has(recorded) ? recorded : 0
- *  - `cover.effective` = current — the SEAM PR-2 turns into
- *                        max(manual, seat) (never a sum, per the SRD's
- *                        most-protective-degree rule)
+ *  - `cover.effective` = max(current, cover.seat) — the SEAM. `cover.seat` is
+ *                        the SHARED player-level fact every cover-carrying
+ *                        vehicle CONTRIBUTES its best held seat degree to
+ *                        (combine max, the infernal-vehicle factory's
+ *                        COVER_SEAT — the shared-spend shape); with no such
+ *                        vehicle loaded the fact is unset and reads 0. Never
+ *                        a sum, per the SRD's most-protective-degree rule.
  *  - `cover.bonus`     = +2 half, +5 three-quarters, 0 none AND total
  *
  * `cover.bonus` is read by the AC module's sum (a component of `ac.value`,
@@ -106,9 +110,16 @@ const cover: RuleModule = {
       fact: 'cover.current',
       value: (f) => (f.has('cover.recorded') ? f.num('cover.recorded') : 0)
     },
-    // PR-2 seam: seat-sourced cover maxes in here (max(manual, seat), never
-    // a sum — the SRD's "only the most protective degree" rule).
-    { fact: 'cover.effective', value: (f) => f.num('cover.current') },
+    // The PR-2 seam: seat-sourced cover maxes in here — max(manual, seat),
+    // never a sum (the SRD's "only the most protective degree" rule). The
+    // seat side is a CONTRIBUTION vehicles make to `cover.seat` (the factory
+    // spell COVER_SEAT — this module only READS it, so no cover module ever
+    // imports a vehicle module); derived from the seat facts at the source,
+    // it vanishes with the seat (leave/abandon) with no wiring here.
+    {
+      fact: 'cover.effective',
+      value: (f) => Math.max(f.num('cover.current'), f.num('cover.seat'))
+    },
     { fact: 'cover.bonus', value: (f) => bonusOf(f.num('cover.effective')) }
   ],
   // ONE standing notice keyed on EFFECTIVE cover (state + bonus in the body,

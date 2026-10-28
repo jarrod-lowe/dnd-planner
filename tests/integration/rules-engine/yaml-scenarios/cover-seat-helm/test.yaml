@@ -1,0 +1,147 @@
+name: 'Cover - Helm Seat Cover'
+description: >-
+  Seat-sourced cover (cover.md PR-2): the vehicle CONTRIBUTES a cover ordinal
+  the player-level effective derive reads — never a second manual record. The
+  factory exposes each seat's degree as spec data and derives the vehicle's
+  best held seat onto the shared player-level fact cover.seat (combine max, so
+  later vehicles plug into the same fact without a vehicle list anywhere); the
+  cover module's effective derive is max(cover.current, cover.seat) — never a
+  sum (the SRD's "only the most protective degree"). At the Tormentor's Helm
+  that is THREE-QUARTERS: taking the seat reads cover.seat 2, AC 15, the
+  three-quarters notice body and the +5 Dex-save rider, all through the
+  EXISTING effective derive — and because the contribution is DERIVED from the
+  seat fact alone, leaving the seat and abandoning the vehicle drop it with no
+  extra wiring (the leave offer's eviction and the acquire lifecycle already
+  clear the seat fact).
+ruleGroups:
+  - dnd-5e-2024/cover
+  - dnd-5e-2024/ac
+  - vehicles/tormentor
+steps:
+  # Bare player: no cover anywhere (no record, no vehicle), AC 10, no notice,
+  # no rider.
+  - evaluate:
+      assert:
+        facts:
+          cover.current: 0
+          cover.seat: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  # Acquire the vehicle: standing beside it grants nothing (no seat held — the
+  # contribution reads the SEAT fact, not the vehicle's presence).
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        facts:
+          cover.seat: 0
+          cover.effective: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  # Take the Helm: three-quarters FROM THE SEAT — cover.current stays 0 (no
+  # manual record was written), effective maxes to 2, AC 15, the notice stands
+  # on effective, and the rider is worth +5.
+  - addOffer:
+      id: take-tormentor-helm-seat
+      assert:
+        facts:
+          cover.current: 0
+          cover.seat: 2
+          cover.effective: 2
+          cover.bonus: 5
+          ac.value: 15
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+          riders:
+            - key: rule.dnd-5e-2024.cover.rider
+              rider:
+                value:
+                  kind: flat
+                  bonus: 5
+        planErrors:
+          - id: take-tormentor-helm-seat
+            index: 0
+            errors: []
+  # Commit: the seat effect persists and the derived cover stays with it.
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-helm
+        facts:
+          cover.seat: 2
+          cover.effective: 2
+          cover.bonus: 5
+          ac.value: 15
+  # LEAVE the seat: the eviction clears the seat fact the moment the row is
+  # merely planned, and the contribution — being DERIVED from that fact — goes
+  # with it. No cover-specific wiring anywhere on the leave path.
+  - addOffer:
+      id: leave-tormentor-helm-seat
+      assert:
+        facts:
+          companion.tormentor.seats.helm: 0
+          cover.seat: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-acquire
+          notExists:
+            - effect-tormentor-seat-helm
+        facts:
+          cover.seat: 0
+          cover.effective: 0
+  # Retake and commit, then ABANDON: the lifecycle evicts the seat with the
+  # acquire and the cover follows it down — again with no wiring of its own.
+  - addOffer:
+      id: take-tormentor-helm-seat
+      assert:
+        facts:
+          cover.seat: 2
+          cover.effective: 2
+  - endTurn:
+      assert:
+        facts:
+          cover.seat: 2
+          cover.effective: 2
+  - addOffer:
+      id: abandon-tormentor
+      assert:
+        facts:
+          companion.tormentor.active: 0
+          companion.tormentor.seats.helm: 0
+          cover.seat: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  - endTurn:
+      assert:
+        effects:
+          notExists:
+            - effect-tormentor-acquire
+            - effect-tormentor-seat-helm
+        facts:
+          cover.seat: 0
+          cover.effective: 0

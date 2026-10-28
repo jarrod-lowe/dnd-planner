@@ -4506,3 +4506,49 @@ describe('checks and saves i18n (tlh is the canary)', () => {
       expect(value, where).toEqual(expect.any(String));
   });
 });
+
+/**
+ * Seat-sourced cover (cover.md PR-2). Each station's cover degree is SPEC
+ * DATA on the seat, and the factory derives the vehicle's best held seat onto
+ * the shared player-level fact `cover.seat` with combine max — the player-side
+ * cover module maxes the manual record with it in `cover.effective` (that
+ * side is pinned in cover.test.ts; the seam itself, on a fixture vehicle, in
+ * infernal-vehicle.test.ts). The Tormentor's data (tormentor2.png): Helm
+ * three-quarters (2), Harpoon Flinger half (1), Passenger and Clinger none
+ * (open air). The contribution reads the SEAT FACT alone — no acquire gate, no
+ * lifecycle wiring — so leaving the seat or abandoning the vehicle drops it
+ * for free (the yaml scenarios cover-seat-* pin those paths through the
+ * offers).
+ */
+describe('seat cover contribution (spec data per station)', () => {
+  const SEAT = 'cover.seat';
+
+  it('the Helm grants THREE-QUARTERS: cover.seat reads 2 while the seat is held', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    expect(out.facts[SEAT]).toBe(2);
+  });
+
+  it('the Harpoon Flinger grants HALF: cover.seat reads 1 while the seat is held', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHarpoon() });
+    expect(out.facts[SEAT]).toBe(1);
+  });
+
+  it('the Passenger seat and the Clinger station grant NOTHING (open air)', () => {
+    const passenger = evaluate({
+      modules: [module()],
+      committed: [acquireEffect(), seatPlannedEffect()]
+    });
+    expect(passenger.facts[SEAT]).toBe(0);
+    expect(evaluate({ modules: [module()], committed: seatedAtClinger() }).facts[SEAT]).toBe(0);
+  });
+
+  it('acquired with no seat held contributes 0 — the seat fact is the whole input', () => {
+    expect(evaluate({ modules: [module()], committed: [acquireEffect()] }).facts[SEAT]).toBe(0);
+  });
+
+  it('the contribution is emitted with combine max (the multi-vehicle contract)', () => {
+    const contribution = module().derive!({ selections: {} }).find((c) => c.fact === SEAT);
+    expect(contribution, 'the module contributes the shared seat-cover fact').toBeDefined();
+    expect(contribution!.combine).toBe('max');
+  });
+});

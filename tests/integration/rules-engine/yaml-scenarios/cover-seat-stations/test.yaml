@@ -1,0 +1,103 @@
+name: 'Cover - Seat Cover By Station'
+description: >-
+  Each station's cover degree is SPEC DATA on the seat (the factory derives
+  the best held seat onto the shared cover.seat fact): the Tormentor's Harpoon
+  Flinger grants HALF cover (cover.seat 1 — AC 12, the half notice body, the
+  +2 Dex-save rider), while the Passenger seat and the Clinger station grant
+  NONE (open air — cover.seat 0, bare AC, no notice, no rider; the clinger's
+  stay-attached notice is a different, station-specific annotation). The
+  degree arrives per seat through the one effective derive — no per-station
+  cover machinery anywhere.
+ruleGroups:
+  - dnd-5e-2024/cover
+  - dnd-5e-2024/ac
+  - vehicles/tormentor
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # The Harpoon Flinger: HALF cover from the seat — AC 12, rider +2.
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+      assert:
+        facts:
+          cover.current: 0
+          cover.seat: 1
+          cover.effective: 1
+          cover.bonus: 2
+          ac.value: 12
+        annotations:
+          exists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+          riders:
+            - key: rule.dnd-5e-2024.cover.rider
+              rider:
+                value:
+                  kind: flat
+                  bonus: 2
+        planErrors:
+          - id: take-tormentor-harpoon-seat
+            index: 0
+            errors: []
+  - endTurn:
+      assert:
+        facts:
+          cover.seat: 1
+          cover.effective: 1
+  # Leave it: the contribution drops with the seat fact.
+  - addOffer:
+      id: leave-tormentor-harpoon-seat
+      assert:
+        facts:
+          cover.seat: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  - endTurn:
+      assert:
+        facts:
+          cover.seat: 0
+  # The Passenger seat: a place to ride, no cover — the derived contribution
+  # reads 0 and nothing downstream moves.
+  - addOffer:
+      id: take-tormentor-passenger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.passenger: 1
+          cover.seat: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider
+  - endTurn:
+      assert:
+        facts:
+          cover.seat: 0
+  # The Clinger station: holding the outside grants no cover either — its
+  # standing notice is the stay-attached rule, never cover. (Clinging while
+  # seated is the illegal-but-committable one-seat leg; the passenger seat is
+  # left first, exactly as the player would.)
+  - addOffer:
+      id: leave-tormentor-passenger-seat
+  - addOffer:
+      id: take-tormentor-clinger-seat
+      assert:
+        facts:
+          companion.tormentor.seats.clinger: 1
+          cover.seat: 0
+          cover.effective: 0
+          cover.bonus: 0
+          ac.value: 10
+        annotations:
+          exists:
+            - rule.tormentor.clinger-notice
+          notExists:
+            - rule.dnd-5e-2024.cover.notice
+            - rule.dnd-5e-2024.cover.rider

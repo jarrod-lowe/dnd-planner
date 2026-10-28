@@ -552,6 +552,157 @@ describe('factory: the movement spend is ONE shared player-level pool', () => {
 });
 
 /**
+ * The SEAT-COVER contribution — cover.md PR-2. The seam is generic at the
+ * VEHICLE side: a seat's cover degree is SPEC DATA (`SeatSpec.cover`, the
+ * cover module's 0-3 ordinal scale), and the factory emits ONE derive onto the
+ * shared player-level fact `cover.seat` — the vehicle's best HELD seat, combine
+ * `max`, reading the seat facts alone (no acquire gate, no lifecycle wiring:
+ * leaving a seat or abandoning the vehicle clears the seat fact, and the
+ * contribution follows for free). The player-side cover module maxes its
+ * manual record with the FACT in `cover.effective` (pinned in cover.test.ts);
+ * a later vehicle (the Demon Grinder's seats) plugs in as pure spec data with
+ * no vehicle list anywhere — the engine's max combine enumerates them.
+ */
+describe('factory: the seat-cover contribution (cover PR-2 seam)', () => {
+  const COVER_SEAT = 'cover.seat';
+
+  /**
+   * A fixture whose ordinals deliberately SWAP the Tormentor's (helm 1,
+   * ballista 2 — the Tormentor prints helm 2, harpoon 1), so a station→degree
+   * map that survived the extraction hardcoded fails here even though the
+   * Tormentor corpus stays green. The net station carries NO ordinal.
+   */
+  const COVER_SPEC: InfernalVehicleSpec = {
+    ...TEST_SPEC,
+    seats: [
+      {
+        station: 'helm',
+        take: { name: `${T}.take-helm-seat.name`, description: `${T}.take-helm-seat.description` },
+        leave: {
+          name: `${T}.leave-helm-seat.name`,
+          description: `${T}.leave-helm-seat.description`
+        },
+        effectName: `${T}.seat-helm-effect.name`,
+        consumesSeat: true,
+        cover: 1
+      },
+      {
+        station: 'ballista',
+        take: {
+          name: `${T}.take-ballista-seat.name`,
+          description: `${T}.take-ballista-seat.description`
+        },
+        leave: {
+          name: `${T}.leave-ballista-seat.name`,
+          description: `${T}.leave-ballista-seat.description`
+        },
+        effectName: `${T}.seat-ballista-effect.name`,
+        consumesSeat: true,
+        cover: 2,
+        weapon: {
+          fire: { name: `${T}.fire-ballista.name`, description: `${T}.fire-ballista.description` },
+          noAction: `${T}.fire-ballista.no_action`,
+          detailKey: 'vehicle/infernal-test-ballista',
+          hitBonus: 9,
+          damageBonus: 4,
+          damageDie: 8,
+          damageCount: 8,
+          damageType: 'bludgeoning'
+        }
+      },
+      {
+        station: 'net',
+        take: { name: `${T}.take-net-seat.name`, description: `${T}.take-net-seat.description` },
+        leave: { name: `${T}.leave-net-seat.name`, description: `${T}.leave-net-seat.description` },
+        effectName: `${T}.seat-net-effect.name`,
+        consumesSeat: false,
+        detailKey: 'vehicle/infernal-test-net',
+        notice: { key: `${T}.net-notice`, body: `${T}.net-notice.body` }
+      }
+    ]
+  };
+
+  /** A SECOND cover-carrying vehicle (different id, stem and ordinal again). */
+  const COVER_SECOND: InfernalVehicleSpec = {
+    ...SECOND_SPEC,
+    seats: [{ ...SECOND_SPEC.seats[0]!, cover: 2 }]
+  };
+
+  /** A committed seat effect for a station (the shape the take advertises). */
+  const seatAt = (spec: InfernalVehicleSpec, station: string): EffectInstance => ({
+    id: `effect-${spec.id}-seat-${station}`,
+    key: `${spec.id}-seat-${station}`,
+    state: { [`${spec.factStem}.seats.${station}`]: 1 },
+    expiry: { kind: 'permanent' }
+  });
+
+  /** The shared cover.seat fact with the given seats held on the given spec. */
+  const coverSeatWith = (spec: InfernalVehicleSpec, ...stations: string[]): number | undefined =>
+    evaluate({
+      modules: [buildInfernalVehicle(spec)],
+      committed: [infernalAcquireEffect(spec), ...stations.map((s) => seatAt(spec, s))]
+    }).facts[COVER_SEAT];
+
+  it('each cover seat contributes its SPEC ordinal while held (data, not station name)', () => {
+    // The swapped ordinals: helm 1, ballista 2 — not the Tormentor's map.
+    expect(coverSeatWith(COVER_SPEC, 'helm')).toBe(1);
+    expect(coverSeatWith(COVER_SPEC, 'ballista')).toBe(2);
+  });
+
+  it('a seat with NO cover ordinal contributes nothing while held', () => {
+    expect(coverSeatWith(COVER_SPEC, 'net')).toBe(0);
+  });
+
+  it('two held seats (the planned-anyway state) contribute the more protective degree', () => {
+    expect(coverSeatWith(COVER_SPEC, 'helm', 'ballista')).toBe(2);
+  });
+
+  it('the contribution reads the SEAT FACT ALONE — no acquire gate to keep in step with the lifecycle', () => {
+    // A seat effect without its acquire cannot arise through play (the take
+    // offers gate on the acquire and the lifecycle evicts them together); the
+    // derive deliberately reads ONLY the seat fact, so the leave/abandon paths
+    // need no cover wiring. This pins that minimal input set.
+    const out = evaluate({
+      modules: [buildInfernalVehicle(COVER_SPEC)],
+      committed: [seatAt(COVER_SPEC, 'ballista')]
+    });
+    expect(out.facts[COVER_SEAT]).toBe(2);
+  });
+
+  it('a spec with NO cover seats emits no cover.seat contribution at all', () => {
+    // The optionality precedent (juke, acMode): what a stat block does not
+    // carry does not exist. SECOND_SPEC sets no cover on any seat.
+    const mod = buildInfernalVehicle(SECOND_SPEC);
+    expect(mod.derive!({ selections: {} }).some((c) => c.fact === COVER_SEAT)).toBe(false);
+    const out = evaluate({
+      modules: [mod],
+      committed: [infernalAcquireEffect(SECOND_SPEC), seatAt(SECOND_SPEC, 'helm')]
+    });
+    expect(out.facts[COVER_SEAT]).toBeUndefined();
+  });
+
+  it('the emitted derive carries combine max — vehicles CO-WRITE the one fact without a conflict', () => {
+    const contribution = buildInfernalVehicle(COVER_SPEC).derive!({ selections: {} }).find(
+      (c) => c.fact === COVER_SEAT
+    );
+    expect(contribution, 'a cover-carrying spec contributes the shared fact').toBeDefined();
+    expect(contribution!.combine).toBe('max');
+    // Cross-vehicle: a seat held on each vehicle — the more protective degree
+    // wins (sum would read 3; override would throw on the second writer).
+    const out = evaluate({
+      modules: [buildInfernalVehicle(COVER_SPEC), buildInfernalVehicle(COVER_SECOND)],
+      committed: [
+        infernalAcquireEffect(COVER_SPEC),
+        seatAt(COVER_SPEC, 'helm'),
+        infernalAcquireEffect(COVER_SECOND),
+        seatAt(COVER_SECOND, 'helm')
+      ]
+    });
+    expect(out.facts[COVER_SEAT]).toBe(2);
+  });
+});
+
+/**
  * The MIGRATION guard: every `rule.*`/`play.*` key the registered Tormentor
  * module EMITS resolves in both locales. The factory builds its keys from spec
  * data, which the static module-i18n-coverage scan cannot expand — this walk

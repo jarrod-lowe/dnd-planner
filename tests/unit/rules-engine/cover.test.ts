@@ -262,6 +262,134 @@ describe('cover annotate — the Dex-save rider', () => {
   });
 });
 
+describe('seat-sourced cover (the PR-2 seam)', () => {
+  /** The registered Tormentor — the first vehicle whose seats carry cover data. */
+  function vehicle(): RuleModule {
+    const m = getModule('tormentor');
+    if (!m) throw new Error('tormentor is not registered in the registry');
+    return m;
+  }
+
+  /**
+   * The committed effects of an acquired Tormentor with seats held at the
+   * given stations, driven through the real plan fold (acquire, then each
+   * take in order — a second take while seated is the planned-anyway path and
+   * still lands its keyed seat effect).
+   */
+  const seatedAt = (...stations: string[]): EffectInstance[] =>
+    evaluate({
+      modules: [vehicle()],
+      planned: [
+        { instanceId: 'v0', ruleId: 'acquire-tormentor' },
+        ...stations.map((station, i) => ({
+          instanceId: `v${i + 1}`,
+          ruleId: `take-tormentor-${station}-seat`
+        }))
+      ]
+    }).effects;
+
+  it('the effective derive reads the FACT: a seeded cover.seat moves effective with NO vehicle module loaded', () => {
+    // The anti-hardcode pin (the ac seam's): effective is fed by the FACT, so
+    // a cover module set that cannot know any vehicle still maxes when the
+    // fact does. Unset (no vehicle contributing) reads 0 — PR-1 unchanged.
+    expect(evaluateSheet([module()], {})['cover.effective']).toBe(0);
+    expect(evaluateSheet([module()], { 'cover.seat': 1 })['cover.effective']).toBe(1);
+    expect(evaluateSheet([module()], { 'cover.seat': 2 })['cover.effective']).toBe(2);
+    expect(evaluateSheet([module()], { 'cover.seat': 2 })['cover.bonus']).toBe(5);
+  });
+
+  it('the Helm seat sources THREE-QUARTERS through the real seat effect: seat 2, effective 2, AC 15', () => {
+    const facts = evaluate({
+      modules: [module(), ac, vehicle()],
+      committed: seatedAt('helm')
+    }).facts;
+    expect(facts['cover.seat']).toBe(2);
+    // No manual record was written — the seat is a CONTRIBUTION, never a
+    // second record.
+    expect(facts['cover.current']).toBe(0);
+    expect(facts['cover.effective']).toBe(2);
+    expect(facts['cover.bonus']).toBe(5);
+    expect(facts['ac.value']).toBe(15);
+  });
+
+  it('the Harpoon Flinger seat sources HALF; the Passenger and Clinger seats source nothing', () => {
+    expect(
+      evaluate({ modules: [module(), vehicle()], committed: seatedAt('harpoon') }).facts[
+        'cover.seat'
+      ]
+    ).toBe(1);
+    expect(
+      evaluate({ modules: [module(), vehicle()], committed: seatedAt('passenger') }).facts[
+        'cover.seat'
+      ]
+    ).toBe(0);
+    expect(
+      evaluate({ modules: [module(), vehicle()], committed: seatedAt('clinger') }).facts[
+        'cover.seat'
+      ]
+    ).toBe(0);
+  });
+
+  it('an acquired vehicle with NO seat held contributes nothing (the seat fact is the whole input)', () => {
+    const facts = evaluate({ modules: [module(), vehicle()], committed: seatedAt() }).facts;
+    expect(facts['cover.seat']).toBe(0);
+    expect(facts['cover.effective']).toBe(0);
+  });
+
+  it('effective is max(manual, seat), NEVER a sum', () => {
+    const at = (degree: number, station: string | null): number => {
+      const committed = [coverEffect(degree), ...(station ? seatedAt(station) : [])];
+      return evaluate({ modules: [module(), vehicle()], committed }).facts['cover.effective'];
+    };
+    // Manual higher: three-quarters recorded beside the half seat.
+    expect(at(2, 'harpoon')).toBe(2);
+    // Seat higher: half recorded at the Helm's three-quarters.
+    expect(at(1, 'helm')).toBe(2);
+    expect(at(0, 'helm')).toBe(2);
+    // Equal degrees stay put — half beside half is half, never a stacked
+    // three-quarters (the SRD's most-protective-degree rule).
+    expect(at(1, 'harpoon')).toBe(1);
+    expect(at(3, 'helm')).toBe(3);
+  });
+
+  it('the bonus follows the max: half manual beside half seat is +2, never +4', () => {
+    const facts = evaluate({
+      modules: [module(), vehicle()],
+      committed: [coverEffect(1), ...seatedAt('harpoon')]
+    }).facts;
+    expect(facts['cover.effective']).toBe(1);
+    expect(facts['cover.bonus']).toBe(2);
+  });
+
+  it('the notice and rider follow the SEAT-SOURCED effective state', () => {
+    const out = evaluate({ modules: [module(), vehicle()], committed: seatedAt('helm') });
+    const notice = out.annotations.find((a) => a.key === `${C}.notice`)!;
+    expect(notice, 'the standing notice exists with no manual record').toBeDefined();
+    expect(notice.body).toBe(`${C}.notice.body.three-quarters`);
+    expect(notice.values).toEqual({ bonus: 5 });
+    const rider = out.annotations.find((a) => a.key === `${C}.rider`)!;
+    expect(rider, 'the Dex-save rider exists with no manual record').toBeDefined();
+    expect(rider.rider).toEqual({
+      label: `${C}.rider`,
+      type: 'modifier',
+      value: { kind: 'flat', bonus: 5 },
+      appliesTo: 'save',
+      defaultOn: true
+    });
+  });
+
+  it('two standing seat effects (the planned-anyway state) contribute the more protective degree', () => {
+    // One seat per player is a legality leg, not a structural gate — a
+    // planned-anyway second take still lands its keyed effect. The
+    // contribution is the max over the standing seat facts.
+    const facts = evaluate({
+      modules: [module(), vehicle()],
+      committed: seatedAt('harpoon', 'helm')
+    }).facts;
+    expect(facts['cover.seat']).toBe(2);
+  });
+});
+
 describe('cover i18n', () => {
   it('carries every module key in en', () => {
     expect(en.rule['dnd-5e-2024'][ID]).toEqual({
