@@ -7,18 +7,18 @@ import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
 
 /**
- * Demon Grinder — PR-3, the SEAT-FREE base. The second vehicle on the shared
- * infernal-vehicle factory (rules/infernal-vehicle.ts): everything here pins
- * what is DATA — the spec's identity strings and its STAT BLOCK (HP 200,
- * thresholds 10/20, capacity 8, cargo 2,000 lb., STR/DEX/CON 18/10/18, the
- * FLAT AC 19 with NO AC-mode machinery anywhere) — plus the one structural
- * fact of this PR: the spec's seat list is EMPTY, so no station exists and
- * every helm-gated offer (drive/dash/juke/fuel/boost) never surfaces. The
- * factory's own behaviour is pinned by infernal-vehicle.test.ts; the
- * Tormentor's corpus stays green untouched.
- *
- * Seats (the Helm, a Harpoon Flinger, the Chomper, the Wrecking Ball) and the
- * offers they gate land in PR-4+; this file is the base those extend.
+ * Demon Grinder — PR-3's seat-free base, extended by PR-4's SEATS. The second
+ * vehicle on the shared infernal-vehicle factory
+ * (rules/infernal-vehicle.ts): everything here pins what is DATA — the spec's
+ * identity strings and its STAT BLOCK (HP 200, thresholds 10/20, capacity 8,
+ * cargo 2,000 lb., STR/DEX/CON 18/10/18, the FLAT AC 19 with NO AC-mode
+ * machinery anywhere) — plus the stations PR-4 adds as pure spec entries: the
+ * HELM (one crew, three-quarters cover, the gate behind drive/dash/fuel/
+ * boost) and ONE HARPOON FLINGER (one crew, half cover, +5 to hit, 2d8
+ * piercing with no damage bonus). NO passenger, NO clinger, and NO Juke (the
+ * stat block carries no Reaction — the spec omits `juke`, so the factory
+ * never emits the offer at all). The factory's own behaviour is pinned by
+ * infernal-vehicle.test.ts; the Tormentor's corpus stays green untouched.
  */
 
 const ID = 'demon-grinder';
@@ -82,11 +82,10 @@ describe('demon-grinder registration', () => {
 describe('acquire offer ui', () => {
   it('is an ungated free-section PLAYER offer: no vehicle subject, no mode control', () => {
     const offers = module().offer!({ selections: {} });
-    // The emitted catalog: the base surface only — NO seat pairs, NO fire
-    // offer, NO ac-mode record (the flat-AC branch). The drive/dash/juke and
-    // fuel/boost offers ARE emitted by the factory but never surface (the
-    // helm gate below pins that): their ids stay in the raw list, their
-    // visibility does not.
+    // The emitted catalog: the base surface plus PR-4's stations — the two
+    // take/leave pairs, the fire offer, NO ac-mode record (the flat-AC
+    // branch). The drive/dash and fuel/boost offers are helm-gated (the seat
+    // describe below pins the gate); NO Juke anywhere.
     expect(offers.map((o) => o.id)).toEqual([
       `acquire-${ID}`,
       `set-${ID}-occupancy`,
@@ -96,6 +95,13 @@ describe('acquire offer ui', () => {
       `record-${ID}-heal`,
       `knock-${ID}-prone`,
       `flip-${ID}-upright`,
+      // The stations in +ADD order (stat-block order): the Helm, then the
+      // Harpoon Flinger — each a take/leave pair, then the weapon's fire.
+      `take-${ID}-helm-seat`,
+      `leave-${ID}-helm-seat`,
+      `take-${ID}-harpoon-seat`,
+      `leave-${ID}-harpoon-seat`,
+      `fire-${ID}-harpoon`,
       `drive-${ID}`,
       `dash-${ID}`,
       // NO Juke: the Demon Grinder's stat block carries no Reaction (the
@@ -155,7 +161,7 @@ describe('acquire effect', () => {
     expect(Object.keys(e.state!).some((k) => k.includes('acMotionless'))).toBe(false);
   });
 
-  it('owns every vehicle record as a dependent — no ac-mode, no seats', () => {
+  it('owns every vehicle record as a dependent — no ac-mode, the two seats', () => {
     expect(acquireEffect().dependents).toEqual([
       `${ID}-occupancy`,
       `${ID}-fuel`,
@@ -163,7 +169,9 @@ describe('acquire effect', () => {
       `${ID}-prone`,
       `${ID}-hp-damage`,
       `${ID}-hp-heal`,
-      `${ID}-destroyed`
+      `${ID}-destroyed`,
+      `${ID}-seat-helm`,
+      `${ID}-seat-harpoon`
     ]);
   });
 
@@ -205,8 +213,21 @@ describe('the flat AC (a spec with NO acMode)', () => {
   });
 });
 
-describe('no helm-gated offer ever surfaces (the seat-free spec)', () => {
-  it('drive/dash/juke/fuel/boost are emitted but structurally absent, acquired or not', () => {
+describe('the helm-gated offers surface ONLY while the Helm seat is held', () => {
+  /** A committed helm seat beside the acquire (the take's advertise shape). */
+  function seatedAtHelm(): EffectInstance[] {
+    return [
+      ...acquired(),
+      {
+        id: `effect-${ID}-seat-helm`,
+        key: `${ID}-seat-helm`,
+        state: { [`${F}.seats.helm`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance
+    ];
+  }
+
+  it('unseated (acquired or not): drive/dash/fuel/boost are structurally absent, and there is never a Juke', () => {
     for (const committed of [[], acquired()]) {
       const out = evaluate({ modules: [module()], committed });
       for (const id of [
@@ -221,6 +242,320 @@ describe('no helm-gated offer ever surfaces (the seat-free spec)', () => {
           `${id} never surfaces`
         ).toBe(false);
     }
+  });
+
+  it('seated at the Helm: drive/dash/fuel/boost all surface — still NO Juke', () => {
+    const out = evaluate({ modules: [module()], committed: seatedAtHelm() });
+    for (const id of [`drive-${ID}`, `dash-${ID}`, `set-${ID}-fuel`, `set-${ID}-boost`])
+      expect(
+        out.availableRules.some((r) => r.rule.id === id),
+        `${id} surfaces at the Helm`
+      ).toBe(true);
+    // The stat block carries no Reaction: no Juke exists even with a driver
+    // seated (the spec omits `juke`, so the factory never emits the offer).
+    expect(out.availableRules.some((r) => r.rule.id === `juke-${ID}`)).toBe(false);
+  });
+
+  it('the dash risk note interpolates the GRINDER allowance: 3 + CON mod 4 = 7, from the facts', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: seatedAtHelm(),
+      planned: [{ instanceId: 'i0', ruleId: `dash-${ID}` }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.dash.no_bonus_action`, severity: 'error' },
+      { code: `${T}.dash.risk`, severity: 'notice', params: { allowance: 7 } }
+    ]);
+  });
+
+  it('the dash risk template interpolates {{allowance}} in BOTH locales', () => {
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      const value = i18nAt(dict, `rule.${ID}.dash.risk`);
+      expect(value, `${locale} dash risk exists`).toEqual(expect.any(String));
+      expect(value, `${locale} interpolates {{allowance}}`).toContain('{{allowance}}');
+    }
+  });
+});
+
+describe('seats — the Helm and the Harpoon Flinger', () => {
+  /** A committed seat effect for a station (the take's advertise shape). */
+  function seatAt(station: string): EffectInstance {
+    return {
+      id: `effect-${ID}-seat-${station}`,
+      key: `${ID}-seat-${station}`,
+      state: { [`${F}.seats.${station}`]: 1 },
+      expiry: { kind: 'permanent' }
+    };
+  }
+
+  it('take applies ONE keyed seat effect under the vehicle stem; the chip files under the subject', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: acquired(),
+      planned: [{ instanceId: 'i0', ruleId: `take-${ID}-helm-seat` }]
+    });
+    const seat = out.effects.find((e) => e.id.endsWith(`effect-${ID}-seat-helm`));
+    expect(seat, 'the fold advertises the keyed seat effect').toBeDefined();
+    expect(seat!.key).toBe(`${ID}-seat-helm`);
+    expect(seat!.state).toEqual({ [`${F}.seats.helm`]: 1 });
+    expect(seat!.display).toEqual({
+      name: `${T}.seat-helm-effect.name`,
+      section: 'mount',
+      subject: SUBJECT
+    });
+  });
+
+  it('the capacity derive counts each held seat toward the 8: helm alone reads 1/8', () => {
+    const helm = evaluate({ modules: [module()], committed: [...acquired(), seatAt('helm')] });
+    expect(helm.facts[`${F}.creatureCapacity.used`]).toBe(1);
+    // Both seats held is the planned-anyway state (one seat per player): the
+    // derive still counts every held fact — 2 of 8.
+    const both = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('helm'), seatAt('harpoon')]
+    });
+    expect(both.facts[`${F}.creatureCapacity.used`]).toBe(2);
+  });
+
+  it('leave is illegal while the seat is unheld; take carries the two legs with the DG keys', () => {
+    const out = evaluate({ modules: [module()], committed: acquired() });
+    const leave = out.availableRules.find((r) => r.rule.id === `leave-${ID}-helm-seat`);
+    expect(leave, 'the leave offer exists once acquired').toBeDefined();
+    expect(leave!.legal).toBe(false);
+    expect(leave!.diagnostics).toEqual([{ code: `${T}.leave-seat.not_seated`, severity: 'error' }]);
+    const take = out.availableRules.find((r) => r.rule.id === `take-${ID}-helm-seat`);
+    expect(take, 'the take offer exists once acquired').toBeDefined();
+    expect(take!.legal).toBe(true);
+    expect(take!.diagnostics).toEqual([]);
+    // The take's TWO legs, off the raw catalog offer (the seat-consuming
+    // station's full set — exclusivity plus the free-seat rule).
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === `take-${ID}-helm-seat`)!;
+    expect(raw.legalWhen).toHaveLength(2);
+    expect(raw.legalWhen![0]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    expect(raw.legalWhen![1]!.diagnostics).toEqual([
+      { code: `${T}.take-seat.full`, severity: 'error' }
+    ]);
+  });
+
+  it('one seat per player WITHIN the vehicle: seated at the Helm, the harpoon take is illegal-but-committable', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('helm')],
+      planned: [{ instanceId: 'i0', ruleId: `take-${ID}-harpoon-seat` }]
+    });
+    expect(out.planDiagnostics['i0']).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+    // The override still applies — the ONE keyed harpoon seat, nothing stacked.
+    expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
+  });
+
+  it('the seat-cover contribution: the Helm grants ¾ (2), the Harpoon Flinger ½ (1)', () => {
+    // The #497 seam: the factory derives the best HELD seat onto the shared
+    // player-level cover.seat fact (combine max) — DG seats are data-only.
+    const helm = evaluate({ modules: [module()], committed: [...acquired(), seatAt('helm')] });
+    expect(helm.facts['cover.seat']).toBe(2);
+    const harpoon = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('harpoon')]
+    });
+    expect(harpoon.facts['cover.seat']).toBe(1);
+    // Both held (planned-anyway): the more protective degree wins, never a sum.
+    const both = evaluate({
+      modules: [module()],
+      committed: [...acquired(), seatAt('helm'), seatAt('harpoon')]
+    });
+    expect(both.facts['cover.seat']).toBe(2);
+  });
+
+  it('every seat i18n key exists in BOTH locales (tlh is the canary)', () => {
+    expectStringInBothLocales([
+      `rule.${ID}.take-helm-seat.name`,
+      `rule.${ID}.take-helm-seat.description`,
+      `rule.${ID}.leave-helm-seat.name`,
+      `rule.${ID}.leave-helm-seat.description`,
+      `rule.${ID}.seat-helm-effect.name`,
+      `rule.${ID}.take-harpoon-seat.name`,
+      `rule.${ID}.take-harpoon-seat.description`,
+      `rule.${ID}.leave-harpoon-seat.name`,
+      `rule.${ID}.leave-harpoon-seat.description`,
+      `rule.${ID}.seat-harpoon-effect.name`,
+      `rule.${ID}.take-seat.already_seated`,
+      `rule.${ID}.take-seat.full`,
+      `rule.${ID}.leave-seat.not_seated`
+    ]);
+  });
+});
+
+describe('the Harpoon Flinger fire offer (the weapon-station machinery)', () => {
+  it('gated on the harpoon seat: dice line +5 to hit, 2d8 piercing, NO damage bonus', () => {
+    const seated = evaluate({
+      modules: [module()],
+      committed: [
+        ...acquired(),
+        {
+          id: `effect-${ID}-seat-harpoon`,
+          key: `${ID}-seat-harpoon`,
+          state: { [`${F}.seats.harpoon`]: 1 },
+          expiry: { kind: 'permanent' }
+        } satisfies EffectInstance
+      ]
+    });
+    const fire = seated.availableRules.find((r) => r.rule.id === `fire-${ID}-harpoon`)!;
+    expect(fire, 'seated at the flinger, the fire offer exists').toBeDefined();
+    expect(fire.rule.ui).toEqual({
+      section: 'action-attack',
+      subject: SUBJECT,
+      name: `${T}.fire-harpoon.name`,
+      description: `${T}.fire-harpoon.description`,
+      detailKey: 'vehicle/demon-grinder-harpoon',
+      intents: { ATTACK: 'weapons' },
+      actionCost: ['action'],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          { sides: 20, bonus: { var: 'hitBonus' }, purpose: 'to-hit' },
+          {
+            sides: 8,
+            count: 2,
+            bonus: { var: 'damageBonus' },
+            purpose: 'damage',
+            damageType: { string: 'piercing' }
+          }
+        ]
+      }
+    });
+    expect(fire.rule.vars).toEqual({
+      hitBonus: { capture: true, default: { fact: `${F}.harpoon.hitBonus` } },
+      damageDie: { default: { number: 8 } },
+      damageBonus: { capture: true, default: { fact: `${F}.harpoon.damageBonus` } }
+    });
+    // The derives the dice line reads: +5 to hit, +0 damage (2d8 carries no
+    // bonus — the Grinder's flinger, not the Tormentor's +2).
+    expect(seated.facts[`${F}.harpoon.hitBonus`]).toBe(5);
+    expect(seated.facts[`${F}.harpoon.damageBonus`]).toBe(0);
+  });
+
+  it('nobody at the flinger (even at the Helm): no fire offer, and the fire i18n keys exist', () => {
+    const atHelm = evaluate({
+      modules: [module()],
+      committed: [
+        ...acquired(),
+        {
+          id: `effect-${ID}-seat-helm`,
+          key: `${ID}-seat-helm`,
+          state: { [`${F}.seats.helm`]: 1 },
+          expiry: { kind: 'permanent' }
+        } satisfies EffectInstance
+      ]
+    });
+    expect(atHelm.availableRules.some((r) => r.rule.id === `fire-${ID}-harpoon`)).toBe(false);
+    expectStringInBothLocales([
+      `rule.${ID}.fire-harpoon.name`,
+      `rule.${ID}.fire-harpoon.description`,
+      `rule.${ID}.fire-harpoon.no_action`
+    ]);
+  });
+
+  it('firing spends the GENERIC action — no attack-pool facts of any kind', () => {
+    const out = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: [
+        ...acquired(),
+        {
+          id: `effect-${ID}-seat-harpoon`,
+          key: `${ID}-seat-harpoon`,
+          state: { [`${F}.seats.harpoon`]: 1 },
+          expiry: { kind: 'permanent' }
+        } satisfies EffectInstance
+      ],
+      planned: [{ instanceId: 'i0', ruleId: `fire-${ID}-harpoon` }]
+    });
+    expect(out.facts['actions.spent']).toBe(1);
+    // No attack accounting: nothing granted, nothing charged — a vehicle
+    // action is not a PC weapon attack (no Extra Attack either way).
+    expect(out.facts['attacks.spent']).toBeUndefined();
+    expect(out.facts['attackAction.extraRemaining']).toBeUndefined();
+    // The seat stays taken; the vehicle's state is untouched.
+    expect(out.facts[`${F}.seats.harpoon`]).toBe(1);
+  });
+});
+
+describe('cross-vehicle one-seat exclusivity (both REAL vehicles loaded)', () => {
+  /** The registered Tormentor module + its committed acquire. */
+  function tormentorAcquired(): { mod: RuleModule; committed: EffectInstance[] } {
+    const mod = getModule('tormentor')!;
+    return {
+      mod,
+      committed: [
+        // The Tormentor acquire effect (the exported helper's exact shape).
+        ...(
+          evaluate({
+            modules: [mod],
+            planned: [{ instanceId: 't0', ruleId: 'acquire-tormentor' }]
+          }).effects ?? []
+        ).filter((e) => e.id.endsWith('effect-tormentor-acquire'))
+      ]
+    };
+  }
+
+  it('seated on the TORMENTOR, the Demon Grinder helm take is illegal-but-committable', () => {
+    const { mod, committed } = tormentorAcquired();
+    const out = evaluate({
+      modules: [module(), mod],
+      committed: [
+        ...committed,
+        ...acquired(),
+        {
+          id: 'effect-tormentor-seat-helm',
+          key: 'tormentor-seat-helm',
+          state: { 'companion.tormentor.seats.helm': 1 },
+          expiry: { kind: 'permanent' }
+        } satisfies EffectInstance
+      ]
+    });
+    const take = out.availableRules.find((r) => r.rule.id === `take-${ID}-helm-seat`)!;
+    expect(take).toBeDefined();
+    expect(take.legal).toBe(false);
+    expect(take.diagnostics).toEqual([
+      { code: `${T}.take-seat.already_seated`, severity: 'error' }
+    ]);
+  });
+
+  it('seated on the DEMON GRINDER, the Tormentor helm take is illegal — and vice versa legal once left', () => {
+    const { mod, committed } = tormentorAcquired();
+    const grinderSeated = [
+      ...committed,
+      ...acquired(),
+      {
+        id: `effect-${ID}-seat-harpoon`,
+        key: `${ID}-seat-harpoon`,
+        state: { [`${F}.seats.harpoon`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance
+    ];
+    const out = evaluate({ modules: [module(), mod], committed: grinderSeated });
+    const take = out.availableRules.find((r) => r.rule.id === 'take-tormentor-helm-seat')!;
+    expect(take).toBeDefined();
+    expect(take.legal).toBe(false);
+    expect(take.diagnostics).toEqual([
+      { code: 'rule.tormentor.take-seat.already_seated', severity: 'error' }
+    ]);
+    // The DG seat left: the Tormentor take is legal again (the eviction
+    // closes the leg exactly as within-vehicle leaves do).
+    const left = evaluate({
+      modules: [module(), mod],
+      committed: grinderSeated.filter((e) => e.key !== `${ID}-seat-harpoon`)
+    });
+    const reopened = left.availableRules.find((r) => r.rule.id === 'take-tormentor-helm-seat');
+    expect(reopened, 'the Tormentor take is offered again').toBeDefined();
+    expect(reopened!.legal).toBe(true);
   });
 });
 
@@ -543,7 +878,9 @@ describe('abandon evicts every child record', () => {
       `${ID}-prone`,
       `${ID}-hp-damage`,
       `${ID}-hp-heal`,
-      `${ID}-destroyed`
+      `${ID}-destroyed`,
+      `${ID}-seat-helm`,
+      `${ID}-seat-harpoon`
     ]) {
       const evict = out.effects.find((e) => e.key === key);
       expect(evict, `abandon advertises the ${key} eviction`).toBeDefined();
@@ -552,6 +889,27 @@ describe('abandon evicts every child record', () => {
     }
     expect(out.facts[`${F}.active`]).toBeUndefined();
     expect(out.facts[`${F}.hp.max`]).toBe(0);
+  });
+
+  it('a held seat dies with the abandon: the seat fact and its cover contribution go', () => {
+    const out = evaluate({
+      modules: [module()],
+      committed: [
+        ...acquired(),
+        {
+          id: `effect-${ID}-seat-helm`,
+          key: `${ID}-seat-helm`,
+          state: { [`${F}.seats.helm`]: 1 },
+          expiry: { kind: 'permanent' }
+        } satisfies EffectInstance
+      ],
+      planned: [{ instanceId: 'i0', ruleId: `abandon-${ID}` }]
+    });
+    // The seat FACT vanishes with its effect (absent — an unset fact reads 0
+    // wherever it is consumed), while the DERIVED cover contribution settles
+    // back to 0 (it stays registered).
+    expect(out.facts[`${F}.seats.helm`]).toBeUndefined();
+    expect(out.facts['cover.seat']).toBe(0);
   });
 });
 

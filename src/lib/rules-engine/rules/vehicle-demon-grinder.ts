@@ -11,23 +11,23 @@ import {
  * (rules/vehicle-tormentor.ts): everything below is DATA, and every behaviour
  * the group carries is the factory's, templated from it. ONE rule group owns
  * the whole vehicle; owning one of EACH vehicle rule group is legal (the
- * acquire's already-have leg reads only this stem's presence).
+ * acquire's already-have leg reads only this stem's presence), while ONE seat
+ * per player holds GLOBALLY across every vehicle (the factory's registry —
+ * this spec joins it data-only, no vehicle list anywhere).
  *
- * PR-3 is the SEAT-FREE base: the spec's seat list is EMPTY, so no station
- * exists yet and every helm-gated offer (Drive/Dash/Juke/Fuel/Boost) is
- * emitted by the factory but never surfaces — the `when` gate reads a helm
- * seat fact nothing writes until PR-4 adds the station. What the base carries
- * on day one: the acquire/abandon lifecycle, the occupancy slider (0–8), the
- * HP recorders (threshold 10 Use/Ignore + the mishap note at 20 + the wrecked
- * boundary), the prone pair + Prone Deficiency notice, the checks/saves
- * record rollers, and the fuel/speed/movement derives (the pool is the
- * fuel's; nobody can set the fuel until the Helm exists).
+ * PR-3 was the SEAT-FREE base; PR-4 adds the STATIONS: the Helm (one crew,
+ * three-quarters cover — the gate behind Drive/Dash/Fuel/Boost) and ONE
+ * Harpoon Flinger (one crew, half cover, +5 to hit, 2d8 piercing with no
+ * damage bonus — 10 harpoons untracked, copy only). The Chomper and Wrecking
+ * Ball stations follow in their own passes. NO passenger or clinger station
+ * exists on this vehicle, and the derived creature capacity counts each held
+ * seat toward the 8.
  *
  * The stat block's two deliberate divergences from the Tormentor, both as
  * DATA: the AC is FLAT 19 (no motionless rider — `flatAc`, never `acMode`,
  * so no mode machinery of any kind exists) and there is NO Reaction (no Juke
- * — the offer stays factory-emitted and helm-gated off with the rest, and
- * whether a Juke-less helm ever surfaces it is PR-4's question).
+ * — the spec omits `juke`, so the factory never emits the offer at all, not
+ * even dormant behind the Helm gate).
  */
 
 const ID = 'demon-grinder';
@@ -35,9 +35,9 @@ const T = `rule.${ID}`;
 const F = 'companion.demonGrinder';
 
 /**
- * The Demon Grinder, as authored data. The per-ability i18n keys are LITERALS
- * here (module-i18n-coverage scans this source for `${PREFIX}.suffix`
- * templates); everything else the factory templates from
+ * The Demon Grinder, as authored data. The per-station and per-ability i18n
+ * keys are LITERALS here (module-i18n-coverage scans this source for
+ * `${PREFIX}.suffix` templates); everything else the factory templates from
  * `id`/`subject`/`factStem` is checked at the EMITTED surface by
  * tests/unit/rules-engine/infernal-vehicle.test.ts (the Demon Grinder walk).
  */
@@ -74,7 +74,7 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
   // mode record, no mode facts — the derived ac.effective is the one number.
   flatAc: 19,
   // Fuel none / soul coin / demon ichor → 0 / 100 / 80 ft. (the same generic
-  // fuel map; the Fuel/Boost OFFERS are helm-gated and land with PR-4's Helm).
+  // fuel map; the Fuel/Boost offers are helm-gated behind the Helm below).
   fuelSpeeds: [0, 100, 80],
   // A demon-ichor boost adds 30 ft. while it stands.
   boostBonus: 30,
@@ -85,14 +85,67 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
     statBlock: 'vehicle/demon-grinder',
     damage: 'vehicle/demon-grinder-damage',
     prone: 'vehicle/demon-grinder-prone',
-    // The Helm and Fuel details land with PR-4's stations; the dormant
-    // helm-gated offers already point at their keys.
     helm: 'vehicle/demon-grinder-helm',
     fuel: 'vehicle/demon-grinder-fuel'
   },
-  // SEAT-FREE (PR-3): no station exists. PR-4 adds the Helm and one Harpoon
-  // Flinger; the Chomper and Wrecking Ball follow.
-  seats: []
+  // The stations in +ADD order (stat-block order). PR-4's base seats: the
+  // Helm and ONE Harpoon Flinger — the Chomper and Wrecking Ball follow in
+  // their own passes, and the second flinger (multi-harpoonist) after that.
+  // NO passenger or clinger station: the Grinder's stat block carries none.
+  seats: [
+    /**
+     * The HELM station (the stat block's Helm, one crew): the take/leave
+     * pair on the shared helper, and the seat fact is the `when` gate the
+     * factory's Drive/Dash/Fuel/Boost offers read — nobody at the Helm, no
+     * driving offers. The helm's cockpit grants THREE-QUARTERS cover: spec
+     * data on the seat, contributed to the player's cover.seat fact by the
+     * factory (cover.md PR-2). The station's explanation hangs off its
+     * offers' DETAIL (the drive/dash/fuel/boost rows link the helm/fuel
+     * details); the seat chip stays plain like every station's.
+     */
+    {
+      station: 'helm',
+      take: { name: `${T}.take-helm-seat.name`, description: `${T}.take-helm-seat.description` },
+      leave: { name: `${T}.leave-helm-seat.name`, description: `${T}.leave-helm-seat.description` },
+      effectName: `${T}.seat-helm-effect.name`,
+      consumesSeat: true,
+      cover: 2
+    },
+    /**
+     * The HARPOON FLINGER station (the stat block's, ONE of its two — the
+     * multi-harpoonist pass adds the second): one crew, half cover, and the
+     * station's ACTION via the factory's weapon-station machinery — the seat
+     * is the fire offer's `when` gate, the numbers are the derives the
+     * dice-line reads (+5 to hit, 2d8 piercing with NO damage bonus). The 10
+     * harpoons and the magical attacks (the Magic Weapons trait) are DETAIL
+     * copy only — nothing tracks ammunition. The mount grants HALF cover:
+     * spec data on the seat (cover.md PR-2).
+     */
+    {
+      station: 'harpoon',
+      take: {
+        name: `${T}.take-harpoon-seat.name`,
+        description: `${T}.take-harpoon-seat.description`
+      },
+      leave: {
+        name: `${T}.leave-harpoon-seat.name`,
+        description: `${T}.leave-harpoon-seat.description`
+      },
+      effectName: `${T}.seat-harpoon-effect.name`,
+      consumesSeat: true,
+      cover: 1,
+      weapon: {
+        fire: { name: `${T}.fire-harpoon.name`, description: `${T}.fire-harpoon.description` },
+        noAction: `${T}.fire-harpoon.no_action`,
+        detailKey: 'vehicle/demon-grinder-harpoon',
+        hitBonus: 5,
+        damageBonus: 0,
+        damageDie: 8,
+        damageCount: 2,
+        damageType: 'piercing'
+      }
+    }
+  ]
 };
 
 /**

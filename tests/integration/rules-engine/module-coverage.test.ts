@@ -58,7 +58,10 @@ const CATALOG_ONLY = new Set([
   'tormentor-fuel-detail',
   'tormentor-clinger-detail',
   'demon-grinder-prone-detail',
-  'demon-grinder-damage-detail'
+  'demon-grinder-damage-detail',
+  'demon-grinder-helm-detail',
+  'demon-grinder-harpoon-detail',
+  'demon-grinder-fuel-detail'
 ]);
 
 /** The deployed id is the bare rule-group id (the JSON key is `category/id`). */

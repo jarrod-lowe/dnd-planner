@@ -1,0 +1,137 @@
+name: 'Demon Grinder - Wrecked Vehicle Legality'
+description: >-
+  While the destroyed wreck stands (companion.demonGrinder.destroyed > 0),
+  the Grinder's ACTIVITY offers and its REPAIR recorder are ILLEGAL — ONE
+  shared wrecked legality leg (rule.demon-grinder.wrecked) beside each
+  offer's existing legs: fire-harpoon, drive, dash, fuel, boost and the HEAL
+  recorder. All illegal-but-COMMITTABLE: every offer stays visible and
+  applicable, a planned-anyway row still commits carrying the diagnostic,
+  and the existing legs keep composing (an over-distance Drive on a wreck
+  fails out-of-movement AND wrecked, in leg order; a Dash keeps its
+  unconditional risk note beside the error). Bookkeeping DELIBERATELY stays
+  legal on a wreck: recording DAMAGE and taking/leaving SEATS.
+ruleGroups:
+  - vehicles/demon-grinder
+  - dnd-5e-2024/action-economy
+steps:
+  # Control — a live, fuelled vehicle: every gated offer reads LEGAL.
+  - addOffer:
+      id: acquire-demon-grinder
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+  - endTurn: {}
+  - addOffer:
+      id: set-demon-grinder-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  - evaluate:
+      assert:
+        offers:
+          legal:
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+            - record-demon-grinder-heal
+            - record-demon-grinder-damage
+  # Destroy the vehicle: one pool-emptying blow (200 against HP 200).
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 200
+      assert:
+        facts:
+          companion.demonGrinder.hp.current: 0
+          companion.demonGrinder.destroyed: 1
+  # Wrecked at the Helm: drive/dash and fuel/boost illegal, repairs illegal,
+  # bookkeeping (damage recording, leaving the seat) still LEGAL — the
+  # boundary. (Taking ANOTHER seat is the exclusivity leg's call, not the
+  # wreck's — pinned elsewhere.)
+  - evaluate:
+      assert:
+        offers:
+          illegal:
+            - drive-demon-grinder
+            - dash-demon-grinder
+            - set-demon-grinder-fuel
+            - set-demon-grinder-boost
+            - record-demon-grinder-heal
+          legal:
+            - record-demon-grinder-damage
+            - leave-demon-grinder-helm-seat
+  # The composition pins — over-distance Drive fails wrecked AND
+  # out-of-movement (the gate's diagnostics first, the apply's re-check
+  # after); a sole-failing-leg Drive reads wrecked ALONE; Dash keeps its
+  # unconditional risk note beside the error, in push order.
+  - addOffer:
+      id: drive-demon-grinder
+      selections:
+        distance: 150
+      assert:
+        planErrors:
+          - id: drive-demon-grinder
+            errors:
+              - rule.demon-grinder.wrecked
+              - rule.demon-grinder.drive.out_of_movement
+  - endTurn: {}
+  - addOffer:
+      id: drive-demon-grinder
+      selections:
+        distance: 30
+      assert:
+        planErrors:
+          - id: drive-demon-grinder
+            errors:
+              - rule.demon-grinder.wrecked
+  - endTurn: {}
+  - addOffer:
+      id: dash-demon-grinder
+      assert:
+        planErrors:
+          - id: dash-demon-grinder
+            errors:
+              - rule.demon-grinder.wrecked
+              - rule.demon-grinder.dash.risk
+  - endTurn: {}
+  - addOffer:
+      id: set-demon-grinder-fuel
+      selections:
+        fuel: 2
+      assert:
+        facts:
+          companion.demonGrinder.fuel.recorded: 2
+        planErrors:
+          - id: set-demon-grinder-fuel
+            errors:
+              - rule.demon-grinder.wrecked
+  - endTurn: {}
+  # The fuel row left demon ichor in the burner, so Boost composes the OTHER
+  # way: without a soul coin AND wrecked, in leg order.
+  - addOffer:
+      id: set-demon-grinder-boost
+      selections:
+        boost: 1
+      assert:
+        facts:
+          companion.demonGrinder.boost.recorded: 1
+        planErrors:
+          - id: set-demon-grinder-boost
+            errors:
+              - rule.demon-grinder.boost.without_soul_coin
+              - rule.demon-grinder.wrecked
+  - endTurn: {}
+  # Swap to the flinger: firing on the wreck is illegal-but-committable, the
+  # row still spends the action carrying the diagnostic.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+  - addOffer:
+      id: take-demon-grinder-harpoon-seat
+  - endTurn: {}
+  - addOffer:
+      id: fire-demon-grinder-harpoon
+      assert:
+        planErrors:
+          - id: fire-demon-grinder-harpoon
+            errors:
+              - rule.demon-grinder.wrecked

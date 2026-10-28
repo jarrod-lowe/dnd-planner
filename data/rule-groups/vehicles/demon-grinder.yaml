@@ -3,11 +3,13 @@ ruleGroups:
   - id: demon-grinder
     # The SECOND per-vehicle rule group on the shared infernal-vehicle factory
     # (the settled design): the Demon Grinder is its OWN group, beside the
-    # Tormentor's, and owning one of EACH vehicle group is legal. PR-3 is the
-    # SEAT-FREE base — acquire/abandon, occupancy, the HP recorders, the prone
-    # pair, checks/saves and the derives; the stations and their offers land
-    # with the later passes. Ungated: available to every character (acquire
-    # legality is not checked — multiple acquisitions are illegal-but-possible).
+    # Tormentor's, and owning one of EACH vehicle group is legal (while ONE
+    # seat per player holds globally across every vehicle). PR-3 landed the
+    # SEAT-FREE base (acquire/abandon, occupancy, the HP recorders, the prone
+    # pair, checks/saves and the derives); PR-4 adds the STATIONS — the Helm
+    # and one Harpoon Flinger. The Chomper and Wrecking Ball follow. Ungated:
+    # available to every character (acquire legality is not checked — multiple
+    # acquisitions are illegal-but-possible).
     translations:
       en:
         name: Demon Grinder
@@ -32,8 +34,9 @@ ruleGroups:
     # The Demon Grinder is not SRD content: this detail is our own wording —
     # numbers and short factual phrases only, never trait prose. It reads
     # in-world (the vehicle and its numbers); nothing about the app. The AC is
-    # FLAT (the stat block carries no motionless rider), and the stations stay
-    # out until the passes that add them.
+    # FLAT (the stat block carries no motionless rider). PR-4 adds the
+    # Stations and Dash paragraphs; the Chomper and Wrecking Ball join theirs
+    # in the passes that add them.
     detail:
       key: vehicle/demon-grinder
       source: custom
@@ -54,6 +57,16 @@ ruleGroups:
             threshold 20); Speed 100 ft.; STR 18 (+4), DEX 10 (+0), CON 18
             (+4). The vehicle has no Intelligence, Wisdom, or Charisma, and
             shrugs off fire, poison, and psychic damage.
+
+            **Stations.** The Helm drives and steers the Demon Grinder. The
+            Harpoon Flinger fires its 10 harpoons at +5 to hit, range
+            120 ft., for 2d8 piercing damage.
+
+            **Dash.** The driver can spend a bonus action to push the Demon
+            Grinder flat out, doubling its movement for the turn. Each
+            encounter the vehicle can Dash 3 times plus its Constitution
+            modifier; each Dash beyond that runs the risk of damaging the
+            vehicle.
 
             **Crushing Wheels.** The Demon Grinder can move through the space
             of a Large or smaller creature. Each creature it moves through for
@@ -173,3 +186,152 @@ ruleGroups:
             **Mishap Threshold 20.** A single source that deals twenty or more
             damage to the Demon Grinder triggers a mishap — consult the
             mishap table for what breaks loose.
+  # The HELM's flip detail — linked from the Drive and Dash offers. A
+  # catalog-only entry like the Tormentor's: our own wording (the Demon
+  # Grinder is not SRD), in-world voice for what the driver does, plus the
+  # Dash rule — the 2024-format stat block takes the vehicle's Dash as a
+  # bonus action under a per-encounter cap (3 + its Constitution modifier;
+  # each Dash beyond that risks damaging the vehicle), the rule stated
+  # without baking the computed total. NO Juke: the Demon Grinder's stat
+  # block carries no Reaction, so the Helm has no reaction to spend. The
+  # stat block's three-quarters cover for the Helm crew stays out: cover is
+  # the table's business here (the Tormentor helm precedent).
+  - id: demon-grinder-helm-detail
+    translations:
+      en:
+        name: Helm (Demon Grinder)
+        description: Detail text for driving the Demon Grinder from the Helm
+        keywords:
+          - helm
+          - drive
+          - dash
+          - grinder
+          - vehicle
+          - driver
+          - steer
+      en-x-tlh:
+        name: Helm (Demon Grinder)
+        description: Detail text for driving the Demon Grinder from the Helm
+        keywords:
+          - helm
+          - drive
+          - dash
+          - grinder
+          - vehicle
+          - driver
+    detail:
+      key: vehicle/demon-grinder-helm
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Station
+          body: |
+            **Helm.** The Helm takes one crew member, and its driver holds the
+            war machine's handle: **Drive** spends the driver's action
+            steering the Demon Grinder through the turn.
+
+            **Dash.** The driver can spend a bonus action pushing the Demon
+            Grinder flat out, doubling its movement for the turn. Each
+            encounter the vehicle can Dash 3 times plus its Constitution
+            modifier; each Dash beyond that runs the risk of damaging the
+            vehicle.
+  # The HARPOON FLINGER's flip detail — linked from the fire offer. A
+  # catalog-only entry like the Tormentor's: our own wording (the Demon
+  # Grinder is not SRD), in-world voice for the numbers, plus the one
+  # app-facing note the settled plan calls for (ammunition is display-only).
+  # 120 ft. and one target live here and in the offer copy, not in range
+  # machinery. The average damage (9) rides the prose beside the dice.
+  - id: demon-grinder-harpoon-detail
+    translations:
+      en:
+        name: Harpoon Flinger (Demon Grinder)
+        description: Detail text for firing the Demon Grinder's Harpoon Flinger
+        keywords:
+          - harpoon
+          - flinger
+          - grinder
+          - vehicle
+          - attack
+          - piercing
+          - ranged
+      en-x-tlh:
+        name: Harpoon Flinger (Demon Grinder)
+        description: Detail text for firing the Demon Grinder's Harpoon Flinger
+        keywords:
+          - harpoon
+          - flinger
+          - grinder
+          - vehicle
+          - attack
+          - piercing
+          - ranged
+    detail:
+      key: vehicle/demon-grinder-harpoon
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Weapon
+          fields:
+            - labelKey: rules.field.range
+              value: 120 ft.
+            - labelKey: rules.field.damage
+              value: 2d8 piercing
+          body: |
+            **Harpoon Flinger.** A ranged weapon attack: +5 to hit, range
+            120 ft., one target, 2d8 piercing damage on a hit (average 9).
+            The attack is made with an action while you hold the Harpoon
+            Flinger seat.
+
+            **Magic Weapons.** The flinger's harpoons are magical.
+
+            **Ammunition.** The flinger's rack carries 10 harpoons. The app
+            does not track how many have been fired — spent harpoons and
+            reloads are the crew's bookkeeping.
+  # The FUEL and BOOST records' flip detail — linked from both helm-gated
+  # record offers (the Tormentor pattern). A catalog-only entry like the
+  # helm's: our own wording (the Demon Grinder is not SRD), in-world voice
+  # for the fuels and their speeds, the boost rule, and the bonus-action cost
+  # of each. The 1-minute duration is copy only — nothing times it for the
+  # crew; when the minute is up, the driver records the boost as spent (sets
+  # it back to none).
+  - id: demon-grinder-fuel-detail
+    translations:
+      en:
+        name: Fuel and Boost (Demon Grinder)
+        description: Detail text for the Demon Grinder's fuel and boost records
+        keywords:
+          - fuel
+          - boost
+          - soul coin
+          - grinder
+          - vehicle
+          - speed
+          - burner
+      en-x-tlh:
+        name: Fuel and Boost (Demon Grinder)
+        description: Detail text for the Demon Grinder's fuel and boost records
+        keywords:
+          - fuel
+          - boost
+          - soul coin
+          - grinder
+          - vehicle
+          - speed
+          - burner
+    detail:
+      key: vehicle/demon-grinder-fuel
+      source: custom
+      translations:
+        en:
+          meta: Vehicle Fuel
+          body: |
+            **Fuel.** The Demon Grinder runs on what its crew feeds the
+            burner: no fuel and its wheels stand still (Speed 0), a soul coin
+            drives it at 100 ft., and a flask of demon ichor burns at 80 ft.
+            Setting the fuel takes a bonus action at the Helm.
+
+            **Boost.** A flask of demon ichor poured into the boost tank
+            takes a bonus action at the Helm and adds 30 ft. to the Demon
+            Grinder's speed for 1 minute. The boost only burns while the
+            machine runs on a soul coin. Nothing counts the minute for the
+            crew: when it runs out, the driver records the boost as spent.

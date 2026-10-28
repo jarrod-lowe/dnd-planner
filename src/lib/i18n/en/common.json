@@ -642,6 +642,40 @@
         "name": "Set Occupancy",
         "description": "Record how many creatures the Demon Grinder carries"
       },
+      "take-seat": {
+        "already_seated": "You already hold a seat — leave it before taking another",
+        "full": "The Demon Grinder is at creature capacity — no seat is free"
+      },
+      "leave-seat": {
+        "not_seated": "You do not hold that seat"
+      },
+      "take-helm-seat": {
+        "name": "Take the Helm seat",
+        "description": "Take the Demon Grinder's Helm and drive the war machine"
+      },
+      "leave-helm-seat": {
+        "name": "Leave the Helm seat",
+        "description": "Step away from the Helm, freeing the seat"
+      },
+      "seat-helm-effect": {
+        "name": "Helm Seat"
+      },
+      "take-harpoon-seat": {
+        "name": "Take the Harpoon Flinger seat",
+        "description": "Man the Demon Grinder's Harpoon Flinger station"
+      },
+      "leave-harpoon-seat": {
+        "name": "Leave the Harpoon Flinger seat",
+        "description": "Step away from the Harpoon Flinger, freeing the seat"
+      },
+      "seat-harpoon-effect": {
+        "name": "Harpoon Flinger Seat"
+      },
+      "fire-harpoon": {
+        "name": "Fire Harpoon",
+        "description": "Ranged weapon attack: +5 to hit, range 120 ft., one target, 2d8 piercing damage (average 9). The harpoons are magical; the flinger carries 10.",
+        "no_action": "No action available"
+      },
       "fuel": {
         "name": "Set Fuel",
         "description": "Spend a bonus action at the Helm feeding the burner: none (0 ft.), a soul coin (100 ft.), or demon ichor (80 ft.)",

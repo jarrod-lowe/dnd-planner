@@ -384,6 +384,22 @@ const EXPECTED_RUNNABLE = [
   'demon-grinder-unboard',
   'demon-grinder-saves',
   'demon-grinder-checks',
+  // …Demon Grinder PR-4 — the seats: the Helm + one Harpoon Flinger as spec
+  // entries (take/leave pairs, capacity counting, one-seat-per-player within
+  // the vehicle, the helm-gated drive/dash/fuel/boost surfacing, no Juke),
+  // the flinger's fire offer (+5, 2d8, the generic action spend), the dash
+  // risk note on every Dash row, fuel/boost helm-gated with the boost's
+  // soul-coin leg, GLOBAL one-seat exclusivity across both vehicles, the
+  // seat-cover contributions (¾ helm, ½ flinger), and the wrecked boundary
+  // on every activity offer.
+  'demon-grinder-seat-board',
+  'demon-grinder-harpoon-fire',
+  'demon-grinder-helm-drive',
+  'demon-grinder-helm-dash-note',
+  'demon-grinder-fuel-helm-gate',
+  'demon-grinder-seat-global-exclusivity',
+  'demon-grinder-cover-seat',
+  'demon-grinder-wrecked-legality',
   'long-rest-resets-hit-dice',
   'long-rest-sets-flag',
   // The long-rest recorder carries the swap-spells reminder (and its negative:
