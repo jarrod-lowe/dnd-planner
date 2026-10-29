@@ -1673,7 +1673,11 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       'companion.vehicle.movement.spent': 30
     });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+      {
+        code: `${T}.drive.crushing_wheels`,
+        severity: 'notice',
+        params: { dc: 13, damage: '2d10 bludgeoning' }
+      }
     ]);
     expect(out.facts['actions.remaining']).toBe(0);
     expect(out.facts[`${F}.movement.remaining`]).toBe(70);
@@ -1715,7 +1719,11 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(out.facts[`${F}.movement.remaining`]).toBe(-50);
     expect(out.planDiagnostics['i0']).toEqual([
       { code: `${T}.drive.out_of_movement`, severity: 'error' },
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+      {
+        code: `${T}.drive.crushing_wheels`,
+        severity: 'notice',
+        params: { dc: 13, damage: '2d10 bludgeoning' }
+      }
     ]);
   });
 
@@ -1734,11 +1742,19 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     // leg is the action alone — the row carries exactly its own diagnostic
     // (the trait note after it) while its default distance still lands.
     expect(out.planDiagnostics['i0'] ?? []).toEqual([
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+      {
+        code: `${T}.drive.crushing_wheels`,
+        severity: 'notice',
+        params: { dc: 13, damage: '2d10 bludgeoning' }
+      }
     ]);
     expect(out.planDiagnostics['i1']).toEqual([
       { code: `${T}.drive.no_action`, severity: 'error' },
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+      {
+        code: `${T}.drive.crushing_wheels`,
+        severity: 'notice',
+        params: { dc: 13, damage: '2d10 bludgeoning' }
+      }
     ]);
     expect(out.facts[`${F}.movement.remaining`]).toBe(0);
   });
@@ -1757,15 +1773,15 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(offer!.diagnostics).toEqual([]);
   });
 
-  it('the crushing wheels note rides every drive row: DC 13, damage 11 (2d10) as COMPUTED params', () => {
+  it('the crushing wheels note rides every drive row: DC 13 and the dice formula as COMPUTED params', () => {
     // The stat block's Crushing Wheels trait — the Tormentor rolls through
     // the space of Medium or smaller creatures; every creature it passes over
-    // must save (DC 13 Dex) or take 11 (2d10) bludgeoning and be knocked
-    // prone; an already-prone creature takes the damage again on a later
-    // pass; once per creature per turn — is PR-7's move-trait machinery: ONE
-    // unconditional 'notice' on EVERY planned drive row (the dash-risk
-    // idiom), never a mechanic. The params are COMPUTED from the spec entry
-    // (2d10 → 11), and the size qualifier lives in the COPY.
+    // must save (DC 13 Dex) or take 2d10 bludgeoning and be knocked prone; an
+    // already-prone creature takes the damage instead; once per creature per
+    // turn — is PR-7's move-trait machinery: ONE unconditional 'notice' on
+    // EVERY planned drive row (the dash-risk idiom), never a mechanic. The
+    // params are COMPUTED from the spec entry (the dice FORMULA + type,
+    // "2d10 bludgeoning"), and the size qualifier lives in the COPY.
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
@@ -1773,7 +1789,11 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
     });
     expect(out.planDiagnostics['i0']).toEqual([
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13, damage: 11 } }
+      {
+        code: `${T}.drive.crushing_wheels`,
+        severity: 'notice',
+        params: { dc: 13, damage: '2d10 bludgeoning' }
+      }
     ]);
     // The note commits nothing: the row's one spend is the drive's own.
     expect(out.effects).toHaveLength(1);
@@ -1807,6 +1827,11 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(english).toContain('instead of being knocked prone');
     expect(english, 'no wheels-caused-prone restriction').not.toContain('already knocked prone');
     expect(english, 'no second-pass requirement').not.toContain('once more');
+    // The damage rides ONLY as the {{damage}} param: the copy carries neither
+    // the static average nor the formula nor the damage-type word.
+    expect(english, 'no static average in the copy').not.toContain('11');
+    expect(english, 'no hardcoded formula in the copy').not.toContain('2d10');
+    expect(english, 'no hardcoded damage type in the copy').not.toContain('bludgeoning');
   });
 });
 

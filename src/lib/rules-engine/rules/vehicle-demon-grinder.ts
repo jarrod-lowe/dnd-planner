@@ -91,24 +91,25 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
   dashAllowanceBase: 3,
   // The stat block's Crushing Wheels trait (PR-7): the Grinder rolls through
   // the space of Large or smaller creatures; every creature it passes over
-  // must make a DC 11 Dexterity saving throw or take 22 (4d10) bludgeoning
-  // damage and be knocked prone; a creature ALREADY PRONE — from any cause —
+  // must make a DC 11 Dexterity saving throw or take 4d10 bludgeoning damage
+  // and be knocked prone; a creature ALREADY PRONE — from any cause —
   // takes the damage instead of being knocked prone; once per creature per
   // turn. The trait is COPY plus NUMBERS, never a mechanic (the dash-risk
   // idiom on the drive rows): the note key is this file's literal, the save
   // DC and the damage dice are data the factory interpolates as
-  // {{dc}}/{{damage}} params (the damage the dice average, 4d10 → 22 —
-  // computed, never hardcoded in the locale), and the size qualifier (Large
-  // or smaller) lives in the note copy because it is translated text either
-  // way. Own wording throughout — the trait text is BG:DiA's, not SRD; only
-  // the numbers are facts.
+  // {{dc}}/{{damage}} params (the damage the dice FORMULA plus its type,
+  // "4d10 bludgeoning" — computed, never hardcoded in the locale), and the
+  // size qualifier (Large or smaller) lives in the note copy because it is
+  // translated text either way. Own wording throughout — the trait text is
+  // BG:DiA's, not SRD; only the numbers are facts.
   moveTraits: [
     {
       note: 'rule.demon-grinder.drive.crushing_wheels',
       saveDc: 11,
       damageCount: 4,
       damageDie: 10,
-      damageBonus: 0
+      damageBonus: 0,
+      damageType: 'bludgeoning'
     }
   ],
   details: {

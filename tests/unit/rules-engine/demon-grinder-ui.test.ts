@@ -315,22 +315,27 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
     ];
   }
 
-  it('the crushing wheels note rides every drive row: DC 11, damage 22 (4d10) as COMPUTED params', () => {
+  it('the crushing wheels note rides every drive row: DC 11 and the dice formula as COMPUTED params', () => {
     // The stat block's Crushing Wheels trait — the Grinder rolls through the
     // space of Large or smaller creatures; every creature it passes over must
-    // save (DC 11 Dex) or take 22 (4d10) bludgeoning and be knocked prone; an
-    // already-prone creature takes the damage again on a later pass; once per
-    // creature per turn — is PR-7's move-trait machinery: ONE unconditional
-    // 'notice' on EVERY planned drive row (the dash-risk idiom), informational
-    // only, never a mechanic. The DC and the damage AVERAGE travel as params
-    // COMPUTED from the spec entry (4d10 → 22), never hardcoded in the copy.
+    // save (DC 11 Dex) or take 4d10 bludgeoning and be knocked prone; an
+    // already-prone creature takes the damage instead; once per creature per
+    // turn — is PR-7's move-trait machinery: ONE unconditional 'notice' on
+    // EVERY planned drive row (the dash-risk idiom), informational only,
+    // never a mechanic. The DC travels and the damage DICE FORMULA travels as
+    // params COMPUTED from the spec entry ("4d10 bludgeoning" — count, die,
+    // bonus, type), never a hardcoded string in the copy.
     const out = evaluate({
       modules: [module(), getModule('action-economy')!],
       committed: fuelledHelm(),
       planned: [{ instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } }]
     });
     expect(out.planDiagnostics['i0']).toEqual([
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 11, damage: 22 } }
+      {
+        code: `${T}.drive.crushing_wheels`,
+        severity: 'notice',
+        params: { dc: 11, damage: '4d10 bludgeoning' }
+      }
     ]);
     // The row is otherwise unchanged: the one endOfTurn spend, the pool paying
     // exactly the captured distance — the note commits nothing.
@@ -361,6 +366,12 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
     expect(english).toContain('instead of being knocked prone');
     expect(english, 'no wheels-caused-prone restriction').not.toContain('already knocked prone');
     expect(english, 'no second-pass requirement').not.toContain('once more');
+    // The damage rides ONLY as the {{damage}} param: the copy carries
+    // neither the static average nor the formula nor the damage-type word —
+    // all three arrive computed from the spec entry.
+    expect(english, 'no static average in the copy').not.toContain('22');
+    expect(english, 'no hardcoded formula in the copy').not.toContain('4d10');
+    expect(english, 'no hardcoded damage type in the copy').not.toContain('bludgeoning');
   });
 
   it('no drive row, no note: unseated, the trait is nowhere (not an annotation, not a fact)', () => {

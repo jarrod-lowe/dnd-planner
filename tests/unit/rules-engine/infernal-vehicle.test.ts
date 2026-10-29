@@ -861,14 +861,16 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
         saveDc: 15,
         damageCount: 3,
         damageDie: 8,
-        damageBonus: 1
+        damageBonus: 1,
+        damageType: 'bludgeoning'
       },
       {
         note: 'rule.infernal-wheels.drive.raking_scythes',
         saveDc: 14,
         damageCount: 2,
         damageDie: 6,
-        damageBonus: 0
+        damageBonus: 0,
+        damageType: 'slashing'
       }
     ]
   };
@@ -899,17 +901,19 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
     });
     // A LEGAL row carries the notes ALONE (informational only, never the
     // error path), each with its OWN numbers as params — the damage the dice
-    // AVERAGE plus the bonus (3d8+1 → 14, 2d6 → 7), computed at the fold.
+    // FORMULA plus the type ("3d8+1 bludgeoning", "2d6 slashing" — the
+    // with-bonus and without-bonus shapes), computed at the fold from the
+    // entry, never a string in any locale.
     expect(out.planDiagnostics['i0']).toEqual([
       {
         code: 'rule.infernal-wheels.drive.crushing_wheels',
         severity: 'notice',
-        params: { dc: 15, damage: 14 }
+        params: { dc: 15, damage: '3d8+1 bludgeoning' }
       },
       {
         code: 'rule.infernal-wheels.drive.raking_scythes',
         severity: 'notice',
-        params: { dc: 14, damage: 7 }
+        params: { dc: 14, damage: '2d6 slashing' }
       }
     ]);
   });
@@ -931,12 +935,12 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
       {
         code: 'rule.infernal-wheels.drive.crushing_wheels',
         severity: 'notice',
-        params: { dc: 15, damage: 14 }
+        params: { dc: 15, damage: '3d8+1 bludgeoning' }
       },
       {
         code: 'rule.infernal-wheels.drive.raking_scythes',
         severity: 'notice',
-        params: { dc: 14, damage: 7 }
+        params: { dc: 14, damage: '2d6 slashing' }
       }
     ]);
   });

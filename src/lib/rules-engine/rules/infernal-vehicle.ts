@@ -91,12 +91,14 @@ export interface MoveTraitSpec {
   /** The Dexterity save DC the trait's rule calls for (the {{dc}} param). */
   saveDc: number;
   /**
-   * The trait's damage dice: {{damage}} = the dice average plus the bonus,
-   * computed from these three numbers (never hardcoded in the copy).
+   * The trait's damage dice and type: {{damage}} = the dice FORMULA plus the
+   * type ("4d10 bludgeoning", "2d10+2 slashing"), computed from these four
+   * values (never hardcoded in the copy).
    */
   damageCount: number;
   damageDie: number;
   damageBonus: number;
+  damageType: string;
 }
 
 /**
@@ -1256,11 +1258,12 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
    * as ONE unconditional 'notice' beside the spend, informational only,
    * never a legality leg, never a standing annotation. The save DC and the
    * damage travel as `params` COMPUTED from the entry ({{dc}}/{{damage}}
-   * slots — the damage the dice AVERAGE plus the bonus, never a total the
-   * copy hardcodes), so a re-authored stat block moves the numbers with no
-   * other edit; the trait's non-numeric shape (which creatures it reaches,
-   * what befalls an already-prone creature) lives in the per-vehicle COPY.
-   * Entries ride in
+   * slots — the damage the dice FORMULA plus its type, "4d10 bludgeoning",
+   * built from the entry's count/die/bonus/type the way the dice lines
+   * render counts and dice, never a string the copy hardcodes), so a
+   * re-authored stat block moves the numbers with no other edit; the
+   * trait's non-numeric shape (which creatures it reaches, what befalls an
+   * already-prone creature) lives in the per-vehicle COPY. Entries ride in
    * spec order after any error legs. A spec with no entries emits NOTHING
    * (the juke/acMode optionality precedent: what a stat block does not
    * carry does not exist).
@@ -1271,7 +1274,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
       severity: 'notice',
       params: {
         dc: trait.saveDc,
-        damage: Math.floor((trait.damageCount * (trait.damageDie + 1)) / 2) + trait.damageBonus
+        // The dice formula the dice lines' way — "4d10", "2d10+2" (the bonus
+        // suffix only when a bonus exists) — with the damage type riding
+        // beside it ("4d10 bludgeoning").
+        damage: `${trait.damageCount}d${trait.damageDie}${trait.damageBonus > 0 ? `+${trait.damageBonus}` : ''} ${trait.damageType}`
       }
     }));
 
