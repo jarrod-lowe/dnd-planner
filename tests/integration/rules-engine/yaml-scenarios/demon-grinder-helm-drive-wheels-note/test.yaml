@@ -4,8 +4,8 @@ description: >-
   on, the Grinder's OWN numbers: it rolls through the space of Large or
   smaller creatures, and every creature it passes over must make a DC 11
   Dexterity saving throw or take 22 (4d10) bludgeoning damage and be knocked
-  prone (an already-prone creature takes the damage again on a later pass;
-  once per creature per turn). The move-trait machinery is per-vehicle DATA
+  prone (a creature already prone takes the damage instead of being knocked
+  prone; once per creature per turn). The move-trait machinery is per-vehicle DATA
   (a later vehicle without the trait emits nothing), so the note rides EVERY
   planned Drive row as an UNCONDITIONAL 'notice' — informational only, never
   the error path, the plan stays legal — collapsed on its own row alone,

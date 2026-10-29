@@ -350,7 +350,17 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
     }
     // The SIZE QUALIFIER (Large or smaller) lives in the per-vehicle copy —
     // translated text either way, never a param.
-    expect(i18nAt(en, `rule.${ID}.drive.crushing_wheels`)).toContain('Large or smaller');
+    const english = i18nAt(en, `rule.${ID}.drive.crushing_wheels`) as string;
+    expect(english).toContain('Large or smaller');
+    // The ALREADY-PRONE clause states the correct semantics (codex P2 on
+    // #501, matching the stat-block detail): a creature ALREADY PRONE — from
+    // any cause — takes the damage INSTEAD of being knocked prone, on the
+    // qualifying pass. Never the old reading's restrictions: no
+    // wheels-caused prone, no second pass.
+    expect(english).toContain('already prone');
+    expect(english).toContain('instead of being knocked prone');
+    expect(english, 'no wheels-caused-prone restriction').not.toContain('already knocked prone');
+    expect(english, 'no second-pass requirement').not.toContain('once more');
   });
 
   it('no drive row, no note: unseated, the trait is nowhere (not an annotation, not a fact)', () => {

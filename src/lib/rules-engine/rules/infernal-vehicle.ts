@@ -78,8 +78,8 @@ export interface SeatWeaponSpec {
  * travel as diagnostic `params` ({{dc}}/{{damage}} slots) COMPUTED from the
  * entry's data — the damage the dice AVERAGE plus the bonus, so a re-authored
  * stat block moves the number with no other edit. The trait's non-numeric
- * shape (which creatures it reaches, what a repeat pass does) lives in the
- * note COPY, not in data — it is translated text either way.
+ * shape (which creatures it reaches, what befalls an already-prone creature)
+ * lives in the note COPY, not in data — it is translated text either way.
  */
 export interface MoveTraitSpec {
   /**
@@ -1259,7 +1259,8 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
    * slots — the damage the dice AVERAGE plus the bonus, never a total the
    * copy hardcodes), so a re-authored stat block moves the numbers with no
    * other edit; the trait's non-numeric shape (which creatures it reaches,
-   * what a repeat pass does) lives in the per-vehicle COPY. Entries ride in
+   * what befalls an already-prone creature) lives in the per-vehicle COPY.
+   * Entries ride in
    * spec order after any error legs. A spec with no entries emits NOTHING
    * (the juke/acMode optionality precedent: what a stat block does not
    * carry does not exist).

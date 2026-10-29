@@ -1797,7 +1797,16 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       expect(value, `${locale} interpolates {{dc}}`).toContain('{{dc}}');
       expect(value, `${locale} interpolates {{damage}}`).toContain('{{damage}}');
     }
-    expect(at(en), 'the size qualifier lives in the en copy').toContain('Medium or smaller');
+    const english = at(en) as string;
+    expect(english, 'the size qualifier lives in the en copy').toContain('Medium or smaller');
+    // The ALREADY-PRONE clause states the correct semantics (codex P2 on
+    // #501, matching the Demon Grinder stat-block detail): a creature ALREADY
+    // PRONE — from any cause — takes the damage INSTEAD of being knocked
+    // prone, on the qualifying pass. Never the old reading's restrictions.
+    expect(english).toContain('already prone');
+    expect(english).toContain('instead of being knocked prone');
+    expect(english, 'no wheels-caused-prone restriction').not.toContain('already knocked prone');
+    expect(english, 'no second-pass requirement').not.toContain('once more');
   });
 });
 

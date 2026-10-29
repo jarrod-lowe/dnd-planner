@@ -93,13 +93,13 @@ const TORMENTOR: InfernalVehicleSpec = {
   // The stat block's Crushing Wheels trait (Demon Grinder PR-7): the same
   // move-trait machinery the Grinder rolls on, the Tormentor's OWN numbers —
   // Medium or smaller creatures, DC 13 Dexterity save, 11 (2d10) bludgeoning
-  // and knocked prone on a failure, the damage again for a creature the
-  // wheels have already knocked prone, once per creature per turn. Copy plus
-  // numbers, never a mechanic; the {{dc}}/{{damage}} params are computed from
-  // the dice below (2d10 → 11), and the size qualifier lives in the note
-  // copy (translated text). PR-8's Raking Scythes joins this list as a second
-  // entry, data only. Own wording throughout — the trait text is BG:DiA's,
-  // not SRD; only the numbers are facts.
+  // and knocked prone on a failure, a creature ALREADY PRONE (any cause)
+  // taking the damage instead of being knocked prone, once per creature per
+  // turn. Copy plus numbers, never a mechanic; the {{dc}}/{{damage}} params
+  // are computed from the dice below (2d10 → 11), and the size qualifier
+  // lives in the note copy (translated text). PR-8's Raking Scythes joins
+  // this list as a second entry, data only. Own wording throughout — the
+  // trait text is BG:DiA's, not SRD; only the numbers are facts.
   moveTraits: [
     {
       note: 'rule.tormentor.drive.crushing_wheels',
