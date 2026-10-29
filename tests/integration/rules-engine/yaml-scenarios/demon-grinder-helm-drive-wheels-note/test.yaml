@@ -1,22 +1,29 @@
 name: 'Demon Grinder - Crushing Wheels Note Rides Every Drive Row'
 description: >-
-  The Demon Grinder's Crushing Wheels — the same trait the Tormentor rolls
-  on, the Grinder's OWN numbers: it rolls through the space of Large or
-  smaller creatures, and every creature it passes over must make a DC 11
-  Dexterity saving throw or take 22 (4d10) bludgeoning damage and be knocked
-  prone (a creature already prone takes the damage instead of being knocked
-  prone; once per creature per turn). The move-trait machinery is per-vehicle DATA
-  (a later vehicle without the trait emits nothing), so the note rides EVERY
-  planned Drive row as an UNCONDITIONAL 'notice' — informational only, never
-  the error path, the plan stays legal — collapsed on its own row alone,
-  committing nothing: only the action and the distance age away at end of
-  turn. No drive row — nobody at the Helm — no note anywhere.
+  The Demon Grinder's Crushing Wheels — the same restructured trait the
+  Tormentor rolls on, the Grinder's OWN numbers: every planned Drive row
+  carries the SHORT pointer note (creatures passed over must save, DC 11
+  Dex, or take the wheels' damage — roll the Crushing Wheels row), while the
+  ROLL row (wheels-demon-grinder, free, no seat, no spend, a damage-only
+  4d10 bludgeoning dice line) is ILLEGAL until the Grinder has Driven this
+  turn (the per-vehicle drove marker Drive's spend writes beside the shared
+  pool). The marker ages away with the turn; leaving the Helm removes the
+  Drive row — no drive row, no note anywhere.
 ruleGroups:
   - vehicles/demon-grinder
   - dnd-5e-2024/action-economy
 steps:
   - addOffer:
       id: acquire-demon-grinder
+  # The roll row exists the moment the vehicle does (no seat gate) and is
+  # ILLEGAL on its own not-driven leg until the Grinder Drives.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - wheels-demon-grinder
+          illegal:
+            - wheels-demon-grinder
   - addOffer:
       id: take-demon-grinder-helm-seat
   # A soul coin in the burner (the Helm's bonus-action record, committed
@@ -26,10 +33,8 @@ steps:
       selections:
         fuel: 1
   - endTurn: {}
-  # The very first Drive row carries the Grinder's OWN note (distinct key
-  # from the Tormentor's): the row informs, the GM adjudicates. (The harness
-  # asserts diagnostic CODES — the {{dc}}/{{damage}} params, 11/22, are
-  # pinned at unit level, as #498 did for the dash {{allowance}}.)
+  # The very first Drive row carries the Grinder's OWN pointer note (distinct
+  # key from the Tormentor's), and the roll row turns LEGAL behind the drive.
   - addOffer:
       id: drive-demon-grinder
       selections:
@@ -42,6 +47,9 @@ steps:
               - rule.demon-grinder.drive.crushing_wheels
         status:
           legal: true
+        offers:
+          legal:
+            - wheels-demon-grinder
   # A free record row planned beside it carries NOTHING (a per-row note is
   # not a panel truth).
   - addOffer:
@@ -53,18 +61,22 @@ steps:
           - id: set-demon-grinder-occupancy
             index: 0
             errors: []
-  # End of turn: the note commits nothing — only the action and the distance
-  # age away; the seat, the fuel and the occupancy stand.
+  # End of turn: the note commits nothing and the drove marker ages away with
+  # the spends — the roll row is illegal again until the next Drive.
   - endTurn:
       assert:
         facts:
           actions.remaining: 1
           companion.demonGrinder.movement.total: 100
           companion.demonGrinder.movement.remaining: 100
+          companion.demonGrinder.movement.drove: 0
           companion.demonGrinder.seats.helm: 1
           companion.demonGrinder.fuel.current: 1
-  # Turn 2: a fresh, LEGAL Drive carries the note ALONE, exactly as the
-  # first did.
+        offers:
+          illegal:
+            - wheels-demon-grinder
+  # Turn 2: a fresh, LEGAL Drive carries the note ALONE again, and the roll
+  # row reopens behind it.
   - addOffer:
       id: drive-demon-grinder
       assert:
@@ -75,8 +87,11 @@ steps:
               - rule.demon-grinder.drive.crushing_wheels
         status:
           legal: true
+        offers:
+          legal:
+            - wheels-demon-grinder
   # Leave the Helm: the drive offer goes with the seat — with no drive row,
-  # the trait is nowhere (the note is per-row, never standing).
+  # the note is nowhere (the note is per-row, never standing).
   - addOffer:
       id: leave-demon-grinder-helm-seat
       assert:

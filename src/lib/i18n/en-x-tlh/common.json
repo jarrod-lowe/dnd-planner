@@ -556,13 +556,18 @@
         "description": "SeHyaH Sep yIvI' 'ej Duj Sep yInab — leng Duj yIlo'",
         "no_action": "DIvI' tu'lu'be'",
         "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'",
-        "crushing_wheels": "Duj Sep machbogh ghewmey Daq vIHlaH 'ej chaH ghoSlaH. Duj Sep ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh {{damage}} qIp 'ej pummoHlu'. pumtaHbogh ghew {{damage}} qIp neH 'ej pumqa'moHlu'be' — 'ej wa' DIj wa'logh neH ghew qIplaH Duj Sep."
+        "crushing_wheels": "Duj Sep ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh ghomej qIp yIlo'."
       },
       "dash": {
         "name": "Duj Do'choH",
         "description": "Duj Sep Do wa'DIch DIvI' yIlo'. wej Do chovmey Duj Sep — Do nIv qaS Duj Sep qIp",
         "no_bonus_action": "DIvI' cha' tu'lu'be'",
         "risk": "qaS Duj Sep {{allowance}} Do chovmey (wej 'ej 'et Duj Sep); Do nIv qaS Duj Sep qIp"
+      },
+      "wheels": {
+        "name": "ghomej qIp",
+        "description": "Duj Sep ghomej: Duj Sep machbogh ghewmey Daq DIj vIHlaH. Duj Sep ghoSlDI' ghew, Do chovang 13 yInabnIS — Qapbe'chugh 2d10 qIp 'ej pummoHlu'. pumtaHbogh ghew qIp neH 'ej pumqa'moHlu'be'; wa' DIj wa'logh neH ghew qIplaH. Duj Sep DIjDI' neH ghomej qIplaH.",
+        "not_driven": "Duj Sep DIjbe' DaHjaj — DIjDI' neH ghomej qIplaH"
       },
       "juke": {
         "name": "yIvegh",
@@ -752,13 +757,18 @@
         "description": "SeHyaH Sep yIvI' 'ej Duj Qaw' yInab — leng Duj yIlo'",
         "no_action": "DIvI' tu'lu'be'",
         "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'",
-        "crushing_wheels": "Duj Qaw' tInbogh machbogh ghap ghewmey Daq vIHlaH 'ej chaH ghoSlaH. Duj Qaw' ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh {{damage}} qIp 'ej pummoHlu'. pumtaHbogh ghew {{damage}} qIp neH 'ej pumqa'moHlu'be' — 'ej wa' DIj wa'logh neH ghew qIplaH Duj Qaw'."
+        "crushing_wheels": "Duj Qaw' ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh ghomej qIp yIlo'."
       },
       "dash": {
         "name": "Duj Do'choH",
         "description": "Duj Qaw' Do wa'DIch DIvI' yIlo'. wej Do chovmey Duj Qaw' — Do nIv qaS Duj Qaw' qIp",
         "no_bonus_action": "DIvI' cha' tu'lu'be'",
         "risk": "qaS Duj Qaw' {{allowance}} Do chovmey (wej 'ej 'et Duj Qaw'); Do nIv qaS Duj Qaw' qIp"
+      },
+      "wheels": {
+        "name": "ghomej qIp",
+        "description": "Duj Qaw' ghomej: Duj Qaw' tInbogh machbogh ghap ghewmey Daq DIj vIHlaH. Duj Qaw' ghoSlDI' ghew, Do chovang 11 yInabnIS — Qapbe'chugh 4d10 qIp 'ej pummoHlu'. pumtaHbogh ghew qIp neH 'ej pumqa'moHlu'be'; wa' DIj wa'logh neH ghew qIplaH. Duj Qaw' DIjDI' neH ghomej qIplaH.",
+        "not_driven": "Duj Qaw' DIjbe' DaHjaj — DIjDI' neH ghomej qIplaH"
       },
       "check-str": {
         "name": "qaS HoS"

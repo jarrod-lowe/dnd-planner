@@ -90,19 +90,22 @@ const TORMENTOR: InfernalVehicleSpec = {
   boostBonus: 30,
   // Each encounter: 3 Dashes plus the vehicle's Constitution modifier.
   dashAllowanceBase: 3,
-  // The stat block's Crushing Wheels trait (Demon Grinder PR-7): the same
-  // move-trait machinery the Grinder rolls on, the Tormentor's OWN numbers —
-  // Medium or smaller creatures, DC 13 Dexterity save, 2d10 bludgeoning and
-  // knocked prone on a failure, a creature ALREADY PRONE (any cause) taking
-  // the damage instead of being knocked prone, once per creature per turn.
-  // Copy plus numbers, never a mechanic; the {{dc}}/{{damage}} params are
-  // computed from the dice below ("2d10 bludgeoning" — the formula plus its
-  // type), and the size qualifier lives in the note copy (translated text).
-  // PR-8's Raking Scythes joins this list as a second entry, data only. Own
-  // wording throughout — the trait text is BG:DiA's, not SRD; only the
-  // numbers are facts.
+  // The stat block's Crushing Wheels trait (Demon Grinder PR-7, restructured
+  // on the user's review): the same move-trait machinery the Grinder rolls
+  // on, the Tormentor's OWN numbers — Medium or smaller creatures, DC 13
+  // Dexterity save, 2d10 bludgeoning and knocked prone on a failure, a
+  // creature ALREADY PRONE (any cause) taking the damage instead of being
+  // knocked prone, once per creature per turn. TWO surfaces: the SHORT
+  // pointer note on every drive row ({{dc}} its only param) and the
+  // vehicle-level roll row `wheels-tormentor` (free, no seat, no spend)
+  // whose 2d10-bludgeoning dice line carries the damage and whose
+  // description carries the whole rule, gated on the per-vehicle drove
+  // marker. PR-8's Raking Scythes join this list as a second entry, data
+  // only. Own wording throughout — the trait text is BG:DiA's, not SRD;
+  // only the numbers are facts.
   moveTraits: [
     {
+      slug: 'wheels',
       note: 'rule.tormentor.drive.crushing_wheels',
       saveDc: 13,
       damageCount: 2,

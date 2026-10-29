@@ -82,6 +82,9 @@ describe('acquire offer ui', () => {
       'drive-tormentor',
       'dash-tormentor',
       'juke-tormentor',
+      // PR-7's move-trait roll row: the vehicle-level Crushing Wheels
+      // consequence of driving (no seat, no spend).
+      'wheels-tormentor',
       // The six record rollers (the steed's saves/skills placement: after the
       // station actions, before the way out) — saves first, then checks.
       'tormentor-save-str',
@@ -1664,19 +1667,21 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     // Exactly ONE advertised effect — the action spend and the movement spend
     // together (the steed-dash idiom: two facts, one per-turn effect). The
     // distance lands on the SHARED player-level spend every vehicle's
-    // remaining reads, never the per-vehicle stem.
+    // remaining reads, never the per-vehicle stem — now carrying the
+    // PER-VEHICLE drove marker beside the shared spend (PR-7's wheels gate).
     expect(out.effects).toHaveLength(1);
     expect(out.effects[0]!.key).toBeUndefined();
     expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
     expect(out.effects[0]!.state).toEqual({
       'actions.spent': 1,
-      'companion.vehicle.movement.spent': 30
+      'companion.vehicle.movement.spent': 30,
+      'companion.tormentor.movement.drove': 1
     });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([
       {
         code: `${T}.drive.crushing_wheels`,
         severity: 'notice',
-        params: { dc: 13, damage: '2d10 bludgeoning' }
+        params: { dc: 13 }
       }
     ]);
     expect(out.facts['actions.remaining']).toBe(0);
@@ -1696,7 +1701,8 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     });
     expect(out.effects[0]!.state).toEqual({
       'actions.spent': 1,
-      'companion.vehicle.movement.spent': 100
+      'companion.vehicle.movement.spent': 100,
+      'companion.tormentor.movement.drove': 1
     });
     expect(out.facts[`${F}.movement.remaining`]).toBe(0);
   });
@@ -1714,7 +1720,8 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     });
     expect(out.effects[0]!.state).toEqual({
       'actions.spent': 1,
-      'companion.vehicle.movement.spent': 150
+      'companion.vehicle.movement.spent': 150,
+      'companion.tormentor.movement.drove': 1
     });
     expect(out.facts[`${F}.movement.remaining`]).toBe(-50);
     expect(out.planDiagnostics['i0']).toEqual([
@@ -1722,7 +1729,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       {
         code: `${T}.drive.crushing_wheels`,
         severity: 'notice',
-        params: { dc: 13, damage: '2d10 bludgeoning' }
+        params: { dc: 13 }
       }
     ]);
   });
@@ -1745,7 +1752,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       {
         code: `${T}.drive.crushing_wheels`,
         severity: 'notice',
-        params: { dc: 13, damage: '2d10 bludgeoning' }
+        params: { dc: 13 }
       }
     ]);
     expect(out.planDiagnostics['i1']).toEqual([
@@ -1753,7 +1760,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       {
         code: `${T}.drive.crushing_wheels`,
         severity: 'notice',
-        params: { dc: 13, damage: '2d10 bludgeoning' }
+        params: { dc: 13 }
       }
     ]);
     expect(out.facts[`${F}.movement.remaining`]).toBe(0);
@@ -1773,15 +1780,14 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(offer!.diagnostics).toEqual([]);
   });
 
-  it('the crushing wheels note rides every drive row: DC 13 and the dice formula as COMPUTED params', () => {
+  it('the crushing wheels note rides every drive row: a SHORT pointer whose only param is the DC', () => {
     // The stat block's Crushing Wheels trait — the Tormentor rolls through
     // the space of Medium or smaller creatures; every creature it passes over
-    // must save (DC 13 Dex) or take 2d10 bludgeoning and be knocked prone; an
-    // already-prone creature takes the damage instead; once per creature per
-    // turn — is PR-7's move-trait machinery: ONE unconditional 'notice' on
-    // EVERY planned drive row (the dash-risk idiom), never a mechanic. The
-    // params are COMPUTED from the spec entry (the dice FORMULA + type,
-    // "2d10 bludgeoning"), and the size qualifier lives in the COPY.
+    // must save (DC 13 Dex) or take the wheels' damage — is PR-7's move-trait
+    // machinery restructured (user review): ONE unconditional 'notice' on
+    // EVERY planned drive row (the dash-risk idiom), a POINTER not the
+    // rulebook. The DC is the note's ONLY param; the formula and type live on
+    // the ROLL row's dice line.
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
@@ -1789,19 +1795,16 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
     });
     expect(out.planDiagnostics['i0']).toEqual([
-      {
-        code: `${T}.drive.crushing_wheels`,
-        severity: 'notice',
-        params: { dc: 13, damage: '2d10 bludgeoning' }
-      }
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13 } }
     ]);
     // The note commits nothing: the row's one spend is the drive's own.
     expect(out.effects).toHaveLength(1);
   });
 
-  it('the wheels note interpolates {{dc}} and {{damage}} in BOTH locales (Medium or smaller in copy)', () => {
-    // Dot-path reads with a cast: the key does not exist at RED, and a typed
-    // property access would not compile there (the DG file's i18nAt note).
+  it('the wheels note is a POINTER in BOTH locales: {{dc}} alone, no rule text, no damage word', () => {
+    // Dot-path reads with a cast: the key did not exist at the original RED,
+    // and a typed property access would not compile there (the DG file's
+    // i18nAt note).
     const at = (dict: unknown): string | undefined =>
       (
         dict as {
@@ -1815,23 +1818,115 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       const value = at(dict);
       expect(value, `${locale} wheels note exists`).toEqual(expect.any(String));
       expect(value, `${locale} interpolates {{dc}}`).toContain('{{dc}}');
-      expect(value, `${locale} interpolates {{damage}}`).toContain('{{damage}}');
+      expect(value, `${locale} note carries no damage param`).not.toContain('{{damage}}');
     }
     const english = at(en) as string;
-    expect(english, 'the size qualifier lives in the en copy').toContain('Medium or smaller');
-    // The ALREADY-PRONE clause states the correct semantics (codex P2 on
-    // #501, matching the Demon Grinder stat-block detail): a creature ALREADY
-    // PRONE — from any cause — takes the damage INSTEAD of being knocked
-    // prone, on the qualifying pass. Never the old reading's restrictions.
-    expect(english).toContain('already prone');
-    expect(english).toContain('instead of being knocked prone');
-    expect(english, 'no wheels-caused-prone restriction').not.toContain('already knocked prone');
-    expect(english, 'no second-pass requirement').not.toContain('once more');
-    // The damage rides ONLY as the {{damage}} param: the copy carries neither
-    // the static average nor the formula nor the damage-type word.
-    expect(english, 'no static average in the copy').not.toContain('11');
-    expect(english, 'no hardcoded formula in the copy').not.toContain('2d10');
-    expect(english, 'no hardcoded damage type in the copy').not.toContain('bludgeoning');
+    // The pointer names the roll row and the save, and NOTHING else: the full
+    // rule (size qualifier, already-prone clause, once per turn) lives on the
+    // ROLL row's description.
+    expect(english).toContain('Crushing Wheels');
+    expect(english).toContain('Dexterity saving throw');
+    for (const absent of [
+      'already prone',
+      'instead of being knocked prone',
+      'Medium or smaller',
+      '11',
+      '2d10',
+      'bludgeoning'
+    ])
+      expect(english, `the slim note restates no rule detail (${absent})`).not.toContain(absent);
+    const klingon = at(tlh) as string;
+    expect(klingon, 'the tlh note leaks no English damage-type identifier').not.toContain(
+      'bludgeoning'
+    );
+    expect(
+      klingon,
+      'the tlh note leaks no English damage-type identifier (slashing)'
+    ).not.toContain('slashing');
+  });
+
+  it('the Crushing Wheels ROLL row: vehicle-level, free, no seat gate, damage-only dice line (DC 13, 2d10)', () => {
+    // The consequence surface (user review restructure): a VEHICLE-level
+    // roll offer — `when` the acquire ALONE (no Helm seat), FREE with no
+    // economy spend (the save/check-recorder precedent), carrying the damage
+    // as a DICE LINE built from the spec (the type as the IDENTIFIER the
+    // render site localizes through damage-type.* — never a param).
+    const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+    const row = unseated.availableRules.find((r) => r.rule.id === 'wheels-tormentor');
+    expect(row, 'the roll row exists while acquired, with nobody at the Helm').toBeDefined();
+    expect(row!.rule.ui).toEqual({
+      section: 'free',
+      subject: SUBJECT,
+      name: `${T}.wheels.name`,
+      description: `${T}.wheels.description`,
+      detailKey: 'vehicle/tormentor',
+      intents: { SAVE: 'vehicle' },
+      actionCost: [],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          {
+            sides: 10,
+            count: 2,
+            purpose: 'damage',
+            damageType: { string: 'bludgeoning' }
+          }
+        ]
+      }
+    });
+    // The RAW catalog offer carries no apply — the recorder shape: the row
+    // rolls, it commits nothing (the descriptor surface never exposes one).
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === 'wheels-tormentor')!;
+    expect(raw.apply).toBeUndefined();
+    // The full rule lives in the DESCRIPTION, both locales — the
+    // already-prone clause, the once-per-turn cap, the size qualifier and
+    // the Drive advertisement (numbers hardcoded per the fire-offer
+    // description convention; the DICE LINE carries the formula).
+    const wheelsAt = (dict: unknown, leaf: string): string | undefined =>
+      (
+        dict as {
+          rule?: { tormentor?: { wheels?: Record<string, string | undefined> } };
+        }
+      ).rule?.tormentor?.wheels?.[leaf];
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      for (const leaf of ['name', 'description', 'not_driven'])
+        expect(wheelsAt(dict, leaf), `${locale} wheels.${leaf}`).toEqual(expect.any(String));
+    }
+    const english = wheelsAt(en, 'description') as string;
+    for (const detail of [
+      'Medium or smaller',
+      'DC 13',
+      '2d10',
+      'already prone',
+      'instead of being knocked prone',
+      'once',
+      'Driven'
+    ])
+      expect(english, `the description carries the full rule (${detail})`).toContain(detail);
+  });
+
+  it('the roll row is ILLEGAL until the Tormentor has Driven this turn — the per-vehicle marker', () => {
+    const economy = getModule('action-economy')!;
+    const before = evaluate({ modules: [module(), economy], committed: helmFuelled() });
+    const row = before.availableRules.find((r) => r.rule.id === 'wheels-tormentor')!;
+    expect(row.legal).toBe(false);
+    expect(row.diagnostics).toEqual([{ code: `${T}.wheels.not_driven`, severity: 'error' }]);
+    const after = evaluate({
+      modules: [module(), economy],
+      committed: helmFuelled(),
+      planned: [
+        { instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } },
+        { instanceId: 'i1', ruleId: 'wheels-tormentor' }
+      ]
+    });
+    const driven = after.availableRules.find((r) => r.rule.id === 'wheels-tormentor')!;
+    expect(driven.legal).toBe(true);
+    expect(after.facts[`${F}.movement.drove`]).toBe(1);
+    expect(after.planDiagnostics['i1'] ?? []).toEqual([]);
   });
 });
 

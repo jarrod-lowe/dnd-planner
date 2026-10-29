@@ -1,23 +1,30 @@
 name: 'Tormentor - Crushing Wheels Note Rides Every Drive Row'
 description: >-
-  The stat block's Crushing Wheels trait: the Tormentor rolls through the
-  space of Medium or smaller creatures, and every creature it passes over
-  must make a DC 13 Dexterity saving throw or take 11 (2d10) bludgeoning
-  damage and be knocked prone (a creature already prone takes the damage
-  instead of being knocked prone; once per creature per turn). Nothing in the engine
-  models the pass, the save or the once-per-turn limit — the GM adjudicates
-  at the table — so the rule states itself as an UNCONDITIONAL per-row note
-  on EVERY planned Drive row (the dash-risk idiom): a 'notice' diagnostic
-  that is informational only (never the error path, so the row and the plan
-  stay LEGAL), rendered collapsed on its own row alone (no other row sees
-  it, nothing commits — only the action and the distance age away at end of
-  turn). No drive row — nobody at the Helm — no note anywhere.
+  The stat block's Crushing Wheels trait, restructured on the user's review:
+  every planned Drive row carries a SHORT pointer note (the dash-risk idiom)
+  — creatures passed over must save (DC 13 Dex) or take the wheels' damage,
+  roll the Crushing Wheels row — while the ROLL row itself (wheels-tormentor,
+  free, no seat, no spend, damage-only dice line) carries the full rule in
+  its description and is ILLEGAL until the Tormentor has Driven this turn
+  (Drive's spend writes the per-vehicle drove marker beside the shared pool;
+  illegal-but-committable, the engine's contract). The marker ages away with
+  the turn, and leaving the Helm removes the Drive row — with no drive row,
+  no note anywhere.
 ruleGroups:
   - vehicles/tormentor
   - dnd-5e-2024/action-economy
 steps:
   - addOffer:
       id: acquire-tormentor
+  # The roll row exists the moment the vehicle does (no seat gate) and is
+  # ILLEGAL on its own not-driven leg until the Tormentor Drives.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - wheels-tormentor
+          illegal:
+            - wheels-tormentor
   - addOffer:
       id: take-tormentor-helm-seat
   - endTurn: {}
@@ -28,10 +35,9 @@ steps:
       selections:
         fuel: 1
   - endTurn: {}
-  # The very first Drive row carries the note: the row informs, the GM
-  # adjudicates. (The yaml harness asserts diagnostic CODES — the note's
-  # {{dc}}/{{damage}} params are pinned at unit level, as #498 did for the
-  # dash {{allowance}}.)
+  # The very first Drive row carries the SHORT pointer note: the row informs,
+  # the roll row carries the rule. Behind the drive, the marker stands and
+  # the roll row turns LEGAL in the same fold.
   - addOffer:
       id: drive-tormentor
       selections:
@@ -44,6 +50,9 @@ steps:
               - rule.tormentor.drive.crushing_wheels
         status:
           legal: true
+        offers:
+          legal:
+            - wheels-tormentor
   # A free record row planned beside it carries NOTHING (a per-row note is
   # not a panel truth).
   - addOffer:
@@ -53,17 +62,21 @@ steps:
           - id: set-tormentor-ac-mode
             index: 0
             errors: []
-  # End of turn: the note commits nothing — only the action and the distance
-  # age away; the seat, the acquire and the fuel are what stand.
+  # End of turn: the note commits nothing and the drove marker ages away with
+  # the spends — the roll row is illegal again until the next Drive.
   - endTurn:
       assert:
         facts:
           actions.remaining: 1
           companion.tormentor.movement.total: 100
           companion.tormentor.movement.remaining: 100
+          companion.tormentor.movement.drove: 0
           companion.tormentor.seats.helm: 1
-  # Turn 2: a fresh, LEGAL Drive carries the note ALONE, exactly as the
-  # first did — informational, never the error path.
+        offers:
+          illegal:
+            - wheels-tormentor
+  # Turn 2: a fresh, LEGAL Drive carries the note ALONE again, and the roll
+  # row reopens behind it.
   - addOffer:
       id: drive-tormentor
       assert:
@@ -74,8 +87,11 @@ steps:
               - rule.tormentor.drive.crushing_wheels
         status:
           legal: true
+        offers:
+          legal:
+            - wheels-tormentor
   # Leave the Helm: the drive offer goes with the seat — with no drive row,
-  # the trait is nowhere (the note is per-row, never standing).
+  # the note is nowhere (the note is per-row, never standing).
   - addOffer:
       id: leave-tormentor-helm-seat
       assert:

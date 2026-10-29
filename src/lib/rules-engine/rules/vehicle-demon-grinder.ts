@@ -89,21 +89,26 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
   // Each encounter: 3 Dashes plus the vehicle's Constitution modifier (7 for
   // the Grinder — interpolated from the facts, never hardcoded).
   dashAllowanceBase: 3,
-  // The stat block's Crushing Wheels trait (PR-7): the Grinder rolls through
-  // the space of Large or smaller creatures; every creature it passes over
-  // must make a DC 11 Dexterity saving throw or take 4d10 bludgeoning damage
-  // and be knocked prone; a creature ALREADY PRONE — from any cause —
-  // takes the damage instead of being knocked prone; once per creature per
-  // turn. The trait is COPY plus NUMBERS, never a mechanic (the dash-risk
-  // idiom on the drive rows): the note key is this file's literal, the save
-  // DC and the damage dice are data the factory interpolates as
-  // {{dc}}/{{damage}} params (the damage the dice FORMULA plus its type,
-  // "4d10 bludgeoning" — computed, never hardcoded in the locale), and the
-  // size qualifier (Large or smaller) lives in the note copy because it is
-  // translated text either way. Own wording throughout — the trait text is
-  // BG:DiA's, not SRD; only the numbers are facts.
+  // The stat block's Crushing Wheels trait (PR-7, restructured on the user's
+  // review): the Grinder rolls through the space of Large or smaller
+  // creatures; every creature it passes over must make a DC 11 Dexterity
+  // saving throw or take 4d10 bludgeoning damage and be knocked prone; a
+  // creature ALREADY PRONE — from any cause — takes the damage instead of
+  // being knocked prone; once per creature per turn. TWO surfaces, never a
+  // mechanic: a SHORT pointer note on every drive row (the note key is this
+  // file's literal; the {{dc}} its only param — no word crosses the engine
+  // boundary inside a param, the render sites interpolate them raw) and the
+  // VEHICLE-level roll row `wheels-demon-grinder` (free, no seat, no spend —
+  // the save/check-recorder shape) whose 4d10-bludgeoning DICE LINE carries
+  // the damage (the type localizes at the render site through the
+  // damage-type.* keys, every dice line's convention) and whose description
+  // carries the whole rule (own wording — the trait text is BG:DiA's, not
+  // SRD; only the numbers are facts), gated on the per-vehicle drove marker
+  // Drive's spend writes. PR-8's Raking Scythes join this list as a second
+  // entry, data only.
   moveTraits: [
     {
+      slug: 'wheels',
       note: 'rule.demon-grinder.drive.crushing_wheels',
       saveDc: 11,
       damageCount: 4,

@@ -830,22 +830,36 @@ describe('factory: the seat-cover contribution (cover PR-2 seam)', () => {
 });
 
 /**
- * The MOVE TRAITS — Demon Grinder PR-7. A stat-block trait that fires on the
- * vehicle's OWN movement (the Crushing Wheels both vehicles roll on; later the
- * Tormentor's Raking Scythes) is SPEC DATA the factory turns into ONE
- * unconditional 'notice' on EVERY planned Drive row — the dash-risk idiom
- * exactly: the note states the whole rule, nothing is gated, recorded or
- * counted behind it, and the plan fold attaches it to that row alone. The DC
- * and the damage travel as {{dc}}/{{damage}} params COMPUTED from the entry
- * (the damage the dice average plus the bonus — the {{allowance}} precedent,
- * never a total the copy hardcodes). A spec with no entries emits nothing.
+ * The MOVE TRAITS — Demon Grinder PR-7, restructured on the user's review. A
+ * stat-block trait that fires on the vehicle's OWN movement (the Crushing
+ * Wheels both vehicles roll on; later the Tormentor's Raking Scythes) is SPEC
+ * DATA behind TWO surfaces:
+ *
+ * - a SHORT POINTER note on EVERY planned Drive row (the dash-risk idiom):
+ *   creatures passed over must save (DC {{dc}}) or take the wheels' damage —
+ *   roll the trait's row. {{dc}} is the ONLY param: the render sites
+ *   interpolate params raw ($t(code, params) translates nothing INSIDE
+ *   them), so no word crosses the engine boundary in a param (the codex P2
+ *   on #501 — the formula and the damage type live on the roll row below,
+ *   where the dice-line conventions localize them).
+ * - a VEHICLE-level ROLL offer (`<slug>-<id>`, e.g. wheels-tormentor): free
+ *   section, NO economy spend (the save/check-recorder precedent — a
+ *   consequence of driving, not a choice), no SEAT gate (the wheels roll
+ *   whether or not anyone sits at the Helm), a DAMAGE-ONLY dice line built
+ *   from the entry's dice and type (the type localizes at the render site
+ *   through the damage-type.* keys, exactly like every other dice line),
+ *   and ONE legality leg of its own: the vehicle has DRIVEN this turn —
+ *   Drive's spend writes a PER-VEHICLE `movement.drove` marker beside the
+ *   shared pool, so driving one machine never unlocks another's wheels —
+ *   beside the shared wrecked leg. Illegal-but-COMMITTABLE (the engine's
+ *   contract), with no apply at all (the recorder shape).
  */
-describe('factory: move traits ride every Drive row as per-row notices', () => {
+describe('factory: move traits — pointer note on Drive rows + a vehicle-level roll offer', () => {
   /**
    * A MOVE-TRAIT fixture: numbers unlike EITHER shipped vehicle's Crushing
-   * Wheels (DC 15/14, 3d8+1 and 2d6 — not 11/22 or 13/11), and TWO entries —
-   * the shape PR-8's Raking Scythes takes when the Tormentor grows a second
-   * trait — so a DC or dice average that survived the parameterisation
+   * Wheels (DC 15/14, 3d8+1 and 2d6 — not 11/4d10 or 13/2d10), and TWO
+   * entries — the shape PR-8's Raking Scythes takes when the Tormentor grows
+   * a second trait — so a DC, die or type that survived the parameterisation
    * hardcoded fails here even though both vehicles' corpora stay green.
    */
   const WHEELS_ID = 'infernal-wheels';
@@ -857,6 +871,7 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
     seats: [TEST_SPEC.seats[0]!],
     moveTraits: [
       {
+        slug: 'wheels',
         note: 'rule.infernal-wheels.drive.crushing_wheels',
         saveDc: 15,
         damageCount: 3,
@@ -865,12 +880,33 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
         damageType: 'bludgeoning'
       },
       {
+        slug: 'scythes',
         note: 'rule.infernal-wheels.drive.raking_scythes',
         saveDc: 14,
         damageCount: 2,
         damageDie: 6,
         damageBonus: 0,
         damageType: 'slashing'
+      }
+    ]
+  };
+
+  /**
+   * A SECOND trait-carrying vehicle (different id and stem again): the
+   * per-vehicle DROVE marker precision pin — driving one machine must never
+   * unlock the other's wheels.
+   */
+  const WHEELS_SECOND: InfernalVehicleSpec = {
+    ...SECOND_SPEC,
+    moveTraits: [
+      {
+        slug: 'wheels',
+        note: 'rule.infernal-second.drive.crushing_wheels',
+        saveDc: 12,
+        damageCount: 2,
+        damageDie: 10,
+        damageBonus: 0,
+        damageType: 'bludgeoning'
       }
     ]
   };
@@ -892,7 +928,7 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
     }
   ];
 
-  it('every entry rides EVERY drive row, its params computed from the entry data', () => {
+  it('every entry rides EVERY drive row as a SHORT note whose only param is the DC', () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
@@ -900,20 +936,19 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
       planned: [{ instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } }]
     });
     // A LEGAL row carries the notes ALONE (informational only, never the
-    // error path), each with its OWN numbers as params — the damage the dice
-    // FORMULA plus the type ("3d8+1 bludgeoning", "2d6 slashing" — the
-    // with-bonus and without-bonus shapes), computed at the fold from the
-    // entry, never a string in any locale.
+    // error path). Each note's params carry the entry's DC and NOTHING else:
+    // no damage word, no type — the formula and the type live on the roll
+    // row's dice line, where the dice-line conventions localize them.
     expect(out.planDiagnostics['i0']).toEqual([
       {
         code: 'rule.infernal-wheels.drive.crushing_wheels',
         severity: 'notice',
-        params: { dc: 15, damage: '3d8+1 bludgeoning' }
+        params: { dc: 15 }
       },
       {
         code: 'rule.infernal-wheels.drive.raking_scythes',
         severity: 'notice',
-        params: { dc: 14, damage: '2d6 slashing' }
+        params: { dc: 14 }
       }
     ]);
   });
@@ -935,37 +970,163 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
       {
         code: 'rule.infernal-wheels.drive.crushing_wheels',
         severity: 'notice',
-        params: { dc: 15, damage: '3d8+1 bludgeoning' }
+        params: { dc: 15 }
       },
       {
         code: 'rule.infernal-wheels.drive.raking_scythes',
         severity: 'notice',
-        params: { dc: 14, damage: '2d6 slashing' }
+        params: { dc: 14 }
       }
     ]);
   });
 
-  it('the notes commit NOTHING and gate NOTHING: the drive offer is otherwise unchanged', () => {
+  it("Drive's spend also writes the PER-VEHICLE drove marker (endOfTurn, beside the shared pool)", () => {
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
       committed: fuelledHelm(WHEELS_SPEC),
       planned: [{ instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } }]
     });
-    // Exactly the one keyless endOfTurn spend the drive row always advertised
-    // — no note-shaped effect, no trait fact, nothing counted.
+    // Still ONE keyless endOfTurn effect — now carrying the shared spend AND
+    // this vehicle's own drove marker (the wheels' legality gate), which ages
+    // away with the turn like every per-turn spend.
     expect(out.effects).toHaveLength(1);
+    expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
     expect(out.effects[0]!.state).toEqual({
       'actions.spent': 1,
-      'companion.vehicle.movement.spent': 20
+      'companion.vehicle.movement.spent': 20,
+      'companion.infernalWheels.movement.drove': 1
     });
-    // A trait is never a legality gate: the same three legs as ever (action,
-    // out-of-movement, wrecked).
+    // A trait is never a DRIVE legality gate: the same three legs as ever
+    // (action, out-of-movement, wrecked).
     const drive = offers(WHEELS_SPEC).find((o) => o.id === `drive-${WHEELS_ID}`)!;
     expect(drive.legalWhen).toHaveLength(3);
   });
 
-  it('a spec with NO moveTraits emits nothing — its drive rows carry no note', () => {
+  it('each entry emits its VEHICLE-level roll offer: free, no seat gate, damage-only dice line', () => {
+    const mod = buildInfernalVehicle(WHEELS_SPEC);
+    const ids = mod.offer!({ selections: {} }).map((o) => o.id);
+    expect(ids).toContain(`wheels-${WHEELS_ID}`);
+    expect(ids).toContain(`scythes-${WHEELS_ID}`);
+    const wheels = offers(WHEELS_SPEC).find((o) => o.id === `wheels-${WHEELS_ID}`)!;
+    // NO SEAT GATE: `when` is the acquire alone — the wheels roll whether or
+    // not anyone sits at the Helm (unlike drive/dash/fuel/boost).
+    expect(typeof wheels.when).toBe('function');
+    expect(
+      wheels.when!({
+        num: (n) => (n === 'companion.infernalWheels.active' ? 1 : 0),
+        has: (n) => n === 'companion.infernalWheels.active'
+      })
+    ).toBe(true);
+    expect(
+      wheels.when!({
+        num: (n) => (n === 'companion.infernalWheels.seats.helm' ? 1 : 0),
+        has: (n) => n === 'companion.infernalWheels.seats.helm'
+      }),
+      'a seat alone (no acquire) never opens the roll row'
+    ).toBe(false);
+    // The recorder shape: free section, the SAVE 'vehicle' sub-bucket beside
+    // the vehicle's save/check rollers, NO action cost, and a damage-ONLY
+    // dice line whose type rides as the IDENTIFIER the render site localizes
+    // through damage-type.* (the dice-line convention — never a param, never
+    // copy). The bonus appears only when the entry carries one.
+    expect(wheels.ui).toEqual({
+      section: 'free',
+      subject: WHEELS_ID,
+      name: 'rule.infernal-wheels.wheels.name',
+      description: 'rule.infernal-wheels.wheels.description',
+      detailKey: 'vehicle/infernal-test',
+      intents: { SAVE: 'vehicle' },
+      actionCost: [],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          {
+            sides: 8,
+            count: 3,
+            bonus: { number: 1 },
+            purpose: 'damage',
+            damageType: { string: 'bludgeoning' }
+          }
+        ]
+      }
+    });
+    const scythes = offers(WHEELS_SPEC).find((o) => o.id === `scythes-${WHEELS_ID}`)!;
+    expect((scythes.ui as Record<string, unknown>).primaryControl).toEqual({
+      type: 'dice-line',
+      dice: [
+        {
+          sides: 6,
+          count: 2,
+          purpose: 'damage',
+          damageType: { string: 'slashing' }
+        }
+      ]
+    });
+    // No apply at all — the recorder shape: the row rolls, it commits nothing.
+    expect(wheels.apply).toBeUndefined();
+    expect(wheels.legalWhen).toHaveLength(2);
+    expect(wheels.legalWhen![0]!.diagnostics).toEqual([
+      { code: 'rule.infernal-wheels.wheels.not_driven', severity: 'error' }
+    ]);
+    expect(wheels.legalWhen!.at(-1)!.diagnostics).toEqual([
+      { code: 'rule.infernal-wheels.wrecked', severity: 'error' }
+    ]);
+  });
+
+  it('the roll row is ILLEGAL until the vehicle has driven, then legal in the SAME fold — its own diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    // Fuelled but not yet driven this turn: the row exists (acquired), is
+    // ILLEGAL on its own not-driven leg, and stays committable (the engine's
+    // illegal-but-visible contract — no apply means the row commits nothing).
+    const before = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
+      committed: fuelledHelm(WHEELS_SPEC)
+    });
+    const row = before.availableRules.find((r) => r.rule.id === `wheels-${WHEELS_ID}`);
+    expect(row, 'the roll row exists while acquired').toBeDefined();
+    expect(row!.legal).toBe(false);
+    expect(row!.diagnostics).toEqual([
+      { code: 'rule.infernal-wheels.wheels.not_driven', severity: 'error' }
+    ]);
+    // A planned drive row writes the marker inside the SAME fold: the roll
+    // row behind it reads LEGAL — the consequence-of-driving gate in action.
+    const after = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
+      committed: fuelledHelm(WHEELS_SPEC),
+      planned: [
+        { instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } },
+        { instanceId: 'i1', ruleId: `wheels-${WHEELS_ID}` }
+      ]
+    });
+    const driven = after.availableRules.find((r) => r.rule.id === `wheels-${WHEELS_ID}`);
+    expect(driven!.legal).toBe(true);
+    expect(driven!.diagnostics).toEqual([]);
+    expect(after.planDiagnostics['i1'] ?? []).toEqual([]);
+  });
+
+  it('the drove marker is PER-VEHICLE: driving one machine never unlocks another’s wheels', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), buildInfernalVehicle(WHEELS_SECOND), economy],
+      committed: [...fuelledHelm(WHEELS_SPEC), ...fuelledHelm(WHEELS_SECOND)],
+      // Drive the FIRST vehicle only.
+      planned: [{ instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } }]
+    });
+    const mine = out.availableRules.find((r) => r.rule.id === `wheels-${WHEELS_ID}`)!;
+    expect(mine.legal).toBe(true);
+    // The SECOND vehicle shared the SPEND (its pool paid the same feet) but
+    // its wheels never turned: its roll row stays illegal on its OWN
+    // not-driven leg — the marker is per-vehicle stem, not the shared fact.
+    const theirs = out.availableRules.find((r) => r.rule.id === 'wheels-infernal-second')!;
+    expect(theirs.legal).toBe(false);
+    expect(theirs.diagnostics).toEqual([
+      { code: 'rule.infernal-second.wheels.not_driven', severity: 'error' }
+    ]);
+  });
+
+  it('a spec with NO moveTraits emits nothing — no notes, no roll offers', () => {
     const economy = getModule('action-economy')!;
     // TEST_SPEC sets no moveTraits (the juke/acMode optionality precedent:
     // what a stat block does not carry does not exist).
@@ -975,6 +1136,7 @@ describe('factory: move traits ride every Drive row as per-row notices', () => {
       planned: [{ instanceId: 'i0', ruleId: `drive-${SPEC_ID}`, selections: { distance: 20 } }]
     });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.availableRules.some((r) => r.rule.id.startsWith('wheels-'))).toBe(false);
   });
 
   it('a trait note is never a standing annotation — no drive row, no note', () => {

@@ -121,6 +121,9 @@ describe('acquire offer ui', () => {
       `dash-${ID}`,
       // NO Juke: the Demon Grinder's stat block carries no Reaction (the
       // spec omits `juke`, so the factory never emits the offer at all).
+      // PR-7's move-trait roll row: the vehicle-level Crushing Wheels
+      // consequence of driving (no seat, no spend).
+      `wheels-${ID}`,
       // The six record rollers (saves first, then checks, in stat-block order).
       `${ID}-save-str`,
       `${ID}-save-dex`,
@@ -315,27 +318,22 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
     ];
   }
 
-  it('the crushing wheels note rides every drive row: DC 11 and the dice formula as COMPUTED params', () => {
+  it('the crushing wheels note rides every drive row: a SHORT pointer whose only param is the DC', () => {
     // The stat block's Crushing Wheels trait — the Grinder rolls through the
     // space of Large or smaller creatures; every creature it passes over must
-    // save (DC 11 Dex) or take 4d10 bludgeoning and be knocked prone; an
-    // already-prone creature takes the damage instead; once per creature per
-    // turn — is PR-7's move-trait machinery: ONE unconditional 'notice' on
-    // EVERY planned drive row (the dash-risk idiom), informational only,
-    // never a mechanic. The DC travels and the damage DICE FORMULA travels as
-    // params COMPUTED from the spec entry ("4d10 bludgeoning" — count, die,
-    // bonus, type), never a hardcoded string in the copy.
+    // save (DC 11 Dex) or take the wheels' damage — is PR-7's move-trait
+    // machinery restructured (user review): ONE unconditional 'notice' on
+    // EVERY planned drive row (the dash-risk idiom), a POINTER not the
+    // rulebook. The DC is the note's ONLY param; the damage formula and its
+    // type live on the ROLL row's dice line (below), where the dice-line
+    // conventions localize them.
     const out = evaluate({
       modules: [module(), getModule('action-economy')!],
       committed: fuelledHelm(),
       planned: [{ instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } }]
     });
     expect(out.planDiagnostics['i0']).toEqual([
-      {
-        code: `${T}.drive.crushing_wheels`,
-        severity: 'notice',
-        params: { dc: 11, damage: '4d10 bludgeoning' }
-      }
+      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 11 } }
     ]);
     // The row is otherwise unchanged: the one endOfTurn spend, the pool paying
     // exactly the captured distance — the note commits nothing.
@@ -343,7 +341,7 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
     expect(out.facts['companion.vehicle.movement.spent']).toBe(30);
   });
 
-  it('the wheels note interpolates {{dc}} and {{damage}} in BOTH locales, own wording', () => {
+  it('the wheels note is a POINTER in BOTH locales: {{dc}} alone, no rule text, no damage word', () => {
     for (const [locale, dict] of [
       ['en', en],
       ['en-x-tlh', tlh]
@@ -351,27 +349,130 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
       const value = i18nAt(dict, `rule.${ID}.drive.crushing_wheels`);
       expect(value, `${locale} wheels note exists`).toEqual(expect.any(String));
       expect(value, `${locale} interpolates {{dc}}`).toContain('{{dc}}');
-      expect(value, `${locale} interpolates {{damage}}`).toContain('{{damage}}');
+      // The full rule lives on the ROLL row's description; the note carries
+      // no damage param at all (the render sites interpolate params raw, so
+      // no word may cross the engine boundary inside one — codex P2 #501).
+      expect(value, `${locale} note carries no damage param`).not.toContain('{{damage}}');
     }
-    // The SIZE QUALIFIER (Large or smaller) lives in the per-vehicle copy —
-    // translated text either way, never a param.
     const english = i18nAt(en, `rule.${ID}.drive.crushing_wheels`) as string;
-    expect(english).toContain('Large or smaller');
-    // The ALREADY-PRONE clause states the correct semantics (codex P2 on
-    // #501, matching the stat-block detail): a creature ALREADY PRONE — from
-    // any cause — takes the damage INSTEAD of being knocked prone, on the
-    // qualifying pass. Never the old reading's restrictions: no
-    // wheels-caused prone, no second pass.
-    expect(english).toContain('already prone');
-    expect(english).toContain('instead of being knocked prone');
-    expect(english, 'no wheels-caused-prone restriction').not.toContain('already knocked prone');
-    expect(english, 'no second-pass requirement').not.toContain('once more');
-    // The damage rides ONLY as the {{damage}} param: the copy carries
-    // neither the static average nor the formula nor the damage-type word —
-    // all three arrive computed from the spec entry.
-    expect(english, 'no static average in the copy').not.toContain('22');
-    expect(english, 'no hardcoded formula in the copy').not.toContain('4d10');
-    expect(english, 'no hardcoded damage type in the copy').not.toContain('bludgeoning');
+    // The pointer names the roll row and the save, and NOTHING else: no
+    // already-prone clause, no size qualifier, no numbers but the {{dc}}
+    // slot, no damage type (all of it lives on the roll row / its dice line).
+    expect(english).toContain('Crushing Wheels');
+    expect(english).toContain('Dexterity saving throw');
+    for (const absent of [
+      'already prone',
+      'instead of being knocked prone',
+      'Large or smaller',
+      '22',
+      '4d10',
+      'bludgeoning'
+    ])
+      expect(english, `the slim note restates no rule detail (${absent})`).not.toContain(absent);
+    const klingon = i18nAt(tlh, `rule.${ID}.drive.crushing_wheels`) as string;
+    expect(klingon, 'the tlh note leaks no English damage-type identifier').not.toContain(
+      'bludgeoning'
+    );
+    expect(
+      klingon,
+      'the tlh note leaks no English damage-type identifier (slashing)'
+    ).not.toContain('slashing');
+  });
+
+  it('the Crushing Wheels ROLL row: vehicle-level, free, no seat gate, damage-only dice line (DC 11, 4d10)', () => {
+    // The consequence surface (user review restructure): a VEHICLE-level
+    // roll offer — `when` the acquire ALONE (no Helm seat: the wheels roll
+    // whether or not anyone drives), FREE with no economy spend (the
+    // save/check-recorder precedent: a consequence of driving, not a
+    // choice), carrying the damage as a DICE LINE built from the spec —
+    // the type rides as the IDENTIFIER the render site localizes through
+    // damage-type.* (every dice line's convention: the toast renders
+    // $t('damage-type.' + key)) — never as a param.
+    const unseated = evaluate({ modules: [module()], committed: acquired() });
+    const row = unseated.availableRules.find((r) => r.rule.id === `wheels-${ID}`);
+    expect(row, 'the roll row exists while acquired, with nobody at the Helm').toBeDefined();
+    expect(row!.rule.ui).toEqual({
+      section: 'free',
+      subject: SUBJECT,
+      name: `${T}.wheels.name`,
+      description: `${T}.wheels.description`,
+      detailKey: 'vehicle/demon-grinder',
+      intents: { SAVE: 'vehicle' },
+      actionCost: [],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          {
+            sides: 10,
+            count: 4,
+            purpose: 'damage',
+            damageType: { string: 'bludgeoning' }
+          }
+        ]
+      }
+    });
+    // The RAW catalog offer carries no apply — the recorder shape: the row
+    // rolls, it commits nothing (the descriptor surface never exposes one).
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === `wheels-${ID}`)!;
+    expect(raw.apply).toBeUndefined();
+  });
+
+  it('the roll row is ILLEGAL until the Grinder has Driven this turn — its own diagnostic, both locales', () => {
+    // The consequence gate (user review): Drive's spend writes the
+    // PER-VEHICLE drove marker (companion.demonGrinder.movement.drove,
+    // endOfTurn) beside the shared pool, and the roll row's one own leg reads
+    // it — illegal-but-committable before driving (the engine's contract;
+    // the row has no apply, so a planned-anyway row commits nothing).
+    const economy = getModule('action-economy')!;
+    const before = evaluate({
+      modules: [module(), economy],
+      committed: fuelledHelm()
+    });
+    const row = before.availableRules.find((r) => r.rule.id === `wheels-${ID}`)!;
+    expect(row.legal).toBe(false);
+    expect(row.diagnostics).toEqual([{ code: `${T}.wheels.not_driven`, severity: 'error' }]);
+    // Same fold, behind a drive row: the marker is written, the row reads
+    // LEGAL — and the marker itself is a plain endOfTurn fact.
+    const after = evaluate({
+      modules: [module(), economy],
+      committed: fuelledHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } },
+        { instanceId: 'i1', ruleId: `wheels-${ID}` }
+      ]
+    });
+    const driven = after.availableRules.find((r) => r.rule.id === `wheels-${ID}`)!;
+    expect(driven.legal).toBe(true);
+    expect(after.facts[`${F}.movement.drove`]).toBe(1);
+    expect(after.planDiagnostics['i1'] ?? []).toEqual([]);
+    // The not-driven diagnostic and the roll row's name/description exist in
+    // BOTH locales — the description carries the FULL rule (already-prone
+    // clause, once per turn, the size qualifier) and ADVERTISES Drive.
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      for (const key of ['name', 'description', 'not_driven'])
+        expect(i18nAt(dict, `rule.${ID}.wheels.${key}`), `${locale} wheels.${key}`).toEqual(
+          expect.any(String)
+        );
+    }
+    const english = i18nAt(en, `rule.${ID}.wheels.description`) as string;
+    for (const detail of [
+      'Large or smaller',
+      'DC 11',
+      '4d10',
+      'already prone',
+      'instead of being knocked prone',
+      'once',
+      'Driven'
+    ])
+      expect(english, `the description carries the full rule (${detail})`).toContain(detail);
+    // The dice-line type localization rides the EXISTING damage-type keys —
+    // the identifier resolves in both locales (the render-site convention).
+    for (const dict of [en, tlh])
+      expect(i18nAt(dict, 'damage-type.bludgeoning')).toEqual(expect.any(String));
   });
 
   it('no drive row, no note: unseated, the trait is nowhere (not an annotation, not a fact)', () => {
