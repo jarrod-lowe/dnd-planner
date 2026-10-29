@@ -62,7 +62,7 @@ steps:
                 default:
                   fact: companion.tormentor.movement.remaining
   # Drive 40 ft: the player's ACTION and exactly 40 ft of the vehicle's pool
-  # (the Crushing Wheels note riding the row — PR-7).
+  #
   - addOffer:
       id: drive-tormentor
       selections:
@@ -74,8 +74,7 @@ steps:
         planErrors:
           - id: drive-tormentor
             index: 0
-            errors:
-              - rule.tormentor.drive.crushing_wheels
+            errors: []
   # No action left (60 ft still in the pool — the failing leg is the action
   # alone): Drive stays visible but ILLEGAL…
   - evaluate:
@@ -85,7 +84,7 @@ steps:
             - drive-tormentor
   # …and the override row still moves, its distance DEFAULTING to all
   # remaining (the steed idiom) while carrying the no-action diagnostic
-  # (the wheels note after it).
+
   - addOffer:
       id: drive-tormentor
       assert:
@@ -97,7 +96,6 @@ steps:
             index: 1
             errors:
               - rule.tormentor.drive.no_action
-              - rule.tormentor.drive.crushing_wheels
   # The turn ends: the spends age away and the pool resets (the steed reset).
   - endTurn:
       assert:
@@ -107,8 +105,7 @@ steps:
           companion.tormentor.movement.remaining: 100
   # Over-distance (the steed partial-distance pin): selecting more than
   # remains must error rather than drive the pool silently — the row still
-  # commits, the pool reading the over-commit (the wheels note after the
-  # error).
+  # commits, the pool reading the over-commit.
   - addOffer:
       id: drive-tormentor
       selections:
@@ -121,7 +118,6 @@ steps:
             index: 0
             errors:
               - rule.tormentor.drive.out_of_movement
-              - rule.tormentor.drive.crushing_wheels
   # Abandoning settles the pool to 0 with every baked fact (the derives stay
   # registered, gated on the acquire).
   - endTurn: {}

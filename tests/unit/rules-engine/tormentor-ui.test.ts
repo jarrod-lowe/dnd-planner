@@ -1677,13 +1677,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       'companion.vehicle.movement.spent': 30,
       'companion.tormentor.movement.drove': 1
     });
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([
-      {
-        code: `${T}.drive.crushing_wheels`,
-        severity: 'notice',
-        params: { dc: 13 }
-      }
-    ]);
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
     expect(out.facts['actions.remaining']).toBe(0);
     expect(out.facts[`${F}.movement.remaining`]).toBe(70);
     // The seat stays taken and the capacity counts it still — moving writes
@@ -1725,12 +1719,7 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     });
     expect(out.facts[`${F}.movement.remaining`]).toBe(-50);
     expect(out.planDiagnostics['i0']).toEqual([
-      { code: `${T}.drive.out_of_movement`, severity: 'error' },
-      {
-        code: `${T}.drive.crushing_wheels`,
-        severity: 'notice',
-        params: { dc: 13 }
-      }
+      { code: `${T}.drive.out_of_movement`, severity: 'error' }
     ]);
   });
 
@@ -1747,21 +1736,10 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     // The second row over-commits the ACTION (the first row spent it) with 70
     // ft still in the pool, so the out-of-movement gate passes and the failing
     // leg is the action alone — the row carries exactly its own diagnostic
-    // (the trait note after it) while its default distance still lands.
-    expect(out.planDiagnostics['i0'] ?? []).toEqual([
-      {
-        code: `${T}.drive.crushing_wheels`,
-        severity: 'notice',
-        params: { dc: 13 }
-      }
-    ]);
+    // (the wheels note is the Drive panel's chip, not a per-row diagnostic).
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
     expect(out.planDiagnostics['i1']).toEqual([
-      { code: `${T}.drive.no_action`, severity: 'error' },
-      {
-        code: `${T}.drive.crushing_wheels`,
-        severity: 'notice',
-        params: { dc: 13 }
-      }
+      { code: `${T}.drive.no_action`, severity: 'error' }
     ]);
     expect(out.facts[`${F}.movement.remaining`]).toBe(0);
   });
@@ -1780,22 +1758,32 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(offer!.diagnostics).toEqual([]);
   });
 
-  it('the crushing wheels note rides every drive row: a SHORT pointer whose only param is the DC', () => {
-    // The stat block's Crushing Wheels trait — the Tormentor rolls through
-    // the space of Medium or smaller creatures; every creature it passes over
-    // must save (DC 13 Dex) or take the wheels' damage — is PR-7's move-trait
-    // machinery restructured (user review): ONE unconditional 'notice' on
-    // EVERY planned drive row (the dash-risk idiom), a POINTER not the
-    // rulebook. The DC is the note's ONLY param; the formula and type live on
-    // the ROLL row's dice line.
+  it('the crushing wheels note is a LINKED annotation on the Drive panel — tap it, the roll row joins the plan', () => {
+    // The user's hands-on correction: the note must LINK to the roll row via
+    // the EXISTING annotation-click mechanism (the Extra Attack / Heroic
+    // Inspiration / Divine Smite pattern). The note is an ANNOTATION targeted
+    // at the Drive panel's own label, carrying addsToPlan to the wheels roll
+    // row — and the drive row itself carries NO per-row diagnostic any more
+    // (the chip is the note).
     const economy = getModule('action-economy')!;
     const out = evaluate({
       modules: [module(), economy],
       committed: helmFuelled(),
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
     });
-    expect(out.planDiagnostics['i0']).toEqual([
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 13 } }
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.annotations).toEqual([
+      {
+        key: `${T}.drive.crushing_wheels`,
+        targets: ['move.vehicle.tormentor.companion'],
+        values: { dc: 13 },
+        addsToPlan: { offer: 'wheels-tormentor' }
+      }
+    ]);
+    // The Drive offer declares the label the chip targets.
+    const drive = module().offer!({ selections: {} }).find((o) => o.id === 'drive-tormentor')!;
+    expect((drive.ui as Record<string, unknown>).annotationLabels).toEqual([
+      'move.vehicle.tormentor.companion'
     ]);
     // The note commits nothing: the row's one spend is the drive's own.
     expect(out.effects).toHaveLength(1);
@@ -1860,7 +1848,9 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       name: `${T}.wheels.name`,
       description: `${T}.wheels.description`,
       detailKey: 'vehicle/tormentor',
-      intents: { SAVE: 'vehicle' },
+      // The user's correction: the wheels are in no way a save — the row
+      // files with the vehicle's WEAPON offers, staying free with no spend.
+      intents: { ATTACK: 'weapons' },
       actionCost: [],
       annotationLabels: ['dice.any.companion'],
       primaryControl: {

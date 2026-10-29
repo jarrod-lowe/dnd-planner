@@ -95,17 +95,18 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
   // saving throw or take 4d10 bludgeoning damage and be knocked prone; a
   // creature ALREADY PRONE — from any cause — takes the damage instead of
   // being knocked prone; once per creature per turn. TWO surfaces, never a
-  // mechanic: a SHORT pointer note on every drive row (the note key is this
-  // file's literal; the {{dc}} its only param — no word crosses the engine
-  // boundary inside a param, the render sites interpolate them raw) and the
-  // VEHICLE-level roll row `wheels-demon-grinder` (free, no seat, no spend —
-  // the save/check-recorder shape) whose 4d10-bludgeoning DICE LINE carries
-  // the damage (the type localizes at the render site through the
-  // damage-type.* keys, every dice line's convention) and whose description
-  // carries the whole rule (own wording — the trait text is BG:DiA's, not
-  // SRD; only the numbers are facts), gated on the per-vehicle drove marker
-  // Drive's spend writes. PR-8's Raking Scythes join this list as a second
-  // entry, data only.
+  // mechanic: a SHORT LINKED chip annotation on the Drive panel (the note
+  // key is this file's literal; the {{dc}} its only interpolation value; tap
+  // the chip and the roll row joins the plan — the existing annotation-click
+  // mechanism) and the VEHICLE-level roll row `wheels-demon-grinder` (free,
+  // no seat, no spend, filed with the WEAPON offers as an ATTACK — the
+  // user's ruling; the wheels are in no way a save) whose 4d10-bludgeoning
+  // DICE LINE carries the damage (the type localizes at the render site
+  // through the damage-type.* keys, every dice line's convention) and whose
+  // description carries the whole rule (own wording — the trait text is
+  // BG:DiA's, not SRD; only the numbers are facts), gated on the
+  // per-vehicle drove marker Drive's spend writes. PR-8's Raking Scythes
+  // join this list as a second entry, data only.
   moveTraits: [
     {
       slug: 'wheels',

@@ -96,13 +96,14 @@ const TORMENTOR: InfernalVehicleSpec = {
   // Dexterity save, 2d10 bludgeoning and knocked prone on a failure, a
   // creature ALREADY PRONE (any cause) taking the damage instead of being
   // knocked prone, once per creature per turn. TWO surfaces: the SHORT
-  // pointer note on every drive row ({{dc}} its only param) and the
-  // vehicle-level roll row `wheels-tormentor` (free, no seat, no spend)
-  // whose 2d10-bludgeoning dice line carries the damage and whose
-  // description carries the whole rule, gated on the per-vehicle drove
-  // marker. PR-8's Raking Scythes join this list as a second entry, data
-  // only. Own wording throughout — the trait text is BG:DiA's, not SRD;
-  // only the numbers are facts.
+  // LINKED chip annotation on the Drive panel ({{dc}} its only
+  // interpolation value; tap the chip and the roll row joins the plan) and
+  // the vehicle-level roll row `wheels-tormentor` (free, no seat, no spend,
+  // filed with the WEAPON offers as an ATTACK) whose 2d10-bludgeoning dice
+  // line carries the damage and whose description carries the whole rule,
+  // gated on the per-vehicle drove marker. PR-8's Raking Scythes join this
+  // list as a second entry, data only. Own wording throughout — the trait
+  // text is BG:DiA's, not SRD; only the numbers are facts.
   moveTraits: [
     {
       slug: 'wheels',

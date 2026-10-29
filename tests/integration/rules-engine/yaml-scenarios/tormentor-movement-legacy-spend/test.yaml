@@ -40,8 +40,7 @@ steps:
         planErrors:
           - id: drive-tormentor
             index: 0
-            errors:
-              - rule.tormentor.drive.crushing_wheels
+            errors: []
   # End of turn: BOTH spends age away — the legacy effect expires with the
   # turn exactly as it always did, and the pool resets full.
   - endTurn:

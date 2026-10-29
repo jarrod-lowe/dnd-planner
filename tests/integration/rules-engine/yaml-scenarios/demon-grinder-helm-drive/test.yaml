@@ -35,9 +35,8 @@ steps:
           companion.demonGrinder.speed.effective: 100
           companion.demonGrinder.movement.total: 100
           companion.demonGrinder.movement.remaining: 100
-  # Drive 40 ft.: the action and the distance land in ONE endOfTurn effect,
-  # the distance on the SHARED player-level spend (the Crushing Wheels note
-  # riding the row — PR-7).
+  # Drive 40 ft.: the action and the distance land in ONE endOfTurn effect —
+  # the distance on the SHARED player-level spend.
   - addOffer:
       id: drive-demon-grinder
       selections:
@@ -51,8 +50,7 @@ steps:
         planErrors:
           - id: drive-demon-grinder
             index: 0
-            errors:
-              - rule.demon-grinder.drive.crushing_wheels
+            errors: []
   - endTurn:
       assert:
         facts:

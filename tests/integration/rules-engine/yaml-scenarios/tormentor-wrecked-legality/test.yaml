@@ -107,7 +107,7 @@ steps:
   # wrecked leg and its out-of-movement re-check — the plan fold carries the
   # legalWhen gates' diagnostics first, the apply's re-checked ones after
   # (deduped), so the row reads wrecked (the gate) then out-of-movement
-  # (the selected distance), the Crushing Wheels note last (PR-7).
+  # (the selected distance)
   - addOffer:
       id: drive-tormentor
       selections:
@@ -118,12 +118,10 @@ steps:
             errors:
               - rule.tormentor.wrecked
               - rule.tormentor.drive.out_of_movement
-              - rule.tormentor.drive.crushing_wheels
   - endTurn: {}
   # The sole-failing-leg pins, one row per turn so every sibling leg passes
-  # and wrecked stands ALONE among the errors (each Drive row keeps its
-  # unconditional wheels note and each Dash row its risk note beside the
-  # error, in push order).
+  # and wrecked stands ALONE on the row (each Dash row keeps its risk note
+  # beside the error, in push order).
   - addOffer:
       id: drive-tormentor
       selections:
@@ -133,7 +131,6 @@ steps:
           - id: drive-tormentor
             errors:
               - rule.tormentor.wrecked
-              - rule.tormentor.drive.crushing_wheels
   - endTurn: {}
   - addOffer:
       id: dash-tormentor

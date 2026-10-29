@@ -30,8 +30,7 @@ steps:
           illegal:
             - drive-tormentor
   # The override row: an over-distance selection carries the steed's
-  # out-of-movement diagnostic while the over-commit projects negative (the
-  # Crushing Wheels note after it — PR-7).
+  # out-of-movement diagnostic while the over-commit projects negative.
   - addOffer:
       id: drive-tormentor
       selections:
@@ -44,7 +43,6 @@ steps:
             index: 0
             errors:
               - rule.tormentor.drive.out_of_movement
-              - rule.tormentor.drive.crushing_wheels
   - endTurn: {}
   # A soul coin: the pool opens at 100 ft. and Drive turns legal.
   - addOffer:

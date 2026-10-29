@@ -60,7 +60,7 @@ steps:
                 - bonus
   # Drive spends the action and the movement — nothing else: the bonus action
   # stays open, the seat stays taken, the capacity counts the driver still
-  # (the Crushing Wheels note riding the row — PR-7).
+  #
   - addOffer:
       id: drive-tormentor
       selections:
@@ -75,8 +75,7 @@ steps:
         planErrors:
           - id: drive-tormentor
             index: 0
-            errors:
-              - rule.tormentor.drive.crushing_wheels
+            errors: []
   # The action is gone but the BONUS action is not: Dash stays LEGAL beside a
   # driven turn, while Drive turns illegal.
   - evaluate:
@@ -113,7 +112,7 @@ steps:
           companion.tormentor.movement.remaining: 100
           companion.tormentor.seats.helm: 1
   # Turn 2, dash-first: the bonus action goes, the ACTION stays open for
-  # Drive — the mirror of turn 1, the note riding the row as before.
+  # Drive — the mirror of turn 1 as before.
   - addOffer:
       id: dash-tormentor
       assert:
@@ -135,5 +134,4 @@ steps:
         planErrors:
           - id: drive-tormentor
             index: 0
-            errors:
-              - rule.tormentor.drive.crushing_wheels
+            errors: []

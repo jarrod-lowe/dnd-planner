@@ -48,7 +48,7 @@ steps:
             errors:
               - rule.tormentor.dash.risk
   # The doubled pool is Drive's to spend, the action still open: 150 of the
-  # 200 (the Crushing Wheels note riding the row — PR-7).
+  # 200
   - addOffer:
       id: drive-tormentor
       selections:
@@ -60,8 +60,7 @@ steps:
         planErrors:
           - id: drive-tormentor
             index: 0
-            errors:
-              - rule.tormentor.drive.crushing_wheels
+            errors: []
   # No bonus action left: Dash stays visible but ILLEGAL with its own
   # diagnostic.
   - evaluate:

@@ -89,11 +89,11 @@ export interface MoveTraitSpec {
    */
   slug: string;
   /**
-   * i18n key of the trait's SHORT pointer note on every drive row — an
-   * authored LITERAL per vehicle, per trait (the SeatWeaponSpec.rider
-   * precedent), so the static module-i18n-coverage scan sees it in the
-   * spec's source. The note points at the roll row; the full rule lives in
-   * the roll offer's description.
+   * i18n key of the trait's SHORT pointer NOTE — the LINKED chip annotation's
+   * label on the Drive panel — an authored LITERAL per vehicle, per trait
+   * (the SeatWeaponSpec.rider precedent), so the static module-i18n-coverage
+   * scan sees it in the spec's source. The chip points at the roll row
+   * (addsToPlan); the full rule lives in the roll offer's description.
    */
   note: string;
   /** The Dexterity save DC the trait's rule calls for (the {{dc}} param). */
@@ -199,12 +199,13 @@ export interface InfernalVehicleSpec {
   /**
    * The stat block's MOVE TRAITS — rules that fire on the vehicle's own
    * movement (Crushing Wheels, Raking Scythes), each an entry in
-   * MoveTraitSpec. When set, each entry drives TWO surfaces: a SHORT
-   * unconditional 'notice' pointer on EVERY drive row (the dash-risk idiom;
-   * the DC its only param) and a VEHICLE-level roll row (`<slug>-<id>`,
+   * MoveTraitSpec. When set, each entry drives TWO surfaces: a SHORT LINKED
+   * chip annotation on the Drive panel (the existing annotation-click
+   * mechanism — tap it and the trait's roll row joins the plan; the DC its
+   * only interpolation value) and a VEHICLE-level roll row (`<slug>-<id>`,
    * free, no seat, no spend) whose dice line carries the trait's damage and
    * whose description carries the whole rule. OMIT it for a vehicle whose
-   * stat block carries none — no notes, no roll rows (what a stat block does
+   * stat block carries none — no chips, no roll rows (what a stat block does
    * not carry does not exist, the juke/acMode optionality precedent), and a
    * later trait joins as data.
    */
@@ -1262,28 +1263,30 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
   const DASH_RISK = `${T}.dash.risk`;
 
   /**
-   * The MOVE-TRAIT notes — the informational diagnostics EVERY planned Drive
-   * row carries when the spec lists move traits (Crushing Wheels today; the
-   * Tormentor's Raking Scythes will join the same way as data). Exactly the
-   * dash-risk idiom, on the rows that do the moving — but a POINTER, not the
-   * rulebook (the user-review restructure): the note says that creatures
-   * passed over must save (DC in hand) or take the trait's damage and points
-   * at the trait's ROLL row (below), whose description carries the whole
-   * rule. The DC is the note's ONLY param — the render sites interpolate
-   * params raw ($t(code, params) translates nothing INSIDE them), so no word
-   * may cross the engine boundary in a param; the formula and the damage
-   * type live on the roll row's DICE LINE, where the dice-line conventions
-   * localize the type through the damage-type.* keys (the codex P2 on #501).
-   * Entries ride in spec order after any error legs. A spec with no entries
-   * emits NOTHING (the juke/acMode optionality precedent: what a stat block
-   * does not carry does not exist).
+   * The MOVE-TRAIT chips — the trait notes as LINKED annotations on the Drive
+   * panel (the user's hands-on correction: the note must LINK to the roll row
+   * via the EXISTING annotation-click mechanism — the Extra Attack / Heroic
+   * Inspiration / Divine Smite pattern). Each chip's KEY is the trait's note
+   * key (a POINTER, never the rulebook: creatures passed over must save, DC
+   * in the `values` slot, or take the wheels' damage), it targets the Drive
+   * offer's own label below — PER SUBJECT, so one vehicle's chip never lands
+   * on another's drive panel — and `addsToPlan` names the trait's ROLL row:
+   * tap the chip, the roll row joins the plan. Emitted only while the vehicle
+   * is acquired; the chip renders exactly where the Drive panel does (the
+   * label rides the drive offer's `annotationLabels`), so no panel, no chip.
+   * A spec with no move traits emits NOTHING (the juke/acMode optionality
+   * precedent: what a stat block does not carry does not exist).
    */
-  const moveTraitNotes = (): Diagnostic[] =>
-    (spec.moveTraits ?? []).map((trait) => ({
-      code: trait.note,
-      severity: 'notice',
-      params: { dc: trait.saveDc }
-    }));
+  const MOVE_TRAIT_LABEL = `move.vehicle.${subject}.companion`;
+  const moveTraitAnnotations = (f: FactReader): Annotation[] =>
+    spec.moveTraits && acquired(f)
+      ? spec.moveTraits.map((trait) => ({
+          key: trait.note,
+          targets: [MOVE_TRAIT_LABEL],
+          values: { dc: trait.saveDc },
+          addsToPlan: { offer: `${trait.slug}-${id}` }
+        }))
+      : [];
 
   /**
    * The PER-VEHICLE drove marker — the fact Drive's spend writes beside the
@@ -1333,7 +1336,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
       name: `${T}.${trait.slug}.name`,
       description: `${T}.${trait.slug}.description`,
       detailKey: spec.details.statBlock,
-      intents: { SAVE: 'vehicle' },
+      // The user's correction: the wheels are in no way a save — the row
+      // FILES with the vehicle's weapon offers (the harpoon/bite/swing rows'
+      // own ATTACK bucket) while keeping the recorder shape (free, no spend).
+      intents: { ATTACK: 'weapons' },
       actionCost: [],
       annotationLabels: ['dice.any.companion'],
       primaryControl: {
@@ -2003,10 +2009,9 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         // Apply re-checks both (the dash idiom), the distance re-check
         // validating the SELECTED distance — an over-distance row carries the
         // steed's out-of-movement diagnostic while its spend still lands (the
-        // over-commit projection, unfloored like the steed's). BESIDE the
-        // re-checks, LAST, the spec's MOVE TRAITS state their whole rules as
-        // unconditional 'notice' diagnostics (moveTraitNotes above — the
-        // dash-risk idiom): the row informs, the GM adjudicates the pass.
+        // over-commit projection, unfloored like the steed's). The trait NOTE
+        // rides the Drive PANEL as a linked chip (moveTraitAnnotations), not
+        // the row: nothing trait-shaped is pushed here.
         id: `drive-${id}`,
         when: (f: FactReader): boolean => acquired(f) && atHelm(f),
         legalWhen: [
@@ -2027,6 +2032,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
           description: `${T}.drive.description`,
           detailKey: spec.details.helm,
           primaryControl: DRIVE_CONTROL,
+          // The panel the move-trait chips ride (MOVE_TRAIT_LABEL): the
+          // linked note renders here, and only here — leaving the Helm takes
+          // the panel, the label and the chip with it.
+          annotationLabels: [MOVE_TRAIT_LABEL],
           intents: { MOVE: 'travel' },
           actionCost: ['action']
         },
@@ -2038,7 +2047,6 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
           if (f.num(`${F}.movement.remaining`) < driveDistance(f, selections))
             diagnostics.push({ code: DRIVE_OUT_OF_MOVEMENT, severity: 'error' });
           if (f.num(`${F}.destroyed`) > 0) diagnostics.push({ code: WRECKED, severity: 'error' });
-          diagnostics.push(...moveTraitNotes());
           return {
             advertise: [
               {
@@ -2184,6 +2192,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
     // seat, they must know BEFORE acting that the station's one rule applies.
     // Like the seat fact it rides, the notice never outlives the leave offer's
     // eviction or the acquire lifecycle.
+    //
+    // The MOVE-TRAIT chips join here (moveTraitAnnotations): panel-targeted
+    // LINKED annotations, not notices — the note rides the Drive panel (its
+    // label) and taps into the plan, the Extra Attack / Divine Smite way.
     annotate: (f: FactReader): Annotation[] => {
       const out: Annotation[] = [];
       if (f.num(`${F}.prone`) > 0)
@@ -2208,6 +2220,7 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
             source: `${T}.effect.name`,
             body: seat.notice.body
           });
+      out.push(...moveTraitAnnotations(f));
       return out;
     }
   };

@@ -62,9 +62,8 @@ steps:
             - leave-demon-grinder-helm-seat
   # The composition pins — over-distance Drive fails wrecked AND
   # out-of-movement (the gate's diagnostics first, the apply's re-check
-  # after); a sole-failing-leg Drive reads wrecked ALONE among the errors,
-  # its unconditional wheels note beside them (PR-7); Dash keeps its risk
-  # note beside the error, in push order.
+  # after); a sole-failing-leg Drive reads wrecked ALONE; Dash keeps its
+  # risk note beside the error, in push order.
   - addOffer:
       id: drive-demon-grinder
       selections:
@@ -75,7 +74,6 @@ steps:
             errors:
               - rule.demon-grinder.wrecked
               - rule.demon-grinder.drive.out_of_movement
-              - rule.demon-grinder.drive.crushing_wheels
   - endTurn: {}
   - addOffer:
       id: drive-demon-grinder
@@ -86,7 +84,6 @@ steps:
           - id: drive-demon-grinder
             errors:
               - rule.demon-grinder.wrecked
-              - rule.demon-grinder.drive.crushing_wheels
   - endTurn: {}
   - addOffer:
       id: dash-demon-grinder

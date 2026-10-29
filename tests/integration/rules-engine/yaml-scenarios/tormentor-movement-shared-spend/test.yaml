@@ -37,8 +37,7 @@ steps:
           companion.vehicle.movement.spent: 0
   # Drive 40 ft: the row's one endOfTurn effect carries the action spend and
   # the distance against the SHARED fact (never the per-vehicle stem), and
-  # remaining = total − shared spent (the Crushing Wheels note riding the
-  # row — PR-7).
+  # remaining = total − shared spent
   - addOffer:
       id: drive-tormentor
       selections:
@@ -52,8 +51,7 @@ steps:
         planErrors:
           - id: drive-tormentor
             index: 0
-            errors:
-              - rule.tormentor.drive.crushing_wheels
+            errors: []
   # Dash doubles THIS vehicle's total only (the dashed flag stays
   # per-vehicle): the shared spend is untouched, so remaining reads the
   # doubled total minus the same 40.

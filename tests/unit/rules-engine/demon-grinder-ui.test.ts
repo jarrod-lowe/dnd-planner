@@ -318,25 +318,33 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
     ];
   }
 
-  it('the crushing wheels note rides every drive row: a SHORT pointer whose only param is the DC', () => {
-    // The stat block's Crushing Wheels trait — the Grinder rolls through the
-    // space of Large or smaller creatures; every creature it passes over must
-    // save (DC 11 Dex) or take the wheels' damage — is PR-7's move-trait
-    // machinery restructured (user review): ONE unconditional 'notice' on
-    // EVERY planned drive row (the dash-risk idiom), a POINTER not the
-    // rulebook. The DC is the note's ONLY param; the damage formula and its
-    // type live on the ROLL row's dice line (below), where the dice-line
-    // conventions localize them.
+  it('the crushing wheels note is a LINKED annotation on the Drive panel — tap it, the roll row joins the plan', () => {
+    // The user's hands-on correction: the note must LINK to the roll row via
+    // the EXISTING annotation-click mechanism (the Extra Attack / Heroic
+    // Inspiration / Divine Smite pattern). The note is an ANNOTATION targeted
+    // at the Drive panel's own label, carrying addsToPlan to the wheels roll
+    // row — and the drive row itself carries NO per-row diagnostic any more
+    // (the chip is the note). The row is otherwise unchanged: the one
+    // endOfTurn spend, the pool paying exactly the captured distance.
     const out = evaluate({
       modules: [module(), getModule('action-economy')!],
       committed: fuelledHelm(),
       planned: [{ instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } }]
     });
-    expect(out.planDiagnostics['i0']).toEqual([
-      { code: `${T}.drive.crushing_wheels`, severity: 'notice', params: { dc: 11 } }
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.annotations).toEqual([
+      {
+        key: `${T}.drive.crushing_wheels`,
+        targets: ['move.vehicle.demon-grinder.companion'],
+        values: { dc: 11 },
+        addsToPlan: { offer: `wheels-${ID}` }
+      }
     ]);
-    // The row is otherwise unchanged: the one endOfTurn spend, the pool paying
-    // exactly the captured distance — the note commits nothing.
+    // The Drive offer declares the label the chip targets.
+    const drive = module().offer!({ selections: {} }).find((o) => o.id === `drive-${ID}`)!;
+    expect((drive.ui as Record<string, unknown>).annotationLabels).toEqual([
+      'move.vehicle.demon-grinder.companion'
+    ]);
     expect(out.effects).toHaveLength(1);
     expect(out.facts['companion.vehicle.movement.spent']).toBe(30);
   });
@@ -397,7 +405,10 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
       name: `${T}.wheels.name`,
       description: `${T}.wheels.description`,
       detailKey: 'vehicle/demon-grinder',
-      intents: { SAVE: 'vehicle' },
+      // The user's correction: the wheels are in no way a save — the row
+      // files with the vehicle's WEAPON offers (the harpoon/bite/swing rows'
+      // own bucket), staying free with no economy spend.
+      intents: { ATTACK: 'weapons' },
       actionCost: [],
       annotationLabels: ['dice.any.companion'],
       primaryControl: {
@@ -475,10 +486,22 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
       expect(i18nAt(dict, 'damage-type.bludgeoning')).toEqual(expect.any(String));
   });
 
-  it('no drive row, no note: unseated, the trait is nowhere (not an annotation, not a fact)', () => {
+  it('no drive row, no panel: unseated, the chip matches nothing and no fact stands', () => {
+    // Unseated there is no Drive offer — no panel carries the label the
+    // trait annotation targets, so the chip renders nowhere — but the
+    // annotation stands ready in the output, and nothing factual backs it.
     const out = evaluate({ modules: [module()], committed: acquired() });
     expect(out.availableRules.some((r) => r.rule.id === `drive-${ID}`)).toBe(false);
-    expect(out.annotations.some((a) => a.key === `${T}.drive.crushing_wheels`)).toBe(false);
+    const chip = out.annotations.find((a) => a.key === `${T}.drive.crushing_wheels`);
+    expect(chip, 'the linked chip exists while acquired').toBeDefined();
+    expect(
+      out.availableRules.some((r) =>
+        ((r.rule.ui as Record<string, unknown>).annotationLabels as string[] | undefined)?.includes(
+          'move.vehicle.demon-grinder.companion'
+        )
+      ),
+      'no panel carries its label'
+    ).toBe(false);
     expect(Object.keys(out.facts).some((k) => k.includes('crushing'))).toBe(false);
   });
 });
