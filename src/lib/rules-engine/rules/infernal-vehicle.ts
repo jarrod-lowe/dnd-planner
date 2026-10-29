@@ -68,6 +68,51 @@ export interface SeatWeaponSpec {
 }
 
 /**
+ * One MOVE TRAIT the stat block carries — a rule that fires on the vehicle's
+ * OWN movement (the Crushing Wheels both infernal vehicles roll on; later the
+ * Tormentor's Raking Scythes), as authored data. The factory turns each entry
+ * into ONE unconditional 'notice' diagnostic on EVERY planned Drive row (the
+ * dash-risk idiom exactly — see DASH_RISK): the note states the WHOLE rule in
+ * the locale's own words, nothing is gated, recorded or counted behind it, and
+ * the plan fold attaches it to that row alone. The save DC and the damage
+ * travel as diagnostic `params` ({{dc}}/{{damage}} slots) COMPUTED from the
+ * entry's data — the damage the dice AVERAGE plus the bonus, so a re-authored
+ * stat block moves the number with no other edit. The trait's non-numeric
+ * shape (which creatures it reaches, what befalls an already-prone creature)
+ * lives in the note COPY, not in data — it is translated text either way.
+ */
+export interface MoveTraitSpec {
+  /**
+   * The trait's slug: the ROLL offer's id (`<slug>-<id>`, e.g.
+   * wheels-tormentor) and the `rule.<id>.<slug>` i18n stem (name,
+   * description, not_driven diagnostic).
+   */
+  slug: string;
+  /**
+   * i18n key of the trait's SHORT pointer NOTE — the LINKED chip annotation's
+   * label on the Drive panel — an authored LITERAL per vehicle, per trait
+   * (the SeatWeaponSpec.rider precedent), so the static module-i18n-coverage
+   * scan sees it in the spec's source. The chip points at the roll row
+   * (addsToPlan); the full rule lives in the roll offer's description.
+   */
+  note: string;
+  /** The Dexterity save DC the trait's rule calls for (the {{dc}} param). */
+  saveDc: number;
+  /**
+   * The trait's damage dice and type — the ROLL offer's damage-only dice
+   * line, built from these values. The damageType rides as the IDENTIFIER
+   * the render site localizes through the damage-type.* keys (every dice
+   * line's convention) — never as a diagnostic param (the render sites
+   * interpolate params raw, so a word there would leak English into every
+   * translated sentence).
+   */
+  damageCount: number;
+  damageDie: number;
+  damageBonus: number;
+  damageType: string;
+}
+
+/**
  * One station's seat, as authored data. The per-station i18n keys arrive as
  * LITERALS per station (module-i18n-coverage scans the source for
  * `${PREFIX}.suffix` templates — a key the helper built from the station string
@@ -151,6 +196,20 @@ export interface InfernalVehicleSpec {
    * does not exist.
    */
   juke?: boolean;
+  /**
+   * The stat block's MOVE TRAITS — rules that fire on the vehicle's own
+   * movement (Crushing Wheels, Raking Scythes), each an entry in
+   * MoveTraitSpec. When set, each entry drives TWO surfaces: a SHORT LINKED
+   * chip annotation on the Drive panel (the existing annotation-click
+   * mechanism — tap it and the trait's roll row joins the plan; the DC its
+   * only interpolation value) and a VEHICLE-level roll row (`<slug>-<id>`,
+   * free, no seat, no spend) whose dice line carries the trait's damage and
+   * whose description carries the whole rule. OMIT it for a vehicle whose
+   * stat block carries none — no chips, no roll rows (what a stat block does
+   * not carry does not exist, the juke/acMode optionality precedent), and a
+   * later trait joins as data.
+   */
+  moveTraits?: readonly MoveTraitSpec[];
   /** Rules-mode detail keys (the flip targets). */
   details: {
     statBlock: string;
@@ -1204,6 +1263,101 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
   const DASH_RISK = `${T}.dash.risk`;
 
   /**
+   * The MOVE-TRAIT chips — the trait notes as LINKED annotations on the Drive
+   * panel (the user's hands-on correction: the note must LINK to the roll row
+   * via the EXISTING annotation-click mechanism — the Extra Attack / Heroic
+   * Inspiration / Divine Smite pattern). Each chip's KEY is the trait's note
+   * key (a POINTER, never the rulebook: creatures passed over must save, DC
+   * in the `values` slot, or take the wheels' damage), it targets the Drive
+   * offer's own label below — PER SUBJECT, so one vehicle's chip never lands
+   * on another's drive panel — and `addsToPlan` names the trait's ROLL row:
+   * tap the chip, the roll row joins the plan. Emitted only while the vehicle
+   * is acquired; the chip renders exactly where the Drive panel does (the
+   * label rides the drive offer's `annotationLabels`), so no panel, no chip.
+   * A spec with no move traits emits NOTHING (the juke/acMode optionality
+   * precedent: what a stat block does not carry does not exist).
+   */
+  const MOVE_TRAIT_LABEL = `move.vehicle.${subject}.companion`;
+  const moveTraitAnnotations = (f: FactReader): Annotation[] =>
+    spec.moveTraits && acquired(f)
+      ? spec.moveTraits.map((trait) => ({
+          key: trait.note,
+          targets: [MOVE_TRAIT_LABEL],
+          values: { dc: trait.saveDc },
+          addsToPlan: { offer: `${trait.slug}-${id}` }
+        }))
+      : [];
+
+  /**
+   * The PER-VEHICLE drove marker — the fact Drive's spend writes beside the
+   * shared pool (`<stem>.movement.drove`, endOfTurn like the spend itself)
+   * and the move-trait roll rows gate on: THIS vehicle has driven this turn.
+   * Deliberately the vehicle's OWN stem, never the shared spend fact: the
+   * spend pools every machine's feet into one ledger (the cross-vehicle
+   * cap), but driving one machine must never unlock another's wheels — the
+   * marker names the machine whose wheels actually turned. It ages away with
+   * the turn, so a new turn's wheels wait for a new Drive.
+   */
+  const DROVE_FACT = `${F}.movement.drove`;
+
+  /**
+   * A MOVE TRAIT's ROLL row — the trait's dice, offered at the VEHICLE
+   * level (`<slug>-<id>`, e.g. wheels-tormentor): the consequence surface of
+   * driving (the user-review restructure). The recorder shape throughout —
+   * `when` the acquire ALONE (no Helm seat: the wheels roll whether or not
+   * anyone drives), the FREE section with NO economy spend (a creature being
+   * run over is not anybody's action choice), and NO apply at all: the row
+   * rolls dice and commits nothing, exactly like the save/check recorders it
+   * sits beside. The damage is a DICE LINE built from the entry (damage
+   * ONLY — the save is the creatures' own roll, not ours) whose damageType
+   * rides as the IDENTIFIER the render site localizes through the
+   * damage-type.* keys, every dice line's convention. ONE legality leg of
+   * its own beside the shared wrecked leg: the vehicle has DRIVEN this turn
+   * (the DROVE_FACT marker above) — illegal-but-COMMITTABLE before driving
+   * (the engine's contract; with no apply, a planned-anyway row carries its
+   * gate diagnostics and commits nothing). The offer's DESCRIPTION carries
+   * the whole trait rule (numbers hardcoded there per the fire-offer
+   * description convention — the dice line carries the formula) and
+   * advertises Drive as the trigger.
+   */
+  const traitRollOffer = (trait: MoveTraitSpec): Offer => ({
+    id: `${trait.slug}-${id}`,
+    when: acquired,
+    legalWhen: [
+      {
+        condition: (f: FactReader): boolean => f.num(DROVE_FACT) > 0,
+        diagnostics: [{ code: `${T}.${trait.slug}.not_driven`, severity: 'error' }]
+      },
+      notWrecked
+    ],
+    ui: {
+      section: 'free',
+      subject,
+      name: `${T}.${trait.slug}.name`,
+      description: `${T}.${trait.slug}.description`,
+      detailKey: spec.details.statBlock,
+      // The user's correction: the wheels are in no way a save — the row
+      // FILES with the vehicle's weapon offers (the harpoon/bite/swing rows'
+      // own ATTACK bucket) while keeping the recorder shape (free, no spend).
+      intents: { ATTACK: 'weapons' },
+      actionCost: [],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          {
+            sides: trait.damageDie,
+            count: trait.damageCount,
+            ...(trait.damageBonus > 0 ? { bonus: { number: trait.damageBonus } } : {}),
+            purpose: 'damage',
+            damageType: { string: trait.damageType }
+          }
+        ]
+      }
+    }
+  });
+
+  /**
    * Drive's distance slider — the steed's STEED_MOVE_CONTROL/STEED_MOVE_VARS
    * shape exactly (find-steed): record the actual feet driven rather than a
    * fixed chunk, bounded by the (Dash-doubled) total, so a short roll of the
@@ -1855,7 +2009,9 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         // Apply re-checks both (the dash idiom), the distance re-check
         // validating the SELECTED distance — an over-distance row carries the
         // steed's out-of-movement diagnostic while its spend still lands (the
-        // over-commit projection, unfloored like the steed's).
+        // over-commit projection, unfloored like the steed's). The trait NOTE
+        // rides the Drive PANEL as a linked chip (moveTraitAnnotations), not
+        // the row: nothing trait-shaped is pushed here.
         id: `drive-${id}`,
         when: (f: FactReader): boolean => acquired(f) && atHelm(f),
         legalWhen: [
@@ -1876,6 +2032,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
           description: `${T}.drive.description`,
           detailKey: spec.details.helm,
           primaryControl: DRIVE_CONTROL,
+          // The panel the move-trait chips ride (MOVE_TRAIT_LABEL): the
+          // linked note renders here, and only here — leaving the Helm takes
+          // the panel, the label and the chip with it.
+          annotationLabels: [MOVE_TRAIT_LABEL],
           intents: { MOVE: 'travel' },
           actionCost: ['action']
         },
@@ -1895,8 +2055,12 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
                   'actions.spent': 1,
                   // The distance lands on the SHARED player-level spend
                   // (VEHICLE_MOVEMENT_SPENT) — the one fact every vehicle's
-                  // remaining reads, never this vehicle's own stem.
-                  [VEHICLE_MOVEMENT_SPENT]: driveDistance(f, selections)
+                  // remaining reads, never this vehicle's own stem — BESIDE
+                  // this vehicle's OWN drove marker (DROVE_FACT), the fact
+                  // the move-trait roll rows gate on: shared feet, the
+                  // machine's own wheels.
+                  [VEHICLE_MOVEMENT_SPENT]: driveDistance(f, selections),
+                  [DROVE_FACT]: 1
                 },
                 expiry: { kind: 'endOfTurn' }
               }
@@ -1974,6 +2138,9 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
       // that carries one on its stat block (`juke`: the Tormentor yes, the
       // Demon Grinder no — its stat block has no Reaction row at all).
       ...(spec.juke ? [jukeOffer()] : []),
+      // Every MOVE TRAIT's vehicle-level roll row (PR-7: the Crushing
+      // Wheels), beside the record rollers it shares a shape with.
+      ...(spec.moveTraits ?? []).map((trait) => traitRollOffer(trait)),
       // The vehicle's CHECKS and SAVES — the record rollers (the steed's
       // save/skill recorders, the PC-parity copy), each a d20 + the BAKED
       // modifier fact, free and UI-only, filed after the station actions and
@@ -2025,6 +2192,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
     // seat, they must know BEFORE acting that the station's one rule applies.
     // Like the seat fact it rides, the notice never outlives the leave offer's
     // eviction or the acquire lifecycle.
+    //
+    // The MOVE-TRAIT chips join here (moveTraitAnnotations): panel-targeted
+    // LINKED annotations, not notices — the note rides the Drive panel (its
+    // label) and taps into the plan, the Extra Attack / Divine Smite way.
     annotate: (f: FactReader): Annotation[] => {
       const out: Annotation[] = [];
       if (f.num(`${F}.prone`) > 0)
@@ -2049,6 +2220,7 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
             source: `${T}.effect.name`,
             body: seat.notice.body
           });
+      out.push(...moveTraitAnnotations(f));
       return out;
     }
   };

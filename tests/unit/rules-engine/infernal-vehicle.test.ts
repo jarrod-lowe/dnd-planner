@@ -830,6 +830,343 @@ describe('factory: the seat-cover contribution (cover PR-2 seam)', () => {
 });
 
 /**
+ * The MOVE TRAITS — Demon Grinder PR-7, restructured on the user's review. A
+ * stat-block trait that fires on the vehicle's OWN movement (the Crushing
+ * Wheels both vehicles roll on; later the Tormentor's Raking Scythes) is SPEC
+ * DATA behind TWO surfaces:
+ *
+ * - a SHORT POINTER note on EVERY planned Drive row (the dash-risk idiom):
+ *   creatures passed over must save (DC {{dc}}) or take the wheels' damage —
+ *   roll the trait's row. {{dc}} is the ONLY param: the render sites
+ *   interpolate params raw ($t(code, params) translates nothing INSIDE
+ *   them), so no word crosses the engine boundary in a param (the codex P2
+ *   on #501 — the formula and the damage type live on the roll row below,
+ *   where the dice-line conventions localize them).
+ * - a VEHICLE-level ROLL offer (`<slug>-<id>`, e.g. wheels-tormentor): free
+ *   section, NO economy spend (the save/check-recorder precedent — a
+ *   consequence of driving, not a choice), no SEAT gate (the wheels roll
+ *   whether or not anyone sits at the Helm), a DAMAGE-ONLY dice line built
+ *   from the entry's dice and type (the type localizes at the render site
+ *   through the damage-type.* keys, exactly like every other dice line),
+ *   and ONE legality leg of its own: the vehicle has DRIVEN this turn —
+ *   Drive's spend writes a PER-VEHICLE `movement.drove` marker beside the
+ *   shared pool, so driving one machine never unlocks another's wheels —
+ *   beside the shared wrecked leg. Illegal-but-COMMITTABLE (the engine's
+ *   contract), with no apply at all (the recorder shape).
+ */
+describe('factory: move traits — pointer note on Drive rows + a vehicle-level roll offer', () => {
+  /**
+   * A MOVE-TRAIT fixture: numbers unlike EITHER shipped vehicle's Crushing
+   * Wheels (DC 15/14, 3d8+1 and 2d6 — not 11/4d10 or 13/2d10), and TWO
+   * entries — the shape PR-8's Raking Scythes takes when the Tormentor grows
+   * a second trait — so a DC, die or type that survived the parameterisation
+   * hardcoded fails here even though both vehicles' corpora stay green.
+   */
+  const WHEELS_ID = 'infernal-wheels';
+  const WHEELS_SPEC: InfernalVehicleSpec = {
+    ...TEST_SPEC,
+    id: WHEELS_ID,
+    subject: WHEELS_ID,
+    factStem: 'companion.infernalWheels',
+    seats: [TEST_SPEC.seats[0]!],
+    moveTraits: [
+      {
+        slug: 'wheels',
+        note: 'rule.infernal-wheels.drive.crushing_wheels',
+        saveDc: 15,
+        damageCount: 3,
+        damageDie: 8,
+        damageBonus: 1,
+        damageType: 'bludgeoning'
+      },
+      {
+        slug: 'scythes',
+        note: 'rule.infernal-wheels.drive.raking_scythes',
+        saveDc: 14,
+        damageCount: 2,
+        damageDie: 6,
+        damageBonus: 0,
+        damageType: 'slashing'
+      }
+    ]
+  };
+
+  /**
+   * A SECOND trait-carrying vehicle (different id and stem again): the
+   * per-vehicle DROVE marker precision pin — driving one machine must never
+   * unlock the other's wheels.
+   */
+  const WHEELS_SECOND: InfernalVehicleSpec = {
+    ...SECOND_SPEC,
+    moveTraits: [
+      {
+        slug: 'wheels',
+        note: 'rule.infernal-second.drive.crushing_wheels',
+        saveDc: 12,
+        damageCount: 2,
+        damageDie: 10,
+        damageBonus: 0,
+        damageType: 'bludgeoning'
+      }
+    ]
+  };
+
+  /** A committed acquire + helm seat + soul-coin fuel record (a legal drive). */
+  const fuelledHelm = (spec: InfernalVehicleSpec): EffectInstance[] => [
+    infernalAcquireEffect(spec),
+    {
+      id: `effect-${spec.id}-seat-helm`,
+      key: `${spec.id}-seat-helm`,
+      state: { [`${spec.factStem}.seats.helm`]: 1 },
+      expiry: { kind: 'permanent' }
+    },
+    {
+      id: `effect-${spec.id}-fuel`,
+      key: `${spec.id}-fuel`,
+      state: { [`${spec.factStem}.fuel.recorded`]: 1 },
+      expiry: { kind: 'permanent' }
+    }
+  ];
+
+  it('each entry is a LINKED annotation on the Drive panel — the note IS the link (user correction)', () => {
+    // The user's hands-on correction: the note must LINK to the roll row via
+    // the EXISTING annotation-click mechanism (the Extra Attack / Heroic
+    // Inspiration / Divine Smite pattern). So the note is no longer a per-row
+    // plan diagnostic (which cannot link) — it is an ANNOTATION the Drive
+    // panel renders, carrying addsToPlan to the trait's roll row: tap the
+    // chip, the roll row joins the plan. The label key is the note key, the
+    // DC its interpolation value.
+    const mod = buildInfernalVehicle(WHEELS_SPEC);
+    const reader: FactReader = {
+      num: (n) => (n === 'companion.infernalWheels.active' ? 1 : 0),
+      has: (n) => n === 'companion.infernalWheels.active'
+    };
+    expect(mod.annotate?.(reader, []) ?? []).toEqual([
+      {
+        key: 'rule.infernal-wheels.drive.crushing_wheels',
+        targets: ['move.vehicle.infernal-wheels.companion'],
+        values: { dc: 15 },
+        addsToPlan: { offer: 'wheels-infernal-wheels' }
+      },
+      {
+        key: 'rule.infernal-wheels.drive.raking_scythes',
+        targets: ['move.vehicle.infernal-wheels.companion'],
+        values: { dc: 14 },
+        addsToPlan: { offer: 'scythes-infernal-wheels' }
+      }
+    ]);
+    // The DRIVE offer declares the label the annotation targets — per-subject,
+    // so the Tormentor's chip never lands on the Grinder's drive panel.
+    const drive = offers(WHEELS_SPEC).find((o) => o.id === `drive-${WHEELS_ID}`)!;
+    expect((drive.ui as Record<string, unknown>).annotationLabels).toEqual([
+      'move.vehicle.infernal-wheels.companion'
+    ]);
+    // And the drive ROW carries no per-row note any more: the plan diagnostic
+    // is gone (an error row shows its own error alone — the chip is the note).
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
+      committed: fuelledHelm(WHEELS_SPEC),
+      planned: [
+        { instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } },
+        { instanceId: 'i1', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } }
+      ]
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.planDiagnostics['i1']).toEqual([
+      { code: `rule.${WHEELS_ID}.drive.no_action`, severity: 'error' }
+    ]);
+  });
+
+  it("Drive's spend also writes the PER-VEHICLE drove marker (endOfTurn, beside the shared pool)", () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
+      committed: fuelledHelm(WHEELS_SPEC),
+      planned: [{ instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } }]
+    });
+    // Still ONE keyless endOfTurn effect — now carrying the shared spend AND
+    // this vehicle's own drove marker (the wheels' legality gate), which ages
+    // away with the turn like every per-turn spend.
+    expect(out.effects).toHaveLength(1);
+    expect(out.effects[0]!.expiry).toEqual({ kind: 'endOfTurn' });
+    expect(out.effects[0]!.state).toEqual({
+      'actions.spent': 1,
+      'companion.vehicle.movement.spent': 20,
+      'companion.infernalWheels.movement.drove': 1
+    });
+    // A trait is never a DRIVE legality gate: the same three legs as ever
+    // (action, out-of-movement, wrecked).
+    const drive = offers(WHEELS_SPEC).find((o) => o.id === `drive-${WHEELS_ID}`)!;
+    expect(drive.legalWhen).toHaveLength(3);
+  });
+
+  it('each entry emits its VEHICLE-level roll offer: free, no seat gate, damage-only dice line', () => {
+    const mod = buildInfernalVehicle(WHEELS_SPEC);
+    const ids = mod.offer!({ selections: {} }).map((o) => o.id);
+    expect(ids).toContain(`wheels-${WHEELS_ID}`);
+    expect(ids).toContain(`scythes-${WHEELS_ID}`);
+    const wheels = offers(WHEELS_SPEC).find((o) => o.id === `wheels-${WHEELS_ID}`)!;
+    // NO SEAT GATE: `when` is the acquire alone — the wheels roll whether or
+    // not anyone sits at the Helm (unlike drive/dash/fuel/boost).
+    expect(typeof wheels.when).toBe('function');
+    expect(
+      wheels.when!({
+        num: (n) => (n === 'companion.infernalWheels.active' ? 1 : 0),
+        has: (n) => n === 'companion.infernalWheels.active'
+      })
+    ).toBe(true);
+    expect(
+      wheels.when!({
+        num: (n) => (n === 'companion.infernalWheels.seats.helm' ? 1 : 0),
+        has: (n) => n === 'companion.infernalWheels.seats.helm'
+      }),
+      'a seat alone (no acquire) never opens the roll row'
+    ).toBe(false);
+    // The recorder shape: free section with NO economy cost, filed as an
+    // ATTACK with the weapon offers' own bucket (the user's correction — the
+    // wheels are in no way a save; the harpoon/bite/swing rows' ATTACK
+    // 'weapons' filing is the convention), and a damage-ONLY dice line whose
+    // type rides as the IDENTIFIER the render site localizes through
+    // damage-type.* (the dice-line convention — never a param, never copy).
+    // The bonus appears only when the entry carries one.
+    expect(wheels.ui).toEqual({
+      section: 'free',
+      subject: WHEELS_ID,
+      name: 'rule.infernal-wheels.wheels.name',
+      description: 'rule.infernal-wheels.wheels.description',
+      detailKey: 'vehicle/infernal-test',
+      intents: { ATTACK: 'weapons' },
+      actionCost: [],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          {
+            sides: 8,
+            count: 3,
+            bonus: { number: 1 },
+            purpose: 'damage',
+            damageType: { string: 'bludgeoning' }
+          }
+        ]
+      }
+    });
+    const scythes = offers(WHEELS_SPEC).find((o) => o.id === `scythes-${WHEELS_ID}`)!;
+    expect((scythes.ui as Record<string, unknown>).primaryControl).toEqual({
+      type: 'dice-line',
+      dice: [
+        {
+          sides: 6,
+          count: 2,
+          purpose: 'damage',
+          damageType: { string: 'slashing' }
+        }
+      ]
+    });
+    // No apply at all — the recorder shape: the row rolls, it commits nothing.
+    expect(wheels.apply).toBeUndefined();
+    expect(wheels.legalWhen).toHaveLength(2);
+    expect(wheels.legalWhen![0]!.diagnostics).toEqual([
+      { code: 'rule.infernal-wheels.wheels.not_driven', severity: 'error' }
+    ]);
+    expect(wheels.legalWhen!.at(-1)!.diagnostics).toEqual([
+      { code: 'rule.infernal-wheels.wrecked', severity: 'error' }
+    ]);
+  });
+
+  it('the roll row is ILLEGAL until the vehicle has driven, then legal in the SAME fold — its own diagnostic', () => {
+    const economy = getModule('action-economy')!;
+    // Fuelled but not yet driven this turn: the row exists (acquired), is
+    // ILLEGAL on its own not-driven leg, and stays committable (the engine's
+    // illegal-but-visible contract — no apply means the row commits nothing).
+    const before = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
+      committed: fuelledHelm(WHEELS_SPEC)
+    });
+    const row = before.availableRules.find((r) => r.rule.id === `wheels-${WHEELS_ID}`);
+    expect(row, 'the roll row exists while acquired').toBeDefined();
+    expect(row!.legal).toBe(false);
+    expect(row!.diagnostics).toEqual([
+      { code: 'rule.infernal-wheels.wheels.not_driven', severity: 'error' }
+    ]);
+    // A planned drive row writes the marker inside the SAME fold: the roll
+    // row behind it reads LEGAL — the consequence-of-driving gate in action.
+    const after = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), economy],
+      committed: fuelledHelm(WHEELS_SPEC),
+      planned: [
+        { instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } },
+        { instanceId: 'i1', ruleId: `wheels-${WHEELS_ID}` }
+      ]
+    });
+    const driven = after.availableRules.find((r) => r.rule.id === `wheels-${WHEELS_ID}`);
+    expect(driven!.legal).toBe(true);
+    expect(driven!.diagnostics).toEqual([]);
+    expect(after.planDiagnostics['i1'] ?? []).toEqual([]);
+  });
+
+  it('the drove marker is PER-VEHICLE: driving one machine never unlocks another’s wheels', () => {
+    const economy = getModule('action-economy')!;
+    const out = evaluate({
+      modules: [buildInfernalVehicle(WHEELS_SPEC), buildInfernalVehicle(WHEELS_SECOND), economy],
+      committed: [...fuelledHelm(WHEELS_SPEC), ...fuelledHelm(WHEELS_SECOND)],
+      // Drive the FIRST vehicle only.
+      planned: [{ instanceId: 'i0', ruleId: `drive-${WHEELS_ID}`, selections: { distance: 20 } }]
+    });
+    const mine = out.availableRules.find((r) => r.rule.id === `wheels-${WHEELS_ID}`)!;
+    expect(mine.legal).toBe(true);
+    // The SECOND vehicle shared the SPEND (its pool paid the same feet) but
+    // its wheels never turned: its roll row stays illegal on its OWN
+    // not-driven leg — the marker is per-vehicle stem, not the shared fact.
+    const theirs = out.availableRules.find((r) => r.rule.id === 'wheels-infernal-second')!;
+    expect(theirs.legal).toBe(false);
+    expect(theirs.diagnostics).toEqual([
+      { code: 'rule.infernal-second.wheels.not_driven', severity: 'error' }
+    ]);
+  });
+
+  it('a spec with NO moveTraits emits nothing — no annotations, no roll offers', () => {
+    const economy = getModule('action-economy')!;
+    // TEST_SPEC sets no moveTraits (the juke/acMode optionality precedent:
+    // what a stat block does not carry does not exist).
+    const out = evaluate({
+      modules: [buildInfernalVehicle(TEST_SPEC), economy],
+      committed: fuelledHelm(TEST_SPEC),
+      planned: [{ instanceId: 'i0', ruleId: `drive-${SPEC_ID}`, selections: { distance: 20 } }]
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.availableRules.some((r) => r.rule.id.startsWith('wheels-'))).toBe(false);
+    expect(out.annotations.some((a) => a.addsToPlan !== undefined)).toBe(false);
+  });
+
+  it('the linked note annotation exists ONLY while acquired — never a notice, never a fact', () => {
+    // The annotation IS the note now (the user's link correction), gated on
+    // the acquire like every vehicle surface: unacquired it emits at all —
+    // and it targets the DRIVE panel's label alone, never the notices strip
+    // (NOTICE_TARGET) — the chip rides the panel, it is not a standing
+    // condition. No fact of any kind backs it.
+    const mod = buildInfernalVehicle(WHEELS_SPEC);
+    const unacquired: FactReader = { num: () => 0, has: () => false };
+    expect(
+      mod.annotate?.(unacquired, []) ?? [],
+      'an unacquired vehicle emits no trait annotations'
+    ).toEqual([]);
+    const acquired: FactReader = {
+      num: (n) => (n === 'companion.infernalWheels.active' ? 1 : 0),
+      has: (n) => n === 'companion.infernalWheels.active'
+    };
+    for (const a of mod.annotate?.(acquired, []) ?? []) {
+      expect(a.targets, 'the trait chip targets its drive panel alone').not.toContain('notice');
+      expect(a.targets).toEqual(['move.vehicle.infernal-wheels.companion']);
+    }
+    const seated = evaluate({ modules: [mod], committed: fuelledHelm(WHEELS_SPEC) });
+    expect(seated.availableRules.some((r) => r.rule.id === `drive-${WHEELS_ID}`)).toBe(true);
+    expect(Object.keys(seated.facts).some((k) => k.includes('crushing'))).toBe(false);
+  });
+});
+
+/**
  * The MIGRATION guard: every `rule.*`/`play.*` key the registered Tormentor
  * module EMITS resolves in both locales. The factory builds its keys from spec
  * data, which the static module-i18n-coverage scan cannot expand — this walk

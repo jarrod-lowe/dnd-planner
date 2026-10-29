@@ -325,6 +325,10 @@ const EXPECTED_RUNNABLE = [
   // chip, nothing durable beside the per-turn spend (abandon still clears
   // the dashed/movement state with the acquire)
   'tormentor-helm-dash-count',
+  // Demon Grinder PR-7: the Crushing Wheels pointer note rides every DRIVE
+  // row the same way — an unconditional informational note whose only param
+  // is the save DC (13 here, 11 on the Grinder)
+  'tormentor-helm-drive-wheels-note',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',
   // …Demon Grinder PR-2: the movement SPEND becomes ONE shared player-level
@@ -396,6 +400,12 @@ const EXPECTED_RUNNABLE = [
   'demon-grinder-harpoon-fire',
   'demon-grinder-helm-drive',
   'demon-grinder-helm-dash-note',
+  // …Demon Grinder PR-7 (restructured on user review): the Crushing Wheels
+  // pointer note on every drive row PLUS the vehicle-level roll row gated on
+  // the per-vehicle drove marker — distinct numbers and keys from the
+  // Tormentor's, and the marker never crossing vehicles
+  'demon-grinder-helm-drive-wheels-note',
+  'vehicle-wheels-drove-marker',
   'demon-grinder-fuel-helm-gate',
   'demon-grinder-seat-global-exclusivity',
   'demon-grinder-cover-seat',

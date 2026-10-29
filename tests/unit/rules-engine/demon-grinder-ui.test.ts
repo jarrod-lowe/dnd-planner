@@ -121,6 +121,9 @@ describe('acquire offer ui', () => {
       `dash-${ID}`,
       // NO Juke: the Demon Grinder's stat block carries no Reaction (the
       // spec omits `juke`, so the factory never emits the offer at all).
+      // PR-7's move-trait roll row: the vehicle-level Crushing Wheels
+      // consequence of driving (no seat, no spend).
+      `wheels-${ID}`,
       // The six record rollers (saves first, then checks, in stat-block order).
       `${ID}-save-str`,
       `${ID}-save-dex`,
@@ -294,6 +297,212 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
       expect(value, `${locale} dash risk exists`).toEqual(expect.any(String));
       expect(value, `${locale} interpolates {{allowance}}`).toContain('{{allowance}}');
     }
+  });
+
+  /** A committed fuelled Helm — the legal-drive state the wheels note tests fold. */
+  function fuelledHelm(): EffectInstance[] {
+    return [
+      ...acquired(),
+      {
+        id: `effect-${ID}-seat-helm`,
+        key: `${ID}-seat-helm`,
+        state: { [`${F}.seats.helm`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance,
+      {
+        id: `effect-${ID}-fuel`,
+        key: `${ID}-fuel`,
+        state: { [`${F}.fuel.recorded`]: 1 },
+        expiry: { kind: 'permanent' }
+      } satisfies EffectInstance
+    ];
+  }
+
+  it('the crushing wheels note is a LINKED annotation on the Drive panel — tap it, the roll row joins the plan', () => {
+    // The user's hands-on correction: the note must LINK to the roll row via
+    // the EXISTING annotation-click mechanism (the Extra Attack / Heroic
+    // Inspiration / Divine Smite pattern). The note is an ANNOTATION targeted
+    // at the Drive panel's own label, carrying addsToPlan to the wheels roll
+    // row — and the drive row itself carries NO per-row diagnostic any more
+    // (the chip is the note). The row is otherwise unchanged: the one
+    // endOfTurn spend, the pool paying exactly the captured distance.
+    const out = evaluate({
+      modules: [module(), getModule('action-economy')!],
+      committed: fuelledHelm(),
+      planned: [{ instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } }]
+    });
+    expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    expect(out.annotations).toEqual([
+      {
+        key: `${T}.drive.crushing_wheels`,
+        targets: ['move.vehicle.demon-grinder.companion'],
+        values: { dc: 11 },
+        addsToPlan: { offer: `wheels-${ID}` }
+      }
+    ]);
+    // The Drive offer declares the label the chip targets.
+    const drive = module().offer!({ selections: {} }).find((o) => o.id === `drive-${ID}`)!;
+    expect((drive.ui as Record<string, unknown>).annotationLabels).toEqual([
+      'move.vehicle.demon-grinder.companion'
+    ]);
+    expect(out.effects).toHaveLength(1);
+    expect(out.facts['companion.vehicle.movement.spent']).toBe(30);
+  });
+
+  it('the wheels note is a POINTER in BOTH locales: {{dc}} alone, no rule text, no damage word', () => {
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      const value = i18nAt(dict, `rule.${ID}.drive.crushing_wheels`);
+      expect(value, `${locale} wheels note exists`).toEqual(expect.any(String));
+      expect(value, `${locale} interpolates {{dc}}`).toContain('{{dc}}');
+      // The full rule lives on the ROLL row's description; the note carries
+      // no damage param at all (the render sites interpolate params raw, so
+      // no word may cross the engine boundary inside one — codex P2 #501).
+      expect(value, `${locale} note carries no damage param`).not.toContain('{{damage}}');
+    }
+    const english = i18nAt(en, `rule.${ID}.drive.crushing_wheels`) as string;
+    // The pointer names the roll row and the save, and NOTHING else: no
+    // already-prone clause, no size qualifier, no numbers but the {{dc}}
+    // slot, no damage type (all of it lives on the roll row / its dice line).
+    expect(english).toContain('Crushing Wheels');
+    expect(english).toContain('Dexterity saving throw');
+    for (const absent of [
+      'already prone',
+      'instead of being knocked prone',
+      'Large or smaller',
+      '22',
+      '4d10',
+      'bludgeoning'
+    ])
+      expect(english, `the slim note restates no rule detail (${absent})`).not.toContain(absent);
+    const klingon = i18nAt(tlh, `rule.${ID}.drive.crushing_wheels`) as string;
+    expect(klingon, 'the tlh note leaks no English damage-type identifier').not.toContain(
+      'bludgeoning'
+    );
+    expect(
+      klingon,
+      'the tlh note leaks no English damage-type identifier (slashing)'
+    ).not.toContain('slashing');
+  });
+
+  it('the Crushing Wheels ROLL row: vehicle-level, free, no seat gate, damage-only dice line (DC 11, 4d10)', () => {
+    // The consequence surface (user review restructure): a VEHICLE-level
+    // roll offer — `when` the acquire ALONE (no Helm seat: the wheels roll
+    // whether or not anyone drives), FREE with no economy spend (the
+    // save/check-recorder precedent: a consequence of driving, not a
+    // choice), carrying the damage as a DICE LINE built from the spec —
+    // the type rides as the IDENTIFIER the render site localizes through
+    // damage-type.* (every dice line's convention: the toast renders
+    // $t('damage-type.' + key)) — never as a param.
+    const unseated = evaluate({ modules: [module()], committed: acquired() });
+    const row = unseated.availableRules.find((r) => r.rule.id === `wheels-${ID}`);
+    expect(row, 'the roll row exists while acquired, with nobody at the Helm').toBeDefined();
+    expect(row!.rule.ui).toEqual({
+      section: 'free',
+      subject: SUBJECT,
+      name: `${T}.wheels.name`,
+      description: `${T}.wheels.description`,
+      detailKey: 'vehicle/demon-grinder',
+      // The user's correction: the wheels are in no way a save — the row
+      // files with the vehicle's WEAPON offers (the harpoon/bite/swing rows'
+      // own bucket), staying free with no economy spend.
+      intents: { ATTACK: 'weapons' },
+      actionCost: [],
+      annotationLabels: ['dice.any.companion'],
+      primaryControl: {
+        type: 'dice-line',
+        dice: [
+          {
+            sides: 10,
+            count: 4,
+            purpose: 'damage',
+            damageType: { string: 'bludgeoning' }
+          }
+        ]
+      }
+    });
+    // The RAW catalog offer carries no apply — the recorder shape: the row
+    // rolls, it commits nothing (the descriptor surface never exposes one).
+    const raw = module().offer!({ selections: {} }).find((o) => o.id === `wheels-${ID}`)!;
+    expect(raw.apply).toBeUndefined();
+  });
+
+  it('the roll row is ILLEGAL until the Grinder has Driven this turn — its own diagnostic, both locales', () => {
+    // The consequence gate (user review): Drive's spend writes the
+    // PER-VEHICLE drove marker (companion.demonGrinder.movement.drove,
+    // endOfTurn) beside the shared pool, and the roll row's one own leg reads
+    // it — illegal-but-committable before driving (the engine's contract;
+    // the row has no apply, so a planned-anyway row commits nothing).
+    const economy = getModule('action-economy')!;
+    const before = evaluate({
+      modules: [module(), economy],
+      committed: fuelledHelm()
+    });
+    const row = before.availableRules.find((r) => r.rule.id === `wheels-${ID}`)!;
+    expect(row.legal).toBe(false);
+    expect(row.diagnostics).toEqual([{ code: `${T}.wheels.not_driven`, severity: 'error' }]);
+    // Same fold, behind a drive row: the marker is written, the row reads
+    // LEGAL — and the marker itself is a plain endOfTurn fact.
+    const after = evaluate({
+      modules: [module(), economy],
+      committed: fuelledHelm(),
+      planned: [
+        { instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } },
+        { instanceId: 'i1', ruleId: `wheels-${ID}` }
+      ]
+    });
+    const driven = after.availableRules.find((r) => r.rule.id === `wheels-${ID}`)!;
+    expect(driven.legal).toBe(true);
+    expect(after.facts[`${F}.movement.drove`]).toBe(1);
+    expect(after.planDiagnostics['i1'] ?? []).toEqual([]);
+    // The not-driven diagnostic and the roll row's name/description exist in
+    // BOTH locales — the description carries the FULL rule (already-prone
+    // clause, once per turn, the size qualifier) and ADVERTISES Drive.
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      for (const key of ['name', 'description', 'not_driven'])
+        expect(i18nAt(dict, `rule.${ID}.wheels.${key}`), `${locale} wheels.${key}`).toEqual(
+          expect.any(String)
+        );
+    }
+    const english = i18nAt(en, `rule.${ID}.wheels.description`) as string;
+    for (const detail of [
+      'Large or smaller',
+      'DC 11',
+      '4d10',
+      'already prone',
+      'instead of being knocked prone',
+      'once',
+      'Driven'
+    ])
+      expect(english, `the description carries the full rule (${detail})`).toContain(detail);
+    // The dice-line type localization rides the EXISTING damage-type keys —
+    // the identifier resolves in both locales (the render-site convention).
+    for (const dict of [en, tlh])
+      expect(i18nAt(dict, 'damage-type.bludgeoning')).toEqual(expect.any(String));
+  });
+
+  it('no drive row, no panel: unseated, the chip matches nothing and no fact stands', () => {
+    // Unseated there is no Drive offer — no panel carries the label the
+    // trait annotation targets, so the chip renders nowhere — but the
+    // annotation stands ready in the output, and nothing factual backs it.
+    const out = evaluate({ modules: [module()], committed: acquired() });
+    expect(out.availableRules.some((r) => r.rule.id === `drive-${ID}`)).toBe(false);
+    const chip = out.annotations.find((a) => a.key === `${T}.drive.crushing_wheels`);
+    expect(chip, 'the linked chip exists while acquired').toBeDefined();
+    expect(
+      out.availableRules.some((r) =>
+        ((r.rule.ui as Record<string, unknown>).annotationLabels as string[] | undefined)?.includes(
+          'move.vehicle.demon-grinder.companion'
+        )
+      ),
+      'no panel carries its label'
+    ).toBe(false);
+    expect(Object.keys(out.facts).some((k) => k.includes('crushing'))).toBe(false);
   });
 });
 

@@ -555,13 +555,19 @@
         "name": "Drive",
         "description": "Spend your action at the Helm, driving the Tormentor up to its movement for the turn",
         "no_action": "No action available",
-        "out_of_movement": "No movement remaining"
+        "out_of_movement": "No movement remaining",
+        "crushing_wheels": "Creatures the Tormentor passes over must make a DC {{dc}} Dexterity saving throw or take the wheels' damage — roll Crushing Wheels."
       },
       "dash": {
         "name": "Dash",
         "description": "Spend a bonus action doubling the Tormentor's movement this turn. The vehicle can Dash 3 times plus its Constitution modifier each encounter — each Dash beyond that risks damaging it",
         "no_bonus_action": "No bonus action available",
         "risk": "Each encounter the vehicle can Dash {{allowance}} times (3 plus its Constitution modifier); each Dash beyond that runs the risk of damaging the vehicle"
+      },
+      "wheels": {
+        "name": "Crushing Wheels",
+        "description": "The Tormentor's wheels: when it Drives through the space of Medium or smaller creatures, each creature it passes over must make a DC 13 Dexterity saving throw or take 2d10 bludgeoning damage and be knocked prone. A creature already prone takes the damage instead of being knocked prone, and the wheels catch the same creature only once on a turn. The wheels only catch creatures on a turn the Tormentor has Driven.",
+        "not_driven": "The Tormentor hasn't Driven this turn — the wheels only catch creatures it Drives over"
       },
       "juke": {
         "name": "Juke",
@@ -750,13 +756,19 @@
         "name": "Drive",
         "description": "Spend your action at the Helm, driving the Demon Grinder up to its movement for the turn",
         "no_action": "No action available",
-        "out_of_movement": "No movement remaining"
+        "out_of_movement": "No movement remaining",
+        "crushing_wheels": "Creatures the Demon Grinder passes over must make a DC {{dc}} Dexterity saving throw or take the wheels' damage — roll Crushing Wheels."
       },
       "dash": {
         "name": "Dash",
         "description": "Spend a bonus action doubling the Demon Grinder's movement this turn. The vehicle can Dash 3 times plus its Constitution modifier each encounter — each Dash beyond that risks damaging it",
         "no_bonus_action": "No bonus action available",
         "risk": "Each encounter the vehicle can Dash {{allowance}} times (3 plus its Constitution modifier); each Dash beyond that runs the risk of damaging the vehicle"
+      },
+      "wheels": {
+        "name": "Crushing Wheels",
+        "description": "The Demon Grinder's wheels: when it Drives through the space of Large or smaller creatures, each creature it passes over must make a DC 11 Dexterity saving throw or take 4d10 bludgeoning damage and be knocked prone. A creature already prone takes the damage instead of being knocked prone, and the wheels catch the same creature only once on a turn. The wheels only catch creatures on a turn the Demon Grinder has Driven.",
+        "not_driven": "The Demon Grinder hasn't Driven this turn — the wheels only catch creatures it Drives over"
       },
       "check-str": {
         "name": "Strength Check"

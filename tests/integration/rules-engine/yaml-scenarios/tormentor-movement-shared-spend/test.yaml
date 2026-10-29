@@ -37,7 +37,7 @@ steps:
           companion.vehicle.movement.spent: 0
   # Drive 40 ft: the row's one endOfTurn effect carries the action spend and
   # the distance against the SHARED fact (never the per-vehicle stem), and
-  # remaining = total − shared spent.
+  # remaining = total − shared spent
   - addOffer:
       id: drive-tormentor
       selections:

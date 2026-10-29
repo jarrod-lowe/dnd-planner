@@ -1,0 +1,108 @@
+name: 'Demon Grinder - Crushing Wheels Note Rides Every Drive Row'
+description: >-
+  The Demon Grinder's Crushing Wheels — the same restructured trait the
+  Tormentor rolls on, the Grinder's OWN numbers: the note is a LINKED
+  annotation on the Drive panel (tap the chip, the wheels-demon-grinder roll
+  row joins the plan), while the roll row (free, no seat, no spend, an
+  ATTACK-filed damage-only 4d10 bludgeoning dice line) is ILLEGAL until the
+  Grinder has Driven this turn (the per-vehicle drove marker Drive's spend
+  writes beside the shared pool). The drive row carries NO per-row
+  diagnostic — the chip is the note — and the marker ages away with the
+  turn.
+ruleGroups:
+  - vehicles/demon-grinder
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-demon-grinder
+  # The roll row exists the moment the vehicle does (no seat gate) and is
+  # ILLEGAL on its own not-driven leg until the Grinder Drives; the linked
+  # chip annotation stands with the Grinder's OWN label.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - wheels-demon-grinder
+          illegal:
+            - wheels-demon-grinder
+        annotations:
+          exists:
+            - rule.demon-grinder.drive.crushing_wheels
+          targets:
+            - key: rule.demon-grinder.drive.crushing_wheels
+              targets:
+                - move.vehicle.demon-grinder.companion
+          addsToPlan:
+            - key: rule.demon-grinder.drive.crushing_wheels
+              adds:
+                offer: wheels-demon-grinder
+  - addOffer:
+      id: take-demon-grinder-helm-seat
+  # A soul coin in the burner (the Helm's bonus-action record, committed
+  # here so the row below is legal).
+  - addOffer:
+      id: set-demon-grinder-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  # The Drive row carries NO per-row diagnostic (the chip is the note), and
+  # the roll row turns LEGAL behind the drive.
+  - addOffer:
+      id: drive-demon-grinder
+      selections:
+        distance: 40
+      assert:
+        planErrors:
+          - id: drive-demon-grinder
+            index: 0
+            errors: []
+        status:
+          legal: true
+        offers:
+          legal:
+            - wheels-demon-grinder
+  # A free record row planned beside it carries NOTHING.
+  - addOffer:
+      id: set-demon-grinder-occupancy
+      selections:
+        occupancy: 2
+      assert:
+        planErrors:
+          - id: set-demon-grinder-occupancy
+            index: 0
+            errors: []
+  # End of turn: the drove marker ages away with the spends — the roll row
+  # is illegal again until the next Drive.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.demonGrinder.movement.total: 100
+          companion.demonGrinder.movement.remaining: 100
+          companion.demonGrinder.movement.drove: 0
+          companion.demonGrinder.seats.helm: 1
+          companion.demonGrinder.fuel.current: 1
+        offers:
+          illegal:
+            - wheels-demon-grinder
+  # Turn 2: a fresh, LEGAL Drive reopens the roll row behind it.
+  - addOffer:
+      id: drive-demon-grinder
+      assert:
+        planErrors:
+          - id: drive-demon-grinder
+            index: 0
+            errors: []
+        status:
+          legal: true
+        offers:
+          legal:
+            - wheels-demon-grinder
+  # Leave the Helm: the Drive panel goes with the seat — no panel carries
+  # the chip's label, so the note renders nowhere.
+  - addOffer:
+      id: leave-demon-grinder-helm-seat
+      assert:
+        offers:
+          notExists:
+            - drive-demon-grinder

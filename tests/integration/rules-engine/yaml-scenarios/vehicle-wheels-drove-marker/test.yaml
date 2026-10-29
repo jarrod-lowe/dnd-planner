@@ -1,0 +1,65 @@
+name: 'Vehicles - Crushing Wheels Drove Marker Is Per Vehicle'
+description: >-
+  The Crushing Wheels roll rows gate on the vehicle's OWN drove marker, not
+  the shared movement spend: Drive's spend writes the per-vehicle
+  <stem>.movement.drove marker (endOfTurn) beside the shared player-level
+  pool, so driving the Tormentor this turn opens the Tormentor's wheels
+  while the Demon Grinder's stay ILLEGAL on their own not-driven leg — even
+  though the Grinder's pool paid the very same feet through the shared
+  spend. Owning both vehicles is legal; the marker never crosses vehicles,
+  and the turn's end closes every machine's wheels together.
+ruleGroups:
+  - vehicles/tormentor
+  - vehicles/demon-grinder
+  - dnd-5e-2024/action-economy
+steps:
+  # Own both vehicles (legal — one of EACH), drive the Tormentor only.
+  - addOffer:
+      id: acquire-tormentor
+  - addOffer:
+      id: acquire-demon-grinder
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - wheels-tormentor
+            - wheels-demon-grinder
+          illegal:
+            - wheels-tormentor
+            - wheels-demon-grinder
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 30
+      assert:
+        facts:
+          companion.tormentor.movement.drove: 1
+          companion.demonGrinder.movement.drove: 0
+          # The SHARED spend paid the feet — every vehicle's pool reads it —
+          # but the Grinder's wheels never turned (its unfuelled pool reads
+          # the shared spend negative; the marker is what matters).
+          companion.vehicle.movement.spent: 30
+        offers:
+          legal:
+            - wheels-tormentor
+          illegal:
+            - wheels-demon-grinder
+  # The turn ends: the shared spend AND both machines' markers age away
+  # together — every wheels row illegal again until each vehicle Drives.
+  - endTurn:
+      assert:
+        facts:
+          companion.vehicle.movement.spent: 0
+          companion.tormentor.movement.drove: 0
+          companion.demonGrinder.movement.drove: 0
+        offers:
+          illegal:
+            - wheels-tormentor
+            - wheels-demon-grinder

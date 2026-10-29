@@ -35,7 +35,7 @@ steps:
           companion.demonGrinder.speed.effective: 100
           companion.demonGrinder.movement.total: 100
           companion.demonGrinder.movement.remaining: 100
-  # Drive 40 ft.: the action and the distance land in ONE endOfTurn effect,
+  # Drive 40 ft.: the action and the distance land in ONE endOfTurn effect —
   # the distance on the SHARED player-level spend.
   - addOffer:
       id: drive-demon-grinder

@@ -63,7 +63,7 @@ steps:
   # The composition pins — over-distance Drive fails wrecked AND
   # out-of-movement (the gate's diagnostics first, the apply's re-check
   # after); a sole-failing-leg Drive reads wrecked ALONE; Dash keeps its
-  # unconditional risk note beside the error, in push order.
+  # risk note beside the error, in push order.
   - addOffer:
       id: drive-demon-grinder
       selections:

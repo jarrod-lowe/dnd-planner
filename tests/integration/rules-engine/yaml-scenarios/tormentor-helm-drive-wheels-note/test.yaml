@@ -1,0 +1,111 @@
+name: 'Tormentor - Crushing Wheels Note Rides Every Drive Row'
+description: >-
+  The stat block's Crushing Wheels trait, restructured on the user's review:
+  the note is a LINKED annotation on the Drive panel (the Extra Attack /
+  Heroic Inspiration / Divine Smite click mechanism) — tap the chip and the
+  Crushing Wheels ROLL row joins the plan — while the roll row itself
+  (wheels-tormentor, free, no seat, no spend, an ATTACK-filed damage-only
+  dice line) carries the full rule in its description and is ILLEGAL until
+  the Tormentor has Driven this turn (Drive's spend writes the per-vehicle
+  drove marker beside the shared pool; illegal-but-committable, the
+  engine's contract). The drive row itself carries NO per-row diagnostic —
+  the chip is the note. The marker ages away with the turn, and leaving the
+  Helm removes the Drive panel — with no panel carrying the chip's label,
+  it renders nowhere.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # The roll row exists the moment the vehicle does (no seat gate) and is
+  # ILLEGAL on its own not-driven leg until the Tormentor Drives; the linked
+  # chip annotation stands, targeting the Drive panel's own label.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - wheels-tormentor
+          illegal:
+            - wheels-tormentor
+        annotations:
+          exists:
+            - rule.tormentor.drive.crushing_wheels
+          targets:
+            - key: rule.tormentor.drive.crushing_wheels
+              targets:
+                - move.vehicle.tormentor.companion
+          addsToPlan:
+            - key: rule.tormentor.drive.crushing_wheels
+              adds:
+                offer: wheels-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  # The pool is the FUEL's — a soul coin in the burner (the Helm's
+  # bonus-action record, committed here so the row below is legal).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  # The Drive row carries NO per-row diagnostic (the chip is the note), and
+  # behind the drive the marker stands and the roll row turns LEGAL in the
+  # same fold.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 40
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+        status:
+          legal: true
+        offers:
+          legal:
+            - wheels-tormentor
+  # A free record row planned beside it carries NOTHING (the chip is not a
+  # per-row truth).
+  - addOffer:
+      id: set-tormentor-ac-mode
+      assert:
+        planErrors:
+          - id: set-tormentor-ac-mode
+            index: 0
+            errors: []
+  # End of turn: the drove marker ages away with the spends — the roll row
+  # is illegal again until the next Drive.
+  - endTurn:
+      assert:
+        facts:
+          actions.remaining: 1
+          companion.tormentor.movement.total: 100
+          companion.tormentor.movement.remaining: 100
+          companion.tormentor.movement.drove: 0
+          companion.tormentor.seats.helm: 1
+        offers:
+          illegal:
+            - wheels-tormentor
+  # Turn 2: a fresh, LEGAL Drive reopens the roll row behind it.
+  - addOffer:
+      id: drive-tormentor
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+        status:
+          legal: true
+        offers:
+          legal:
+            - wheels-tormentor
+  # Leave the Helm: the Drive panel goes with the seat — no panel carries
+  # the chip's label, so the note renders nowhere.
+  - addOffer:
+      id: leave-tormentor-helm-seat
+      assert:
+        offers:
+          notExists:
+            - drive-tormentor

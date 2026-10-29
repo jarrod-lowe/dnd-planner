@@ -27,7 +27,8 @@ steps:
           legal:
             - drive-tormentor
   # A fresh Drive row spends the SHARED fact alone: 25 ft against the pool,
-  # remaining 75 — the legacy 30 never joins the arithmetic.
+  # remaining 75 — the legacy 30 never joins the arithmetic (the Crushing
+  # Wheels note riding the row — PR-7).
   - addOffer:
       id: drive-tormentor
       selections:

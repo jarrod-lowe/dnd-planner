@@ -107,7 +107,7 @@ steps:
   # wrecked leg and its out-of-movement re-check — the plan fold carries the
   # legalWhen gates' diagnostics first, the apply's re-checked ones after
   # (deduped), so the row reads wrecked (the gate) then out-of-movement
-  # (the selected distance).
+  # (the selected distance)
   - addOffer:
       id: drive-tormentor
       selections:
@@ -120,8 +120,8 @@ steps:
               - rule.tormentor.drive.out_of_movement
   - endTurn: {}
   # The sole-failing-leg pins, one row per turn so every sibling leg passes
-  # and wrecked stands ALONE on the row (Dash keeps its unconditional risk
-  # note beside the error, in push order).
+  # and wrecked stands ALONE on the row (each Dash row keeps its risk note
+  # beside the error, in push order).
   - addOffer:
       id: drive-tormentor
       selections:

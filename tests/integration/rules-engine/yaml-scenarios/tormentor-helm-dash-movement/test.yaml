@@ -48,7 +48,7 @@ steps:
             errors:
               - rule.tormentor.dash.risk
   # The doubled pool is Drive's to spend, the action still open: 150 of the
-  # 200.
+  # 200
   - addOffer:
       id: drive-tormentor
       selections:

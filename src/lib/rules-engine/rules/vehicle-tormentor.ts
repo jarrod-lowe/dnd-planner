@@ -90,6 +90,31 @@ const TORMENTOR: InfernalVehicleSpec = {
   boostBonus: 30,
   // Each encounter: 3 Dashes plus the vehicle's Constitution modifier.
   dashAllowanceBase: 3,
+  // The stat block's Crushing Wheels trait (Demon Grinder PR-7, restructured
+  // on the user's review): the same move-trait machinery the Grinder rolls
+  // on, the Tormentor's OWN numbers — Medium or smaller creatures, DC 13
+  // Dexterity save, 2d10 bludgeoning and knocked prone on a failure, a
+  // creature ALREADY PRONE (any cause) taking the damage instead of being
+  // knocked prone, once per creature per turn. TWO surfaces: the SHORT
+  // LINKED chip annotation on the Drive panel ({{dc}} its only
+  // interpolation value; tap the chip and the roll row joins the plan) and
+  // the vehicle-level roll row `wheels-tormentor` (free, no seat, no spend,
+  // filed with the WEAPON offers as an ATTACK) whose 2d10-bludgeoning dice
+  // line carries the damage and whose description carries the whole rule,
+  // gated on the per-vehicle drove marker. PR-8's Raking Scythes join this
+  // list as a second entry, data only. Own wording throughout — the trait
+  // text is BG:DiA's, not SRD; only the numbers are facts.
+  moveTraits: [
+    {
+      slug: 'wheels',
+      note: 'rule.tormentor.drive.crushing_wheels',
+      saveDc: 13,
+      damageCount: 2,
+      damageDie: 10,
+      damageBonus: 0,
+      damageType: 'bludgeoning'
+    }
+  ],
   // The stat block's Reaction row (the driver's Juke swerve) — a vehicle
   // whose stat block carries no Reaction (the Demon Grinder) omits this and
   // never gets the offer.
