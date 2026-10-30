@@ -125,6 +125,9 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
   // standing note, the types as localized chips on the record-damage offer
   // (PR-9). Never mechanics: the recorder stays legal for every type.
   immunities: ['fire', 'poison', 'psychic'],
+  // The stat block's Magic Weapons trait (its weapon attacks are magical): a
+  // Magical mark on every fire panel — harpoon, wrecking ball and chomper.
+  magicWeapons: true,
   details: {
     statBlock: 'vehicle/demon-grinder',
     damage: 'vehicle/demon-grinder-damage',

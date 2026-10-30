@@ -49,6 +49,7 @@ steps:
                 - action
               annotationLabels:
                 - dice.any.companion
+                - property.vehicle.tormentor.companion
               intents:
                 ATTACK: weapons
               primaryControl:

@@ -1,0 +1,64 @@
+name: 'Demon Grinder - Magic Weapons Mark Every Fire Panel'
+description: >-
+  The stat block's Magic Weapons trait (the Demon Grinder's weapon attacks are
+  magical) rides EVERY weapon station's fire offer as a plain Magical mark on
+  the vehicle's per-subject, companion-suffixed property label — harpoon,
+  wrecking ball and chomper alike. The mark stands while the vehicle is
+  acquired and leaves with the abandon.
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  - evaluate:
+      assert:
+        annotations:
+          notExists:
+            - rule.demon-grinder.magical
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        annotations:
+          exists:
+            - rule.demon-grinder.magical
+          targets:
+            - key: rule.demon-grinder.magical
+              targets:
+                - property.vehicle.demon-grinder.companion
+  - addOffer:
+      id: take-demon-grinder-harpoon-seat
+      assert:
+        offerUi:
+          - id: fire-demon-grinder-harpoon
+            ui:
+              annotationLabels:
+                - dice.any.companion
+                - property.vehicle.demon-grinder.companion
+  - addOffer:
+      id: leave-demon-grinder-harpoon-seat
+  - addOffer:
+      id: take-demon-grinder-wrecking-ball-seat
+      assert:
+        offerUi:
+          - id: fire-demon-grinder-wrecking-ball
+            ui:
+              annotationLabels:
+                - dice.any.companion
+                - property.vehicle.demon-grinder.companion
+  - addOffer:
+      id: leave-demon-grinder-wrecking-ball-seat
+  - addOffer:
+      id: take-demon-grinder-chomper-seat
+      assert:
+        offerUi:
+          - id: fire-demon-grinder-chomper
+            ui:
+              annotationLabels:
+                - dice.any.companion
+                - property.vehicle.demon-grinder.companion
+  - addOffer:
+      id: leave-demon-grinder-chomper-seat
+  - addOffer:
+      id: abandon-demon-grinder
+      assert:
+        annotations:
+          notExists:
+            - rule.demon-grinder.magical

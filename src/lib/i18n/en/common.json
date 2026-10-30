@@ -452,6 +452,7 @@
     },
     "tormentor": {
       "name": "Tormentor",
+      "magical": "Magical",
       "keywords": "vehicle tormentor war machine acquire abandon mount ride",
       "description": "The Tormentor war vehicle, acquired and abandoned as one vehicle",
       "acquire": {
@@ -640,6 +641,7 @@
     },
     "demon-grinder": {
       "name": "Demon Grinder",
+      "magical": "Magical",
       "keywords": "vehicle demon grinder war machine acquire abandon mount ride",
       "description": "The Demon Grinder war vehicle, acquired and abandoned as one vehicle",
       "acquire": {

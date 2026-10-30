@@ -228,6 +228,15 @@ export interface InfernalVehicleSpec {
    * vehicle-spec data, never shared-factory behaviour).
    */
   immunities?: readonly string[];
+  /**
+   * The stat block's MAGIC WEAPONS trait, when it carries one: every weapon
+   * station's fire offer carries a plain Magical mark while the vehicle is
+   * acquired (the Spear +1 property.magical shape, on a per-subject
+   * companion-suffixed label so the player's own mark never reaches it). A
+   * mark, never a mechanic. OMIT it for a vehicle whose stat block carries no
+   * such trait — no mark, no label.
+   */
+  magicWeapons?: boolean;
   /** Rules-mode detail keys (the flip targets). */
   details: {
     statBlock: string;
@@ -532,6 +541,16 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
    * because the recorder wiring below reads it at BUILD time.
    */
   const IMMUNE_LABEL = `damage.vehicle.${subject}.companion`;
+
+  /**
+   * The MAGIC WEAPONS mark's key and the fire panels' label it lands on —
+   * per subject and `.companion`-suffixed (the IMMUNE_LABEL discipline), so
+   * the player's `property.magical` mark (Spear +1) never reaches a vehicle's
+   * fire panel and one vehicle's mark never reaches another's. Declared here
+   * because the fire offers read the label at BUILD time.
+   */
+  const MAGICAL_MARK = `${T}.magical`;
+  const MAGICAL_LABEL = `property.vehicle.${subject}.companion`;
 
   /** Each prone offer's single legality leg (the get-up not_prone idiom). */
   const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
@@ -878,7 +897,10 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
         // precedent): the fire panel lives under the vehicle subject, and every
         // subject panel scopes its labels so self-only riders cannot reach a
         // companion's rolls — the player spends the action, the VEHICLE fires.
-        annotationLabels: ['dice.any.companion'],
+        // Beside it, the Magic Weapons mark's label when the spec wires it.
+        annotationLabels: spec.magicWeapons
+          ? ['dice.any.companion', MAGICAL_LABEL]
+          : ['dice.any.companion'],
         primaryControl: control
       },
       vars,
@@ -2262,7 +2284,8 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
     // label) and taps into the plan, the Extra Attack / Divine Smite way.
     // The IMMUNITIES note joins the same way (immunityAnnotations): a
     // read-only panel annotation on the recorder, listing the spec's immune
-    // damage types as render-site-localized chips.
+    // damage types as render-site-localized chips. The MAGIC WEAPONS mark
+    // likewise: a plain Magical chip on every fire panel while acquired.
     annotate: (f: FactReader): Annotation[] => {
       const out: Annotation[] = [];
       if (f.num(`${F}.prone`) > 0)
@@ -2289,6 +2312,8 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
           });
       out.push(...moveTraitAnnotations(f));
       out.push(...immunityAnnotations(f));
+      if (spec.magicWeapons && acquired(f))
+        out.push({ key: MAGICAL_MARK, targets: [MAGICAL_LABEL] });
       return out;
     }
   };

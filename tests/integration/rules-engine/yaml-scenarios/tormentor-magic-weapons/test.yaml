@@ -1,0 +1,42 @@
+name: 'Tormentor - Magic Weapons Mark The Fire Panel'
+description: >-
+  The stat block's Magic Weapons trait (the flinger's harpoons are magical)
+  rides the fire offer as a plain Magical mark — the Spear +1 shape, but on a
+  per-subject, companion-suffixed property label so the player's own
+  property.magical mark never reaches the vehicle's panel. The mark stands
+  while the vehicle is acquired and leaves with the abandon.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  - evaluate:
+      assert:
+        annotations:
+          notExists:
+            - rule.tormentor.magical
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        annotations:
+          exists:
+            - rule.tormentor.magical
+          targets:
+            - key: rule.tormentor.magical
+              targets:
+                - property.vehicle.tormentor.companion
+  - addOffer:
+      id: take-tormentor-harpoon-seat
+      assert:
+        offerUi:
+          - id: fire-tormentor-harpoon
+            ui:
+              annotationLabels:
+                - dice.any.companion
+                - property.vehicle.tormentor.companion
+  - addOffer:
+      id: leave-tormentor-harpoon-seat
+  - addOffer:
+      id: abandon-tormentor
+      assert:
+        annotations:
+          notExists:
+            - rule.tormentor.magical

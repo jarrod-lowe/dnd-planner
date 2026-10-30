@@ -1092,8 +1092,12 @@ describe('fire-tormentor-harpoon offer', () => {
     // A dice-line roller carries a dice.any label so reroll riders can find
     // the panel — and because the panel lives under the vehicle SUBJECT it is
     // the companion-suffixed form (the steed's COMPANION_DICE_LABEL precedent;
-    // companion-annotation-labels pins the suffix registry-wide).
-    expect(ui.annotationLabels).toEqual(['dice.any.companion']);
+    // companion-annotation-labels pins the suffix registry-wide). Beside it,
+    // the Magic Weapons mark's per-subject label.
+    expect(ui.annotationLabels).toEqual([
+      'dice.any.companion',
+      'property.vehicle.tormentor.companion'
+    ]);
     // 120 ft. / one target are copy + detail — no ranges machinery, so the
     // control is dice alone: d20 + hitBonus to hit, 2d8 + damageBonus
     // piercing (the HEAL_TOUCH count:2 precedent for the damage pair).
@@ -1797,7 +1801,8 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
         key: `${T}.record-damage.immunities`,
         targets: ['damage.vehicle.tormentor.companion'],
         damageTypes: ['fire', 'poison', 'psychic']
-      }
+      },
+      { key: `${T}.magical`, targets: ['property.vehicle.tormentor.companion'] }
     ]);
     // The Drive offer declares the label the chip targets.
     const drive = module().offer!({ selections: {} }).find((o) => o.id === 'drive-tormentor')!;

@@ -345,7 +345,8 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
         key: `${T}.record-damage.immunities`,
         targets: ['damage.vehicle.demon-grinder.companion'],
         damageTypes: ['fire', 'poison', 'psychic']
-      }
+      },
+      { key: `${T}.magical`, targets: ['property.vehicle.demon-grinder.companion'] }
     ]);
     // The Drive offer declares the label the chip targets.
     const drive = module().offer!({ selections: {} }).find((o) => o.id === `drive-${ID}`)!;
@@ -709,7 +710,7 @@ describe('the Harpoon Flinger fire offer (the weapon-station machinery)', () => 
       detailKey: 'vehicle/demon-grinder-harpoon',
       intents: { ATTACK: 'weapons' },
       actionCost: ['action'],
-      annotationLabels: ['dice.any.companion'],
+      annotationLabels: ['dice.any.companion', 'property.vehicle.demon-grinder.companion'],
       primaryControl: {
         type: 'dice-line',
         dice: [
@@ -806,7 +807,7 @@ describe('the Chomper bite offer (PR-6, the same machinery)', () => {
       detailKey: 'vehicle/demon-grinder-chomper',
       intents: { ATTACK: 'weapons' },
       actionCost: ['action'],
-      annotationLabels: ['dice.any.companion'],
+      annotationLabels: ['dice.any.companion', 'property.vehicle.demon-grinder.companion'],
       primaryControl: {
         type: 'dice-line',
         dice: [
@@ -970,7 +971,7 @@ describe('the Wrecking Ball swing offer (PR-5, the same machinery)', () => {
       detailKey: 'vehicle/demon-grinder-wrecking-ball',
       intents: { ATTACK: 'weapons' },
       actionCost: ['action'],
-      annotationLabels: ['dice.any.companion'],
+      annotationLabels: ['dice.any.companion', 'property.vehicle.demon-grinder.companion'],
       primaryControl: {
         type: 'dice-line',
         dice: [
