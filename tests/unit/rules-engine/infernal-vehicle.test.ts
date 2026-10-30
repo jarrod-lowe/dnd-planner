@@ -13,6 +13,9 @@ import {
   infernalAcquireEffect,
   type InfernalVehicleSpec
 } from '$lib/rules-engine/rules/infernal-vehicle';
+import coreEvents from '$lib/rules-engine/rules/core-events';
+import hp from '$lib/rules-engine/rules/hp';
+import findSteed, { steedEffect } from '$lib/rules-engine/rules/find-steed';
 import en from '$lib/i18n/en/common.json';
 import tlh from '$lib/i18n/en-x-tlh/common.json';
 
@@ -1173,6 +1176,157 @@ describe('factory: move traits — pointer note on Drive rows + a vehicle-level 
  * restores that guard at the emitted surface (offer ui, legality and plan-row
  * diagnostics, effect chips, annotations, panels, control prefixes).
  */
+describe('factory: damage immunities — the recorder panel’s standing note', () => {
+  /**
+   * An IMMUNITIES fixture: the opt-in spec field both shipped vehicles wire
+   * (fire/poison/psychic from each stat block), on a spec whose every other
+   * number is TEST_SPEC's — so the emitted note's key, label and type list
+   * are all that can differ here.
+   */
+  const IMMUNE_ID = 'infernal-immune';
+  const IMMUNE_SPEC: InfernalVehicleSpec = {
+    ...TEST_SPEC,
+    id: IMMUNE_ID,
+    subject: IMMUNE_ID,
+    factStem: 'companion.infernalImmune',
+    seats: [TEST_SPEC.seats[0]!],
+    immunities: ['fire', 'poison', 'psychic']
+  };
+  const IMMUNE_NOTE = `rule.${IMMUNE_ID}.record-damage.immunities`;
+  const IMMUNE_LABEL = `damage.vehicle.${IMMUNE_ID}.companion`;
+
+  const acquiredReader = (stem: string): FactReader => ({
+    num: (n) => (n === `${stem}.active` ? 1 : 0),
+    has: (n) => n === `${stem}.active`
+  });
+
+  it('a wired spec emits ONE note on the recorder’s own label, types as damageTypes — never params', () => {
+    // The note is a STANDING panel annotation (the recorder idiom: the panel
+    // the post-hoc reminders ride), not a notice and not a per-row
+    // diagnostic. The TYPES ride the damageTypes channel as IDENTIFIERS the
+    // render site localizes through damage-type.* — the dice-line convention
+    // — so `values` stays ABSENT: no raw English identifier ever crosses
+    // into an interpolation param (the PR-7/#501 lesson).
+    const annotations =
+      buildInfernalVehicle(IMMUNE_SPEC).annotate?.(
+        acquiredReader('companion.infernalImmune'),
+        []
+      ) ?? [];
+    const note = annotations.find((a) => a.key === IMMUNE_NOTE);
+    expect(note, 'the immunities note is emitted while acquired').toBeDefined();
+    expect(note!.targets).toEqual([IMMUNE_LABEL]);
+    expect(note!.damageTypes).toEqual(['fire', 'poison', 'psychic']);
+    expect(note!.values, 'identifiers never ride interpolation params').toBeUndefined();
+    expect(note!.targets).not.toContain('notice');
+  });
+
+  it('the DAMAGE offer carries the note’s label — per-subject, and the heal offer carries none', () => {
+    const rows = offers(IMMUNE_SPEC);
+    const damage = rows.find((o) => o.id === `record-${IMMUNE_ID}-damage`)!;
+    expect(damage, 'the damage recorder row exists').toBeDefined();
+    expect((damage.ui as Record<string, unknown>).annotationLabels).toEqual([IMMUNE_LABEL]);
+    const heal = rows.find((o) => o.id === `record-${IMMUNE_ID}-heal`)!;
+    expect(
+      (heal.ui as Record<string, unknown>).annotationLabels,
+      'repairs have no immunity semantics'
+    ).toBeUndefined();
+  });
+
+  it('the note exists ONLY while acquired (it rides the panel, and the panel rides the acquire)', () => {
+    const mod = buildInfernalVehicle(IMMUNE_SPEC);
+    const unacquired: FactReader = { num: () => 0, has: () => false };
+    expect(
+      mod.annotate?.(unacquired, []) ?? [],
+      'an unacquired vehicle emits no immunities note'
+    ).toEqual([]);
+  });
+
+  it('a spec with NO immunities emits no note and labels no recorder row (opt-in, zero change)', () => {
+    // TEST_SPEC wires no immunities — the player/steed shape on a vehicle
+    // spec: no annotation, and the damage offer carries no annotationLabels.
+    const mod = buildInfernalVehicle(TEST_SPEC);
+    expect(
+      mod.annotate?.(acquiredReader(F), []) ?? [],
+      'no immunities note without the spec field'
+    ).toEqual([]);
+    const damage = offers(TEST_SPEC).find((o) => o.id === `record-${SPEC_ID}-damage`)!;
+    expect((damage.ui as Record<string, unknown>).annotationLabels).toBeUndefined();
+  });
+
+  it('the note NEVER gates: an immune-type blow records in full, legal, no diagnostic', () => {
+    // 15 fire damage — an immune type, above the fixture's damage threshold:
+    // the record lands exactly as ever. Immunity is the GM's call at the
+    // table; the recorder stays legal for every type (the notice taxonomy —
+    // know BEFORE acting, never a legality gate).
+    const out = evaluate({
+      modules: [buildInfernalVehicle(IMMUNE_SPEC)],
+      committed: [infernalAcquireEffect(IMMUNE_SPEC)],
+      planned: [
+        { instanceId: 'd1', ruleId: `record-${IMMUNE_ID}-damage`, selections: { amount: 15 } }
+      ]
+    });
+    expect(out.facts['companion.infernalImmune.hp.damageRecorded']).toBe(15);
+    expect(out.facts['companion.infernalImmune.hp.current']).toBe(185);
+    expect(out.planDiagnostics['d1'] ?? []).toEqual([]);
+    expect(out.status.legal).toBe(true);
+    // The note still stands beside the planned row — the panel it rides did
+    // not move.
+    expect(out.annotations.some((a) => a.key === IMMUNE_NOTE)).toBe(true);
+  });
+
+  it('the player’s and the steed’s recorders are untouched — no damageTypes anywhere', () => {
+    // The option lives on the VEHICLE spec (the factory that owns the
+    // annotate share); the shared hpRecorders factory gains nothing
+    // unconditional, so the player's and the steed's recorders keep exactly
+    // the surfaces they had.
+    const player = evaluate({ modules: [coreEvents, hp] });
+    expect(player.annotations.every((a) => a.damageTypes === undefined)).toBe(true);
+    const playerRow = player.availableRules.find((r) => r.rule.id === 'record-damage')!;
+    expect((playerRow.rule.ui as Record<string, unknown>).annotationLabels).toEqual(['damage.any']);
+    const steed = evaluate({ modules: [findSteed], committed: [steedEffect(2, 0)] });
+    expect(steed.annotations.every((a) => a.damageTypes === undefined)).toBe(true);
+    const steedRow = steed.availableRules.find((r) => r.rule.id === 'steed-record-damage')!;
+    expect((steedRow.rule.ui as Record<string, unknown>).annotationLabels).toBeUndefined();
+  });
+
+  it('both shipped vehicles’ note copy exists in BOTH locales, param-free, leading into the type chips', () => {
+    // The label is a lead-in ending in a colon — the localized type chips
+    // follow it (the render site composes label + damage-type.* values). NO
+    // {{param}} slots: the types never interpolate, so the tlh canary can
+    // never leak an English identifier mid-sentence.
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      const rule = dict.rule as unknown as Record<string, Record<string, Record<string, string>>>;
+      for (const value of [
+        rule.tormentor!['record-damage']!.immunities,
+        rule['demon-grinder']!['record-damage']!.immunities
+      ]) {
+        expect(value, `${locale} immunities note`).toEqual(expect.any(String));
+        expect(value!.trim().endsWith(':'), `${locale} note leads into the chips`).toBe(true);
+        expect(value, `${locale} note carries no params`).not.toContain('{{');
+      }
+    }
+  });
+
+  it('the types localize at the render site — damage-type.* resolves for every type in BOTH locales', () => {
+    // The chips render $t(`damage-type.${type}`) exactly as every dice line
+    // does; the note's whole tlh path is the tlh label plus the locale's own
+    // damage-type values — nothing hand-embedded, nothing raw.
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      const types = dict['damage-type'] as Record<string, string>;
+      for (const type of ['fire', 'poison', 'psychic']) {
+        expect(types![type], `${locale} damage-type.${type}`).toEqual(expect.any(String));
+        expect(types![type]!.length, `${locale} damage-type.${type} non-empty`).toBeGreaterThan(0);
+      }
+    }
+  });
+});
+
 describe('factory: the registered Tormentor module emits only resolvable keys', () => {
   const TORMENTOR = 'tormentor';
   const TF = 'companion.tormentor';
@@ -1234,11 +1388,22 @@ describe('factory: the registered Tormentor module emits only resolvable keys', 
     for (const effect of out.effects) if (effect.display) i18nStrings(effect.display, keys);
     for (const diags of Object.values(out.planDiagnostics))
       for (const d of diags) i18nStrings(d.code, keys);
-    // The annotate surface, with every standing-notice fact set directly.
+    // The annotate surface, with every standing-notice fact set directly —
+    // `active` included, so the acquired-only annotations (the move-trait
+    // chips, the PR-9 immunities note) land in the walked key set too.
     const reader: FactReader = {
       num: (n) =>
-        n === `${TF}.prone` || n === `${TF}.destroyed` || n === `${TF}.seats.clinger` ? 1 : 0,
-      has: (n) => n === `${TF}.prone` || n === `${TF}.destroyed` || n === `${TF}.seats.clinger`
+        n === `${TF}.active` ||
+        n === `${TF}.prone` ||
+        n === `${TF}.destroyed` ||
+        n === `${TF}.seats.clinger`
+          ? 1
+          : 0,
+      has: (n) =>
+        n === `${TF}.active` ||
+        n === `${TF}.prone` ||
+        n === `${TF}.destroyed` ||
+        n === `${TF}.seats.clinger`
     };
     for (const a of mod.annotate!(reader, [])) i18nStrings([a.key, a.body, a.source], keys);
     // The declared panels (the label surface the renderer translates).
@@ -1348,10 +1513,13 @@ describe('factory: the registered Demon Grinder module emits only resolvable key
     for (const effect of out.effects) if (effect.display) dgI18nStrings(effect.display, keys);
     for (const diags of Object.values(out.planDiagnostics))
       for (const d of diags) dgI18nStrings(d.code, keys);
-    // The annotate surface, with every standing-notice fact set directly.
+    // The annotate surface, with every standing-notice fact set directly —
+    // `active` included, so the acquired-only annotations (the wheels chip,
+    // the PR-9 immunities note) land in the walked key set too.
     const reader: FactReader = {
-      num: (n) => (n === `${DGF}.prone` || n === `${DGF}.destroyed` ? 1 : 0),
-      has: (n) => n === `${DGF}.prone` || n === `${DGF}.destroyed`
+      num: (n) =>
+        n === `${DGF}.active` || n === `${DGF}.prone` || n === `${DGF}.destroyed` ? 1 : 0,
+      has: (n) => n === `${DGF}.active` || n === `${DGF}.prone` || n === `${DGF}.destroyed`
     };
     for (const a of mod.annotate!(reader, [])) dgI18nStrings([a.key, a.body, a.source], keys);
     // The declared panels (the label surface the renderer translates).

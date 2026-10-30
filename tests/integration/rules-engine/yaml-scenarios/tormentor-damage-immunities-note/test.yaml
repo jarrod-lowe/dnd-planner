@@ -1,0 +1,83 @@
+name: 'Tormentor - Damage Immunities Stand On The Recorder Panel'
+description: >-
+  The stat block's damage immunities (fire, poison, psychic) ride the
+  record-damage offer as a STANDING panel annotation — spec data on the shared
+  factory's opt-in immunities field, emitted while the vehicle is acquired and
+  targeted at the recorder's own per-subject label. The note is a NOTICE, never
+  a legality gate: recording any amount of ANY type stays fully legal (the GM
+  adjudicates what bounced), no diagnostic fires, and the types travel as the
+  annotation's damageTypes list — identifiers the render site localizes through
+  the damage-type.* keys, never interpolation params. Unacquired there is no
+  note (no panel to carry it), and the abandon fold drops it with the acquire.
+ruleGroups:
+  - vehicles/tormentor
+steps:
+  # Unacquired: no recorder offer, no note — the annotation is gated on the
+  # acquire like every vehicle surface.
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - record-tormentor-damage
+        annotations:
+          notExists:
+            - rule.tormentor.record-damage.immunities
+  - addOffer:
+      id: acquire-tormentor
+      assert:
+        # The note stands on the recorder's own panel label (per-subject, so
+        # the Grinder's note never lands on the Tormentor's recorder) and
+        # lists exactly the spec's three immune types.
+        annotations:
+          exists:
+            - rule.tormentor.record-damage.immunities
+          targets:
+            - key: rule.tormentor.record-damage.immunities
+              targets:
+                - damage.vehicle.tormentor.companion
+          damageTypes:
+            - key: rule.tormentor.record-damage.immunities
+              damageTypes:
+                - fire
+                - poison
+                - psychic
+        offerUi:
+          - id: record-tormentor-damage
+            ui:
+              annotationLabels:
+                - damage.vehicle.tormentor.companion
+  # 15 FIRE damage — an immune type, above the damage threshold: the record
+  # lands IN FULL with no diagnostic of any kind. Immunity is the GM's call at
+  # the table; the recorder never refuses a type.
+  - addOffer:
+      id: record-tormentor-damage
+      selections:
+        amount: 15
+      assert:
+        facts:
+          companion.tormentor.hp.damageRecorded: 15
+          companion.tormentor.hp.current: 45
+        planErrors:
+          - id: record-tormentor-damage
+            index: 0
+            errors: []
+        status:
+          legal: true
+        annotations:
+          exists:
+            - rule.tormentor.record-damage.immunities
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-tormentor-hp-damage
+  # The abandon fold evicts the acquire — the panel and its note go with it.
+  - addOffer:
+      id: abandon-tormentor
+      assert:
+        offers:
+          notExists:
+            - record-tormentor-damage
+        annotations:
+          notExists:
+            - rule.tormentor.record-damage.immunities

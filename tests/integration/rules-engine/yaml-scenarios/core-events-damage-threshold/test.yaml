@@ -18,12 +18,21 @@ ruleGroups:
   - class-paladin/class-paladin-level1
   - dnd-5e-2024/core-events
 steps:
-  # Set CON to 14 (modifier +2) → hp.max = 12, hp.current = 12.
+  # Set CON to 14 (modifier +2) → hp.max = 12, hp.current = 12. The recorder's
+  # panel surface is pinned UNCHANGED beside the vehicle immunities note
+  # (PR-9): the player's recorder configures no immunities option, so its
+  # annotationLabels stay exactly the post-hoc reminder labels they have
+  # always been — no vehicle note can land here.
   - evaluate:
       assert:
         offers:
           exists:
             - set-constitution
+        offerUi:
+          - id: record-damage
+            ui:
+              annotationLabels:
+                - damage.any
   - addOffer:
       id: set-constitution
       selections:

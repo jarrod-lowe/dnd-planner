@@ -511,6 +511,17 @@ export interface Annotation {
    * Currently renders in the notices strip only.
    */
   roll?: AnnotationRoll;
+  /**
+   * Damage TYPES the annotation names (a vehicle's damage immunities) —
+   * engine-side plain identifiers (the `WeaponDef.damageType` /
+   * {@link AnnotationRoll.damageType} convention) that the RENDER SITE maps
+   * through the `damage-type.*` i18n keys, never words. They belong HERE and
+   * never in {@link values}: params interpolate raw, so an identifier riding
+   * one would leak English into every translated sentence (the move-trait
+   * damageType lesson). The panel renders the label as a lead-in followed by
+   * one localized type chip per entry.
+   */
+  damageTypes?: readonly string[];
   rider?: AnnotationRider;
   toggle?: AnnotationToggle;
   /**

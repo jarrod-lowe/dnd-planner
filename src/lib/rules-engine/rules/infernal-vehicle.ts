@@ -210,6 +210,24 @@ export interface InfernalVehicleSpec {
    * later trait joins as data.
    */
   moveTraits?: readonly MoveTraitSpec[];
+  /**
+   * The stat block's DAMAGE IMMUNITIES line, when it carries one: the damage
+   * TYPES (plain identifiers — 'fire', 'poison', …) the vehicle cannot be
+   * hurt by. When set, the record-DAMAGE offer carries ONE standing panel
+   * annotation listing them (the recorder idiom: the label the post-hoc
+   * reminders ride, per-subject so one vehicle's note never lands on
+   * another's recorder) with the types riding the annotation's damageTypes
+   * channel — identifiers the render site localizes through the damage-type.*
+   * keys, never interpolation params. A NOTICE, never a legality gate:
+   * recording any amount of ANY type stays fully legal (what bounced is the
+   * GM's call), nothing is refused, counted or diagnosed, and the recorder's
+   * numbers are untouched. OMIT it for a vehicle whose stat block carries no
+   * immunities line — no note, no label (the juke/acMode/moveTraits
+   * optionality precedent: what a stat block does not carry does not exist),
+   * and the player/steed recorders are unaffected either way (this field is
+   * vehicle-spec data, never shared-factory behaviour).
+   */
+  immunities?: readonly string[];
   /** Rules-mode detail keys (the flip targets). */
   details: {
     statBlock: string;
@@ -490,6 +508,30 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
    * params for the locale's {{amount}}/{{threshold}} slots.
    */
   const MISHAP_THRESHOLD = `${T}.record-damage.mishap_threshold`;
+
+  /**
+   * The damage recorder's IMMUNITIES note key — the STANDING panel annotation
+   * a spec that wires `immunities` carries on the record-damage offer (the
+   * recorder idiom: post-hoc damage reminders ride the recorder's own panel,
+   * the concentration 'damage.any' precedent — but on a PER-SUBJECT label, so
+   * one vehicle's note never lands on another's recorder or on the player's).
+   * A notice the crew must know BEFORE recording, never a gate: every type
+   * stays recordable, and the types ride the annotation's damageTypes channel
+   * (render-site localization through damage-type.*) — never params.
+   */
+  const IMMUNITIES_NOTE = `${T}.record-damage.immunities`;
+
+  /**
+   * The recorder panel's label for the IMMUNITIES note — PER SUBJECT and
+   * `.companion`-suffixed (the MOVE_TRAIT_LABEL discipline: a companion
+   * panel's every label ends `.companion`, so no self-only rider can ever
+   * reach it), so the note renders on THIS vehicle's record-damage panel
+   * alone: never another vehicle's recorder, never the player's (whose
+   * recorder carries the bare 'damage.any' — the player-level post-hoc
+   * channel this deliberately does not join). Declared beside the note key
+   * because the recorder wiring below reads it at BUILD time.
+   */
+  const IMMUNE_LABEL = `damage.vehicle.${subject}.companion`;
 
   /** Each prone offer's single legality leg (the get-up not_prone idiom). */
   const ALREADY_PRONE = `${T}.knocked-prone.already_prone`;
@@ -1090,13 +1132,16 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
    * a cap). Damage that brings the pool to 0 ALSO writes the permanent
    * destroyed wreck BESIDE the record (the record lands — the blow happened;
    * the wreck is permanent, because a long rest must not un-burn a war
-   * machine). The damage offer carries the damage DETAIL — threshold,
-   * immunities and the mishap trigger live there, not on standing notices
-   * (nothing else behaves differently, so there is nothing to warn about before
-   * acting) — while the MISHAP TRIGGER also rides the recording ROW itself: the
-   * acquire bakes the mishap threshold, and the factory's OPT-IN mishap option
-   * names the fact, so a single-source recording that meets it carries ONE
-   * informational note on that row alone. The repair offer keeps the minimal
+   * machine). The damage offer carries the damage DETAIL — the threshold and
+   * the mishap trigger live there — while each of those ALSO has its own
+   * surface on the recorder: the MISHAP TRIGGER rides the recording ROW itself
+   * (the acquire bakes the mishap threshold, and the factory's OPT-IN mishap
+   * option names the fact, so a single-source recording that meets it carries
+   * ONE informational note on that row alone), and the stat block's DAMAGE
+   * IMMUNITIES stand on the PANEL itself as their own note when the spec
+   * wires them (`immunities` → IMMUNITIES_NOTE on IMMUNE_LABEL): a notice
+   * the crew knows BEFORE recording — the one thing here that must be known
+   * before acting — never a gate. The repair offer keeps the minimal
    * surface (no detailKey, no threshold control — repairs never bounce) but
    * carries the ONE shared WRECKED leg (the factory's opt-in healLegality): a
    * destroyed war machine cannot be patched back to life, so repairs are
@@ -1120,6 +1165,11 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
       name: `${T}.record-damage.name`,
       description: `${T}.record-damage.description`,
       detailKey: spec.details.damage,
+      // The IMMUNITIES note's landing label — carried ONLY by a spec that
+      // wires the field (the recorder option the spec's immunities data
+      // flows into; an unwired spec's damage row carries no label at all,
+      // the player/steed shape).
+      ...(spec.immunities ? { annotationLabels: [IMMUNE_LABEL] } : {}),
       effectId: HP_DAMAGE_EFFECT_ID,
       effectKey: HP_DAMAGE_KEY,
       effectName: `${T}.hp-damage-effect.name`
@@ -1286,6 +1336,20 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
           values: { dc: trait.saveDc },
           addsToPlan: { offer: `${trait.slug}-${id}` }
         }))
+      : [];
+
+  /**
+   * The IMMUNITIES note, emitted while the vehicle is acquired for every
+   * spec that wires the field: ONE standing panel annotation whose label
+   * leads in and whose TYPES ride damageTypes (the whole list, spec order).
+   * No `values` — identifiers never cross into interpolation params (the
+   * render site localizes each type through damage-type.*, the dice-line
+   * convention). Never a notice-strip target: the note rides the panel it
+   * informs, exactly where the crew records the blow.
+   */
+  const immunityAnnotations = (f: FactReader): Annotation[] =>
+    spec.immunities && acquired(f)
+      ? [{ key: IMMUNITIES_NOTE, targets: [IMMUNE_LABEL], damageTypes: spec.immunities }]
       : [];
 
   /**
@@ -2196,6 +2260,9 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
     // The MOVE-TRAIT chips join here (moveTraitAnnotations): panel-targeted
     // LINKED annotations, not notices — the note rides the Drive panel (its
     // label) and taps into the plan, the Extra Attack / Divine Smite way.
+    // The IMMUNITIES note joins the same way (immunityAnnotations): a
+    // read-only panel annotation on the recorder, listing the spec's immune
+    // damage types as render-site-localized chips.
     annotate: (f: FactReader): Annotation[] => {
       const out: Annotation[] = [];
       if (f.num(`${F}.prone`) > 0)
@@ -2221,6 +2288,7 @@ export function buildInfernalVehicle(spec: InfernalVehicleSpec): RuleModule {
             body: seat.notice.body
           });
       out.push(...moveTraitAnnotations(f));
+      out.push(...immunityAnnotations(f));
       return out;
     }
   };

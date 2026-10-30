@@ -119,6 +119,12 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
       damageType: 'bludgeoning'
     }
   ],
+  // The stat block's DAMAGE IMMUNITIES line (fire, poison, psychic — the same
+  // three as the Tormentor's, but THIS list from THIS stat block, never a
+  // shared literal): spec data the factory turns into the recorder panel's
+  // standing note, the types as localized chips on the record-damage offer
+  // (PR-9). Never mechanics: the recorder stays legal for every type.
+  immunities: ['fire', 'poison', 'psychic'],
   details: {
     statBlock: 'vehicle/demon-grinder',
     damage: 'vehicle/demon-grinder-damage',

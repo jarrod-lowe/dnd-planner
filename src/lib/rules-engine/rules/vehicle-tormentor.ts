@@ -35,9 +35,10 @@ import {
  * of each piece; the numbers below are the stat block's.
  *
  * Deliberately out of scope (existing simplifications, unchanged): damage
- * immunities as MECHANICS (detail text only — the recorder never refuses
- * fire/poison/psychic; the mishap threshold IS wired, as the recorder's
- * per-row note), any prone attack/movement or incapacitated mechanics beyond
+ * immunities as MECHANICS (they stand on the recorder panel as PR-9's note —
+ * the recorder never refuses fire/poison/psychic; the mishap threshold IS
+ * wired, as the recorder's per-row note), any prone attack/movement or
+ * incapacitated mechanics beyond
  * the record, the clinger's Dexterity checks as MECHANICS (the notice states
  * the rule and the vehicle's Dex-check recorder is the row the player rolls it
  * on), and MULTIPLE vehicles of the same rule group per character (acquiring
@@ -133,6 +134,12 @@ const TORMENTOR: InfernalVehicleSpec = {
       damageType: 'slashing'
     }
   ],
+  // The stat block's DAMAGE IMMUNITIES line (fire, poison, psychic): spec
+  // data the factory turns into the recorder panel's standing note — the
+  // types listed as localized chips on the record-damage offer (PR-9), a
+  // NOTICE the crew knows before recording. Never mechanics: the recorder
+  // stays legal for every type and never refuses an amount.
+  immunities: ['fire', 'poison', 'psychic'],
   // The stat block's Reaction row (the driver's Juke swerve) — a vehicle
   // whose stat block carries no Reaction (the Demon Grinder) omits this and
   // never gets the offer.
