@@ -66,8 +66,8 @@ ruleGroups:
             destroyed beyond normal recovery, its nonmagical items destroyed
             with it. The Wrecking Ball swings at +9 to hit, reach 15 ft., for
             8d8+4 bludgeoning damage, doubled against objects and structures.
-            The Harpoon Flinger fires its 10 harpoons at +5 to hit, range
-            120 ft., for 2d8 piercing damage.
+            Two Harpoon Flingers each carry 10 harpoons and fire at +5 to
+            hit, range 120 ft., for 2d8 piercing damage.
 
             **Dash.** The driver can spend a bonus action to push the Demon
             Grinder flat out, doubling its movement for the turn. Each
@@ -290,9 +290,9 @@ ruleGroups:
 
             **Magic Weapons.** The flinger's harpoons are magical.
 
-            **Ammunition.** The flinger's rack carries 10 harpoons. The app
-            does not track how many have been fired — spent harpoons and
-            reloads are the crew's bookkeeping.
+            **Ammunition.** The Grinder mounts two flingers, each carrying
+            10 harpoons. The app does not track how many have been fired —
+            spent harpoons and reloads are the crew's bookkeeping.
   # The WRECKING BALL's flip detail — linked from the swing offer (PR-5). A
   # catalog-only entry like the flinger's: our own wording (the Demon Grinder
   # is not SRD), in-world voice for the numbers, plus the station's one RIDER
