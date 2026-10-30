@@ -1,0 +1,127 @@
+name: 'Tormentor - Raking Scythes Ride The Same Move-Trait Machinery'
+description: >-
+  The stat block's Raking Scythes trait (Tormentor-only — the Demon Grinder's
+  stat block carries none): a SECOND moveTraits entry on the same machinery
+  PR-7 built, data only. Both traits coexist: the Drive panel carries TWO
+  linked chips (the wheels' and the scythes', each tapping its own roll row
+  into the plan), and the vehicle carries TWO roll rows (wheels-tormentor and
+  scythes-tormentor, both free, no seat, no spend, both ATTACK-filed with the
+  weapon offers). The scythes' dice line is 2d10+2 SLASHING — the machinery's
+  first nonzero damage bonus — and its row is ILLEGAL until the Tormentor has
+  Driven this turn, exactly like the wheels' (the same per-vehicle drove
+  marker; illegal-but-committable, the engine's contract), turning legal in
+  the same fold as a Drive and closing again with the turn.
+ruleGroups:
+  - vehicles/tormentor
+  - dnd-5e-2024/action-economy
+steps:
+  - addOffer:
+      id: acquire-tormentor
+  # BOTH roll rows exist the moment the vehicle does (no seat gate), BOTH
+  # illegal on their own not-driven legs; BOTH linked chips stand on the
+  # Drive panel's label, each naming its own roll row. The scythes row files
+  # with the WEAPON offers (ATTACK 'weapons', the user's wheels ruling) and
+  # carries the 2d10+2 slashing dice line with its bonus.
+  - evaluate:
+      assert:
+        offers:
+          exists:
+            - wheels-tormentor
+            - scythes-tormentor
+          illegal:
+            - wheels-tormentor
+            - scythes-tormentor
+        offerUi:
+          - id: scythes-tormentor
+            ui:
+              section: free
+              subject: tormentor
+              name: rule.tormentor.scythes.name
+              description: rule.tormentor.scythes.description
+              detailKey: vehicle/tormentor
+              actionCost: []
+              intents:
+                ATTACK: weapons
+              primaryControl:
+                type: dice-line
+                dice:
+                  - sides: 10
+                    count: 2
+                    bonus:
+                      number: 2
+                    purpose: damage
+                    damageType:
+                      string: slashing
+        annotations:
+          exists:
+            - rule.tormentor.drive.crushing_wheels
+            - rule.tormentor.drive.raking_scythes
+          targets:
+            - key: rule.tormentor.drive.raking_scythes
+              targets:
+                - move.vehicle.tormentor.companion
+          addsToPlan:
+            - key: rule.tormentor.drive.crushing_wheels
+              adds:
+                offer: wheels-tormentor
+            - key: rule.tormentor.drive.raking_scythes
+              adds:
+                offer: scythes-tormentor
+  - addOffer:
+      id: take-tormentor-helm-seat
+  - endTurn: {}
+  # A soul coin in the burner (the Helm's bonus-action record, committed here
+  # so the Drive row below is legal).
+  - addOffer:
+      id: set-tormentor-fuel
+      selections:
+        fuel: 1
+  - endTurn: {}
+  # The Drive row carries no per-row diagnostic, and behind the drive the
+  # marker opens BOTH trait rows in the same fold — one Drive, two rakes.
+  - addOffer:
+      id: drive-tormentor
+      selections:
+        distance: 40
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+        status:
+          legal: true
+        offers:
+          legal:
+            - wheels-tormentor
+            - scythes-tormentor
+  # The scythes row planned beside the drive is legal too (the marker it
+  # gates on is written in the same fold) and commits nothing.
+  - addOffer:
+      id: scythes-tormentor
+      assert:
+        planErrors:
+          - id: scythes-tormentor
+            index: 0
+            errors: []
+  # End of turn: the drove marker ages away with the spends — BOTH roll rows
+  # illegal again until the next Drive.
+  - endTurn:
+      assert:
+        facts:
+          companion.tormentor.movement.drove: 0
+        offers:
+          illegal:
+            - wheels-tormentor
+            - scythes-tormentor
+  # Turn 2: a fresh, LEGAL Drive reopens both rows behind it.
+  - addOffer:
+      id: drive-tormentor
+      assert:
+        planErrors:
+          - id: drive-tormentor
+            index: 0
+            errors: []
+        offers:
+          legal:
+            - wheels-tormentor
+            - scythes-tormentor

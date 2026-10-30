@@ -8,7 +8,10 @@ description: >-
   Grinder has Driven this turn (the per-vehicle drove marker Drive's spend
   writes beside the shared pool). The drive row carries NO per-row
   diagnostic — the chip is the note — and the marker ages away with the
-  turn.
+  turn. NOTHING scythes-shaped exists on the Grinder (Demon Grinder PR-8):
+  the Raking Scythes are a Tormentor-only trait — the Grinder's stat block
+  carries no second move trait, so no scythes roll row and no scythes chip
+  ever surface on it.
 ruleGroups:
   - vehicles/demon-grinder
   - dnd-5e-2024/action-economy
@@ -17,7 +20,8 @@ steps:
       id: acquire-demon-grinder
   # The roll row exists the moment the vehicle does (no seat gate) and is
   # ILLEGAL on its own not-driven leg until the Grinder Drives; the linked
-  # chip annotation stands with the Grinder's OWN label.
+  # chip annotation stands with the Grinder's OWN label. NO scythes row, NO
+  # scythes chip anywhere (the Tormentor-only trait).
   - evaluate:
       assert:
         offers:
@@ -25,9 +29,13 @@ steps:
             - wheels-demon-grinder
           illegal:
             - wheels-demon-grinder
+          notExists:
+            - scythes-demon-grinder
         annotations:
           exists:
             - rule.demon-grinder.drive.crushing_wheels
+          notExists:
+            - rule.demon-grinder.drive.raking_scythes
           targets:
             - key: rule.demon-grinder.drive.crushing_wheels
               targets:

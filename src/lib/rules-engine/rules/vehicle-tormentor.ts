@@ -90,20 +90,29 @@ const TORMENTOR: InfernalVehicleSpec = {
   boostBonus: 30,
   // Each encounter: 3 Dashes plus the vehicle's Constitution modifier.
   dashAllowanceBase: 3,
-  // The stat block's Crushing Wheels trait (Demon Grinder PR-7, restructured
-  // on the user's review): the same move-trait machinery the Grinder rolls
-  // on, the Tormentor's OWN numbers — Medium or smaller creatures, DC 13
-  // Dexterity save, 2d10 bludgeoning and knocked prone on a failure, a
-  // creature ALREADY PRONE (any cause) taking the damage instead of being
-  // knocked prone, once per creature per turn. TWO surfaces: the SHORT
-  // LINKED chip annotation on the Drive panel ({{dc}} its only
-  // interpolation value; tap the chip and the roll row joins the plan) and
-  // the vehicle-level roll row `wheels-tormentor` (free, no seat, no spend,
-  // filed with the WEAPON offers as an ATTACK) whose 2d10-bludgeoning dice
-  // line carries the damage and whose description carries the whole rule,
-  // gated on the per-vehicle drove marker. PR-8's Raking Scythes join this
-  // list as a second entry, data only. Own wording throughout — the trait
-  // text is BG:DiA's, not SRD; only the numbers are facts.
+  // The stat block's MOVE TRAITS — two entries on the same PR-7 machinery,
+  // each driving a SHORT LINKED chip annotation on the Drive panel ({{dc}}
+  // its only interpolation value; tap the chip and the roll row joins the
+  // plan) and a vehicle-level roll row `<slug>-tormentor` (free, no seat, no
+  // spend, filed with the WEAPON offers as an ATTACK) whose dice line carries
+  // the damage and whose description carries the whole rule, gated on the
+  // per-vehicle drove marker.
+  //
+  // CRUSHING WHEELS (PR-7): the Tormentor's OWN numbers — Medium or smaller
+  // creatures, DC 13 Dexterity save, 2d10 bludgeoning and knocked prone on a
+  // failure, a creature ALREADY PRONE (any cause) taking the damage instead
+  // of being knocked prone, once per creature per turn.
+  //
+  // RAKING SCYTHES (PR-8, Tormentor-only — the Grinder's stat block carries
+  // none): the machinery's second entry, DATA ONLY (the two-trait fixture in
+  // the factory tests pinned this shape before it shipped), and its first
+  // entry with a damage BONUS — the first time on a turn the Tormentor moves
+  // within 5 feet of a creature that isn't prone, or within 5 feet of
+  // another vehicle, the scythes rake: 2d10+2 slashing, avoided entirely on
+  // a DC 13 Dexterity save, and a VEHICLE avoids when its DRIVER succeeds on
+  // that save (the driver-save clause lives in the roll row's DESCRIPTION —
+  // copy only, nothing mechanical behind it). Own wording throughout — the
+  // trait text is BG:DiA's, not SRD; only the numbers are facts.
   moveTraits: [
     {
       slug: 'wheels',
@@ -113,6 +122,15 @@ const TORMENTOR: InfernalVehicleSpec = {
       damageDie: 10,
       damageBonus: 0,
       damageType: 'bludgeoning'
+    },
+    {
+      slug: 'scythes',
+      note: 'rule.tormentor.drive.raking_scythes',
+      saveDc: 13,
+      damageCount: 2,
+      damageDie: 10,
+      damageBonus: 2,
+      damageType: 'slashing'
     }
   ],
   // The stat block's Reaction row (the driver's Juke swerve) — a vehicle

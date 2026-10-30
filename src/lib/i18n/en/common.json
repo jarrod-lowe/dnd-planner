@@ -556,7 +556,8 @@
         "description": "Spend your action at the Helm, driving the Tormentor up to its movement for the turn",
         "no_action": "No action available",
         "out_of_movement": "No movement remaining",
-        "crushing_wheels": "Creatures the Tormentor passes over must make a DC {{dc}} Dexterity saving throw or take the wheels' damage — roll Crushing Wheels."
+        "crushing_wheels": "Creatures the Tormentor passes over must make a DC {{dc}} Dexterity saving throw or take the wheels' damage — roll Crushing Wheels.",
+        "raking_scythes": "Creatures and vehicles the Tormentor moves within 5 feet of must make a DC {{dc}} Dexterity saving throw or take the scythes' damage — roll Raking Scythes."
       },
       "dash": {
         "name": "Dash",
@@ -568,6 +569,11 @@
         "name": "Crushing Wheels",
         "description": "The Tormentor's wheels: when it Drives through the space of Medium or smaller creatures, each creature it passes over must make a DC 13 Dexterity saving throw or take 2d10 bludgeoning damage and be knocked prone. A creature already prone takes the damage instead of being knocked prone, and the wheels catch the same creature only once on a turn. The wheels only catch creatures on a turn the Tormentor has Driven.",
         "not_driven": "The Tormentor hasn't Driven this turn — the wheels only catch creatures it Drives over"
+      },
+      "scythes": {
+        "name": "Raking Scythes",
+        "description": "The Tormentor's scythes: the first time on a turn it Drives within 5 feet of a creature that isn't prone, or within 5 feet of another vehicle, the scythes rake — 2d10+2 slashing damage, avoided entirely on a successful DC 13 Dexterity saving throw. A vehicle avoids the rake when its driver succeeds on that save. The scythes only rake on a turn the Tormentor has Driven.",
+        "not_driven": "The Tormentor hasn't Driven this turn — the scythes only rake on a turn it Drives"
       },
       "juke": {
         "name": "Juke",

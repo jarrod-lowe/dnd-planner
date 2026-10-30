@@ -83,8 +83,11 @@ describe('acquire offer ui', () => {
       'dash-tormentor',
       'juke-tormentor',
       // PR-7's move-trait roll row: the vehicle-level Crushing Wheels
-      // consequence of driving (no seat, no spend).
+      // consequence of driving (no seat, no spend) — and PR-8's Raking
+      // Scythes beside it, a second spec entry on the same machinery
+      // (catalog order = spec order: wheels first, scythes second).
       'wheels-tormentor',
+      'scythes-tormentor',
       // The six record rollers (the steed's saves/skills placement: after the
       // station actions, before the way out) — saves first, then checks.
       'tormentor-save-str',
@@ -1772,12 +1775,21 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
       planned: [{ instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } }]
     });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // PR-8: the panel now carries TWO chips — the wheels' and the scythes',
+    // in spec order, each naming its own roll row. Both are data on the same
+    // moveTraitAnnotations machinery; nothing about the drive row changed.
     expect(out.annotations).toEqual([
       {
         key: `${T}.drive.crushing_wheels`,
         targets: ['move.vehicle.tormentor.companion'],
         values: { dc: 13 },
         addsToPlan: { offer: 'wheels-tormentor' }
+      },
+      {
+        key: `${T}.drive.raking_scythes`,
+        targets: ['move.vehicle.tormentor.companion'],
+        values: { dc: 13 },
+        addsToPlan: { offer: 'scythes-tormentor' }
       }
     ]);
     // The Drive offer declares the label the chip targets.
@@ -1917,6 +1929,169 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     expect(driven.legal).toBe(true);
     expect(after.facts[`${F}.movement.drove`]).toBe(1);
     expect(after.planDiagnostics['i1'] ?? []).toEqual([]);
+  });
+
+  /**
+   * PR-8 — the RAKING SCYTHES, a SECOND moveTraits entry on the same
+   * machinery (Tormentor-only: the Grinder's stat block carries no such
+   * trait, and its corpus stays note-free). Everything below pins the DATA:
+   * the entry's numbers (DC 13, 2d10+2 SLASHING — the machinery's first
+   * nonzero damage bonus) and its copy (own wording both locales; the
+   * vehicle-avoids-if-its-DRIVER-saves clause is copy only). The behaviour —
+   * the chip's link, the roll row's gate, the ATTACK filing — is the
+   * machinery's, pinned above and in infernal-vehicle.test.ts.
+   */
+  describe('raking scythes (PR-8) — the second move-trait entry', () => {
+    it('the scythes note is a POINTER in BOTH locales: {{dc}} alone, no rule text, no damage word', () => {
+      const at = (dict: unknown): string | undefined =>
+        (
+          dict as {
+            rule?: { tormentor?: { drive?: Record<string, string | undefined> } };
+          }
+        ).rule?.tormentor?.drive?.['raking_scythes'];
+      for (const [locale, dict] of [
+        ['en', en],
+        ['en-x-tlh', tlh]
+      ] as const) {
+        const value = at(dict);
+        expect(value, `${locale} scythes note exists`).toEqual(expect.any(String));
+        expect(value, `${locale} interpolates {{dc}}`).toContain('{{dc}}');
+        expect(value, `${locale} note carries no damage param`).not.toContain('{{damage}}');
+      }
+      const english = at(en) as string;
+      // The pointer names the roll row and the save, and NOTHING else: the
+      // full rule (the 5-foot reach, the non-prone qualifier, the driver-save
+      // clause, the once-per-turn cap) lives on the ROLL row's description.
+      expect(english).toContain('Raking Scythes');
+      expect(english).toContain('Dexterity saving throw');
+      for (const absent of [
+        "isn't prone",
+        'another vehicle',
+        'driver',
+        'first time',
+        '2d10+2',
+        'slashing'
+      ])
+        expect(english, `the slim note restates no rule detail (${absent})`).not.toContain(absent);
+      const klingon = at(tlh) as string;
+      expect(klingon, 'the tlh note leaks no English damage-type identifier').not.toContain(
+        'slashing'
+      );
+      expect(klingon, 'the tlh note leaks no English damage-type identifier (2)').not.toContain(
+        'bludgeoning'
+      );
+    });
+
+    it('the Raking Scythes ROLL row: same recorder shape, 2d10+2 SLASHING dice line with its bonus', () => {
+      // The machinery's first entry with a damage BONUS: the dice line must
+      // carry it (2d10+2, sides 10 count 2 bonus 2) and the SLASHING type as
+      // the identifier the render site localizes through damage-type.*.
+      const unseated = evaluate({ modules: [module()], committed: [acquireEffect()] });
+      const row = unseated.availableRules.find((r) => r.rule.id === 'scythes-tormentor');
+      expect(
+        row,
+        'the scythes roll row exists while acquired, beside the wheels row'
+      ).toBeDefined();
+      expect(row!.rule.ui).toEqual({
+        section: 'free',
+        subject: SUBJECT,
+        name: `${T}.scythes.name`,
+        description: `${T}.scythes.description`,
+        detailKey: 'vehicle/tormentor',
+        // The same ATTACK filing as the wheels row (the user's ruling: the
+        // trait rolls are in no way saves).
+        intents: { ATTACK: 'weapons' },
+        actionCost: [],
+        annotationLabels: ['dice.any.companion'],
+        primaryControl: {
+          type: 'dice-line',
+          dice: [
+            {
+              sides: 10,
+              count: 2,
+              bonus: { number: 2 },
+              purpose: 'damage',
+              damageType: { string: 'slashing' }
+            }
+          ]
+        }
+      });
+      // The recorder shape, untouched by the second entry: no apply, and the
+      // same two legality legs (not-driven own leg + the shared wrecked leg).
+      const raw = module().offer!({ selections: {} }).find((o) => o.id === 'scythes-tormentor');
+      expect(raw, 'the raw scythes offer exists in the catalog').toBeDefined();
+      expect(raw!.apply).toBeUndefined();
+      expect(raw!.legalWhen).toHaveLength(2);
+      expect(raw!.legalWhen![0]!.diagnostics).toEqual([
+        { code: `${T}.scythes.not_driven`, severity: 'error' }
+      ]);
+    });
+
+    it('the scythes row rides the SAME drove marker as the wheels row — both open in one Drive', () => {
+      const economy = getModule('action-economy')!;
+      const before = evaluate({ modules: [module(), economy], committed: helmFuelled() });
+      const scythes = before.availableRules.find((r) => r.rule.id === 'scythes-tormentor');
+      expect(scythes, 'the scythes row exists while acquired').toBeDefined();
+      expect(scythes!.legal).toBe(false);
+      expect(scythes!.diagnostics).toEqual([
+        { code: `${T}.scythes.not_driven`, severity: 'error' }
+      ]);
+      // One Drive opens BOTH trait rows in the same fold: the marker is the
+      // vehicle's, shared by its traits — the second entry adds no gate of
+      // its own and no second marker.
+      const after = evaluate({
+        modules: [module(), economy],
+        committed: helmFuelled(),
+        planned: [
+          { instanceId: 'i0', ruleId: 'drive-tormentor', selections: { distance: 30 } },
+          { instanceId: 'i1', ruleId: 'scythes-tormentor' }
+        ]
+      });
+      const driven = after.availableRules.find((r) => r.rule.id === 'scythes-tormentor')!;
+      expect(driven, 'the scythes row exists behind the drive').toBeDefined();
+      expect(driven!.legal).toBe(true);
+      expect(after.planDiagnostics['i1'] ?? []).toEqual([]);
+    });
+
+    it('the description carries the FULL scythes rule in our own words — driver-save clause included', () => {
+      const scythesAt = (dict: unknown, leaf: string): string | undefined =>
+        (
+          dict as {
+            rule?: { tormentor?: { scythes?: Record<string, string | undefined> } };
+          }
+        ).rule?.tormentor?.scythes?.[leaf];
+      for (const [locale, dict] of [
+        ['en', en],
+        ['en-x-tlh', tlh]
+      ] as const) {
+        for (const leaf of ['name', 'description', 'not_driven'])
+          expect(scythesAt(dict, leaf), `${locale} scythes.${leaf}`).toEqual(expect.any(String));
+      }
+      // The stat block's rule, our own words: the 5-foot reach, the
+      // non-prone creature OR another vehicle, the FIRST time on a turn, the
+      // 2d10+2 slashing, the DC 13 Dex save avoiding it entirely, a VEHICLE
+      // avoiding when its DRIVER saves, and the Drive advertisement.
+      const english = scythesAt(en, 'description') as string;
+      for (const detail of [
+        'within 5 feet',
+        "isn't prone",
+        'another vehicle',
+        'first time on a turn',
+        '2d10+2 slashing',
+        'DC 13',
+        'driver',
+        'Driven'
+      ])
+        expect(english, `the description carries the full rule (${detail})`).toContain(detail);
+      // The not_driven diagnostic mirrors the wheels' shape.
+      const notDriven = scythesAt(en, 'not_driven') as string;
+      expect(notDriven).toContain("hasn't Driven");
+      // The dice-line type localization rides the EXISTING damage-type keys.
+      const damageTypes = (dict: unknown): Record<string, unknown> =>
+        (dict as { 'damage-type'?: Record<string, unknown> })['damage-type']!;
+      expect(damageTypes(en)['slashing']).toEqual(expect.any(String));
+      expect(damageTypes(tlh)['slashing']).toEqual(expect.any(String));
+    });
   });
 });
 

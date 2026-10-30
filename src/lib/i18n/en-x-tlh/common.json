@@ -556,7 +556,8 @@
         "description": "SeHyaH Sep yIvI' 'ej Duj Sep yInab — leng Duj yIlo'",
         "no_action": "DIvI' tu'lu'be'",
         "out_of_movement": "leng tu'lu'be' — Duj vIHlaHbe'",
-        "crushing_wheels": "Duj Sep ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh ghomej qIp yIlo'."
+        "crushing_wheels": "Duj Sep ghoSlDI' ghew, Do chovang {{dc}} yInabnIS — Qapbe'chugh ghomej qIp yIlo'.",
+        "raking_scythes": "Duj Sep vagh qammey lughoSbogh ghew 'ej latlh Dujmey, Do chovang {{dc}} yInabnIS — Qapbe'chugh Ho' yan yIlo'."
       },
       "dash": {
         "name": "Duj Do'choH",
@@ -568,6 +569,11 @@
         "name": "ghomej qIp",
         "description": "Duj Sep ghomej: Duj Sep machbogh ghewmey Daq DIj vIHlaH. Duj Sep ghoSlDI' ghew, Do chovang 13 yInabnIS — Qapbe'chugh 2d10 qIp 'ej pummoHlu'. pumtaHbogh ghew qIp neH 'ej pumqa'moHlu'be'; wa' DIj wa'logh neH ghew qIplaH. Duj Sep DIjDI' neH ghomej qIplaH.",
         "not_driven": "Duj Sep DIjbe' DaHjaj — DIjDI' neH ghomej qIplaH"
+      },
+      "scythes": {
+        "name": "Ho' yan",
+        "description": "Duj Sep Ho' yan: wa' DIj wa'logh, Duj Sep pumbe'bogh ghew vagh qammey Duj Sep ghoS 'ej latlh Duj vagh qammey Duj Sep ghoS, Ho' yan qIp — Do chovang 13 Qapchugh pagh qIp; Qapbe'chugh 2d10+2 qIp. Latlh Duj: SeHyaH SepwI' Qapchugh, Ho' yan qIpbe'. Duj Sep DIjDI' neH Ho' yan qIplaH.",
+        "not_driven": "Duj Sep DIjbe' DaHjaj — DIjDI' neH Ho' yan qIplaH"
       },
       "juke": {
         "name": "yIvegh",
