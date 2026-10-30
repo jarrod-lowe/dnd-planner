@@ -306,6 +306,13 @@ export interface Annotation {
   values?: Record<string, string | number>;
   /** Optional rider data for rendering as a modifier chip */
   rider?: AnnotationRider;
+  /**
+   * Damage types the annotation names (a vehicle's damage immunities) —
+   * plain identifiers the panel renders as one localized chip each through
+   * the `damage-type.*` keys (the dice-line convention; never `values`
+   * params, which interpolate raw).
+   */
+  damageTypes?: readonly string[];
   /** Optional state-toggle data rendered as a pressed/unpressed chip */
   toggle?: AnnotationToggle;
   /**

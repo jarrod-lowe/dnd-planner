@@ -43,6 +43,16 @@ steps:
       assert:
         facts:
           companion.steed.hp.current: 25
+        # The steed's recorder surface, pinned UNCHANGED beside the vehicle
+        # immunities note (PR-9): the steed configures no immunities option,
+        # so its damage row is exactly the row it has always been (the
+        # no-annotationLabels pin is unit-level — the yaml ui assert compares
+        # expected keys only and cannot pin an absent key).
+        offerUi:
+          - id: steed-record-damage
+            ui:
+              subject: steed
+              name: rule.spell-find-steed.steed-record-damage.name
   # IGNORE THRESHOLD first (before any bounce exists): the GM-correction mode
   # records the RAW amount in full — no bounce note, no error.
   - addOffer:

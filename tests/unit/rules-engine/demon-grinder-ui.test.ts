@@ -332,12 +332,19 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
       planned: [{ instanceId: 'i0', ruleId: `drive-${ID}`, selections: { distance: 30 } }]
     });
     expect(out.planDiagnostics['i0'] ?? []).toEqual([]);
+    // PR-9 appends the recorder's IMMUNITIES note to the acquired vehicle's
+    // standing annotations (its own panel label, the spec's three types).
     expect(out.annotations).toEqual([
       {
         key: `${T}.drive.crushing_wheels`,
         targets: ['move.vehicle.demon-grinder.companion'],
         values: { dc: 11 },
         addsToPlan: { offer: `wheels-${ID}` }
+      },
+      {
+        key: `${T}.record-damage.immunities`,
+        targets: ['damage.vehicle.demon-grinder.companion'],
+        damageTypes: ['fire', 'poison', 'psychic']
       }
     ]);
     // The Drive offer declares the label the chip targets.

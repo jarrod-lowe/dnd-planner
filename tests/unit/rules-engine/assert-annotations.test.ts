@@ -21,6 +21,11 @@ const annotations: Annotation[] = [
     key: 'rule.demo.rolling',
     targets: ['notice'],
     roll: { sides: 6, count: 2, purpose: 'damage', damageType: 'fire' }
+  },
+  {
+    key: 'rule.demo.immune',
+    targets: ['damage.vehicle.demo.immune'],
+    damageTypes: ['fire', 'poison', 'psychic']
   }
 ];
 
@@ -155,6 +160,38 @@ describe('assertAnnotations', () => {
       assertAnnotations(
         annotations,
         { rolls: [{ key: 'rule.demo.absent', roll: { sides: 6, count: 1, purpose: 'damage' } }] },
+        'where'
+      )
+    ).toThrow();
+  });
+
+  it('passes when the asserted damageTypes array matches exactly', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        {
+          damageTypes: [{ key: 'rule.demo.immune', damageTypes: ['fire', 'poison', 'psychic'] }]
+        },
+        'where'
+      )
+    ).not.toThrow();
+  });
+
+  it('fails when a damage type is missing from the actual array', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        { damageTypes: [{ key: 'rule.demo.immune', damageTypes: ['fire'] }] },
+        'where'
+      )
+    ).toThrow();
+  });
+
+  it('fails when asserting damageTypes on an annotation that carries none', () => {
+    expect(() =>
+      assertAnnotations(
+        annotations,
+        { damageTypes: [{ key: 'rule.demo.plain', damageTypes: ['fire'] }] },
         'where'
       )
     ).toThrow();

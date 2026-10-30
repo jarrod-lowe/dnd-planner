@@ -122,11 +122,14 @@ ruleGroups:
             heaving together. The moment its wheels are back under it, the
             Tormentor is upright and ready to roll again.
   # The DAMAGE recorder's flip detail — the settled home for the stat block's
-  # damage semantics (threshold, immunities, mishap): nothing here behaves
-  # differently beyond the threshold the recorder gates on, so the explanation
-  # rides the offer instead of standing notices. A catalog-only entry like the
-  # prone detail above: our own wording (the Tormentor is not SRD), in-world
-  # voice, numbers and short factual phrases only.
+  # damage semantics (threshold, mishap): nothing here behaves differently
+  # beyond the threshold the recorder gates on, so the explanation rides the
+  # offer instead of standing notices. The IMMUNITIES list stands on the
+  # recorder panel itself (PR-9's spec-generated note), not in this prose —
+  # a hand-written list here could only drift from the spec data. A
+  # catalog-only entry like the prone detail above: our own wording (the
+  # Tormentor is not SRD), in-world voice, numbers and short factual phrases
+  # only.
   - id: tormentor-damage-detail
     translations:
       en:
@@ -168,9 +171,6 @@ ruleGroups:
             floor, not a cap, and never subtracts from what gets through. To
             land a correction beneath the threshold, ignore it for that one
             record.
-
-            **Immunities.** Fire, poison, and psychic damage cannot hurt the
-            vehicle at all. Record none of it, however heavy the blow.
 
             **Mishap Threshold 20.** A single source that deals twenty or more
             damage to the Tormentor triggers a mishap — consult the

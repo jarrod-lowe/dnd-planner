@@ -273,6 +273,12 @@ const EXPECTED_RUNNABLE = [
   'tormentor-mishap-threshold',
   'tormentor-destroyed-at-zero',
   'tormentor-hp-lifecycle',
+  // …Demon Grinder PR-9: the stat block's damage immunities as the recorder
+  // panel's standing note — an opt-in spec field both vehicles wire
+  // (fire/poison/psychic), a NOTICE that never gates recording, its types
+  // riding the annotation's damageTypes channel (localized at the render
+  // site through damage-type.*, never params)
+  'tormentor-damage-immunities-note',
   // …PR 7 — pass 4 v2: the AC mode — a [Moving | Motionless] segmented control
   // on the board offer (creatureType precedent) baking acMotionless, a station
   // AC-mode record (keyed, replaces) storing the distinct recorded fact, the
@@ -389,6 +395,7 @@ const EXPECTED_RUNNABLE = [
   'demon-grinder-occupancy',
   'demon-grinder-hp-threshold',
   'demon-grinder-mishap-threshold',
+  'demon-grinder-damage-immunities-note',
   'demon-grinder-prone-record',
   'demon-grinder-unboard',
   'demon-grinder-saves',

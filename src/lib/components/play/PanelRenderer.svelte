@@ -4,6 +4,7 @@
   import { extractPanelDescriptor } from './panel-renderer/extractPanelDescriptor';
   import { resolveValueSource } from './panel-renderer/resolveValueSource';
   import { showDiceRollToast } from './panel-renderer/diceRollToast';
+  import DamageTypeIcon from './panel-renderer/DamageTypeIcon.svelte';
   import PanelSlider from './panel-renderer/PanelSlider.svelte';
   import PanelDiceLine, { diceLineIsEmpty } from './panel-renderer/PanelDiceLine.svelte';
   import PanelHitDice, { hitDiceIsEmpty } from './panel-renderer/PanelHitDice.svelte';
@@ -897,6 +898,26 @@
         {#each noticeDiagnostics as diagnostic (diagnostic.code)}
           <span class="panel-renderer__annotation">{$t(diagnostic.code, diagnostic.params)}</span>
         {/each}
+        {#snippet annotationTypeChips(types: readonly string[])}
+          <!--
+            Named damage types (a vehicle's immunities note) render as one chip
+            per type — icon plus the LOCALIZED name, resolved here through the
+            damage-type.* keys exactly as every dice line does. The types ride
+            the annotation's damageTypes channel as identifiers, never the
+            label's interpolation params (params interpolate raw, so a word
+            there would leak English into every translated sentence).
+          -->
+          <span class="panel-renderer__annotation-types">
+            {#each types as type (type)}
+              <span class="panel-renderer__annotation-type">
+                <span class="panel-renderer__damage-type-icon" aria-hidden="true">
+                  <DamageTypeIcon {type} />
+                </span>
+                {$t(`damage-type.${type}`)}
+              </span>
+            {/each}
+          </span>
+        {/snippet}
         {#each informationalAnnotations as annotation (annotation.key)}
           {@const addsOffer =
             annotation.addsToPlan && annotationsActionable
@@ -918,7 +939,12 @@
                 addAnnotationOffer(e, addsOffer, annotationSeed(annotation.addsToPlan!))}
             >
               <span class="panel-renderer__annotation-text"
-                >{$t(annotation.key, annotation.values)}</span
+                >{$t(
+                  annotation.key,
+                  annotation.values
+                )}{#if annotation.damageTypes?.length}{@render annotationTypeChips(
+                    annotation.damageTypes
+                  )}{/if}</span
               >
               <span class="panel-renderer__annotation-add" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -927,7 +953,14 @@
               </span>
             </button>
           {:else}
-            <span class="panel-renderer__annotation">{$t(annotation.key, annotation.values)}</span>
+            <span class="panel-renderer__annotation"
+              >{$t(
+                annotation.key,
+                annotation.values
+              )}{#if annotation.damageTypes?.length}{@render annotationTypeChips(
+                  annotation.damageTypes
+                )}{/if}</span
+            >
           {/if}
         {/each}
       </div>
@@ -1362,6 +1395,37 @@
   .panel-renderer__annotation-add svg {
     width: 1rem;
     height: 1rem;
+  }
+
+  /* Named damage types on an annotation (the vehicle immunities note): the
+     label leads in, the types follow as chips — the dice-line icon idiom on
+     the annotation surface. */
+  .panel-renderer__annotation-types {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-inline-start: var(--spacing-xs);
+  }
+
+  .panel-renderer__annotation-type {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-weight: 600;
+  }
+
+  .panel-renderer__damage-type-icon {
+    display: inline-flex;
+    align-items: center;
+    width: 1rem;
+    height: 1rem;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .panel-renderer__damage-type-icon :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 
   .panel-renderer__followups {

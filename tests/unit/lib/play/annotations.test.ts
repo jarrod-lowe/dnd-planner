@@ -94,6 +94,26 @@ describe('getMatchingAnnotations', () => {
     expect(match.addsToPlan).toBeUndefined();
   });
 
+  it('carries a damageTypes list through to the panel (the vehicle immunities note)', () => {
+    // The note's TYPES ride a structured channel the RENDER SITE localizes
+    // through the damage-type.* keys — never the `values` params, which
+    // interpolate raw and would leak English identifiers into every
+    // translated sentence. The passthrough is the whole contract here.
+    const immune: Annotation[] = [
+      {
+        key: 'rule.demo.record-damage.immunities',
+        targets: ['damage.vehicle.demo.companion'],
+        damageTypes: ['fire', 'poison', 'psychic']
+      }
+    ];
+    expect(getMatchingAnnotations(['damage.vehicle.demo.companion'], immune)).toEqual([
+      {
+        key: 'rule.demo.record-damage.immunities',
+        damageTypes: ['fire', 'poison', 'psychic']
+      }
+    ]);
+  });
+
   it("carries the 'again' form through, which names no offer of its own", () => {
     const active: Annotation[] = [
       {

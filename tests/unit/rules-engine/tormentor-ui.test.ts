@@ -1778,6 +1778,8 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
     // PR-8: the panel now carries TWO chips — the wheels' and the scythes',
     // in spec order, each naming its own roll row. Both are data on the same
     // moveTraitAnnotations machinery; nothing about the drive row changed.
+    // PR-9 appends the recorder's IMMUNITIES note (its own panel label, the
+    // spec's three types) — acquired, every standing vehicle note surfaces.
     expect(out.annotations).toEqual([
       {
         key: `${T}.drive.crushing_wheels`,
@@ -1790,6 +1792,11 @@ describe('drive-tormentor offer (the vehicle movement offer)', () => {
         targets: ['move.vehicle.tormentor.companion'],
         values: { dc: 13 },
         addsToPlan: { offer: 'scythes-tormentor' }
+      },
+      {
+        key: `${T}.record-damage.immunities`,
+        targets: ['damage.vehicle.tormentor.companion'],
+        damageTypes: ['fire', 'poison', 'psychic']
       }
     ]);
     // The Drive offer declares the label the chip targets.
@@ -3416,8 +3423,8 @@ describe('record-tormentor-damage offer', () => {
     expect(ui.subject).toBe(SUBJECT);
     expect(ui.name).toBe(`${T}.record-damage.name`);
     expect(ui.description).toBe(`${T}.record-damage.description`);
-    // The recorder carries the DAMAGE detail (threshold/immunities/mishap) —
-    // the settled home for the stat block's damage semantics.
+    // The recorder carries the DAMAGE detail (threshold/mishap) — the settled
+    // home for the stat block's damage semantics.
     expect(ui.detailKey).toBe('vehicle/tormentor-damage');
     expect(ui.actionCost).toEqual([]);
     // An HP record, not a condition: the steed damage recorder's HEALTH bucket.
@@ -3429,9 +3436,10 @@ describe('record-tormentor-damage offer', () => {
       max: { fact: `${F}.hp.max` },
       unit: 'hp'
     });
-    // The damage panel declares no annotation labels: the below-threshold
-    // bounce is a per-row notice, not a panel annotation, so nothing targets it.
-    expect(ui.annotationLabels).toBeUndefined();
+    // PR-9: the damage panel declares exactly ONE annotation label — the
+    // IMMUNITIES note's per-subject landing label (the below-threshold
+    // bounce stays a per-row notice; nothing else targets the panel).
+    expect(ui.annotationLabels).toEqual(['damage.vehicle.tormentor.companion']);
     // The [Use Threshold | Ignore Threshold] segmented SECONDARY control (the
     // generic factory emission): `enabled.condition` names the baked threshold
     // fact, and PanelRenderer hides a false-gated control — unacquired or

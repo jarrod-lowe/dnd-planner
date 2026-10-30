@@ -495,7 +495,8 @@
         "name": "Duj Sep qIp yIcher",
         "description": "Duj Sep qIpmeH qIp yIcher",
         "below_threshold": "qIp chuqHa' (10) — Duj Sep qIpbe' 'e' chaw'be'",
-        "mishap_threshold": "wa' Sep qIp {{amount}} qIp chuq nIv ({{threshold}}) SIplu' — qagh Dotlh yIlaD 'ej ghIq Dotlh qIp yIlegh"
+        "mishap_threshold": "wa' Sep qIp {{amount}} qIp chuq nIv ({{threshold}}) SIplu' — qagh Dotlh yIlaD 'ej ghIq Dotlh qIp yIlegh",
+        "immunities": "Seghmeyvam Duj Sep qIpbe' — qIp pagh:"
       },
       "record-heal": {
         "name": "Duj Sep tej yIcher",
@@ -742,7 +743,8 @@
         "name": "Duj Qaw' qIp yIcher",
         "description": "Duj Qaw' qIpmeH qIp yIcher",
         "below_threshold": "qIp chuqHa' (10) — Duj Qaw' qIpbe' 'e' chaw'be'",
-        "mishap_threshold": "wa' Sep qIp {{amount}} qIp chuq nIv ({{threshold}}) SIplu' — qagh Dotlh yIlaD 'ej ghIq Dotlh qIp yIlegh"
+        "mishap_threshold": "wa' Sep qIp {{amount}} qIp chuq nIv ({{threshold}}) SIplu' — qagh Dotlh yIlaD 'ej ghIq Dotlh qIp yIlegh",
+        "immunities": "Seghmeyvam Duj Qaw' qIpbe' — qIp pagh:"
       },
       "record-heal": {
         "name": "Duj Qaw' tej yIcher",

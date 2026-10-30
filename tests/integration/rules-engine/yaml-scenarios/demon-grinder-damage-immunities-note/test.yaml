@@ -1,0 +1,74 @@
+name: 'Demon Grinder - Damage Immunities Stand On The Recorder Panel'
+description: >-
+  The same opt-in immunities field as the Tormentor's, wired on the second
+  vehicle's own spec: the Demon Grinder's fire/poison/psychic note stands on
+  ITS recorder panel under ITS per-subject label while acquired, never gates
+  anything (recording any type stays fully legal, no diagnostics), and drops
+  with the abandon fold. The types ride as the annotation's damageTypes list —
+  the render site localizes them through the damage-type.* keys.
+ruleGroups:
+  - vehicles/demon-grinder
+steps:
+  - evaluate:
+      assert:
+        offers:
+          notExists:
+            - record-demon-grinder-damage
+        annotations:
+          notExists:
+            - rule.demon-grinder.record-damage.immunities
+  - addOffer:
+      id: acquire-demon-grinder
+      assert:
+        annotations:
+          exists:
+            - rule.demon-grinder.record-damage.immunities
+          targets:
+            - key: rule.demon-grinder.record-damage.immunities
+              targets:
+                - damage.vehicle.demon-grinder.companion
+          damageTypes:
+            - key: rule.demon-grinder.record-damage.immunities
+              damageTypes:
+                - fire
+                - poison
+                - psychic
+        offerUi:
+          - id: record-demon-grinder-damage
+            ui:
+              annotationLabels:
+                - damage.vehicle.demon-grinder.companion
+  # 15 POISON damage — immune, above the damage threshold, below the mishap:
+  # records in full, no note of any kind fires (immunity is not the recorder's
+  # business), the plan stays legal.
+  - addOffer:
+      id: record-demon-grinder-damage
+      selections:
+        amount: 15
+      assert:
+        facts:
+          companion.demonGrinder.hp.damageRecorded: 15
+          companion.demonGrinder.hp.current: 185
+        planErrors:
+          - id: record-demon-grinder-damage
+            index: 0
+            errors: []
+        status:
+          legal: true
+        annotations:
+          exists:
+            - rule.demon-grinder.record-damage.immunities
+  - endTurn:
+      assert:
+        effects:
+          exists:
+            - effect-demon-grinder-hp-damage
+  - addOffer:
+      id: abandon-demon-grinder
+      assert:
+        offers:
+          notExists:
+            - record-demon-grinder-damage
+        annotations:
+          notExists:
+            - rule.demon-grinder.record-damage.immunities

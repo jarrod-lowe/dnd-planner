@@ -495,7 +495,8 @@
         "name": "Record Vehicle Damage",
         "description": "Record damage dealt to the Tormentor",
         "below_threshold": "Below the damage threshold (10) — the Tormentor takes no damage",
-        "mishap_threshold": "A single source dealt {{amount}} damage, meeting the mishap threshold ({{threshold}}) — consult the mishap table for what breaks loose"
+        "mishap_threshold": "A single source dealt {{amount}} damage, meeting the mishap threshold ({{threshold}}) — consult the mishap table for what breaks loose",
+        "immunities": "The Tormentor takes no damage of these types:"
       },
       "record-heal": {
         "name": "Record Vehicle Repairs",
@@ -742,7 +743,8 @@
         "name": "Record Vehicle Damage",
         "description": "Record damage dealt to the Demon Grinder",
         "below_threshold": "Below the damage threshold (10) — the Demon Grinder takes no damage",
-        "mishap_threshold": "A single source dealt {{amount}} damage, meeting the mishap threshold ({{threshold}}) — consult the mishap table for what breaks loose"
+        "mishap_threshold": "A single source dealt {{amount}} damage, meeting the mishap threshold ({{threshold}}) — consult the mishap table for what breaks loose",
+        "immunities": "The Demon Grinder takes no damage of these types:"
       },
       "record-heal": {
         "name": "Record Vehicle Repairs",

@@ -17,6 +17,9 @@ import type { Annotation } from '$lib/rules-engine';
  * style, not the rider field-by-field style), so a scenario can pin exactly
  * WHAT the player rolls on a notice's cadence — dice belong on `roll` and a
  * partial assert could let a wrong `count` or `purpose` slip through.
+ * `damageTypes` asserts a matched annotation's damageTypes array exactly (the
+ * whole-object style again), so a scenario can pin WHICH damage types a note
+ * lists — the vehicle immunities note's whole content.
  */
 export interface AnnotationAssert {
   exists?: string[];
@@ -25,6 +28,7 @@ export interface AnnotationAssert {
   targets?: { key: string; targets: string[] }[];
   addsToPlan?: { key: string; adds: unknown }[];
   rolls?: { key: string; roll: unknown }[];
+  damageTypes?: { key: string; damageTypes: string[] }[];
   /** Named fields of a matched annotation's toggle (the rider style — effect
    * instances stay unit-pinned, the yaml assert would break on every tweak). */
   toggles?: { key: string; toggle: Record<string, unknown> }[];
@@ -62,6 +66,11 @@ export function assertAnnotations(
     const found = actual.find((a) => a.key === key);
     expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
     expect(found!.addsToPlan, `${where}: annotation "${key}".addsToPlan`).toEqual(adds);
+  }
+  for (const { key, damageTypes } of expected.damageTypes ?? []) {
+    const found = actual.find((a) => a.key === key);
+    expect(found, `${where}: annotation "${key}" exists`).toBeDefined();
+    expect(found!.damageTypes, `${where}: annotation "${key}".damageTypes`).toEqual(damageTypes);
   }
   for (const { key, roll } of expected.rolls ?? []) {
     const found = actual.find((a) => a.key === key);

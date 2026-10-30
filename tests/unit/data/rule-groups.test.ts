@@ -357,12 +357,14 @@ describe('tormentor prone detail body', () => {
 });
 
 describe('tormentor damage detail body', () => {
-  // The damage recorder carries the stat block's damage semantics — threshold,
-  // immunities, mishap — as its flip detail. Nothing here BEHAVES differently
-  // in the engine (the threshold aside, which the apply gates); the detail is
-  // the settled home for the explanation, so it must state the three notions
-  // plainly. Same discipline: our own words (the Tormentor is not SRD),
-  // in-world voice, no app meta.
+  // The damage recorder carries the stat block's damage semantics — threshold
+  // and mishap — as its flip detail. Nothing here BEHAVES differently in the
+  // engine (the threshold aside, which the apply gates); the detail is the
+  // settled home for the explanation, so it must state the notions plainly.
+  // The IMMUNITIES list lives on the recorder panel itself now (PR-9's
+  // standing note, generated from the spec), not in this prose. Same
+  // discipline: our own words (the Tormentor is not SRD), in-world voice, no
+  // app meta.
   const body = tormentorDetailBody('vehicle/tormentor-damage');
 
   it('exists as a detail block in tormentor.yaml', () => {
@@ -376,19 +378,24 @@ describe('tormentor damage detail body', () => {
     expect(found, `app-meta phrases in the damage detail body: ${found.join(', ')}`).toEqual([]);
   });
 
-  it('states the threshold, the immunities and the mishap trigger', () => {
+  it('states the threshold and the mishap trigger — the immunities list moved to the recorder panel (PR-9)', () => {
     for (const notion of [
       'Damage Threshold 10',
       'less than ten',
-      'Fire',
-      'poison',
-      'psychic',
       'Mishap Threshold 20',
       'twenty',
       'mishap table'
     ]) {
       expect(body, `the damage detail body states "${notion}"`).toContain(notion);
     }
+    // The immunities paragraph is RETIRED: the recorder's standing note
+    // lists the immune types on the very panel the detail flips from, so a
+    // second hand-written type list here could only drift from the spec
+    // data. No paragraph, no type words.
+    expect(body, 'no Immunities paragraph').not.toContain('Immunities');
+    expect(body, 'no fire immunity sentence').not.toContain('Fire');
+    expect(body, 'no poison immunity sentence').not.toContain('poison');
+    expect(body, 'no psychic immunity sentence').not.toContain('psychic');
   });
 });
 
@@ -621,9 +628,11 @@ describe('demon grinder prone detail body', () => {
 });
 
 describe('demon grinder damage detail body', () => {
-  // The damage recorder carries the stat block's damage semantics — threshold,
-  // immunities, mishap — as its flip detail (the Tormentor damage-detail
-  // discipline, the Grinder's own numbers).
+  // The damage recorder carries the stat block's damage semantics — threshold
+  // and mishap — as its flip detail (the Tormentor damage-detail discipline,
+  // the Grinder's own numbers). The IMMUNITIES list lives on the recorder
+  // panel itself (PR-9's standing note, generated from the spec), not in
+  // this prose — same trim as the Tormentor's.
   const body = demonGrinderDetailBody('vehicle/demon-grinder-damage');
 
   it('exists as a detail block in demon-grinder.yaml', () => {
@@ -638,18 +647,21 @@ describe('demon grinder damage detail body', () => {
     expect(found, `app-meta phrases in the damage detail body: ${found.join(', ')}`).toEqual([]);
   });
 
-  it('states the threshold, the immunities and the mishap trigger', () => {
+  it('states the threshold and the mishap trigger — the immunities list moved to the recorder panel (PR-9)', () => {
     for (const notion of [
       'Damage Threshold 10',
       'less than ten',
-      'Fire',
-      'poison',
-      'psychic',
       'Mishap Threshold 20',
       'twenty',
       'mishap table'
     ]) {
       expect(body, `the damage detail body states "${notion}"`).toContain(notion);
     }
+    // Same trim as the Tormentor's damage detail: the recorder's standing
+    // note owns the type list now, generated from the spec.
+    expect(body, 'no Immunities paragraph').not.toContain('Immunities');
+    expect(body, 'no fire immunity sentence').not.toContain('Fire');
+    expect(body, 'no poison immunity sentence').not.toContain('poison');
+    expect(body, 'no psychic immunity sentence').not.toContain('psychic');
   });
 });

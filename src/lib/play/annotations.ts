@@ -12,6 +12,12 @@ export interface ActiveAnnotation {
   /** Interpolation params for the label — `$t(key, values)`. Absent → plain. */
   values?: Record<string, string | number>;
   rider?: AnnotationRider;
+  /**
+   * Damage types the annotation names (a vehicle's immunities note) —
+   * identifiers the panel renders as localized chips through the
+   * `damage-type.*` keys (the dice-line convention), never `values` params.
+   */
+  damageTypes?: readonly string[];
   /** State-toggle chip data; absent → no pressed/unpressed chip. */
   toggle?: AnnotationToggle;
   /** What to plan when the annotation is tapped; absent → not actionable. */
@@ -37,6 +43,7 @@ export function getMatchingAnnotations(
         key: annotation.key,
         values: annotation.values,
         rider: annotation.rider,
+        damageTypes: annotation.damageTypes,
         toggle: annotation.toggle,
         addsToPlan: annotation.addsToPlan
       });
