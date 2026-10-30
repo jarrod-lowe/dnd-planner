@@ -140,6 +140,9 @@ const TORMENTOR: InfernalVehicleSpec = {
   // NOTICE the crew knows before recording. Never mechanics: the recorder
   // stays legal for every type and never refuses an amount.
   immunities: ['fire', 'poison', 'psychic'],
+  // The stat block's Magic Weapons trait (the flinger's harpoons are
+  // magical): a Magical mark on the fire panel.
+  magicWeapons: true,
   // The stat block's Reaction row (the driver's Juke swerve) — a vehicle
   // whose stat block carries no Reaction (the Demon Grinder) omits this and
   // never gets the offer.

@@ -279,6 +279,9 @@ const EXPECTED_RUNNABLE = [
   // riding the annotation's damageTypes channel (localized at the render
   // site through damage-type.*, never params)
   'tormentor-damage-immunities-note',
+  // …the Magic Weapons trait as a plain Magical mark on every fire panel —
+  // an opt-in spec field both vehicles wire, on a per-subject label
+  'tormentor-magic-weapons',
   // …PR 7 — pass 4 v2: the AC mode — a [Moving | Motionless] segmented control
   // on the board offer (creatureType precedent) baking acMotionless, a station
   // AC-mode record (keyed, replaces) storing the distinct recorded fact, the
@@ -396,6 +399,7 @@ const EXPECTED_RUNNABLE = [
   'demon-grinder-hp-threshold',
   'demon-grinder-mishap-threshold',
   'demon-grinder-damage-immunities-note',
+  'demon-grinder-magic-weapons',
   'demon-grinder-prone-record',
   'demon-grinder-unboard',
   'demon-grinder-saves',

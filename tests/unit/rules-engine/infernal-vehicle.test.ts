@@ -1327,6 +1327,78 @@ describe('factory: damage immunities — the recorder panel’s standing note', 
   });
 });
 
+describe('factory: magic weapons — the Magical mark on every fire panel', () => {
+  /**
+   * A MAGIC-WEAPONS fixture: the opt-in spec field both shipped vehicles wire
+   * (each stat block's Magic Weapons trait), on a spec whose every other
+   * number is TEST_SPEC's — so the mark's key and label are all that differ.
+   */
+  const MAGIC_ID = 'infernal-magic';
+  const MAGIC_SPEC: InfernalVehicleSpec = {
+    ...TEST_SPEC,
+    id: MAGIC_ID,
+    subject: MAGIC_ID,
+    factStem: 'companion.infernalMagic',
+    magicWeapons: true
+  };
+  const MAGIC_MARK = `rule.${MAGIC_ID}.magical`;
+  const MAGIC_LABEL = `property.vehicle.${MAGIC_ID}.companion`;
+
+  const acquiredReader: FactReader = {
+    num: (n) => (n === 'companion.infernalMagic.active' ? 1 : 0),
+    has: (n) => n === 'companion.infernalMagic.active'
+  };
+
+  it('a wired spec emits ONE Magical mark on the fire panels’ per-subject label', () => {
+    // The Spear +1 shape (a plain mark on a property label), but the label is
+    // per-subject and `.companion`-suffixed: the player's own `property.magical`
+    // mark can never reach a vehicle's fire panel, nor one vehicle's another's.
+    const annotations = buildInfernalVehicle(MAGIC_SPEC).annotate?.(acquiredReader, []) ?? [];
+    const marks = annotations.filter((a) => a.key === MAGIC_MARK);
+    expect(marks).toHaveLength(1);
+    expect(marks[0]!.targets).toEqual([MAGIC_LABEL]);
+    expect(marks[0]!.targets).not.toContain('notice');
+  });
+
+  it('every weapon station’s fire offer carries the label beside its dice label', () => {
+    const fire = offers(MAGIC_SPEC).find((o) => o.id === `fire-${MAGIC_ID}-ballista`)!;
+    expect(fire, 'the fire row exists').toBeDefined();
+    expect((fire.ui as Record<string, unknown>).annotationLabels).toEqual([
+      'dice.any.companion',
+      MAGIC_LABEL
+    ]);
+  });
+
+  it('the mark exists ONLY while acquired', () => {
+    const unacquired: FactReader = { num: () => 0, has: () => false };
+    expect(
+      (buildInfernalVehicle(MAGIC_SPEC).annotate?.(unacquired, []) ?? []).filter(
+        (a) => a.key === MAGIC_MARK
+      )
+    ).toEqual([]);
+  });
+
+  it('a spec with NO magicWeapons emits no mark and labels its fire rows with dice only', () => {
+    const marks = (buildInfernalVehicle(TEST_SPEC).annotate?.(acquiredReader, []) ?? []).filter(
+      (a) => a.key.endsWith('.magical')
+    );
+    expect(marks).toEqual([]);
+    const fire = offers(TEST_SPEC).find((o) => o.id === `fire-${SPEC_ID}-ballista`)!;
+    expect((fire.ui as Record<string, unknown>).annotationLabels).toEqual(['dice.any.companion']);
+  });
+
+  it('both shipped vehicles’ Magical copy exists in BOTH locales', () => {
+    for (const [locale, dict] of [
+      ['en', en],
+      ['en-x-tlh', tlh]
+    ] as const) {
+      const rule = dict.rule as unknown as Record<string, Record<string, unknown>>;
+      for (const vehicle of ['tormentor', 'demon-grinder'])
+        expect(rule[vehicle]!.magical, `${locale} ${vehicle}.magical`).toEqual(expect.any(String));
+    }
+  });
+});
+
 describe('factory: the registered Tormentor module emits only resolvable keys', () => {
   const TORMENTOR = 'tormentor';
   const TF = 'companion.tormentor';

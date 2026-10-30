@@ -452,6 +452,7 @@
     },
     "tormentor": {
       "name": "Duj Sep",
+      "magical": "mIgh",
       "keywords": "vehicle tormentor war machine acquire abandon mount ride",
       "description": "Duj Sep SuvwI' Duj. wa' Duj Sep yISuq 'ej Duj Daj yIghaj",
       "acquire": {
@@ -640,6 +641,7 @@
     },
     "demon-grinder": {
       "name": "Duj Qaw'",
+      "magical": "mIgh",
       "keywords": "vehicle demon grinder war machine acquire abandon mount ride",
       "description": "Duj Qaw' SuvwI' Duj. wa' Duj Qaw' yISuq 'ej Duj Daj yIghaj",
       "acquire": {
