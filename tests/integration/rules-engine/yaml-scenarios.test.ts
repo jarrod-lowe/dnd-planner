@@ -329,6 +329,11 @@ const EXPECTED_RUNNABLE = [
   // row the same way — an unconditional informational note whose only param
   // is the save DC (13 here, 11 on the Grinder)
   'tormentor-helm-drive-wheels-note',
+  // Demon Grinder PR-8: the Raking Scythes — a SECOND moveTraits entry on the
+  // same machinery, Tormentor-only: both chips and both roll rows coexist,
+  // the scythes' dice line carrying the machinery's first damage bonus
+  // (2d10+2 slashing), gated on the same per-vehicle drove marker
+  'tormentor-helm-drive-scythes-note',
   'tormentor-helm-juke',
   'tormentor-helm-juke-prone',
   // …Demon Grinder PR-2: the movement SPEND becomes ONE shared player-level

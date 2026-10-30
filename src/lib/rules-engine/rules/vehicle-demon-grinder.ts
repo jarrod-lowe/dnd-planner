@@ -105,8 +105,9 @@ const DEMON_GRINDER: InfernalVehicleSpec = {
   // through the damage-type.* keys, every dice line's convention) and whose
   // description carries the whole rule (own wording — the trait text is
   // BG:DiA's, not SRD; only the numbers are facts), gated on the
-  // per-vehicle drove marker Drive's spend writes. PR-8's Raking Scythes
-  // join this list as a second entry, data only.
+  // per-vehicle drove marker Drive's spend writes. NO second entry ever
+  // joins this list: the Grinder's stat block carries no Raking Scythes
+  // (Tormentor-only — pinned absent in the corpus).
   moveTraits: [
     {
       slug: 'wheels',

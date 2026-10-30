@@ -504,6 +504,27 @@ describe('the helm-gated offers surface ONLY while the Helm seat is held', () =>
     ).toBe(false);
     expect(Object.keys(out.facts).some((k) => k.includes('crushing'))).toBe(false);
   });
+
+  it('NOTHING scythes-shaped exists on the Grinder (PR-8: the Raking Scythes are Tormentor-only)', () => {
+    // The Grinder's stat block carries no Raking Scythes, so the second
+    // move-trait entry lands on the Tormentor alone: no scythes ROLL row, no
+    // scythes CHIP, and not even the i18n KEYS — what a stat block does not
+    // carry does not exist (the juke/acMode optionality precedent).
+    expect(module().offer!({ selections: {} }).some((o) => o.id === `scythes-${ID}`)).toBe(false);
+    expect(module().offer!({ selections: {} }).some((o) => o.id.startsWith('scythes-'))).toBe(
+      false
+    );
+    const out = evaluate({ modules: [module()], committed: acquired() });
+    expect(out.annotations.some((a) => a.key.includes('scythes') || a.key.includes('raking'))).toBe(
+      false
+    );
+    for (const dict of [en, tlh]) {
+      expect(i18nAt(dict, `rule.${ID}.scythes.name`)).toBeUndefined();
+      expect(i18nAt(dict, `rule.${ID}.scythes.description`)).toBeUndefined();
+      expect(i18nAt(dict, `rule.${ID}.scythes.not_driven`)).toBeUndefined();
+      expect(i18nAt(dict, `rule.${ID}.drive.raking_scythes`)).toBeUndefined();
+    }
+  });
 });
 
 describe('seats — the Helm, the Chomper, the Wrecking Ball and the Harpoon Flinger', () => {
